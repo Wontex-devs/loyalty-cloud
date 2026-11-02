@@ -17,6 +17,7 @@ import type { Promotion } from "@/lib/domain/types";
 import { dbErrorMessage } from "./errors";
 import { fetchAll } from "./fetch-all";
 import { toCard, toCustomer } from "./mappers";
+import { scheduleCardWalletSync } from "@/lib/wallet/sync";
 import { rateLimit } from "./rate-limit";
 
 export type JoinActionResult = { ok: true; token: string; existing: boolean } | { ok: false; message: string };
@@ -75,6 +76,7 @@ export async function registerVisitAction(cardId: string, idempotencyKey: string
 
   const res = data as { reward_id: string | null; current_stamps: number; bonus_stamps?: number; birthday_reward_id?: string | null };
   revalidatePath("/business", "layout");
+  scheduleCardWalletSync(parsed.data.cardId);
   return {
     ok: true,
     data: {
@@ -95,6 +97,8 @@ export async function redeemRewardAction(rewardId: string): Promise<OpActionResu
   const supabase = await createClient();
   const { error } = await supabase.rpc("redeem_reward", { p_reward_id: rewardId });
   if (error) return { ok: false, message: dbErrorMessage(error) };
+  const { data: rw } = await supabase.from("rewards").select("card_id").eq("id", rewardId).maybeSingle();
+  if (rw?.card_id) scheduleCardWalletSync(rw.card_id);
   revalidatePath("/business", "layout");
   return { ok: true };
 }
@@ -107,6 +111,8 @@ export async function reverseVisitAction(visitId: string, reason: string): Promi
   const supabase = await createClient();
   const { error } = await supabase.rpc("reverse_visit", { p_visit_id: parsed.data.visitId, p_reason: parsed.data.reason });
   if (error) return { ok: false, message: dbErrorMessage(error) };
+  const { data: v } = await supabase.from("visits").select("card_id").eq("id", parsed.data.visitId).maybeSingle();
+  if (v?.card_id) scheduleCardWalletSync(v.card_id);
   revalidatePath("/business", "layout");
   return { ok: true };
 }
@@ -116,6 +122,7 @@ export async function setCardBlockedAction(cardId: string, blocked: boolean): Pr
   const supabase = await createClient();
   const { error } = await supabase.rpc("set_card_blocked", { p_card_id: cardId, p_blocked: blocked === true });
   if (error) return { ok: false, message: dbErrorMessage(error) };
+  scheduleCardWalletSync(cardId);
   revalidatePath("/business", "layout");
   return { ok: true };
 }

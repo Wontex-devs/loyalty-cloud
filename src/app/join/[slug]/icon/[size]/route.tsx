@@ -4,7 +4,7 @@ import { getPublicBusiness } from "@/lib/data/public";
 
 type Ctx = { params: Promise<{ slug: string; size: string }> };
 
-const SIZES = new Set([180, 192, 512]);
+const SIZES = new Set([180, 192, 512, 660]);
 
 /** Icono de la app de la tarjeta: iniciales del comercio sobre sus colores. */
 export async function GET(_req: Request, { params }: Ctx) {

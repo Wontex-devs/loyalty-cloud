@@ -14,6 +14,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { brandingSchema, businessSchema, businessSettingsSchema, programSchema, staffInviteSchema, type BusinessSettingsInput } from "@/lib/domain/schemas";
 import { getSession, homePathFor } from "./queries";
 import { dbErrorMessage } from "./errors";
+import { scheduleBusinessWalletSync } from "@/lib/wallet/sync";
 import type { BusinessBranding, BusinessMembership, BusinessStatus, LoyaltyProgram } from "@/lib/domain/types";
 
 export type ActionResult = { ok: true; message?: string } | { ok: false; message: string };
@@ -90,9 +91,10 @@ export async function updateProgramAction(programId: string, patch: Partial<Loya
   if (d.active !== undefined) row.active = d.active;
 
   const supabase = await createClient();
-  const { data, error } = await supabase.from("loyalty_programs").update(row).eq("id", programId).select("id");
+  const { data, error } = await supabase.from("loyalty_programs").update(row).eq("id", programId).select("id, business_id");
   if (error) return fail(error);
   if (!data?.length) return fail({ message: "FORBIDDEN" });
+  scheduleBusinessWalletSync(data[0].business_id);
   revalidatePath("/business", "layout");
   return { ok: true };
 }
@@ -110,6 +112,7 @@ export async function updateBrandingAction(businessId: string, patch: Partial<Bu
     p_branding: parsed.data,
   });
   if (error) return fail(error);
+  scheduleBusinessWalletSync(businessId);
   revalidatePath("/business", "layout");
   return { ok: true };
 }
@@ -133,6 +136,7 @@ export async function updateBusinessSettingsAction(businessId: string, input: Bu
     p_address: d.address || null,
   });
   if (error) return fail(error);
+  scheduleBusinessWalletSync(businessId);
   revalidatePath("/business", "layout");
   revalidatePath("/join", "layout");
   return { ok: true, message: "Configuración guardada." };

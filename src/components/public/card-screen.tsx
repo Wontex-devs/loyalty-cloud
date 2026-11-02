@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Cake, Check, Copy, Gift, PartyPopper, Share2, Sparkles } from "lucide-react";
 import { LoyaltyCardView } from "@/components/loyalty/loyalty-card";
 import { InstallCard } from "./install-card";
+import { WalletButtons } from "./wallet-buttons";
 import { PLATFORM_NAME } from "@/lib/config";
 import { formatDate, formatRelative } from "@/lib/utils";
 import type { BusinessBranding, CardStatus } from "@/lib/domain/types";
@@ -26,7 +27,7 @@ export interface PublicCardData {
 }
 
 /** Página de la tarjeta del cliente. En modo live se refresca sola mientras está visible. */
-export function CardScreen({ data, isNew, live }: { data: PublicCardData; isNew?: boolean; live?: boolean }) {
+export function CardScreen({ data, isNew, live, googleWallet = false }: { data: PublicCardData; isNew?: boolean; live?: boolean; googleWallet?: boolean }) {
   const router = useRouter();
   const [copied, setCopied] = useState(false);
   const [url, setUrl] = useState("");
@@ -129,6 +130,7 @@ export function CardScreen({ data, isNew, live }: { data: PublicCardData; isNew?
           </button>
         </div>
 
+        {data.status !== "blocked" && <WalletButtons token={data.token} google={googleWallet} />}
         <InstallCard color={b.cardForeground} />
 
         {data.rewards.length > 0 && (

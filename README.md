@@ -15,5 +15,6 @@ npm run db:seed    # carga Beauty Club en tu proyecto Supabase
 - Conectar Supabase (Etapa 2): [docs/ETAPA-2-SUPABASE.md](docs/ETAPA-2-SUPABASE.md)
 - Inscripción, QR y visitas (Etapa 3): [docs/ETAPA-3.md](docs/ETAPA-3.md)
 - Recompensas, canjes, historial y estadísticas (Etapa 4): [docs/ETAPA-4.md](docs/ETAPA-4.md)
+- Google Wallet (Etapa 9): [docs/ETAPA-9-WALLET.md](docs/ETAPA-9-WALLET.md)
 - Pruebas, despliegue y plan del piloto (Etapa 5): [docs/ETAPA-5.md](docs/ETAPA-5.md) · Guía para el equipo: [docs/GUIA-EQUIPO.md](docs/GUIA-EQUIPO.md)
 - Comercio de ejemplo: **Beauty Club** (`/business/beautyclub`, `/join/beautyclub`)

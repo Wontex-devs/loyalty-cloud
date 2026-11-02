@@ -3,6 +3,7 @@ import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { getPublicCard } from "@/lib/data/public";
 import { CardScreen, NotFoundScreen } from "@/components/public/card-screen";
 import { DemoCard } from "@/components/public/demo-card";
+import { isGoogleWalletEnabled } from "@/lib/wallet/config";
 
 type Props = { params: Promise<{ token: string }>; searchParams: Promise<{ new?: string }> };
 
@@ -36,5 +37,5 @@ export default async function CardPage({ params, searchParams }: Props) {
 
   const data = await getPublicCard(token);
   if (!data) return <NotFoundScreen title="Tarjeta no encontrada" text="Revisa el enlace o pide ayuda en el establecimiento." />;
-  return <CardScreen data={data} isNew={isNew} live />;
+  return <CardScreen data={data} isNew={isNew} live googleWallet={isGoogleWalletEnabled()} />;
 }
