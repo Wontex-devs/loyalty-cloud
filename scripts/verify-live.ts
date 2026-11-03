@@ -29,6 +29,8 @@ async function as(demoId: string) {
 }
 
 const anon = createClient(url, anonKey, { auth: { persistSession: false } });
+// Desde la Etapa 11 solo el servidor (service_role) puede inscribir. La clave se lee de .env.local y nunca se imprime.
+const service = createClient(url, process.env.SUPABASE_SERVICE_ROLE_KEY!, { auth: { persistSession: false } });
 
 console.log("\nAcceso público (anon)");
 {
@@ -39,6 +41,14 @@ console.log("\nAcceso público (anon)");
   check("la tarjeta pública no expone teléfono", card && !JSON.stringify(card).includes("+57"));
   const { error: e2 } = await anon.rpc("register_visit", { p_card_id: "00000000-0000-0000-0000-000000000000", p_idempotency_key: "anon-check-1" });
   check("anon no puede registrar visitas", !!e2);
+  const { error: jn } = await anon.rpc("join_program", { p_slug: "beautyclub", p_full_name: "Directa Anon", p_phone_e164: "+573000000098", p_email: null, p_accept_terms: true, p_marketing_consent: false });
+  check("anon ya no puede inscribirse saltándose la app", !!jn, jn?.message);
+  const { error: jl } = await anon.rpc("join_program_limited", { p_client_key: "x", p_slug: "beautyclub", p_full_name: "Directa Anon", p_phone_e164: "+573000000098", p_email: null, p_accept_terms: true, p_marketing_consent: false });
+  check("ni con la versión con límite", !!jl, jl?.message);
+  const { data: un } = await anon.rpc("unsubscribe_marketing", { p_token: "tokenInexistente0000000" });
+  check("la baja de marketing con un token inexistente no afecta a nadie", un === false, un);
+  const { error: az } = await anon.rpc("anonymize_customer", { p_customer_id: "00000000-0000-0000-0000-000000000000" });
+  check("anon no puede eliminar datos de clientas", !!az, az?.message);
 }
 
 console.log("\nPropietaria de Beauty Club (Valentina)");
@@ -104,10 +114,10 @@ if (process.argv.includes("--e2e")) {
   // Crea (o reutiliza) un cliente de prueba identificable. Las visitas son inmutables: queda en el historial.
   const phone = "+573000000001";
   const join = () =>
-    anon.rpc("join_program", { p_slug: "beautyclub", p_full_name: "Cliente Verificación", p_phone_e164: phone, p_email: null, p_accept_terms: true, p_marketing_consent: false });
+    service.rpc("join_program", { p_slug: "beautyclub", p_full_name: "Cliente Verificación", p_phone_e164: phone, p_email: null, p_accept_terms: true, p_marketing_consent: false });
   const { data: j1, error: je } = await join();
   const token = (Array.isArray(j1) ? j1[0] : j1)?.public_token as string | undefined;
-  check("anon se inscribe con join_program", !!token, je?.message);
+  check("el servidor inscribe con join_program", !!token, je?.message);
   const { data: j2 } = await join();
   check("repetir el teléfono devuelve la misma tarjeta", (Array.isArray(j2) ? j2[0] : j2)?.public_token === token && (Array.isArray(j2) ? j2[0] : j2)?.existing === true);
 
@@ -202,9 +212,9 @@ console.log("\nEtapa 6 · experiencia de la clienta");
   const { data: pub } = await anon.rpc("get_public_business", { p_slug: "beautyclub" });
   check("la ficha pública anuncia los sellos de bienvenida", typeof pub?.program?.welcome_stamps === "number", pub?.program);
   if (process.argv.includes("--e2e")) {
-    const { error } = await anon.rpc("join_program", { p_slug: "beautyclub", p_full_name: "Otra Persona", p_phone_e164: "+573000000001", p_email: null, p_accept_terms: true, p_marketing_consent: false });
+    const { error } = await service.rpc("join_program", { p_slug: "beautyclub", p_full_name: "Otra Persona", p_phone_e164: "+573000000001", p_email: null, p_accept_terms: true, p_marketing_consent: false });
     check("un celular inscrito con otro nombre no revela la tarjeta", !!error && error.message.includes("PHONE_REGISTERED"), error?.message);
-    const { data } = await anon.rpc("join_program", { p_slug: "beautyclub", p_full_name: "cliente verificacion", p_phone_e164: "+573000000001", p_email: null, p_accept_terms: true, p_marketing_consent: false });
+    const { data } = await service.rpc("join_program", { p_slug: "beautyclub", p_full_name: "cliente verificacion", p_phone_e164: "+573000000001", p_email: null, p_accept_terms: true, p_marketing_consent: false });
     check("el mismo nombre sin tildes ni mayúsculas la recupera", (Array.isArray(data) ? data[0] : data)?.existing === true);
   }
 }
@@ -225,7 +235,7 @@ console.log("\nEtapa 7 · promociones, cumpleaños y contactos");
   check("una empleada no ve el registro de contactos", !cc && (contacts ?? []).length === 0, cc?.message);
   const { data: card } = await anon.rpc("get_public_card", { p_token: "q7Lm2Xv9RkTz4pWb8NcY3a" });
   check("la tarjeta pública incluye la promoción del día (o null)", card && "promotion" in card, card && Object.keys(card));
-  const { error: bd } = await anon.rpc("join_program", { p_slug: "beautyclub", p_full_name: "Fecha Imposible", p_phone_e164: "+573000000099", p_email: null, p_accept_terms: true, p_marketing_consent: false, p_birth_month: 2, p_birth_day: 31 });
+  const { error: bd } = await service.rpc("join_program", { p_slug: "beautyclub", p_full_name: "Fecha Imposible", p_phone_e164: "+573000000099", p_email: null, p_accept_terms: true, p_marketing_consent: false, p_birth_month: 2, p_birth_day: 31 });
   check("un cumpleaños imposible se rechaza", !!bd && bd.message.includes("INVALID_BIRTHDAY"), bd?.message);
 }
 
@@ -242,6 +252,35 @@ console.log("\nEtapa 8 · planes y sedes");
   check("un comercio no cambia su propio plan", !!pl && pl.message.includes("FORBIDDEN"), pl?.message);
   const { data: st } = await owner.rpc("business_stats", { p_business_id: biz!.id, p_days: 30 });
   check("las estadísticas incluyen visitas por sede", Array.isArray(st?.by_location), st && Object.keys(st));
+}
+
+console.log("\nEtapa 10 · logotipo en Storage");
+{
+  // PNG de 1×1 px: basta para probar permisos sin dejar nada visible.
+  const png = new Blob([Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==", "base64")], { type: "image/png" });
+  const { data: biz } = await owner.from("businesses").select("id, branding").eq("slug", "beautyclub").single();
+  const path = `${biz!.id}/verify-${Date.now()}.png`;
+  const { error: su } = await staff.storage.from("brand-assets").upload(path, png, { contentType: "image/png" });
+  check("una empleada no sube logos", !!su, su?.message);
+  const { error: ou } = await other.storage.from("brand-assets").upload(path, png, { contentType: "image/png" });
+  check("otro comercio no sube logos a la carpeta de Beauty Club", !!ou, ou?.message);
+  const foreign = `${url}/storage/v1/object/public/brand-assets/00000000-0000-0000-0000-000000000000/x.png`;
+  const { error: fu } = await owner.rpc("update_business_profile", { p_business_id: biz!.id, p_name: null, p_category: null, p_city: null, p_timezone: null, p_branding: { logoUrl: foreign } });
+  check("no acepta un logo de otra carpeta", !!fu && fu.message.includes("INVALID_BRANDING"), fu?.message);
+  if (process.argv.includes("--e2e")) {
+    const bucket = owner.storage.from("brand-assets");
+    const { error: up } = await bucket.upload(path, png, { contentType: "image/png" });
+    check("la propietaria sube un logo a su carpeta", !up, up?.message);
+    const publicUrl = bucket.getPublicUrl(path).data.publicUrl;
+    const res = await fetch(publicUrl);
+    check("el logo se ve sin iniciar sesión", res.ok && res.headers.get("content-type") === "image/png", res.status);
+    const previous = biz!.branding?.logoUrl ?? "";
+    const { error: sv } = await owner.rpc("update_business_profile", { p_business_id: biz!.id, p_name: null, p_category: null, p_city: null, p_timezone: null, p_branding: { logoUrl: publicUrl } });
+    check("la propietaria guarda la URL de su logo", !sv, sv?.message);
+    await owner.rpc("update_business_profile", { p_business_id: biz!.id, p_name: null, p_category: null, p_city: null, p_timezone: null, p_branding: { logoUrl: previous } });
+    const { error: rm } = await bucket.remove([path]);
+    check("la propietaria borra su archivo", !rm, rm?.message);
+  }
 }
 
 console.log(`\n${passed} correctas, ${failed} fallidas\n`);

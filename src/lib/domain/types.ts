@@ -125,6 +125,8 @@ export interface Customer {
   termsAcceptedAt: ISODate;
   marketingConsent: boolean;
   marketingConsentAt?: ISODate;
+  /** Fecha en que se eliminaron sus datos personales (supresión). Sin teléfono ni correo desde entonces. */
+  anonymizedAt?: ISODate;
   createdAt: ISODate;
 }
 

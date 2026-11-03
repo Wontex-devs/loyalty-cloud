@@ -54,6 +54,20 @@ async function as(user, sql, params = []) {
   }
 }
 
+// El servidor de la app (service_role): único que puede llamar a join_program desde la Etapa 11.
+async function asService(sql, params = []) {
+  await db.query("begin");
+  try {
+    await db.query("set local role service_role");
+    const res = await db.query(sql, params);
+    await db.query("commit");
+    return { ok: true, rows: res.rows, affected: res.affectedRows ?? 0 };
+  } catch (e) {
+    await db.query("rollback");
+    return { ok: false, error: e.message };
+  }
+}
+
 let passed = 0;
 let failed = 0;
 function check(name, cond, detail) {
@@ -68,7 +82,7 @@ function check(name, cond, detail) {
 const expectError = (r, code) => !r.ok && r.error.includes(code);
 
 const joinProgram = (slug, phone, name = "Cliente Prueba") =>
-  as(null, "select * from public.join_program($1, $2, $3, null, true, false)", [slug, name, phone]);
+  asService("select * from public.join_program($1, $2, $3, null, true, false)", [slug, name, phone]);
 
 // ---------- Público (anon) ----------
 console.log("\nAcceso público");
@@ -78,7 +92,7 @@ r = await as(null, "select * from public.loyalty_cards");
 check("anon no puede leer tarjetas", expectError(r, "permission denied"), r);
 
 r = await joinProgram("negocio-a", "+573001112233", "Ana Prueba");
-check("anon se inscribe con join_program", r.ok && r.rows[0]?.existing === false, r);
+check("el servidor inscribe con join_program", r.ok && r.rows[0]?.existing === false, r);
 const tokenA = r.rows[0]?.public_token;
 check("token público de 22 caracteres base64url", /^[A-Za-z0-9_-]{22}$/.test(tokenA ?? ""), tokenA);
 
@@ -89,7 +103,7 @@ check("mismo celular y mismo nombre (sin importar mayúsculas ni espacios) recup
 r = await joinProgram("negocio-a", "+573001112233", "Ána Prueba");
 check("las tildes no impiden recuperar la tarjeta", r.ok && r.rows[0]?.public_token === tokenA, r);
 
-r = await as(null, "select public.join_program('negocio-a', 'X Y', '+573009999999', null, false, false)");
+r = await asService("select public.join_program('negocio-a', 'X Y', '+573009999999', null, false, false)");
 check("inscripción sin aceptar términos es rechazada", expectError(r, "TERMS_REQUIRED"), r);
 
 r = await as(null, "select public.get_public_card($1) as card", [tokenA]);
@@ -313,9 +327,9 @@ console.log("\nPromociones, cumpleaños y contactos");
   r = await as(U.ownerB, `insert into public.promotions (business_id, name, bonus_stamps, starts_on, ends_on)
     values ($1, 'Doble sello', 1, current_date - 1, current_date + 1) returning id`, [B]);
   check("propietario crea una promoción de doble sello", r.ok, r);
-  r = await as(null, "select * from public.join_program('negocio-b', 'Cumple Prueba', '+573118880001', null, true, true, 2, 30)");
+  r = await asService("select * from public.join_program('negocio-b', 'Cumple Prueba', '+573118880001', null, true, true, 2, 30)");
   check("fecha de cumpleaños imposible → INVALID_BIRTHDAY", expectError(r, "INVALID_BIRTHDAY"), r);
-  r = await as(null, "select * from public.join_program('negocio-b', 'Cumple Prueba', '+573118880001', null, true, true, $1, 15)", [mm]);
+  r = await asService("select * from public.join_program('negocio-b', 'Cumple Prueba', '+573118880001', null, true, true, $1, 15)", [mm]);
   const bToken = r.rows?.[0]?.public_token;
   check("inscripción con cumpleaños (día y mes)", r.ok && !!bToken, r);
   const bCard = (await db.query("select id from public.loyalty_cards where public_token = $1", [bToken])).rows[0].id;
@@ -340,7 +354,7 @@ console.log("\nPromociones, cumpleaños y contactos");
   r = await as(U.ownerB, "select public.register_visit($1, 'promo-key-04') as res", [bCard]);
   check("sin promoción activa la visita vuelve a sumar 1", r.rows?.[0]?.res?.bonus_stamps === 0, r.rows?.[0]?.res);
 
-  const noConsent = (await as(null, "select * from public.join_program('negocio-b', 'Sin Permiso', '+573118880002', null, true, false)")).rows[0];
+  const noConsent = (await asService("select * from public.join_program('negocio-b', 'Sin Permiso', '+573118880002', null, true, false)")).rows[0];
   const noConsentId = (await db.query("select customer_id from public.loyalty_cards where public_token = $1", [noConsent.public_token])).rows[0].customer_id;
   const withConsentId = (await db.query("select customer_id from public.loyalty_cards where id = $1", [bCard])).rows[0].customer_id;
   r = await as(U.ownerB, "select public.log_customer_contact($1, 'cumpleanos')", [noConsentId]);
@@ -424,7 +438,7 @@ await db.query(`insert into public.customers (business_id, full_name, phone_e164
   select $1, 'Masivo ' || i, '+57310' || lpad(i::text, 7, '0'), now() from generate_series(1, 60) i`, [B]);
 r = await joinProgram("negocio-b", "+573209998877");
 check("inscripciones masivas en 10 min → RATE_LIMITED", expectError(r, "RATE_LIMITED"), r);
-r = await as(null, "select * from public.join_program('negocio-b', 'Masivo 1', '+573100000001', null, true, false)");
+r = await asService("select * from public.join_program('negocio-b', 'Masivo 1', '+573100000001', null, true, false)");
 check("un cliente existente sigue recuperando su tarjeta durante el freno", r.ok, r);
 
 console.log("\nSellos de bienvenida");
@@ -451,6 +465,82 @@ r = await as(null, "select public.get_public_business('negocio-a') as b");
 check("la ficha pública del comercio no se muestra", r.ok && r.rows[0].b === null, r);
 
 // ---------- Datos semilla (Beauty Club) contra las restricciones reales ----------
+console.log("\nDerechos de la clienta y freno a inscripciones (Etapa 11)");
+{
+  await db.query("update public.businesses set status = 'active' where id = $1", [A]); // la sección anterior lo suspendió
+  r = await as(null, "select * from public.join_program('negocio-a', 'Directa Anon', '+573009990001', null, true, false)");
+  check("la clave pública ya no puede llamar a join_program", expectError(r, "permission denied"), r);
+  r = await as(null, "select * from public.join_program_limited('k', 'negocio-a', 'Directa Anon', '+573009990001', null, true, false)");
+  check("ni a join_program_limited", expectError(r, "permission denied"), r);
+  r = await asService("select * from public.join_program_limited('ip-1', 'negocio-a', 'Por Servidor', '+573009990002', null, true, true)");
+  check("el servidor inscribe con límite por IP", r.ok && r.rows[0]?.existing === false, r);
+  const anonToken = r.rows?.[0]?.public_token;
+  let limited = null;
+  for (let i = 0; i < 25 && !limited; i++) {
+    const t = await asService("select * from public.join_program_limited('ip-2', 'negocio-a', 'Misma Persona', '+573009990003', null, true, false)");
+    if (!t.ok) limited = { i, t };
+  }
+  check("más de 20 intentos por hora desde la misma IP → RATE_LIMITED", limited && limited.i === 20 && expectError(limited.t, "RATE_LIMITED"), limited);
+  r = await asService("select * from public.join_program_limited('ip-3', 'negocio-a', 'Otra Conexion', '+573009990004', null, true, false)");
+  check("otra IP no se ve afectada", r.ok, r);
+  r = await db.query("select count(*)::int n from private.join_attempts where client_key like 'ip-%'");
+  check("solo se guarda la clave de la conexión", r.rows[0].n > 0, r.rows);
+
+  // Baja de marketing desde la tarjeta
+  r = await as(null, "select public.get_public_card($1) as c", [anonToken]);
+  check("la tarjeta pública indica el consentimiento de marketing", r.rows?.[0]?.c?.marketing_consent === true, r);
+  r = await as(null, "select public.unsubscribe_marketing($1) as ok", [anonToken]);
+  check("la clienta se da de baja desde su tarjeta", r.ok && r.rows[0].ok === true, r);
+  r = await as(null, "select public.get_public_card($1) as c", [anonToken]);
+  check("después de la baja ya no figura con consentimiento", r.rows?.[0]?.c?.marketing_consent === false, r);
+  r = await as(null, "select public.unsubscribe_marketing('tokenInexistente0000000') as ok");
+  check("un token inexistente no da de baja a nadie", r.ok && r.rows[0].ok === false, r);
+
+  // Retiro desde el panel
+  const cust = (await db.query("select id from public.customers where phone_e164 = '+573009990004'")).rows[0].id;
+  await db.query("update public.customers set marketing_consent = true, marketing_consent_at = now() where id = $1", [cust]);
+  r = await as(U.staffA, "select public.revoke_marketing_consent($1)", [cust]);
+  check("una empleada no retira consentimientos", expectError(r, "FORBIDDEN"), r);
+  r = await as(U.ownerB, "select public.revoke_marketing_consent($1)", [cust]);
+  check("otro comercio no retira consentimientos", expectError(r, "FORBIDDEN"), r);
+  r = await as(U.adminA, "select public.revoke_marketing_consent($1)", [cust]);
+  const c1 = (await db.query("select marketing_consent, marketing_consent_at from public.customers where id = $1", [cust])).rows[0];
+  check("admin retira el consentimiento de marketing", r.ok && c1.marketing_consent === false && c1.marketing_consent_at === null, { r, c1 });
+  r = await as(U.ownerA, "select count(*)::int n from public.audit_logs where action = 'customer.marketing_revoked'");
+  check("los retiros quedan en la auditoría", r.rows?.[0]?.n === 2, r);
+
+  // Anonimizar (supresión de datos)
+  const victim = (await db.query("select c.id, k.id card_id, k.public_token from public.customers c join public.loyalty_cards k on k.customer_id = c.id where c.phone_e164 = '+573009990002'")).rows[0];
+  r = await as(U.ownerA, "select public.register_visit($1, 'anon-visit-0001')", [victim.card_id]);
+  check("visita previa a la eliminación", r.ok, r);
+  r = await as(U.adminA, "select public.anonymize_customer($1)", [victim.id]);
+  check("solo el propietario elimina datos de clientas (admin no)", expectError(r, "FORBIDDEN"), r);
+  r = await as(U.ownerB, "select public.anonymize_customer($1)", [victim.id]);
+  check("otro comercio no elimina datos ajenos", expectError(r, "FORBIDDEN"), r);
+  r = await as(U.ownerA, "select public.anonymize_customer($1)", [victim.id]);
+  check("el propietario elimina los datos de una clienta", r.ok, r);
+  const after = (await db.query("select full_name, phone_e164, email, birth_month, marketing_consent, anonymized_at from public.customers where id = $1", [victim.id])).rows[0];
+  check("no queda nombre, teléfono, correo ni cumpleaños", after.full_name === "Datos eliminados" && after.phone_e164 === null && after.email === null && after.birth_month === null && after.anonymized_at, after);
+  const card2 = (await db.query("select status, public_token from public.loyalty_cards where id = $1", [victim.card_id])).rows[0];
+  check("la tarjeta queda bloqueada y con otro enlace", card2.status === "blocked" && card2.public_token !== victim.public_token, card2);
+  r = await as(null, "select public.get_public_card($1) as c", [victim.public_token]);
+  check("el enlace anterior ya no muestra nada", r.ok && r.rows[0].c === null, r);
+  r = await as(null, "select public.get_public_card($1) as c", [card2.public_token]);
+  check("ni siquiera el enlace nuevo muestra la tarjeta", r.ok && r.rows[0].c === null, r);
+  const visitsKept = (await db.query("select count(*)::int n from public.visits where card_id = $1", [victim.card_id])).rows[0].n;
+  check("las visitas siguen en el historial (sin datos personales)", visitsKept >= 1, visitsKept);
+  r = await as(U.ownerA, "select public.set_card_blocked($1, false)", [victim.card_id]);
+  check("su tarjeta no se puede reactivar", expectError(r, "CUSTOMER_ANONYMIZED"), r);
+  r = await as(U.ownerA, "update public.customers set full_name = 'Recuperada' where id = $1", [victim.id]);
+  check("sus datos ya no se pueden editar", (r.ok && r.affected === 0) || !r.ok, r);
+  r = await as(U.ownerA, "select public.anonymize_customer($1)", [victim.id]);
+  check("anonimizar dos veces → ALREADY_ANONYMIZED", expectError(r, "ALREADY_ANONYMIZED"), r);
+  r = await asService("select * from public.join_program('negocio-a', 'Vuelve Luego', '+573009990002', null, true, false)");
+  check("el mismo celular puede volver a inscribirse desde cero", r.ok && r.rows[0]?.existing === false, r);
+  r = await as(U.ownerA, "select count(*)::int n from public.audit_logs where action = 'customer.anonymized'");
+  check("la eliminación queda en la auditoría", r.rows?.[0]?.n === 1, r);
+}
+
 console.log("\nDatos de demostración");
 {
   const { buildSeed, demoUsers, SEED_ORDER } = await import("./seed-data.ts");

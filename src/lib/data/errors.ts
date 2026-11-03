@@ -30,6 +30,8 @@ const DB_ERRORS: Record<string, string> = {
   legal_name_check: "Revisa la razón social.",
   contact_phone_check: "Revisa el teléfono de contacto.",
   address_check: "Revisa la dirección.",
+  ALREADY_ANONYMIZED: "Los datos de esta clienta ya se eliminaron.",
+  CUSTOMER_ANONYMIZED: "Los datos de esta clienta se eliminaron: su tarjeta no se puede reactivar.",
   REWARD_ALREADY_REDEEMED: "No se puede revertir: la recompensa de esa visita ya se canjeó.",
 };
 // Los códigos más largos primero: "REWARD_ALREADY_REDEEMED" antes que "ALREADY_REDEEMED".

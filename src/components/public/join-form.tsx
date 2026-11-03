@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Gift, Loader2, Stamp } from "lucide-react";
 import { useDemo } from "@/lib/demo/store";
@@ -10,6 +10,7 @@ import { PLATFORM_NAME } from "@/lib/config";
 import { cn } from "@/lib/utils";
 import type { BusinessBranding } from "@/lib/domain/types";
 import { NotFoundScreen } from "./card-screen";
+import { Turnstile, TURNSTILE_SITE_KEY, type TurnstileHandle } from "./turnstile";
 import { BrandMark, brandFont } from "@/components/loyalty/brand-mark";
 
 const MONTHS = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
@@ -32,6 +33,9 @@ export function JoinForm({ slug, business, program, live }: JoinFormProps) {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
+  const [captcha, setCaptcha] = useState("");
+  const captchaRef = useRef<TurnstileHandle>(null);
+  const needsCaptcha = live && !!TURNSTILE_SITE_KEY;
 
   const b = business.branding;
 
@@ -50,12 +54,17 @@ export function JoinForm({ slug, business, program, live }: JoinFormProps) {
       return;
     }
     setErrors({});
+    if (needsCaptcha && !captcha) {
+      setNotice("Estamos verificando la conexión. Espera un segundo y vuelve a intentarlo.");
+      return;
+    }
     setSubmitting(true);
     const demoBusinessId = state.businesses.find((x) => x.slug === slug)?.id ?? "";
-    const res = live ? await joinProgramAction(slug, parsed.data) : await joinProgram(demoBusinessId, parsed.data);
+    const res = live ? await joinProgramAction(slug, parsed.data, captcha || undefined) : await joinProgram(demoBusinessId, parsed.data);
     if (!res.ok) {
       setNotice(res.message);
       setSubmitting(false);
+      captchaRef.current?.reset(); // el token es de un solo uso
       return;
     }
     if (res.existing) {
@@ -170,6 +179,7 @@ export function JoinForm({ slug, business, program, live }: JoinFormProps) {
             <span>Quiero recibir promociones y novedades (opcional).</span>
           </label>
 
+          {live && <Turnstile ref={captchaRef} onToken={setCaptcha} />}
           {notice && <p className="rounded-xl bg-white/80 px-3 py-2 text-sm">{notice}</p>}
 
           <button

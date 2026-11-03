@@ -99,13 +99,14 @@ export const toCustomer = (r: Row): Customer => ({
   id: r.id,
   businessId: r.business_id,
   fullName: r.full_name,
-  phone: r.phone_e164,
+  phone: r.phone_e164 ?? "",
   email: opt(r.email),
   birthMonth: opt(r.birth_month),
   birthDay: opt(r.birth_day),
   termsAcceptedAt: r.terms_accepted_at,
   marketingConsent: r.marketing_consent,
   marketingConsentAt: opt(r.marketing_consent_at),
+  anonymizedAt: opt(r.anonymized_at),
   createdAt: r.created_at,
 });
 

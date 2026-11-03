@@ -34,6 +34,7 @@ export const getPublicCard = cache(async (token: string): Promise<PublicCardData
     rewards: (d.rewards ?? []).map((r: any) => ({ name: r.name, kind: r.kind ?? "cycle", expiresAt: r.expires_at })),
     recent: (d.recent ?? []).map((v: any) => ({ kind: v.kind, delta: v.delta, bonus: v.bonus ?? 0, createdAt: v.created_at })),
     promotion: d.promotion ? { name: d.promotion.name, bonusStamps: d.promotion.bonus_stamps } : null,
+    marketingConsent: d.marketing_consent === true,
   };
 });
 

@@ -24,11 +24,27 @@ export interface PublicCardData {
   recent: { kind: "visit" | "reversal"; delta: number; bonus?: number; createdAt: string }[];
   /** Promoción vigente hoy en el comercio (p. ej. doble sello). */
   promotion?: { name: string; bonusStamps: number } | null;
+  /** La clienta aceptó recibir mensajes: se le ofrece darse de baja. */
+  marketingConsent?: boolean;
 }
 
 /** Página de la tarjeta del cliente. En modo live se refresca sola mientras está visible. */
-export function CardScreen({ data, isNew, live, googleWallet = false }: { data: PublicCardData; isNew?: boolean; live?: boolean; googleWallet?: boolean }) {
+export function CardScreen({
+  data,
+  isNew,
+  live,
+  googleWallet = false,
+  onUnsubscribe,
+}: {
+  data: PublicCardData;
+  isNew?: boolean;
+  live?: boolean;
+  googleWallet?: boolean;
+  /** Retira el consentimiento de marketing de esta tarjeta. */
+  onUnsubscribe?: () => Promise<boolean>;
+}) {
   const router = useRouter();
+  const [unsub, setUnsub] = useState<"idle" | "confirm" | "busy" | "done" | "error">("idle");
   const [copied, setCopied] = useState(false);
   const [url, setUrl] = useState("");
   const [bump, setBump] = useState(false);
@@ -178,6 +194,37 @@ export function CardScreen({ data, isNew, live, googleWallet = false }: { data: 
               Términos y tratamiento de datos
             </a>
           </p>
+        )}
+        {onUnsubscribe && (data.marketingConsent || unsub === "done") && (
+          <div className="mt-2 text-center text-[11px] text-muted">
+            {unsub === "done" ? (
+              <p>Listo: {data.business.name} ya no te enviará promociones. Tu tarjeta sigue igual.</p>
+            ) : unsub === "confirm" || unsub === "busy" || unsub === "error" ? (
+              <p>
+                {unsub === "error" ? "No se pudo completar. " : "¿Dejar de recibir promociones y novedades? "}
+                <button
+                  type="button"
+                  disabled={unsub === "busy"}
+                  className="font-semibold underline"
+                  onClick={async () => {
+                    setUnsub("busy");
+                    setUnsub((await onUnsubscribe()) ? "done" : "error");
+                  }}
+                >
+                  {unsub === "busy" ? "Un momento…" : unsub === "error" ? "Reintentar" : "Sí, no quiero mensajes"}
+                </button>{" "}
+                {unsub !== "busy" && (
+                  <button type="button" className="underline" onClick={() => setUnsub("idle")}>
+                    Cancelar
+                  </button>
+                )}
+              </p>
+            ) : (
+              <button type="button" className="underline" onClick={() => setUnsub("confirm")}>
+                No quiero recibir promociones
+              </button>
+            )}
+          </div>
         )}
         <p className="mt-4 text-center text-[11px] text-subtle">Tecnología de {PLATFORM_NAME}</p>
       </div>

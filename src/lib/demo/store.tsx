@@ -95,6 +95,11 @@ export interface DemoApi {
   reverseVisit: (visitId: string, reason: string) => Promise<OpResult>;
   redeemReward: (rewardId: string) => Promise<OpResult>;
   setCardBlocked: (cardId: string, blocked: boolean) => Promise<OpResult>;
+  /** Supresión: borra los datos personales de la clienta y bloquea su tarjeta (solo propietario). */
+  anonymizeCustomer: (customerId: string) => Promise<OpResult>;
+  revokeMarketingConsent: (customerId: string) => Promise<OpResult>;
+  /** Baja de mensajes desde la tarjeta pública (por token). */
+  unsubscribeMarketing: (token: string) => Promise<boolean>;
   updateBusinessSettings: (businessId: string, input: BusinessSettingsInput) => Promise<OpResult>;
   savePromotion: (businessId: string, input: PromotionInput, id?: string) => Promise<OpResult>;
   logContact: (customerId: string, segment: string) => Promise<OpResult>;
@@ -277,6 +282,9 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
         const card = s.cards.find((c) => c.id === cardId);
         const m = card ? acting(s, card.businessId) : undefined;
         if (!card || !m || m.role === "staff") return { ok: false, message: "No tienes permiso para realizar esta acción." };
+        if (!blocked && s.customers.find((c) => c.id === card.customerId)?.anonymizedAt) {
+          return { ok: false, message: "Los datos de esta clienta se eliminaron: su tarjeta no se puede reactivar." };
+        }
         const hasReward = s.rewards.some((r) => r.cardId === cardId && r.status === "available");
         const status = blocked ? "blocked" : hasReward ? "reward_available" : "active";
         const now = new Date().toISOString();
@@ -291,6 +299,65 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
         stateRef.current = next;
         setState(next);
         return { ok: true };
+      },
+
+      anonymizeCustomer: async (customerId) => {
+        const s = stateRef.current;
+        const customer = s.customers.find((c) => c.id === customerId);
+        const m = customer ? acting(s, customer.businessId) : undefined;
+        if (!customer || !m || m.role !== "owner") return { ok: false, message: "No tienes permiso para realizar esta acción." };
+        if (customer.anonymizedAt) return { ok: false, message: "Los datos de esta clienta ya se eliminaron." };
+        const now = new Date().toISOString();
+        const cardIds = new Set(s.cards.filter((c) => c.customerId === customerId).map((c) => c.id));
+        const next: DemoState = {
+          ...s,
+          customers: s.customers.map((c) =>
+            c.id === customerId
+              ? { ...c, fullName: "Datos eliminados", phone: "", email: undefined, birthMonth: undefined, birthDay: undefined, marketingConsent: false, marketingConsentAt: undefined, anonymizedAt: now }
+              : c,
+          ),
+          cards: s.cards.map((c) => (cardIds.has(c.id) ? { ...c, status: "blocked" as const, publicToken: newId("anon") } : c)),
+          rewards: s.rewards.map((r) => (cardIds.has(r.cardId) && r.status === "available" ? { ...r, status: "void" as const } : r)),
+          auditLogs: [
+            { id: newId("aud_"), businessId: customer.businessId, actorId: s.actingProfileId, action: "customer.anonymized", entity: "customer", entityId: customerId, createdAt: now },
+            ...s.auditLogs,
+          ],
+        };
+        stateRef.current = next;
+        setState(next);
+        return { ok: true };
+      },
+
+      revokeMarketingConsent: async (customerId) => {
+        const s = stateRef.current;
+        const customer = s.customers.find((c) => c.id === customerId);
+        const m = customer ? acting(s, customer.businessId) : undefined;
+        if (!customer || !m || m.role === "staff") return { ok: false, message: "No tienes permiso para realizar esta acción." };
+        const now = new Date().toISOString();
+        const next: DemoState = {
+          ...s,
+          customers: s.customers.map((c) => (c.id === customerId ? { ...c, marketingConsent: false, marketingConsentAt: undefined } : c)),
+          auditLogs: [
+            { id: newId("aud_"), businessId: customer.businessId, actorId: s.actingProfileId, action: "customer.marketing_revoked", entity: "customer", entityId: customerId, metadata: { source: "panel" }, createdAt: now },
+            ...s.auditLogs,
+          ],
+        };
+        stateRef.current = next;
+        setState(next);
+        return { ok: true };
+      },
+
+      unsubscribeMarketing: async (token) => {
+        const s = stateRef.current;
+        const card = s.cards.find((c) => c.publicToken === token);
+        if (!card) return false;
+        const next: DemoState = {
+          ...s,
+          customers: s.customers.map((c) => (c.id === card.customerId ? { ...c, marketingConsent: false, marketingConsentAt: undefined } : c)),
+        };
+        stateRef.current = next;
+        setState(next);
+        return true;
       },
 
       updateBusinessSettings: async (businessId, input) => {

@@ -5,10 +5,12 @@
  * estadísticas y exportación. La lógica de negocio vive en las funciones de
  * Postgres; aquí solo se valida la entrada y se traducen los errores.
  */
+import { createHmac } from "node:crypto";
 import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { joinSchema, normalizePhone, type JoinInput } from "@/lib/domain/schemas";
 import { customersCsv } from "@/lib/domain/csv";
 import { statsFromRow, type BusinessStats } from "@/lib/domain/stats";
@@ -22,22 +24,46 @@ import { rateLimit } from "./rate-limit";
 
 export type JoinActionResult = { ok: true; token: string; existing: boolean } | { ok: false; message: string };
 
-export async function joinProgramAction(slug: string, input: JoinInput): Promise<JoinActionResult> {
+/** Comprueba el desafío anti-bots de Cloudflare Turnstile. Sin TURNSTILE_SECRET_KEY no se exige. */
+async function verifyTurnstile(token: string | undefined, ip: string) {
+  const secret = process.env.TURNSTILE_SECRET_KEY;
+  if (!secret) return true;
+  if (!token) return false;
+  try {
+    const res = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
+      method: "POST",
+      body: new URLSearchParams({ secret, response: token, remoteip: ip }),
+    });
+    const out = (await res.json()) as { success?: boolean };
+    return out.success === true;
+  } catch {
+    return false;
+  }
+}
+
+export async function joinProgramAction(slug: string, input: JoinInput, captchaToken?: string): Promise<JoinActionResult> {
   const parsed = joinSchema.safeParse(input);
   if (!parsed.success) return { ok: false, message: parsed.error.issues[0]?.message ?? "Revisa los datos." };
 
   const phone = normalizePhone(parsed.data.phone);
   if (!/^\+[1-9][0-9]{6,14}$/.test(phone)) return { ok: false, message: "Teléfono no válido." };
 
-  // Freno básico contra registros masivos desde una misma IP.
   const h = await headers();
-  const ip = h.get("x-forwarded-for")?.split(",")[0]?.trim() || h.get("x-real-ip") || "local";
+  const ip = h.get("x-real-ip") || h.get("x-forwarded-for")?.split(",")[0]?.trim() || "local";
+  // Freno rápido en este servidor; el límite que cuenta está en Postgres (join_program_limited).
   if (!rateLimit(`join:${ip}`, 10, 10 * 60_000)) {
     return { ok: false, message: "Demasiados intentos. Espera unos minutos e inténtalo de nuevo." };
   }
+  if (!(await verifyTurnstile(captchaToken, ip))) {
+    return { ok: false, message: "No pudimos verificar que eres una persona. Recarga la página e inténtalo de nuevo." };
+  }
 
-  const supabase = await createClient();
-  const { data, error } = await supabase.rpc("join_program", {
+  // join_program ya no es accesible con la clave pública: solo con la service_role, desde aquí.
+  // A la base de datos llega un HMAC de la IP, nunca la IP.
+  const clientKey = createHmac("sha256", process.env.SUPABASE_SERVICE_ROLE_KEY ?? "local").update(ip).digest("base64url").slice(0, 32);
+  const supabase = createAdminClient();
+  const { data, error } = await supabase.rpc("join_program_limited", {
+    p_client_key: clientKey,
     p_slug: slug,
     p_full_name: parsed.data.fullName,
     p_phone_e164: phone,
@@ -239,4 +265,37 @@ export async function setBusinessPlanAction(businessId: string, planId: string):
   revalidatePath("/admin", "layout");
   revalidatePath("/business", "layout");
   return { ok: true };
+}
+
+// ---------- Etapa 11: derechos de la clienta ----------
+
+/** Elimina los datos personales de una clienta (solo el propietario). Las visitas quedan anónimas. */
+export async function anonymizeCustomerAction(customerId: string): Promise<OpActionResult> {
+  if (!z.uuid().safeParse(customerId).success) return { ok: false, message: "Clienta no válida." };
+  const supabase = await createClient();
+  const { data: card } = await supabase.from("loyalty_cards").select("id").eq("customer_id", customerId).maybeSingle();
+  const { error } = await supabase.rpc("anonymize_customer", { p_customer_id: customerId });
+  if (error) return { ok: false, message: dbErrorMessage(error) };
+  if (card?.id) scheduleCardWalletSync(card.id);
+  revalidatePath("/business", "layout");
+  return { ok: true };
+}
+
+export async function revokeMarketingConsentAction(customerId: string): Promise<OpActionResult> {
+  if (!z.uuid().safeParse(customerId).success) return { ok: false, message: "Clienta no válida." };
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("revoke_marketing_consent", { p_customer_id: customerId });
+  if (error) return { ok: false, message: dbErrorMessage(error) };
+  revalidatePath("/business", "layout");
+  return { ok: true };
+}
+
+/** Baja de mensajes desde la tarjeta pública: el token de la tarjeta es la credencial. */
+export async function unsubscribeMarketingAction(token: string): Promise<boolean> {
+  if (!/^[A-Za-z0-9_-]{16,64}$/.test(token)) return false;
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("unsubscribe_marketing", { p_token: token });
+  if (error) return false;
+  revalidatePath(`/card/${token}`);
+  return data === true;
 }
