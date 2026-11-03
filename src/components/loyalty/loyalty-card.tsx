@@ -1,7 +1,8 @@
 "use client";
 
 import { QRCodeSVG } from "qrcode.react";
-import { Check, Gift, Sparkles } from "lucide-react";
+import { Gift, Sparkles } from "lucide-react";
+import { BrandMark, brandFont, FILLED_STAMP_ICONS, STAMP_ICON_COMPONENTS } from "./brand-mark";
 import { cn } from "@/lib/utils";
 import type { Business, CardStatus, LoyaltyProgram } from "@/lib/domain/types";
 
@@ -43,6 +44,9 @@ export function LoyaltyCardView({
   const b = business.branding;
   const remaining = Math.max(program.stampsRequired - stamps, 0);
   const cols = program.stampsRequired <= 10 ? Math.min(5, Math.ceil(program.stampsRequired / 2)) : 6;
+  const StampIcon = STAMP_ICON_COMPONENTS[b.stampIcon ?? "check"] ?? STAMP_ICON_COMPONENTS.check;
+  const font = brandFont(b);
+  const titleFont = brandFont(b, "tracking-[0.12em]");
 
   return (
     <div
@@ -60,14 +64,13 @@ export function LoyaltyCardView({
         {/* Cabecera */}
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div
-              className="flex size-11 items-center justify-center rounded-full font-serif text-lg tracking-wide"
+            <BrandMark
+              branding={b}
+              className={cn("size-11 rounded-full text-lg", brandFont(b, "tracking-wide"))}
               style={{ background: b.cardForeground, color: b.cardBackground }}
-            >
-              {b.logoText}
-            </div>
+            />
             <div>
-              <p className="font-serif text-xl leading-none tracking-[0.12em] uppercase">{business.name}</p>
+              <p className={cn("text-xl leading-none uppercase", titleFont)}>{business.name}</p>
               <p className="mt-1 text-[10px] font-medium tracking-[0.16em] whitespace-nowrap uppercase opacity-60">
                 {program.name.trim().toLowerCase() === business.name.trim().toLowerCase() ? "Tarjeta de fidelidad" : program.name}
               </p>
@@ -107,7 +110,11 @@ export function LoyaltyCardView({
                 }}
               >
                 {filled ? (
-                  <Check className={cn("size-[45%]", justAdded && "animate-stamp")} strokeWidth={2.5} />
+                  <StampIcon
+                    className={cn("size-[45%]", justAdded && "animate-stamp")}
+                    strokeWidth={b.stampIcon && b.stampIcon !== "check" ? 2 : 2.5}
+                    fill={b.stampIcon && FILLED_STAMP_ICONS.has(b.stampIcon) ? "currentColor" : "none"}
+                  />
                 ) : isLast ? (
                   <Gift className="size-[42%]" style={{ color: b.cardForeground, opacity: 0.55 }} strokeWidth={1.75} />
                 ) : (
@@ -134,7 +141,7 @@ export function LoyaltyCardView({
             )}
             <p className="mt-0.5 truncate text-xs opacity-65">Recompensa: {program.rewardName}</p>
           </div>
-          <p className="tabular shrink-0 font-serif text-3xl leading-none">
+          <p className={cn("tabular shrink-0 text-3xl leading-none", font)}>
             {stamps}
             <span className="text-base opacity-50">/{program.stampsRequired}</span>
           </p>

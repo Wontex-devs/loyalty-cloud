@@ -9,6 +9,8 @@ import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { X } from "lucide-react";
 import { DataContext, type DemoApi, type DemoState } from "@/lib/demo/store";
+import { createClient } from "@/lib/supabase/client";
+import { prepareLogo } from "@/lib/brand-image";
 import {
   inviteStaffAction,
   setBusinessStatusAction,
@@ -100,6 +102,41 @@ export function LiveProvider({ snapshot, children }: { snapshot: DemoState; chil
           brandingPatch.current = {};
           run(updateBrandingAction(businessId, p));
         }, 700);
+      },
+
+      // El navegador sube la imagen a Storage (las políticas limitan la carpeta al comercio)
+      // y la acción del servidor guarda la URL, que Postgres vuelve a validar.
+      setLogo: async (businessId, file) => {
+        const supabase = createClient();
+        const bucket = supabase.storage.from("brand-assets");
+        const previous = state.businesses.find((b) => b.id === businessId)?.branding.logoUrl ?? "";
+        const prefix = bucket.getPublicUrl(`${businessId}/`).data.publicUrl;
+        let path: string | null = null;
+        let logoUrl = "";
+        if (file) {
+          let blob: Blob;
+          try {
+            blob = await prepareLogo(file, 512);
+          } catch (e) {
+            return { ok: false, message: e instanceof Error ? e.message : "No se pudo cargar la imagen." };
+          }
+          path = `${businessId}/logo-${Date.now()}.png`;
+          const up = await bucket.upload(path, blob, { contentType: blob.type, cacheControl: "31536000" });
+          if (up.error) return { ok: false, message: "No se pudo subir el logotipo. Inténtalo de nuevo." };
+          logoUrl = bucket.getPublicUrl(path).data.publicUrl;
+        }
+        const res = await updateBrandingAction(businessId, { logoUrl });
+        if (!res.ok) {
+          if (path) await bucket.remove([path]);
+          return res;
+        }
+        if (previous.startsWith(prefix)) await bucket.remove([previous.slice(prefix.length - businessId.length - 1)]);
+        setState((s) => ({
+          ...s,
+          businesses: s.businesses.map((b) => (b.id === businessId ? { ...b, branding: { ...b.branding, logoUrl } } : b)),
+        }));
+        startTransition(() => router.refresh());
+        return { ok: true };
       },
 
       setBusinessStatus: (businessId, status) => {

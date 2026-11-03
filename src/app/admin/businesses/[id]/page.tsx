@@ -12,6 +12,7 @@ import { PUBLIC_HOST_LABEL } from "@/lib/config";
 import { Avatar, Badge, Button, ButtonLink, Card, CardHeader, EmptyState, Field, Input, Select, StatCard } from "@/components/ui";
 import { formatDate, formatMoney, formatNumber } from "@/lib/utils";
 import { Store } from "lucide-react";
+import { BrandMark } from "@/components/loyalty/brand-mark";
 
 export default function AdminBusinessDetail() {
   const { id } = useParams<{ id: string }>();
@@ -34,9 +35,7 @@ export default function AdminBusinessDetail() {
         <ArrowLeft className="size-4" /> Establecimientos
       </Link>
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center">
-        <span className="flex size-12 items-center justify-center rounded-xl font-serif text-lg text-white" style={{ background: b.branding.primary }}>
-          {b.branding.logoText}
-        </span>
+        <BrandMark branding={b.branding} className="size-12 rounded-xl font-serif text-lg text-white" style={{ background: b.branding.primary }} />
         <div className="flex-1">
           <div className="flex items-center gap-2">
             <h1 className="text-xl font-semibold tracking-tight">{b.name}</h1>

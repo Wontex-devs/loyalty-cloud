@@ -8,6 +8,7 @@ import { BUSINESS_STATUS } from "@/components/business/status";
 import { Badge, ButtonLink, Card, Input, PageHeader, Segmented, Table, Td, Th } from "@/components/ui";
 import { formatDate, formatNumber } from "@/lib/utils";
 import type { BusinessStatus } from "@/lib/domain/types";
+import { BrandMark } from "@/components/loyalty/brand-mark";
 
 export default function BusinessesPage() {
   const router = useRouter();
@@ -65,9 +66,7 @@ export default function BusinessesPage() {
               <tr key={r.business.id} onClick={() => router.push(`/admin/businesses/${r.business.id}`)} className="cursor-pointer hover:bg-canvas">
                 <Td>
                   <div className="flex items-center gap-3">
-                    <span className="flex size-8 items-center justify-center rounded-lg text-[11px] font-semibold text-white" style={{ background: r.business.branding.primary }}>
-                      {r.business.branding.logoText}
-                    </span>
+                    <BrandMark branding={r.business.branding} className="size-8 rounded-lg text-[11px] font-semibold text-white" style={{ background: r.business.branding.primary }} />
                     <div>
                       <p className="font-medium">{r.business.name}</p>
                       <p className="text-xs text-muted">

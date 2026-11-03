@@ -10,6 +10,7 @@ import { PLATFORM_NAME } from "@/lib/config";
 import { cn } from "@/lib/utils";
 import type { BusinessBranding } from "@/lib/domain/types";
 import { NotFoundScreen } from "./card-screen";
+import { BrandMark, brandFont } from "@/components/loyalty/brand-mark";
 
 const MONTHS = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
 
@@ -71,10 +72,8 @@ export function JoinForm({ slug, business, program, live }: JoinFormProps) {
     <div className="min-h-dvh" style={{ background: b.cardBackground, color: b.cardForeground }}>
       <div className="mx-auto flex min-h-dvh max-w-md flex-col px-5 pt-10 pb-8">
         <header className="text-center">
-          <div className="mx-auto flex size-16 items-center justify-center rounded-full font-serif text-2xl" style={{ background: b.cardForeground, color: b.cardBackground }}>
-            {b.logoText}
-          </div>
-          <p className="mt-4 font-serif text-3xl tracking-[0.14em] uppercase">{business.name}</p>
+          <BrandMark branding={b} className={`mx-auto size-16 rounded-full text-2xl ${brandFont(b)}`} style={{ background: b.cardForeground, color: b.cardBackground }} />
+          <p className={cn("mt-4 text-3xl uppercase", brandFont(b, "tracking-[0.14em]"))}>{business.name}</p>
           <p className="mt-2 text-sm opacity-70">{program.description}</p>
         </header>
 

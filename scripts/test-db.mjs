@@ -163,6 +163,28 @@ check("branding con color inválido es rechazado", expectError(r, "INVALID_BRAND
 r = await as(U.ownerA, `select public.update_business_profile($1, null, null, null, null, '{"primary":"#112233"}'::jsonb)`, [A]);
 check("propietario actualiza su identidad visual", r.ok, r);
 
+// Personalización (Etapa 10): logo en Storage, icono del sello y tipografía.
+const logoA = `https://abc123.supabase.co/storage/v1/object/public/brand-assets/${A}/logo-1.webp`;
+const logoB = `https://abc123.supabase.co/storage/v1/object/public/brand-assets/${B}/logo-1.webp`;
+r = await as(U.ownerA, "select public.update_business_profile($1, null, null, null, null, $2::jsonb)", [A, JSON.stringify({ logoUrl: logoA, stampIcon: "heart", font: "sans" })]);
+check("propietario guarda logo, icono y tipografía", r.ok, r);
+r = await as(U.ownerA, "select public.update_business_profile($1, null, null, null, null, $2::jsonb)", [A, JSON.stringify({ logoUrl: logoB })]);
+check("no puede usar un logo de la carpeta de otro comercio", expectError(r, "INVALID_BRANDING"), r);
+r = await as(U.ownerA, "select public.update_business_profile($1, null, null, null, null, $2::jsonb)", [A, JSON.stringify({ logoUrl: "javascript:alert(1)" })]);
+check("logo con URL arbitraria es rechazado", expectError(r, "INVALID_BRANDING"), r);
+r = await as(U.ownerA, "select public.update_business_profile($1, null, null, null, null, $2::jsonb)", [A, JSON.stringify({ stampIcon: "skull" })]);
+check("icono de sello desconocido es rechazado", expectError(r, "INVALID_BRANDING"), r);
+r = await as(U.ownerA, "select public.update_business_profile($1, null, null, null, null, $2::jsonb)", [A, JSON.stringify({ logoUrl: "" })]);
+check("propietario puede quitar su logo", r.ok, r);
+r = await as(U.ownerA, "insert into storage.objects (bucket_id, name) values ('brand-assets', $1)", [`${A}/logo-2.webp`]);
+check("propietario sube un archivo a su carpeta", r.ok, r);
+r = await as(U.ownerA, "insert into storage.objects (bucket_id, name) values ('brand-assets', $1)", [`${B}/logo-2.webp`]);
+check("propietario no puede subir a la carpeta de otro comercio", !r.ok, r);
+r = await as(U.staffA, "insert into storage.objects (bucket_id, name) values ('brand-assets', $1)", [`${A}/logo-3.webp`]);
+check("empleado no puede subir logos", !r.ok, r);
+r = await as(U.ownerA, "insert into storage.objects (bucket_id, name) values ('brand-assets', 'sin-carpeta.webp')");
+check("archivo fuera de una carpeta de comercio es rechazado", !r.ok, r);
+
 // ---------- Recompensas ----------
 console.log("\nRecompensas y canjes");
 await as(U.staffA, "select public.register_visit($1, 'op-key-0003')", [cardA]);

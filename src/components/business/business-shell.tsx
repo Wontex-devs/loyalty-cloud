@@ -27,6 +27,7 @@ import { ROLE_LABELS } from "@/lib/domain/permissions";
 import { Avatar, Badge, ButtonLink, EmptyState } from "@/components/ui";
 import { AlertTriangle, Lock } from "lucide-react";
 import { SignOutButton } from "@/components/auth/sign-out-button";
+import { BrandMark } from "@/components/loyalty/brand-mark";
 
 const ScopeCtx = createContext<BusinessScope | null>(null);
 
@@ -95,12 +96,11 @@ export function BusinessShell({ slug, children }: { slug: string; children: Reac
 
   const header = (
     <div className="flex items-center gap-2.5 rounded-lg px-1.5 py-1.5">
-      <div
-        className="flex size-8 items-center justify-center rounded-lg font-serif text-sm"
+      <BrandMark
+        branding={business.branding}
+        className="size-8 rounded-lg border border-line font-serif text-sm"
         style={{ background: business.branding.primary, color: business.branding.primaryForeground }}
-      >
-        {business.branding.logoText}
-      </div>
+      />
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-semibold">{business.name}</p>
         <p className="truncate text-xs text-muted">{business.category}</p>

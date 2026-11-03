@@ -3,6 +3,7 @@
  * El servidor siempre vuelve a validar: la validación del cliente es solo UX.
  */
 import { z } from "zod";
+import { STAMP_ICONS } from "./types.ts";
 
 /** Normaliza teléfonos a formato E.164 simple. País por defecto: Colombia (+57). */
 export function normalizePhone(raw: string, defaultCountryCode = "57"): string {
@@ -50,6 +51,10 @@ export type ProgramInput = z.infer<typeof programSchema>;
 const hex = z.string().regex(/^#[0-9a-fA-F]{6}$/, "Color hexadecimal no válido");
 export const brandingSchema = z.object({
   logoText: z.string().trim().min(1).max(3),
+  // La base de datos además exige que sea de la carpeta del propio comercio en Storage.
+  logoUrl: z.union([z.literal(""), z.url({ protocol: /^https$/ })]),
+  stampIcon: z.enum(STAMP_ICONS),
+  font: z.enum(["serif", "sans"]),
   primary: hex,
   primaryForeground: hex,
   accent: hex,

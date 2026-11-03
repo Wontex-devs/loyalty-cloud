@@ -7,6 +7,8 @@ import { useDemo } from "@/lib/demo/store";
 import { PLATFORM_NAME } from "@/lib/config";
 import type { BusinessBranding } from "@/lib/domain/types";
 import { JoinUnavailable } from "./join-form";
+import { BrandMark, brandFont } from "@/components/loyalty/brand-mark";
+import { cn } from "@/lib/utils";
 
 interface PosterProps {
   slug: string;
@@ -33,10 +35,8 @@ export function Poster({ slug, business, program }: PosterProps) {
         style={{ background: b.cardBackground, color: b.cardForeground }}
       >
         <div>
-          <div className="mx-auto flex size-[22mm] items-center justify-center rounded-full font-serif text-[9mm]" style={{ background: b.cardForeground, color: b.cardBackground }}>
-            {b.logoText}
-          </div>
-          <p className="mt-[6mm] font-serif text-[13mm] leading-none tracking-[0.12em] uppercase">{business.name}</p>
+          <BrandMark branding={b} className={`mx-auto size-[22mm] rounded-full text-[9mm] ${brandFont(b)}`} style={{ background: b.cardForeground, color: b.cardBackground }} />
+          <p className={cn("mt-[6mm] text-[13mm] leading-none uppercase", brandFont(b, "tracking-[0.12em]"))}>{business.name}</p>
           {program.name.trim().toLowerCase() !== business.name.trim().toLowerCase() && (
             <p className="mt-[3mm] text-[4.2mm] tracking-[0.3em] uppercase opacity-60">{program.name}</p>
           )}

@@ -3,7 +3,7 @@ import { ERROR_MESSAGES } from "@/lib/domain/loyalty-engine";
 /** Traduce los códigos que lanzan las funciones de Postgres a mensajes para el usuario. */
 const DB_ERRORS: Record<string, string> = {
   ...ERROR_MESSAGES,
-  INVALID_BRANDING: "Los colores de la marca no son válidos.",
+  INVALID_BRANDING: "La personalización de la marca no es válida.",
   SLUG_TAKEN: "Ese identificador ya está en uso.",
   BUSINESS_NOT_FOUND: "No se encontró el establecimiento.",
   BUSINESS_SUSPENDED: "El establecimiento está suspendido.",

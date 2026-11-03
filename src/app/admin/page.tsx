@@ -7,6 +7,7 @@ import { HBarList } from "@/components/business/charts";
 import { BUSINESS_STATUS } from "@/components/business/status";
 import { Badge, ButtonLink, Card, CardHeader, PageHeader, StatCard, Table, Td, Th } from "@/components/ui";
 import { formatDateTime, formatMoney, formatNumber } from "@/lib/utils";
+import { BrandMark } from "@/components/loyalty/brand-mark";
 
 export default function AdminDashboard() {
   const { rows, mrr, state } = usePlatform();
@@ -59,9 +60,7 @@ export default function AdminDashboard() {
                 <tr key={r.business.id} className="hover:bg-canvas">
                   <Td>
                     <Link href={`/admin/businesses/${r.business.id}`} className="flex items-center gap-3">
-                      <span className="flex size-7 items-center justify-center rounded-md text-[11px] font-semibold" style={{ background: r.business.branding.primary, color: "#fff" }}>
-                        {r.business.branding.logoText}
-                      </span>
+                      <BrandMark branding={r.business.branding} className="size-7 rounded-md text-[11px] font-semibold" style={{ background: r.business.branding.primary, color: "#fff" }} />
                       <span className="font-medium">{r.business.name}</span>
                     </Link>
                   </Td>

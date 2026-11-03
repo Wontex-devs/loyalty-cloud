@@ -4,6 +4,7 @@ import { useDemo } from "@/lib/demo/store";
 import { PLATFORM_NAME } from "@/lib/config";
 import type { BusinessBranding, BusinessLegal } from "@/lib/domain/types";
 import { JoinUnavailable } from "./join-form";
+import { BrandMark } from "@/components/loyalty/brand-mark";
 
 export interface LegalData {
   slug: string;
@@ -29,9 +30,7 @@ export function LegalScreen({ data }: { data: LegalData }) {
     <div className="min-h-dvh bg-[#f6f6f6] px-4 py-8">
       <article className="mx-auto max-w-2xl rounded-2xl bg-white p-6 text-[15px] leading-relaxed text-ink-2 shadow-card sm:p-10">
         <header className="mb-8 flex items-center gap-3">
-          <div className="flex size-11 items-center justify-center rounded-full font-serif" style={{ background: data.branding.cardBackground, color: data.branding.cardForeground }}>
-            {data.branding.logoText}
-          </div>
+          <BrandMark branding={data.branding} className="size-11 rounded-full font-serif" style={{ background: data.branding.cardBackground, color: data.branding.cardForeground }} />
           <div>
             <h1 className="text-lg font-semibold text-ink">{program.name}</h1>
             <p className="text-sm text-muted">Términos del programa y tratamiento de datos personales</p>

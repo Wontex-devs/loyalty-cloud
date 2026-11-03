@@ -101,7 +101,7 @@ export async function updateProgramAction(programId: string, patch: Partial<Loya
 
 export async function updateBrandingAction(businessId: string, patch: Partial<BusinessBranding>): Promise<ActionResult> {
   const parsed = brandingSchema.partial().safeParse(patch);
-  if (!parsed.success) return { ok: false, message: "Los colores de la marca no son válidos." };
+  if (!parsed.success) return { ok: false, message: "La personalización de la marca no es válida." };
   const supabase = await createClient();
   const { error } = await supabase.rpc("update_business_profile", {
     p_business_id: businessId,

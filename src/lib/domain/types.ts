@@ -35,9 +35,16 @@ export interface Location {
   createdAt: ISODate;
 }
 
+export const STAMP_ICONS = ["check", "heart", "star", "sparkles", "flower", "gem", "crown", "scissors"] as const;
+export type StampIcon = (typeof STAMP_ICONS)[number];
+export type CardFont = "serif" | "sans";
+
 export interface BusinessBranding {
-  logoText: string; // monograma mientras no hay logo subido (Supabase Storage en Etapa 2)
+  logoText: string; // monograma mientras no hay logo subido
+  /** Imagen en Supabase Storage (brand-assets/<business_id>/…); en demo, un data URL. Vacío = sin logo. */
   logoUrl?: string;
+  stampIcon?: StampIcon;
+  font?: CardFont;
   primary: string; // color de marca
   primaryForeground: string;
   accent: string;

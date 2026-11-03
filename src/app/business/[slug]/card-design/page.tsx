@@ -1,14 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Download, ImageUp, Printer } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Download, ImageUp, Loader2, Printer, Trash2 } from "lucide-react";
 import { QRCodeCanvas, QRCodeSVG } from "qrcode.react";
 import { useScope, RequirePermission } from "@/components/business/business-shell";
 import { LoyaltyCardView } from "@/components/loyalty/loyalty-card";
+import { BrandMark, FILLED_STAMP_ICONS, STAMP_ICON_COMPONENTS, STAMP_ICON_LABELS } from "@/components/loyalty/brand-mark";
 import { useDemo } from "@/lib/demo/store";
 import { can } from "@/lib/domain/permissions";
 import { PUBLIC_HOST_LABEL } from "@/lib/config";
-import type { BusinessBranding, CardStatus } from "@/lib/domain/types";
+import { STAMP_ICONS, type BusinessBranding, type CardStatus } from "@/lib/domain/types";
+import { cn } from "@/lib/utils";
 import { Button, buttonClass, Card, CardHeader, Field, Input, PageHeader, Segmented } from "@/components/ui";
 
 const PRESETS: { name: string; colors: Partial<BusinessBranding> }[] = [
@@ -16,6 +18,10 @@ const PRESETS: { name: string; colors: Partial<BusinessBranding> }[] = [
   { name: "Negro & rosa", colors: { cardBackground: "#141112", cardForeground: "#F1D3CF", primary: "#141112", accent: "#E7B9B3" } },
   { name: "Marfil", colors: { cardBackground: "#F6F1EA", cardForeground: "#1F1B16", primary: "#1F1B16", accent: "#CDB9A0" } },
   { name: "Salvia", colors: { cardBackground: "#D5DDCF", cardForeground: "#1E2A1E", primary: "#1E2A1E", accent: "#A9B99E" } },
+  { name: "Lavanda", colors: { cardBackground: "#E3DCF0", cardForeground: "#2B2140", primary: "#2B2140", accent: "#B8A6D9" } },
+  { name: "Champán", colors: { cardBackground: "#EFE2C8", cardForeground: "#3A2E1C", primary: "#3A2E1C", accent: "#C9A96E" } },
+  { name: "Azul noche", colors: { cardBackground: "#1C2333", cardForeground: "#E8DCC4", primary: "#1C2333", accent: "#C9B48A" } },
+  { name: "Terracota", colors: { cardBackground: "#E7C4AF", cardForeground: "#3B1F14", primary: "#3B1F14", accent: "#C97B5A" } },
 ];
 
 const COLOR_FIELDS: { key: keyof BusinessBranding; label: string }[] = [
@@ -27,7 +33,17 @@ const COLOR_FIELDS: { key: keyof BusinessBranding; label: string }[] = [
 
 export default function CardDesignPage() {
   const { business, program, membership } = useScope();
-  const { updateBranding } = useDemo();
+  const { updateBranding, setLogo } = useDemo();
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [logoBusy, setLogoBusy] = useState(false);
+  const [logoError, setLogoError] = useState<string | null>(null);
+  const changeLogo = async (file: File | null) => {
+    setLogoBusy(true);
+    setLogoError(null);
+    const res = await setLogo(business.id, file);
+    setLogoBusy(false);
+    if (!res.ok) setLogoError(res.message);
+  };
   const [previewState, setPreviewState] = useState<CardStatus>("active");
   const b = business.branding;
   const [joinUrl, setJoinUrl] = useState("");
@@ -51,19 +67,36 @@ export default function CardDesignPage() {
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_400px]">
         <div className="space-y-4">
           <Card>
-            <CardHeader title="Logotipo" />
+            <CardHeader title="Logotipo" description="Sube tu logo en PNG, JPG o SVG. Si no lo tienes, usamos tus iniciales." />
             <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center">
-              <div className="flex size-16 items-center justify-center rounded-full font-serif text-2xl" style={{ background: b.cardForeground, color: b.cardBackground }}>
-                {b.logoText}
-              </div>
+              <BrandMark branding={b} className="size-16 rounded-full font-serif text-2xl" style={{ background: b.cardForeground, color: b.cardBackground }} />
               <div className="flex-1 space-y-2">
-                <Field label="Monograma" hint="Se usa mientras no subas un logotipo.">
+                <Field label="Iniciales" hint={b.logoUrl ? "Se mostrarán si quitas el logotipo." : "Se muestran mientras no subas un logotipo."}>
                   <Input maxLength={3} value={b.logoText} onChange={(e) => updateBranding(business.id, { logoText: e.target.value.toUpperCase() })} className="w-24" />
                 </Field>
+                {logoError && <p className="text-sm text-danger">{logoError}</p>}
               </div>
-              <Button variant="secondary" disabled title="Próximamente (Supabase Storage)">
-                <ImageUp className="size-4" /> Subir logotipo
-              </Button>
+              <div className="flex flex-wrap gap-2">
+                <input
+                  ref={fileRef}
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                  className="hidden"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    e.target.value = "";
+                    if (f) changeLogo(f);
+                  }}
+                />
+                <Button variant="secondary" onClick={() => fileRef.current?.click()} disabled={logoBusy}>
+                  {logoBusy ? <Loader2 className="size-4 animate-spin" /> : <ImageUp className="size-4" />} {b.logoUrl ? "Cambiar logo" : "Subir logotipo"}
+                </Button>
+                {b.logoUrl && (
+                  <Button variant="ghost" onClick={() => changeLogo(null)} disabled={logoBusy} aria-label="Quitar logotipo">
+                    <Trash2 className="size-4" />
+                  </Button>
+                )}
+              </div>
             </div>
           </Card>
 
@@ -86,6 +119,48 @@ export default function CardDesignPage() {
                   <p className="mt-2 text-xs font-medium">{p.name}</p>
                 </button>
               ))}
+            </div>
+          </Card>
+
+          <Card>
+            <CardHeader title="Sellos y tipografía" />
+            <div className="space-y-5 p-5">
+              <Field label="Icono del sello">
+                <div className="grid grid-cols-4 gap-2 sm:grid-cols-8">
+                  {STAMP_ICONS.map((key) => {
+                    const Icon = STAMP_ICON_COMPONENTS[key];
+                    const selected = (b.stampIcon ?? "check") === key;
+                    return (
+                      <button
+                        key={key}
+                        type="button"
+                        onClick={() => updateBranding(business.id, { stampIcon: key })}
+                        aria-pressed={selected}
+                        title={STAMP_ICON_LABELS[key]}
+                        className={cn(
+                          "flex flex-col items-center gap-1.5 rounded-xl border p-2 text-[11px] transition",
+                          selected ? "border-ink shadow-card" : "border-line hover:border-line-strong",
+                        )}
+                      >
+                        <span className="flex size-9 items-center justify-center rounded-full" style={{ background: b.cardForeground, color: b.cardBackground }}>
+                          <Icon className="size-4" strokeWidth={2.25} fill={FILLED_STAMP_ICONS.has(key) ? "currentColor" : "none"} />
+                        </span>
+                        {STAMP_ICON_LABELS[key]}
+                      </button>
+                    );
+                  })}
+                </div>
+              </Field>
+              <Field label="Tipografía del nombre">
+                <Segmented<"serif" | "sans">
+                  value={b.font ?? "serif"}
+                  onChange={(font) => updateBranding(business.id, { font })}
+                  options={[
+                    { value: "serif", label: "Clásica" },
+                    { value: "sans", label: "Moderna" },
+                  ]}
+                />
+              </Field>
             </div>
           </Card>
 
