@@ -37,7 +37,10 @@ import type {
   Plan,
   Profile,
   Promotion,
+  WalletNotice,
+  WalletSettings,
 } from "@/lib/domain/types";
+import { personalize, visitNotice, walletSettings, type Notice } from "@/lib/wallet/messages";
 
 const STORAGE_KEY = "loyalty-demo-v1";
 
@@ -53,6 +56,8 @@ export interface DemoState extends LedgerState {
   promotions: Promotion[];
   contacts: CustomerContact[];
   locations: Location[];
+  /** Avisos enviados a las billeteras (en la demo se simulan). */
+  walletNotices: WalletNotice[];
   /** Perfil con el que se navega el panel del comercio (simula la sesión). */
   actingProfileId: string;
 }
@@ -74,6 +79,7 @@ function initialState(): DemoState {
     promotions: [] as Promotion[],
     contacts: [] as CustomerContact[],
     locations: [] as Location[],
+    walletNotices: [] as WalletNotice[],
     actingProfileId: "usr_owner",
   });
 }
@@ -82,6 +88,9 @@ export type JoinResult = { ok: true; token: string; existing: boolean } | { ok: 
 /** Resultado común de operaciones (demo: motor local; live: RPC en Postgres). */
 export type OpResult =
   | { ok: true; data?: { reward?: unknown; bonusStamps?: number; birthdayReward?: string | null } }
+  | { ok: false; message: string };
+export type WalletCampaignResult =
+  | { ok: true; queued: number; skipped: number; sent: number; notSaved: number; failed: number }
   | { ok: false; message: string };
 export type PromotionInput = Pick<Promotion, "name" | "bonusStamps" | "startsOn" | "endsOn" | "weekdays" | "active">;
 
@@ -103,6 +112,9 @@ export interface DemoApi {
   updateBusinessSettings: (businessId: string, input: BusinessSettingsInput) => Promise<OpResult>;
   savePromotion: (businessId: string, input: PromotionInput, id?: string) => Promise<OpResult>;
   logContact: (customerId: string, segment: string) => Promise<OpResult>;
+  updateWalletSettings: (businessId: string, settings: WalletSettings) => Promise<OpResult>;
+  /** Aviso a la billetera para todo un grupo (solo quienes aceptaron mensajes; máx. una campaña por semana). */
+  sendWalletCampaign: (businessId: string, customerIds: string[], title: string, body: string) => Promise<WalletCampaignResult>;
   saveLocation: (businessId: string, input: { name: string; address?: string; active: boolean }, id?: string) => Promise<OpResult>;
   setBusinessPlan: (businessId: string, planId: string) => Promise<OpResult>;
   getStats: (businessId: string, days: number) => Promise<{ ok: true; stats: BusinessStats } | { ok: false; message: string }>;
@@ -135,7 +147,9 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
       if (raw) {
         const saved = JSON.parse(raw) as Partial<DemoState>;
         // Datos guardados por versiones anteriores del prototipo: se completan los campos nuevos.
-        if (saved.businesses) saved.businesses = saved.businesses.map((b) => ({ ...b, legal: b.legal ?? {} }));
+        if (saved.businesses) {
+          saved.businesses = saved.businesses.map((b) => ({ ...b, legal: b.legal ?? {}, walletNotifications: walletSettings(b.walletNotifications) }));
+        }
         // Los planes son datos de referencia: siempre los del código, no los guardados.
         delete saved.plans;
         setState({ ...initialState(), ...saved });
@@ -177,6 +191,21 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
     },
     [],
   );
+
+  /** En la demo los avisos "llegan" siempre: se guardan y la tarjeta los muestra como notificación. */
+  const addNotices = useCallback((items: { businessId: string; cardId: string; ref: string; notice: Notice }[]) => {
+    const s = stateRef.current;
+    const list = s.walletNotices ?? [];
+    const now = new Date().toISOString();
+    const fresh = items
+      .filter((i) => !list.some((n) => n.cardId === i.cardId && n.ref === i.ref))
+      .map((i): WalletNotice => ({ id: newId("wn_"), businessId: i.businessId, cardId: i.cardId, ref: i.ref, ...i.notice, status: "sent", createdAt: now }));
+    if (!fresh.length) return 0;
+    const next = { ...s, walletNotices: [...fresh, ...list].slice(0, 1000) };
+    stateRef.current = next;
+    setState(next);
+    return fresh.length;
+  }, []);
 
   const api = useMemo<DemoApi>(
     () => ({
@@ -263,6 +292,22 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
           if (r.ok && locationId) r.state.visits = r.state.visits.map((v) => (v.id === r.data.visit.id ? { ...v, locationId } : v));
           return r;
         });
+        if (res.ok) {
+          const s = stateRef.current;
+          const card = s.cards.find((c) => c.id === cardId)!;
+          const program = s.programs.find((p) => p.id === card.programId)!;
+          const business = s.businesses.find((b) => b.id === card.businessId)!;
+          const reward = (res.data as { reward?: { name: string } | null }).reward;
+          const notice = visitNotice(walletSettings(business.walletNotifications), {
+            businessName: business.name,
+            stamps: Math.min(card.currentStamps, program.stampsRequired),
+            required: program.stampsRequired,
+            rewardName: program.rewardName,
+            rewardEarned: reward?.name ?? null,
+            birthdayReward: bday,
+          });
+          if (notice) addNotices([{ businessId: business.id, cardId, ref: `visit:${idempotencyKey}`, notice }]);
+        }
         return res.ok ? { ok: true, data: { ...res.data, bonusStamps: bonus, birthdayReward: bday } } : res;
       },
 
@@ -395,6 +440,37 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
         return { ok: true };
       },
 
+      updateWalletSettings: async (businessId, settings) => {
+        const s = stateRef.current;
+        if (acting(s, businessId)?.role === "staff") return { ok: false, message: "No tienes permiso para realizar esta acción." };
+        if (!Number.isInteger(settings.winbackDays) || settings.winbackDays < 14 || settings.winbackDays > 180) {
+          return { ok: false, message: "Los días para 'te extrañamos' van de 14 a 180." };
+        }
+        const next = { ...s, businesses: s.businesses.map((b) => (b.id === businessId ? { ...b, walletNotifications: walletSettings(settings) } : b)) };
+        stateRef.current = next;
+        setState(next);
+        return { ok: true };
+      },
+
+      sendWalletCampaign: async (businessId, customerIds, title, body) => {
+        const s = stateRef.current;
+        if (acting(s, businessId)?.role === "staff") return { ok: false, message: "No tienes permiso para realizar esta acción." };
+        if (!title.trim() || title.trim().length > 40) return { ok: false, message: "El título admite de 1 a 40 caracteres." };
+        if (!body.trim() || body.trim().length > 240) return { ok: false, message: "El mensaje admite de 1 a 240 caracteres." };
+        const weekAgo = Date.now() - 7 * 86400000;
+        const ref = `campaign:${newId("")}`;
+        const items = customerIds.flatMap((id) => {
+          const customer = s.customers.find((c) => c.id === id && c.businessId === businessId);
+          const card = s.cards.find((c) => c.customerId === id && c.businessId === businessId);
+          if (!customer?.marketingConsent || customer.anonymizedAt || !card || card.status === "blocked") return [];
+          const recent = (s.walletNotices ?? []).some((n) => n.cardId === card.id && n.kind === "campaign" && new Date(n.createdAt).getTime() > weekAgo);
+          if (recent) return [];
+          return [{ businessId, cardId: card.id, ref, notice: { kind: "campaign" as const, title: title.trim(), body: personalize(body.trim(), customer.fullName) } }];
+        });
+        const queued = addNotices(items);
+        return { ok: true, queued, skipped: customerIds.length - queued, sent: queued, notSaved: 0, failed: 0 };
+      },
+
       saveLocation: async (businessId, input, id) => {
         const s = stateRef.current;
         if (acting(s, businessId)?.role === "staff") return { ok: false, message: "No tienes permiso para realizar esta acción." };
@@ -502,7 +578,7 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
 
       reset: () => setState(initialState()),
     }),
-    [state, hydrated, runEngine, acting],
+    [state, hydrated, runEngine, acting, addNotices],
   );
 
   return <Ctx.Provider value={api}>{children}</Ctx.Provider>;
@@ -540,6 +616,7 @@ export function useBusiness(slug: string) {
       auditLogs: state.auditLogs.filter((a) => a.businessId === id),
       promotions: (state.promotions ?? []).filter((p) => p.businessId === id),
       contacts: (state.contacts ?? []).filter((c) => c.businessId === id),
+      walletNotices: (state.walletNotices ?? []).filter((n) => n.businessId === id),
       locations: (state.locations ?? []).filter((l) => l.businessId === id),
       plan: state.plans.find((p) => p.id === business.planId),
       memberships: state.memberships.filter((m) => m.businessId === id),

@@ -4,6 +4,7 @@ import { useDemo } from "@/lib/demo/store";
 import { getProgress } from "@/lib/domain/loyalty-engine";
 import { activePromotion } from "@/lib/domain/promotions";
 import { CardScreen, NotFoundScreen } from "./card-screen";
+import { WalletToast } from "./wallet-toast";
 
 /** Tarjeta en modo demo: se arma con el store del navegador (sincronizado entre pestañas). */
 export function DemoCard({ token, isNew }: { token: string; isNew: boolean }) {
@@ -19,7 +20,10 @@ export function DemoCard({ token, isNew }: { token: string; isNew: boolean }) {
   }
 
   const progress = getProgress(card, program, state.rewards);
+  const notice = (state.walletNotices ?? []).find((n) => n.cardId === card.id);
   return (
+    <>
+    <WalletToast notice={notice} businessName={business.name} />
     <CardScreen
       isNew={isNew}
       data={{
@@ -41,5 +45,6 @@ export function DemoCard({ token, isNew }: { token: string; isNew: boolean }) {
       }}
       onUnsubscribe={() => unsubscribeMarketing(token)}
     />
+    </>
   );
 }

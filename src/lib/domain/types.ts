@@ -64,6 +64,35 @@ export interface Business {
   timezone: string;
   /** Responsable del tratamiento de datos (se muestra en la política pública). */
   legal: BusinessLegal;
+  /** Avisos automáticos en la billetera (Etapa 12). */
+  walletNotifications: WalletSettings;
+  createdAt: ISODate;
+}
+
+export interface WalletSettings {
+  stamp: boolean;
+  near: boolean;
+  reward: boolean;
+  birthday: boolean;
+  winback: boolean;
+  /** Días sin venir para enviar "te extrañamos" (14–180). */
+  winbackDays: number;
+}
+
+export type WalletNoticeKind = "stamp" | "near" | "reward" | "birthday" | "winback" | "campaign";
+
+/** Un aviso enviado (o intentado) a la billetera de un cliente. */
+export interface WalletNotice {
+  id: ID;
+  businessId: ID;
+  cardId: ID;
+  kind: WalletNoticeKind;
+  /** Clave que evita repetir el aviso (visit:…, birthday:…, campaign:…). */
+  ref: string;
+  title: string;
+  body: string;
+  /** not_saved = el cliente no tiene la tarjeta en su billetera. */
+  status: "pending" | "sent" | "not_saved" | "failed";
   createdAt: ISODate;
 }
 

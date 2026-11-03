@@ -13,6 +13,8 @@ const DB_ERRORS: Record<string, string> = {
   PHONE_REGISTERED: "Este celular ya tiene una tarjeta con otro nombre. Escribe tu nombre tal como lo registraste o pide tu enlace en el establecimiento.",
   welcome_lt_required: "Los sellos de bienvenida deben ser menos que las visitas necesarias.",
   INVALID_BIRTHDAY: "La fecha de cumpleaños no es válida.",
+  INVALID_WALLET_SETTINGS: "Revisa los ajustes de los avisos.",
+  INVALID_WALLET_MESSAGE: "Revisa el título y el mensaje del aviso.",
   NO_MARKETING_CONSENT: "Esta clienta no aceptó recibir mensajes.",
   CUSTOMER_NOT_FOUND: "No se encontró la clienta.",
   promotions_name_check: "Escribe un nombre de 2 a 60 caracteres.",

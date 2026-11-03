@@ -108,5 +108,32 @@ async function patch(cfg: GoogleWalletConfig, kind: "loyaltyClass" | "loyaltyObj
   return true;
 }
 
-export const updateObject = (cfg: GoogleWalletConfig, p: WalletPass) => patch(cfg, "loyaltyObject", objectId(cfg, p.token), loyaltyObject(cfg, p));
+/**
+ * Mensaje con aviso en el celular. Google permite hasta 3 avisos al día por pase;
+ * el mensaje queda visible en el pase durante 30 días. false = la clienta no guardó el pase.
+ */
+export function walletMessage(m: { id: string; title: string; body: string }, now = Date.now()) {
+  return {
+    message: {
+      id: m.id,
+      header: m.title,
+      body: m.body,
+      messageType: "TEXT_AND_NOTIFY",
+      displayInterval: { end: { date: new Date(now + 30 * 86400000).toISOString() } },
+    },
+  };
+}
+
+export async function addMessage(cfg: GoogleWalletConfig, token: string, m: { id: string; title: string; body: string }) {
+  const res = await fetch(`${API}/loyaltyObject/${encodeURIComponent(objectId(cfg, token))}/addMessage`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${await accessToken(cfg)}`, "Content-Type": "application/json" },
+    body: JSON.stringify(walletMessage(m)),
+  });
+  if (res.status === 404) return false;
+  if (!res.ok) throw new Error(`Google Wallet addMessage ${res.status}: ${(await res.text()).slice(0, 200)}`);
+  return true;
+}
+
+export const updateObject =(cfg: GoogleWalletConfig, p: WalletPass) => patch(cfg, "loyaltyObject", objectId(cfg, p.token), loyaltyObject(cfg, p));
 export const updateClass = (cfg: GoogleWalletConfig, p: Pick<WalletPass, "business" | "program">) => patch(cfg, "loyaltyClass", classId(cfg, p.business.slug), loyaltyClass(cfg, p));

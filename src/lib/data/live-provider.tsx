@@ -32,6 +32,8 @@ import {
   unsubscribeMarketingAction,
   savePromotionAction,
   logContactAction,
+  sendWalletCampaignAction,
+  updateWalletSettingsAction,
   saveLocationAction,
   setBusinessPlanAction,
   type OpActionResult,
@@ -85,6 +87,12 @@ export function LiveProvider({ snapshot, children }: { snapshot: DemoState; chil
       updateBusinessSettings: (businessId, input) => refreshAfter(updateBusinessSettingsAction(businessId, input)),
       savePromotion: (businessId, input, id) => refreshAfter(savePromotionAction(businessId, input, id)),
       logContact: (customerId, segment) => refreshAfter(logContactAction(customerId, segment)),
+      updateWalletSettings: (businessId, settings) => refreshAfter(updateWalletSettingsAction(businessId, settings)),
+      sendWalletCampaign: async (businessId, customerIds, title, body) => {
+        const res = await sendWalletCampaignAction(businessId, customerIds, title, body);
+        if (res.ok) startTransition(() => router.refresh());
+        return res;
+      },
       saveLocation: (businessId, input, id) => refreshAfter(saveLocationAction(businessId, input, id)),
       setBusinessPlan: (businessId, planId) => refreshAfter(setBusinessPlanAction(businessId, planId)),
       getStats: getBusinessStatsAction,

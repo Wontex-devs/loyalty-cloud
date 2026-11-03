@@ -446,7 +446,7 @@ r = await as(U.ownerA, "update public.loyalty_programs set welcome_stamps = 3 wh
 check("la bienvenida no puede igualar la meta del programa", !r.ok && r.error.includes("welcome_lt_required"), r);
 r = await as(U.ownerA, "update public.loyalty_programs set welcome_stamps = 1 where business_id = $1", [A]);
 check("propietario configura 1 sello de bienvenida", r.ok && r.affected === 1, r);
-r = await joinProgram("negocio-a", "+573007770001", "Clienta Bienvenida");
+r = await joinProgram("negocio-a", "+573148880001", "Clienta Bienvenida");
 const welcomeToken = r.rows?.[0]?.public_token;
 r = await as(null, "select public.get_public_card($1) as c", [welcomeToken]);
 check("la tarjeta nueva empieza con el sello de regalo y sin visitas", r.rows?.[0]?.c?.current_stamps === 1 && r.rows[0].c.total_visits === 0, r.rows?.[0]?.c);
@@ -539,6 +539,78 @@ console.log("\nDerechos de la clienta y freno a inscripciones (Etapa 11)");
   check("el mismo celular puede volver a inscribirse desde cero", r.ok && r.rows[0]?.existing === false, r);
   r = await as(U.ownerA, "select count(*)::int n from public.audit_logs where action = 'customer.anonymized'");
   check("la eliminación queda en la auditoría", r.rows?.[0]?.n === 1, r);
+}
+
+console.log("\nEtapa 12 · Avisos en la billetera");
+{
+  const today = (await db.query("select extract(month from now() at time zone 'America/Bogota')::int m, extract(day from now() at time zone 'America/Bogota')::int d")).rows[0];
+  const join = async (name, phone, consent, month = null, day = null) => {
+    const r = await asService("select * from public.join_program('negocio-a', $1, $2, null, true, $3, $4, $5)", [name, phone, consent, month, day]);
+    if (!r.ok) throw new Error(r.error);
+    const card = (await db.query("select c.id card_id, c.customer_id from public.loyalty_cards c where c.public_token = $1", [r.rows[0].public_token])).rows[0];
+    return { token: r.rows[0].public_token, ...card };
+  };
+  const ana = await join("Ana Avisos", "+573165550001", true, today.m, today.d);
+  const sin = await join("Sin Permiso", "+573165550002", false, today.m, today.d);
+  const blo = await join("Bloqueada Avisos", "+573165550003", true);
+  await db.query("update public.loyalty_cards set status = 'blocked' where id = $1", [blo.card_id]);
+
+  let r = await as(U.ownerA, "select wallet_notifications s from public.businesses where id = $1", [A]);
+  check("los avisos vienen activados por defecto (45 días para 'te extrañamos')", r.rows?.[0]?.s?.stamp === true && r.rows[0].s.winbackDays === 45, r);
+  const settings = { stamp: true, near: false, reward: true, birthday: true, winback: true, winbackDays: 30 };
+  r = await as(U.staffA, "select public.update_wallet_settings($1, $2)", [A, settings]);
+  check("un empleado no cambia los avisos", expectError(r, "FORBIDDEN"), r);
+  r = await as(U.ownerB, "select public.update_wallet_settings($1, $2)", [A, settings]);
+  check("otro comercio no cambia los avisos", expectError(r, "FORBIDDEN"), r);
+  r = await as(U.adminA, "select public.update_wallet_settings($1, $2)", [A, { ...settings, winbackDays: 5 }]);
+  check("'te extrañamos' con menos de 14 días → rechazado", expectError(r, "INVALID_WALLET_SETTINGS"), r);
+  r = await as(U.adminA, "select public.update_wallet_settings($1, $2)", [A, { ...settings, extra: true }]);
+  check("ajustes con claves desconocidas → rechazados", expectError(r, "INVALID_WALLET_SETTINGS"), r);
+  r = await as(U.adminA, "select public.update_wallet_settings($1, $2)", [A, settings]);
+  check("el administrador cambia los avisos", r.ok, r);
+
+  const ids = [ana.customer_id, sin.customer_id, blo.customer_id];
+  r = await as(U.staffA, "select * from public.queue_wallet_campaign($1, $2, 'Hola', 'Hola {nombre}')", [A, ids]);
+  check("un empleado no envía campañas", expectError(r, "FORBIDDEN"), r);
+  r = await as(U.ownerB, "select * from public.queue_wallet_campaign($1, $2, 'Hola', 'Hola {nombre}')", [A, ids]);
+  check("otro comercio no envía campañas a mis clientes", expectError(r, "FORBIDDEN"), r);
+  r = await as(U.ownerA, "select * from public.queue_wallet_campaign($1, $2, '', 'Hola')", [A, ids]);
+  check("campaña sin título → rechazada", expectError(r, "INVALID_WALLET_MESSAGE"), r);
+  r = await as(U.ownerA, "select * from public.queue_wallet_campaign($1, $2, 'Martes doble', 'Hola {nombre}, hoy doble sello')", [A, ids]);
+  check("la campaña solo llega a quien aceptó mensajes y tiene la tarjeta activa", r.ok && r.rows.length === 1 && r.rows[0].public_token === ana.token, r);
+  check("el mensaje lleva el nombre de la clienta", r.rows?.[0]?.body === "Hola Ana, hoy doble sello", r.rows?.[0]);
+  r = await as(U.ownerA, "select * from public.queue_wallet_campaign($1, $2, 'Otra', 'Otra campaña')", [A, ids]);
+  check("máximo una campaña por clienta a la semana", r.ok && r.rows.length === 0, r);
+
+  r = await as(U.staffA, "select count(*)::int n from public.wallet_notifications");
+  check("un empleado no ve el registro de avisos", r.rows?.[0]?.n === 0, r);
+  r = await as(U.ownerB, "select count(*)::int n from public.wallet_notifications");
+  check("otro comercio no ve mis avisos", r.rows?.[0]?.n === 0, r);
+  r = await as(U.ownerA, "select count(*)::int n from public.wallet_notifications");
+  check("el propietario ve sus avisos", r.rows?.[0]?.n === 1, r);
+  r = await as(U.ownerA, "insert into public.wallet_notifications (business_id, card_id, kind, ref, title, body) values ($1, $2, 'stamp', 'visit:x', 'a', 'b')", [A, ana.card_id]);
+  check("desde el panel no se escriben avisos a mano", !r.ok, r);
+  r = await as(U.ownerA, "update public.wallet_notifications set status = 'sent'");
+  check("ni se cambia su estado", (r.ok && r.affected === 0) || !r.ok, r);
+
+  r = await as(U.ownerA, "select * from public.wallet_daily_candidates()");
+  check("el proceso diario no se puede llamar desde el panel", !r.ok, r);
+  r = await as(null, "select * from public.wallet_daily_candidates()");
+  check("ni con la clave pública", !r.ok, r);
+  await db.query("update public.loyalty_cards set last_visit_at = now() - interval '40 days' where id = $1", [ana.card_id]);
+  r = await asService("select * from public.wallet_daily_candidates()");
+  const mine = (r.rows ?? []).filter((x) => [ana.card_id, sin.card_id, blo.card_id].includes(x.card_id));
+  check("cumpleaños de hoy, solo con permiso de mensajes", mine.some((x) => x.kind === "birthday" && x.card_id === ana.card_id) && !mine.some((x) => x.card_id === sin.card_id), mine);
+  check("'te extrañamos' a los 30 días configurados", mine.some((x) => x.kind === "winback" && x.card_id === ana.card_id && x.first_name === "Ana"), mine);
+  check("nunca a tarjetas bloqueadas", !mine.some((x) => x.card_id === blo.card_id), mine);
+  await db.query("update public.loyalty_cards set last_visit_at = now() - interval '200 days' where id = $1", [ana.card_id]);
+  r = await asService("select * from public.wallet_daily_candidates() where kind = 'winback' and card_id = $1", [ana.card_id]);
+  check("no se escribe a quien dejó de venir hace mucho", r.ok && r.rows.length === 0, r);
+  await db.query("update public.loyalty_cards set last_visit_at = null where id = $1", [ana.card_id]);
+  await db.query("update public.businesses set wallet_notifications = $2 where id = $1", [A, { ...settings, birthday: false }]);
+  r = await asService("select * from public.wallet_daily_candidates() where kind = 'birthday' and card_id = $1", [ana.card_id]);
+  check("con el aviso de cumpleaños apagado no se envía", r.ok && r.rows.length === 0, r);
+  await db.query("update public.businesses set wallet_notifications = $2 where id = $1", [A, { ...settings, near: true, winbackDays: 45 }]);
 }
 
 console.log("\nDatos de demostración");

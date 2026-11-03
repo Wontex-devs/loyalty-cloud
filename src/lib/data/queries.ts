@@ -56,7 +56,7 @@ export async function loadBusinessSnapshot(slug: string, session: Session): Prom
   const id = biz.id as string;
 
   // Las tablas que crecen se piden por páginas (Supabase limita a 1000 filas por consulta).
-  const [plans, programs, customers, cards, visits, rewards, redemptions, memberships, profiles, audit, promotions, contacts, locations] = await Promise.all([
+  const [plans, programs, customers, cards, visits, rewards, redemptions, memberships, profiles, audit, promotions, contacts, locations, walletNotices] = await Promise.all([
     supabase.from("plans").select("*"),
     supabase.from("loyalty_programs").select("*").eq("business_id", id),
     fetchAll((f, t) => supabase.from("customers").select("*").eq("business_id", id).order("created_at").range(f, t), MAX_ROWS),
@@ -71,6 +71,8 @@ export async function loadBusinessSnapshot(slug: string, session: Session): Prom
     // Solo owner/admin pueden leerlos (RLS); para el resto llega vacío.
     supabase.from("customer_contacts").select("*").eq("business_id", id).order("created_at", { ascending: false }).limit(5000),
     supabase.from("locations").select("*").eq("business_id", id).order("created_at"),
+    // Igual que los contactos: solo owner/admin.
+    supabase.from("wallet_notifications").select("*").eq("business_id", id).order("created_at", { ascending: false }).limit(1000),
   ]);
 
   return {
@@ -89,6 +91,7 @@ export async function loadBusinessSnapshot(slug: string, session: Session): Prom
     promotions: (promotions.data ?? []).map(m.toPromotion),
     contacts: (contacts.data ?? []).map(m.toContact),
     locations: (locations.data ?? []).map(m.toLocation),
+    walletNotices: (walletNotices.data ?? []).map(m.toWalletNotice),
     actingProfileId: session.user.id,
   };
 }
@@ -126,6 +129,7 @@ export async function loadPlatformSnapshot(session: Session): Promise<DemoState>
     promotions: [],
     contacts: [],
     locations: [],
+    walletNotices: [],
     actingProfileId: session.user.id,
   };
 }

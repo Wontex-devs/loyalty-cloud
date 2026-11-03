@@ -15,11 +15,12 @@ import { joinSchema, normalizePhone, type JoinInput } from "@/lib/domain/schemas
 import { customersCsv } from "@/lib/domain/csv";
 import { statsFromRow, type BusinessStats } from "@/lib/domain/stats";
 import { promotionSchema } from "@/lib/domain/schemas";
-import type { Promotion } from "@/lib/domain/types";
+import type { Promotion, WalletSettings } from "@/lib/domain/types";
 import { dbErrorMessage } from "./errors";
 import { fetchAll } from "./fetch-all";
 import { toCard, toCustomer } from "./mappers";
 import { scheduleCardWalletSync } from "@/lib/wallet/sync";
+import { deliverNotices } from "@/lib/wallet/notify";
 import { rateLimit } from "./rate-limit";
 
 export type JoinActionResult = { ok: true; token: string; existing: boolean } | { ok: false; message: string };
@@ -102,7 +103,11 @@ export async function registerVisitAction(cardId: string, idempotencyKey: string
 
   const res = data as { reward_id: string | null; current_stamps: number; bonus_stamps?: number; birthday_reward_id?: string | null };
   revalidatePath("/business", "layout");
-  scheduleCardWalletSync(parsed.data.cardId);
+  scheduleCardWalletSync(parsed.data.cardId, {
+    idempotencyKey: parsed.data.idempotencyKey,
+    rewardEarned: !!res.reward_id,
+    birthdayReward: !!res.birthday_reward_id,
+  });
   return {
     ok: true,
     data: {
@@ -226,6 +231,65 @@ export async function logContactAction(customerId: string, segment: string): Pro
   const { error } = await supabase.rpc("log_customer_contact", { p_customer_id: customerId, p_segment: segment.slice(0, 40) });
   if (error) return { ok: false, message: dbErrorMessage(error) };
   return { ok: true };
+}
+
+// ---------- Etapa 12: avisos en la billetera ----------
+
+const walletSettingsInput = z.object({
+  stamp: z.boolean(),
+  near: z.boolean(),
+  reward: z.boolean(),
+  birthday: z.boolean(),
+  winback: z.boolean(),
+  winbackDays: z.number().int().min(14, "Mínimo 14 días.").max(180, "Máximo 180 días."),
+});
+
+export async function updateWalletSettingsAction(businessId: string, settings: WalletSettings): Promise<OpActionResult> {
+  const parsed = walletSettingsInput.safeParse(settings);
+  if (!parsed.success) return { ok: false, message: parsed.error.issues[0]?.message ?? "Revisa los ajustes." };
+  if (!z.uuid().safeParse(businessId).success) return { ok: false, message: "Datos no válidos." };
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("update_wallet_settings", { p_business_id: businessId, p_settings: parsed.data });
+  if (error) return { ok: false, message: dbErrorMessage(error) };
+  revalidatePath("/business", "layout");
+  return { ok: true };
+}
+
+export type WalletCampaignResult =
+  | { ok: true; queued: number; skipped: number; sent: number; notSaved: number; failed: number }
+  | { ok: false; message: string };
+
+const campaignInput = z.object({
+  businessId: z.uuid(),
+  customerIds: z.array(z.uuid()).min(1, "No hay clientes en este grupo.").max(2000),
+  title: z.string().trim().min(1, "Escribe el título del aviso.").max(40, "El título admite hasta 40 caracteres."),
+  body: z.string().trim().min(1, "Escribe el mensaje.").max(240, "El mensaje admite hasta 240 caracteres."),
+});
+
+/** Envía un aviso a la billetera de todo un grupo. La base de datos filtra consentimiento y frecuencia. */
+export async function sendWalletCampaignAction(
+  businessId: string,
+  customerIds: string[],
+  title: string,
+  body: string,
+): Promise<WalletCampaignResult> {
+  const parsed = campaignInput.safeParse({ businessId, customerIds, title, body });
+  if (!parsed.success) return { ok: false, message: parsed.error.issues[0]?.message ?? "Revisa el aviso." };
+  if (!rateLimit(`wallet-campaign:${parsed.data.businessId}`, 10, 60 * 60_000)) {
+    return { ok: false, message: "Enviaste muchas campañas seguidas. Espera un rato e inténtalo de nuevo." };
+  }
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("queue_wallet_campaign", {
+    p_business_id: parsed.data.businessId,
+    p_customer_ids: parsed.data.customerIds,
+    p_title: parsed.data.title,
+    p_body: parsed.data.body,
+  });
+  if (error) return { ok: false, message: dbErrorMessage(error) };
+  const rows = (data ?? []) as { notification_id: string; public_token: string; title: string; body: string }[];
+  const counts = await deliverNotices(rows.map((r) => ({ id: r.notification_id, token: r.public_token, title: r.title, body: r.body })));
+  revalidatePath("/business", "layout");
+  return { ok: true, queued: rows.length, skipped: parsed.data.customerIds.length - rows.length, ...counts };
 }
 
 // ---------- Etapa 8: sedes y planes ----------

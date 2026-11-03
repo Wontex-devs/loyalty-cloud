@@ -64,6 +64,12 @@ body {
 }
 .animate-fade-up { animation: fade-up 0.25s ease-out both; }
 
+@keyframes toast-in {
+  from { transform: translateY(-120%); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+.animate-toast-in { animation: toast-in 0.35s ease-out both; }
+
 @keyframes scan-line {
   0%, 100% { top: 8%; }
   50% { top: 88%; }

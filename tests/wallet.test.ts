@@ -65,3 +65,56 @@ test("enlace de guardado: JWT RS256 firmado con la clase y el objeto", () => {
   assert.ok(createVerify("RSA-SHA256").update(`${h}.${c}`).verify(publicKey, Buffer.from(sig, "base64url")));
   assert.ok(!JSON.stringify(claims).includes("+57"), "el pase no debe llevar el teléfono");
 });
+
+// ---------- Etapa 12: avisos ----------
+import { walletMessage } from "../src/lib/wallet/google.ts";
+import { DEFAULT_WALLET_SETTINGS, dailyNotice, personalize, visitNotice, walletSettings } from "../src/lib/wallet/messages.ts";
+
+const v = { businessName: "Beauty Club", required: 8, rewardName: "manicura gratis" };
+
+test("aviso de visita: sello nuevo con el progreso", () => {
+  const n = visitNotice(DEFAULT_WALLET_SETTINGS, { ...v, stamps: 6 });
+  assert.equal(n?.kind, "stamp");
+  assert.equal(n?.body, "Vas 6 de 8. Te faltan 2 visitas para tu manicura gratis.");
+});
+
+test("aviso de visita: te falta 1 tiene prioridad sobre sello nuevo", () => {
+  assert.equal(visitNotice(DEFAULT_WALLET_SETTINGS, { ...v, stamps: 7 })?.kind, "near");
+  // Apagado "te falta 1", se envía el de sello nuevo.
+  assert.equal(visitNotice({ ...DEFAULT_WALLET_SETTINGS, near: false }, { ...v, stamps: 7 })?.kind, "stamp");
+});
+
+test("aviso de visita: premio listo y regalo de cumpleaños", () => {
+  assert.match(visitNotice(DEFAULT_WALLET_SETTINGS, { ...v, stamps: 0, rewardEarned: "manicura gratis" })?.body ?? "", /Ganaste tu manicura gratis/);
+  assert.match(visitNotice(DEFAULT_WALLET_SETTINGS, { ...v, stamps: 3, birthdayReward: "postre" })?.title ?? "", /cumpleaños/);
+  assert.equal(visitNotice({ ...DEFAULT_WALLET_SETTINGS, reward: false }, { ...v, stamps: 0, rewardEarned: "x" }), null);
+});
+
+test("aviso de visita: con todo apagado no se envía nada", () => {
+  const off = { ...DEFAULT_WALLET_SETTINGS, stamp: false, near: false };
+  assert.equal(visitNotice(off, { ...v, stamps: 3 }), null);
+});
+
+test("avisos diarios: cumpleaños y te extrañamos", () => {
+  assert.equal(dailyNotice("birthday", { ...v, firstName: "Ana", stamps: 0 }).title, "¡Feliz cumpleaños, Ana!");
+  assert.match(dailyNotice("winback", { ...v, firstName: "Ana", stamps: 5 }).body, /Llevas 5 de 8 sellos/);
+  assert.doesNotMatch(dailyNotice("winback", { ...v, firstName: "Ana", stamps: 0 }).body, /Llevas/);
+});
+
+test("ajustes: valores inválidos vuelven a los de por defecto", () => {
+  assert.deepEqual(walletSettings(null), DEFAULT_WALLET_SETTINGS);
+  assert.equal(walletSettings({ winbackDays: 3 }).winbackDays, 45);
+  assert.equal(walletSettings({ stamp: false, winbackDays: 30 }).stamp, false);
+});
+
+test("campañas: {nombre} usa el primer nombre", () => {
+  assert.equal(personalize("Hola {nombre}!", "  Sofía Martínez "), "Hola Sofía!");
+});
+
+test("mensaje de Google: con aviso al celular y visible 30 días", () => {
+  const now = Date.UTC(2026, 10, 3);
+  const m = walletMessage({ id: "abc", title: "T", body: "B" }, now).message;
+  assert.equal(m.messageType, "TEXT_AND_NOTIFY");
+  assert.equal(m.header, "T");
+  assert.equal(m.displayInterval.end.date, new Date(now + 30 * 86400000).toISOString());
+});

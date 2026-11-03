@@ -9,46 +9,53 @@ import { activePromotion, localDay } from "@/lib/domain/promotions";
 import { isRewardUsable } from "@/lib/domain/stats";
 import { publicOrigin } from "@/lib/config";
 import { Avatar, Card, EmptyState, PageHeader, Segmented, Textarea } from "@/components/ui";
+import { RecentWalletNotices, WalletCampaignCard, WalletSettingsCard } from "@/components/business/wallet-notices";
 import { formatRelative } from "@/lib/utils";
 
 type Segment = "near" | "reward" | "inactive" | "birthday" | "new" | "all";
 
-const SEGMENTS: { value: Segment; label: string; hint: string; template: string }[] = [
+const SEGMENTS: { value: Segment; label: string; hint: string; template: string; wallet: { title: string; body: string } }[] = [
   {
     value: "near",
     label: "Cerca del premio",
     hint: "Les faltan 1 o 2 visitas para la recompensa.",
     template: "Hola {nombre} 💅 ¡Solo te {faltan} para tu {recompensa} en {negocio}! Te esperamos. Tu tarjeta: {enlace}",
+    wallet: { title: "¡Ya casi tienes tu premio!", body: "Hola {nombre}, estás a muy poco de tu premio. ¡Te esperamos!" },
   },
   {
     value: "reward",
     label: "Premio sin canjear",
     hint: "Tienen una recompensa disponible.",
     template: "Hola {nombre}, tienes un regalo esperándote en {negocio}: {recompensa}. Muéstrale tu tarjeta al equipo en tu próxima visita: {enlace}",
+    wallet: { title: "Tienes un premio esperándote", body: "Hola {nombre}, tu premio está listo. Muestra tu tarjeta en tu próxima visita." },
   },
   {
     value: "inactive",
     label: "Hace tiempo no vienen",
     hint: "Su última visita fue hace más de 45 días.",
     template: "Hola {nombre}, ¡te extrañamos en {negocio}! Llevas {sellos} sellos en tu tarjeta. Agenda tu próxima cita y sigue sumando: {enlace}",
+    wallet: { title: "Te extrañamos", body: "Hola {nombre}, hace rato no te vemos. ¡Vuelve y sigue sumando sellos!" },
   },
   {
     value: "birthday",
     label: "Cumpleaños del mes",
     hint: "Cumplen años este mes.",
     template: "¡Feliz cumpleaños, {nombre}! 🎂 En {negocio} queremos celebrarlo contigo. Ven este mes y te espera una sorpresa. Tu tarjeta: {enlace}",
+    wallet: { title: "¡Feliz mes de cumpleaños!", body: "Hola {nombre}, este mes queremos celebrarlo contigo. ¡Te esperamos!" },
   },
   {
     value: "new",
     label: "Nuevas",
     hint: "Se inscribieron en los últimos 30 días y aún no repiten.",
     template: "Hola {nombre}, gracias por unirte a {negocio}. En tu próxima visita sumas otro sello. Tu tarjeta: {enlace}",
+    wallet: { title: "Gracias por unirte", body: "Hola {nombre}, en tu próxima visita sumas otro sello. ¡Te esperamos!" },
   },
   {
     value: "all",
     label: "Todas",
     hint: "Todas las clientas que aceptaron recibir mensajes.",
     template: "Hola {nombre}, tenemos novedades en {negocio}. Tu tarjeta: {enlace}",
+    wallet: { title: "Novedades para ti", body: "Hola {nombre}, tenemos novedades. ¡Te esperamos!" },
   },
 ];
 
@@ -121,13 +128,13 @@ export default function CampaignsPage() {
     <RequirePermission allowed={!!membership && can(membership, "program.edit")}>
       <PageHeader
         title="Campañas"
-        description="Escríbeles por WhatsApp a tus clientas, una por una y desde tu propio teléfono. Solo aparecen las que aceptaron recibir mensajes."
+        description="Envía un aviso a la billetera de todo un grupo con un botón, o escríbeles por WhatsApp una por una. Solo aparecen las que aceptaron recibir mensajes."
       />
 
       <div className="mb-4 flex items-start gap-2 rounded-lg border border-line bg-surface px-4 py-3 text-sm text-muted">
         <ShieldCheck className="mt-0.5 size-4 shrink-0" />
         <p>
-          No hay envíos masivos ni automáticos: cada mensaje lo abres y lo envías tú. Cada envío queda registrado, para que no le escribas a la misma clienta dos veces seguidas.
+          Los avisos a la billetera llegan como notificación al celular y respetan un máximo de una campaña por clienta a la semana. Los de WhatsApp los abres y envías tú, uno por uno. Todo queda registrado.
         </p>
       </div>
 
@@ -183,8 +190,16 @@ export default function CampaignsPage() {
           )}
         </Card>
 
+        <div className="flex flex-col gap-4">
+        <WalletCampaignCard
+          segmentKey={segment}
+          segmentLabel={current.label}
+          customerIds={allowed.map(({ customer }) => customer.id)}
+          defaultTitle={current.wallet.title}
+          defaultBody={current.wallet.body}
+        />
         <Card className="h-fit p-5">
-          <p className="text-sm font-semibold">Mensaje</p>
+          <p className="text-sm font-semibold">Mensaje de WhatsApp</p>
           <p className="mt-1 text-xs text-muted">
             Variables: {"{nombre}"} {"{negocio}"} {"{recompensa}"} {"{sellos}"} {"{faltan}"} {"{enlace}"}
           </p>
@@ -195,6 +210,12 @@ export default function CampaignsPage() {
           />
           {promo && <p className="mt-2 text-xs text-muted">Se añadirá al final: la promoción de hoy ({promo.name}).</p>}
         </Card>
+        </div>
+      </div>
+
+      <div className="mt-4 grid gap-4 lg:grid-cols-2">
+        <WalletSettingsCard />
+        <RecentWalletNotices />
       </div>
     </RequirePermission>
   );

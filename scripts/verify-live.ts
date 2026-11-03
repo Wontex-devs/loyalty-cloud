@@ -283,5 +283,32 @@ console.log("\nEtapa 10 · logotipo en Storage");
   }
 }
 
+console.log("\nEtapa 12 · avisos en la billetera");
+{
+  const { data: biz } = await owner.from("businesses").select("id, wallet_notifications").eq("slug", "beautyclub").single();
+  check("los ajustes de avisos existen en el comercio", typeof biz?.wallet_notifications?.winbackDays === "number", biz?.wallet_notifications);
+  const { error: a1 } = await anon.rpc("wallet_daily_candidates");
+  check("la clave pública no llama al proceso diario", !!a1, a1?.message);
+  const { error: a2 } = await owner.rpc("wallet_daily_candidates");
+  check("tampoco la propietaria desde el panel", !!a2, a2?.message);
+  const { data: cands, error: a3 } = await service.rpc("wallet_daily_candidates");
+  check("el servidor sí lo llama", !a3 && Array.isArray(cands), a3?.message);
+  const current = biz!.wallet_notifications;
+  const { error: s1 } = await staff.rpc("update_wallet_settings", { p_business_id: biz!.id, p_settings: current });
+  check("una empleada no cambia los avisos", !!s1 && s1.message.includes("FORBIDDEN"), s1?.message);
+  const { error: s2 } = await owner.rpc("update_wallet_settings", { p_business_id: biz!.id, p_settings: { ...current, winbackDays: 3 } });
+  check("ajustes fuera de rango → rechazados", !!s2 && s2.message.includes("INVALID_WALLET_SETTINGS"), s2?.message);
+  const { error: s3 } = await owner.rpc("update_wallet_settings", { p_business_id: biz!.id, p_settings: current });
+  check("la propietaria guarda sus ajustes", !s3, s3?.message);
+  const { error: c1 } = await other.rpc("queue_wallet_campaign", { p_business_id: biz!.id, p_customer_ids: ["00000000-0000-0000-0000-000000000000"], p_title: "x", p_body: "y" });
+  check("otro comercio no envía campañas a Beauty Club", !!c1 && c1.message.includes("FORBIDDEN"), c1?.message);
+  const { error: c2 } = await owner.rpc("queue_wallet_campaign", { p_business_id: biz!.id, p_customer_ids: ["00000000-0000-0000-0000-000000000000"], p_title: " ", p_body: "y" });
+  check("campaña sin título → rechazada", !!c2 && c2.message.includes("INVALID_WALLET_MESSAGE"), c2?.message);
+  const { data: sn } = await staff.from("wallet_notifications").select("id").limit(1);
+  check("una empleada no ve el registro de avisos", (sn ?? []).length === 0, sn);
+  const { error: ow } = await owner.from("wallet_notifications").insert({ business_id: biz!.id, card_id: biz!.id, kind: "stamp", ref: "visit:x", title: "a", body: "b" });
+  check("desde el panel no se escriben avisos a mano", !!ow, ow?.message);
+}
+
 console.log(`\n${passed} correctas, ${failed} fallidas\n`);
 process.exit(failed ? 1 : 0);

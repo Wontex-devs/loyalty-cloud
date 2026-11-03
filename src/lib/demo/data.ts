@@ -2,6 +2,7 @@
  * Datos de demostración (Etapa 1). Se generan de forma determinista para que el
  * render de servidor y de cliente coincidan. Se sustituirán por Supabase en la Etapa 2.
  */
+import { DEFAULT_WALLET_SETTINGS } from "../wallet/messages.ts";
 import type {
   AuditLog,
   Business,
@@ -83,6 +84,7 @@ export const beautyClub: Business = {
   planId: "plan_pro",
   timezone: "America/Bogota",
   legal: {},
+  walletNotifications: { ...DEFAULT_WALLET_SETTINGS },
   createdAt: daysAgo(142),
   branding: {
     logoText: "BC",
@@ -111,6 +113,7 @@ const otherBusinesses: Business[] = [
   planId,
   timezone: "America/Bogota",
   legal: {},
+  walletNotifications: { ...DEFAULT_WALLET_SETTINGS },
   createdAt: daysAgo(30 + i * 17),
   branding: {
     logoText: name

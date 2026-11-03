@@ -1,4 +1,5 @@
 /** Conversión filas de Postgres (snake_case) → modelo de dominio (camelCase). */
+import { walletSettings } from "@/lib/wallet/messages";
 import type {
   AuditLog,
   Business,
@@ -14,6 +15,7 @@ import type {
   Redemption,
   Reward,
   Visit,
+  WalletNotice,
 } from "@/lib/domain/types";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -48,6 +50,7 @@ export const toBusiness = (r: Row): Business => ({
     contactPhone: opt(r.contact_phone),
     address: opt(r.address),
   },
+  walletNotifications: walletSettings(r.wallet_notifications),
   createdAt: r.created_at,
   branding: {
     logoText: "",
@@ -188,6 +191,18 @@ export const toContact = (r: Row): CustomerContact => ({
   customerId: r.customer_id,
   segment: r.segment,
   staffId: r.staff_id ?? "",
+  createdAt: r.created_at,
+});
+
+export const toWalletNotice = (r: Row): WalletNotice => ({
+  id: r.id,
+  businessId: r.business_id,
+  cardId: r.card_id,
+  kind: r.kind,
+  ref: r.ref,
+  title: r.title,
+  body: r.body,
+  status: r.status,
   createdAt: r.created_at,
 });
 
