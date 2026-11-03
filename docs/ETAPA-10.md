@@ -23,8 +23,8 @@ Nueva migración `20261101000011_brand_assets.sql`:
 
 | Proyecto | Estado |
 |---|---|
-| Pruebas (`loyalty-cloud`) | Pendiente |
-| Producción (`loyalty-cloud-prod`) | Pendiente |
+| Pruebas (`loyalty-cloud`) | ✅ Aplicada (`db:verify --e2e`: 68 de 68) |
+| Producción (`loyalty-cloud-prod`) | ✅ Aplicada y publicada en Vercel (prueba del sitio: 16 de 16) |
 
 ## Pruebas
 - `npm run test:db`: 133 casos, 9 de ellos nuevos (logo propio o de otro comercio, URL arbitraria, icono no válido, quitar el logo y escritura en Storage por rol y por carpeta).

@@ -32,7 +32,7 @@ Nueva migración `20261101000012_privacy_abuse.sql`:
 | Proyecto | Estado |
 |---|---|
 | Pruebas (`loyalty-cloud`) | ✅ Aplicada y verificada (`db:verify --e2e`: 72 de 72) |
-| Producción (`loyalty-cloud-prod`) | Pendiente |
+| Producción (`loyalty-cloud-prod`) | ✅ Aplicada y publicada en Vercel (prueba del sitio: 16 de 16; permisos comprobados en la base de datos) |
 
 ⚠️ **En producción hay que aplicar la migración y publicar el código seguidos.** Con la migración aplicada, el código anterior ya no puede inscribir, porque usaba la clave pública. Con el código nuevo y sin la migración, tampoco, porque `join_program_limited` no existiría.
 
