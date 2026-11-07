@@ -66,7 +66,7 @@ export function LoyaltyCardView({
           <div className="flex items-center gap-3">
             <BrandMark
               branding={b}
-              className={cn("size-11 rounded-full text-lg", brandFont(b, "tracking-wide"))}
+              className={cn("size-14 rounded-full text-xl", brandFont(b, "tracking-wide"))}
               style={{ background: b.cardForeground, color: b.cardBackground }}
             />
             <div>

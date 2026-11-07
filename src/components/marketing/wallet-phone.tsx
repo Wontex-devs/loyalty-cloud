@@ -16,6 +16,7 @@ function WalletIcon({ stripes, pocket }: { stripes: string[]; pocket: string }) 
   );
 }
 
+/* eslint-disable @next/next/no-img-element */
 function WalletBadge({ name, className, stripes, pocket }: { name: string; className: string; stripes: string[]; pocket: string }) {
   return (
     <div className={`absolute flex items-center gap-2.5 rounded-2xl bg-black py-2.5 pl-3 pr-5 text-white shadow-[0_14px_30px_rgba(6,10,36,0.4)] ${className}`}>
@@ -31,7 +32,7 @@ function WalletBadge({ name, className, stripes, pocket }: { name: string; class
 /** iPhone flotando: la tarjeta de un negocio de ejemplo y el aviso que le llega al sumar un sello. */
 export function WalletPhone() {
   return (
-    <div className="phone-frame" role="img" aria-label="iPhone con la tarjeta de sellos de Barbería Norte: llega un aviso de sello registrado y se marca el quinto sello">
+    <div className="phone-frame" role="img" aria-label="iPhone con la tarjeta de sellos de Barbería El Faro: llega un aviso de sello registrado y se marca el quinto sello">
       <div className="phone-scene">
         <div aria-hidden className="phone-shadow" />
 
@@ -47,13 +48,13 @@ export function WalletPhone() {
 
               {/* Aviso */}
               <div className="notice-slide absolute inset-x-2.5 top-11 z-10 flex items-center gap-2.5 rounded-[20px] bg-white/95 p-3 shadow-[0_8px_24px_rgba(0,0,0,0.18)]">
-                <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-cobalt text-[12px] font-bold text-sun">BN</span>
+                <img src="/logos/el-faro.svg" alt="" className="size-10 shrink-0 rounded-xl bg-white p-1 ring-1 ring-black/10" />
                 <div className="min-w-0 flex-1 leading-snug">
                   <p className="flex justify-between gap-2 text-[11px] text-[#6c6c70]">
                     <span>Wallet</span>
                     <span>ahora</span>
                   </p>
-                  <p className="text-[13px] font-semibold">Barbería Norte</p>
+                  <p className="text-[13px] font-semibold">Barbería El Faro</p>
                   <p className="text-[12px] text-[#3c3c43]">Sello registrado. Vas 5 de 6.</p>
                 </div>
               </div>
@@ -62,10 +63,10 @@ export function WalletPhone() {
               <div className="absolute inset-x-2.5 bottom-3 top-[124px] overflow-hidden rounded-[22px] bg-cobalt text-white">
                 <div className="px-4 pt-3.5">
                   <div className="flex items-center gap-2.5">
-                    <span className="flex size-9 items-center justify-center rounded-full bg-sun text-[12px] font-bold text-coal">BN</span>
-                    <span className="text-[13px] font-medium">Barbería Norte</span>
+                    <img src="/logos/el-faro.svg" alt="" className="size-9 rounded-full bg-white p-1" />
+                    <span className="text-[13px] font-medium">Barbería El Faro</span>
                   </div>
-                  <p className="mt-2.5 text-[21px] font-semibold leading-none">Los de siempre</p>
+                  <p className="mt-2.5 text-[21px] font-semibold leading-none">Club del Faro</p>
                   <div className="mt-2.5 flex items-end justify-between leading-tight">
                     <div>
                       <p className="text-[10px] text-white/75">Cortes</p>

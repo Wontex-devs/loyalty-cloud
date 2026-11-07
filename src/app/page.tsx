@@ -23,7 +23,7 @@ const h2 = `${poster} text-4xl leading-[1.02] sm:text-6xl`;
 const btn = "inline-flex h-14 items-center justify-center gap-2.5 rounded-lg px-6 text-base font-semibold transition-transform hover:-translate-y-0.5";
 
 const PLANS = [
-  { name: "Starter", who: "Para un local con poco equipo", lines: ["300 clientes", "2 personas del equipo", "1 sede"] },
+  { name: "Starter", who: "Para un local con poco equipo", lines: ["300 clientes", "2 personas del equipo", "1 sede"], freeMonth: true },
   { name: "Pro", who: "Para el negocio que ya tiene movimiento", lines: ["2.000 clientes", "10 personas del equipo", "3 sedes"], featured: true },
   { name: "Business", who: "Para cadenas y varias sedes", lines: ["Clientes sin límite", "Equipo sin límite", "Sedes sin límite"] },
 ];
@@ -169,7 +169,7 @@ export default function Home() {
             <div>
               <h2 className={h2}>Con tu marca, no con la nuestra</h2>
               <p className="mt-6 max-w-lg text-xl leading-relaxed text-graphite">
-                Tu logo, tus colores, tu sello y tu letra. Toca un negocio y mira cómo cambia la tarjeta.
+                Tu logo, tus colores, tu sello, tu letra y el nombre de tu club. Toca un negocio y mira cómo cambia la tarjeta.
               </p>
             </div>
             <BrandPreview />
@@ -201,7 +201,8 @@ export default function Home() {
                 <ul className="mt-6 space-y-2 text-lg font-medium">
                   {p.lines.map((l) => <li key={l}>{l}</li>)}
                 </ul>
-                <a href={whatsappHref} target="_blank" rel="noopener" className="mt-7 inline-block font-semibold underline underline-offset-4">Pregunta el precio</a>
+                {p.freeMonth && <p className="mt-6 w-fit rounded-lg bg-sun px-3 py-1.5 font-semibold">Primer mes gratis</p>}
+                <a href={whatsappHref} target="_blank" rel="noopener" className="mt-5 block font-semibold underline underline-offset-4">Pregunta el precio</a>
               </div>
             ))}
           </div>
