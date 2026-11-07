@@ -24,7 +24,7 @@ const btn = "inline-flex h-14 items-center justify-center gap-2.5 rounded-lg px-
 
 const PLANS = [
   { name: "Starter", who: "Para un local que empieza", lines: ["100 clientes", "2 personas del equipo", "1 sede"], price: "$59.900", freeMonth: true },
-  { name: "Pro", who: "Para el negocio que ya tiene movimiento", lines: ["300 clientes", "10 personas del equipo", "3 sedes"], price: "$99.900", featured: true },
+  { name: "Pro", who: "Para el negocio que ya tiene movimiento", lines: ["300 clientes", "10 personas del equipo", "3 sedes"], price: "$119.900", featured: true },
   { name: "Business", who: "Para cadenas y varias sedes", lines: ["Clientes a tu medida", "Equipo a tu medida", "Sedes a tu medida"] },
 ];
 

@@ -53,7 +53,7 @@ export const plans: Plan[] = [
   {
     id: "plan_pro",
     name: "Pro",
-    priceMonthly: 99900,
+    priceMonthly: 119900,
     currency: "COP",
     maxCustomers: 300,
     maxStaff: 10,

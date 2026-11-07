@@ -618,7 +618,7 @@ console.log("\nPlanes comerciales");
   const p = (await db.query("select id, price_monthly::int price, max_customers from public.plans order by id")).rows;
   const by = Object.fromEntries(p.map((x) => [x.id, x]));
   check("Starter: $59.900 y 100 clientes", by.plan_starter.price === 59900 && by.plan_starter.max_customers === 100, by.plan_starter);
-  check("Pro: $99.900 y 300 clientes", by.plan_pro.price === 99900 && by.plan_pro.max_customers === 300, by.plan_pro);
+  check("Pro: $119.900 y 300 clientes", by.plan_pro.price === 119900 && by.plan_pro.max_customers === 300, by.plan_pro);
 }
 
 console.log("\nDatos de demostración");
