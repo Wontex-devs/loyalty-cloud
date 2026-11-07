@@ -84,7 +84,7 @@ export default function Home() {
           </div>
           <div className="relative mx-auto">
             <WalletPhone />
-            <p className={`${poster} absolute -right-2 top-[56%] flex size-28 lg:-right-14 rotate-12 items-center justify-center rounded-full bg-sun p-3 text-center text-[17px] leading-[1.05] text-coal sm:size-32 sm:text-xl`}>
+            <p className={`${poster} absolute -right-2 top-[70%] flex size-28 lg:-right-12 rotate-12 items-center justify-center rounded-full bg-sun p-3 text-center text-[17px] leading-[1.05] text-coal sm:size-32 sm:text-xl`}>
               Primer mes gratis
             </p>
           </div>
