@@ -23,9 +23,9 @@ const h2 = `${poster} text-4xl leading-[1.02] sm:text-6xl`;
 const btn = "inline-flex h-14 items-center justify-center gap-2.5 rounded-lg px-6 text-base font-semibold transition-transform hover:-translate-y-0.5";
 
 const PLANS = [
-  { name: "Starter", who: "Para un local con poco equipo", lines: ["300 clientes", "2 personas del equipo", "1 sede"], price: "$39.000" },
-  { name: "Pro", who: "Para el negocio que ya tiene movimiento", lines: ["2.000 clientes", "10 personas del equipo", "3 sedes"], featured: true },
-  { name: "Business", who: "Para cadenas y varias sedes", lines: ["Clientes sin límite", "Equipo sin límite", "Sedes sin límite"] },
+  { name: "Starter", who: "Para un local que empieza", lines: ["100 clientes", "2 personas del equipo", "1 sede"], price: "$59.900", freeMonth: true },
+  { name: "Pro", who: "Para el negocio que ya tiene movimiento", lines: ["300 clientes", "10 personas del equipo", "3 sedes"], price: "$99.900", featured: true },
+  { name: "Business", who: "Para cadenas y varias sedes", lines: ["Clientes a tu medida", "Equipo a tu medida", "Sedes a tu medida"] },
 ];
 
 const FAQ = [
@@ -201,16 +201,19 @@ export default function Home() {
                 <ul className="mt-6 space-y-2 text-lg font-medium">
                   {p.lines.map((l) => <li key={l}>{l}</li>)}
                 </ul>
-                {p.price && (
-                  <div className="mt-6">
-                    <p className="w-fit rounded-lg bg-sun px-3 py-1.5 font-semibold">Primer mes gratis</p>
-                    <p className="mt-3 text-lg">
-                      Después, <strong className={`${poster} text-2xl`}>{p.price}</strong> al mes
+                <div className="mt-6">
+                  {p.freeMonth && <p className="mb-3 w-fit rounded-lg bg-sun px-3 py-1.5 font-semibold">Primer mes gratis</p>}
+                  {p.price ? (
+                    <p className="text-lg">
+                      {p.freeMonth && "Después, "}
+                      <strong className={`${poster} text-2xl`}>{p.price}</strong> al mes
                     </p>
-                  </div>
-                )}
+                  ) : (
+                    <p className={`${poster} text-2xl`}>Precio ajustable</p>
+                  )}
+                </div>
                 <a href={whatsappHref} target="_blank" rel="noopener" className="mt-5 block font-semibold underline underline-offset-4">
-                  {p.price ? "Empezar gratis" : "Pregunta el precio"}
+                  {p.freeMonth ? "Empezar gratis" : p.price ? "Quiero este plan" : "Hablemos de tu negocio"}
                 </a>
               </div>
             ))}

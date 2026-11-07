@@ -409,7 +409,7 @@ console.log("\nLímites de plan y sedes");
   check("con el cupo de clientes lleno no hay nuevas inscripciones → PLAN_LIMIT_CUSTOMERS", expectError(r, "PLAN_LIMIT_CUSTOMERS"), r);
   r = await joinProgram("negocio-a", "+573001112233", "Ana Prueba");
   check("con el cupo lleno las clientas existentes siguen recuperando su tarjeta", r.ok && r.rows[0]?.existing === true, r);
-  await db.query("update public.plans set max_customers = 2000 where id = 'plan_pro'");
+  await db.query("update public.plans set max_customers = 300 where id = 'plan_pro'");
 
   r = await as(U.ownerA, "select public.set_business_plan($1, 'plan_business')", [A]);
   check("un comercio no cambia su propio plan", expectError(r, "FORBIDDEN"), r);
@@ -611,6 +611,14 @@ console.log("\nEtapa 12 · Avisos en la billetera");
   r = await asService("select * from public.wallet_daily_candidates() where kind = 'birthday' and card_id = $1", [ana.card_id]);
   check("con el aviso de cumpleaños apagado no se envía", r.ok && r.rows.length === 0, r);
   await db.query("update public.businesses set wallet_notifications = $2 where id = $1", [A, { ...settings, near: true, winbackDays: 45 }]);
+}
+
+console.log("\nPlanes comerciales");
+{
+  const p = (await db.query("select id, price_monthly::int price, max_customers from public.plans order by id")).rows;
+  const by = Object.fromEntries(p.map((x) => [x.id, x]));
+  check("Starter: $59.900 y 100 clientes", by.plan_starter.price === 59900 && by.plan_starter.max_customers === 100, by.plan_starter);
+  check("Pro: $99.900 y 300 clientes", by.plan_pro.price === 99900 && by.plan_pro.max_customers === 300, by.plan_pro);
 }
 
 console.log("\nDatos de demostración");

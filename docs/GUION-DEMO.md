@@ -27,14 +27,12 @@ La demo usa datos de ejemplo (Beauty Club), no pide contraseña y no toca datos 
 - **¿La clienta tiene que descargar algo?** No. Es una página web que se puede añadir a la pantalla de inicio como una app.
 - **¿Qué pasa si la clienta cambia de celular o pierde el enlace?** Vuelve a escanear el QR del salón con el mismo nombre y celular y recupera su tarjeta.
 - **¿Mis datos y los de mis clientas están seguros?** Cada salón ve solo su información. Las clientas aceptan la política de datos (Ley 1581) al inscribirse.
-- **¿Funciona con varias sedes?** Sí: depende del plan (Starter 1, Pro 3, Business sin límite).
+- **¿Funciona con varias sedes?** Sí: depende del plan (Starter 1, Pro 3, Business a la medida).
 - **¿Y Google Wallet o Apple Wallet?** Está en preparación. Por ahora la tarjeta web hace lo mismo.
 
 ## Planes
-| Plan | Clientes | Equipo | Sedes |
-|---|---|---|---|
-| Starter | 300 | 2 | 1 |
-| Pro | 2.000 | 10 | 3 |
-| Business | Sin límite | Sin límite | Sin límite |
-
-Los precios aún no están definidos: decídelos antes de las primeras reuniones.
+| Plan | Precio al mes | Clientes | Equipo | Sedes |
+|---|---|---|---|---|
+| Starter | $59.900 (primer mes gratis) | 100 | 2 | 1 |
+| Pro | $99.900 | 300 | 10 | 3 |
+| Business | Ajustable | A la medida | A la medida | A la medida |

@@ -3,7 +3,7 @@
 **Diapositivas:** https://claude.ai/artifact/KuvhxXabsPRpVpujw6e4vT (se descargan en PDF o PowerPoint).
 Este archivo guarda los textos para reutilizarlos en la futura página web de venta, con la misma estructura.
 
-**Pendiente de completar:** los precios de los planes (`[$__]`) y el número de WhatsApp de contacto.
+**Pendiente:** las diapositivas siguen con los planes y colores anteriores.
 
 ## 1. Portada
 **Haz que tus clientes vuelvan.**
@@ -70,10 +70,10 @@ Creas la promoción una vez y se aplica sola. Las recompensas también: aparecen
 ## 12. Planes
 | | Starter | Pro | Business |
 |---|---|---|---|
-| Precio | [$__] / mes | [$__] / mes | [$__] / mes |
-| Clientes | 300 | 2.000 | Sin límite |
-| Equipo | 2 | 10 | Sin límite |
-| Sedes | 1 | 3 | Sin límite |
+| Precio | $59.900 / mes, primer mes gratis | $99.900 / mes | Ajustable |
+| Clientes | 100 | 300 | A la medida |
+| Equipo | 2 | 10 | A la medida |
+| Sedes | 1 | 3 | A la medida |
 
 Todos incluyen la tarjeta con tu marca, mensajes por WhatsApp, promociones, recompensas y estadísticas.
 
