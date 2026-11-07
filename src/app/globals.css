@@ -91,41 +91,28 @@ body {
   background-position: center;
 }
 
-/* iPhone isométrico de la portada: proyección sin perspectiva. */
-.iso-scene {
-  display: flex;
-  height: 600px;
-  align-items: center;
-  justify-content: center;
-}
-.iso-phone {
+/* Mano con el iPhone de la portada: escena de 600×720 que se escala por pantalla. */
+.hand-frame {
+  --hand-scale: 0.57;
   position: relative;
-  width: 290px;
-  height: 590px;
-  flex: none;
-  transform-style: preserve-3d;
-  transform: scale(var(--iso-scale, 0.92)) rotateX(48deg) rotateZ(-32deg);
+  width: calc(600px * var(--hand-scale));
+  height: calc(720px * var(--hand-scale));
+  overflow: hidden;
 }
-.iso-edge {
-  position: absolute;
-  inset: 0;
-  border-radius: 46px;
-  background: #060a24;
+.hand-scene {
+  position: relative;
+  width: 600px;
+  height: 720px;
+  transform: scale(var(--hand-scale));
+  transform-origin: top left;
 }
-.iso-shadow {
-  position: absolute;
-  inset: 24px;
-  border-radius: 46px;
-  background: rgb(6 10 36 / 0.55);
-  filter: blur(26px);
-  transform: translate3d(-34px, 34px, -40px);
-}
-@media (max-width: 640px) {
-  .iso-scene {
-    height: 410px;
-  }
-  .iso-phone {
-    --iso-scale: 0.6;
+@media (min-width: 640px) {
+  .hand-frame {
+    --hand-scale: 0.8;
   }
 }
-
+@media (min-width: 1024px) {
+  .hand-frame {
+    --hand-scale: 0.86;
+  }
+}

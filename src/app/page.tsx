@@ -3,7 +3,7 @@ import { Bricolage_Grotesque, Onest } from "next/font/google";
 import Link from "next/link";
 import { MessageCircle } from "lucide-react";
 import { BrandPreview } from "@/components/marketing/brand-preview";
-import { WalletPhone } from "@/components/marketing/wallet-phone";
+import { WalletHand } from "@/components/marketing/wallet-hand";
 import { DEMO_URL, PLATFORM_NAME, SALES_WHATSAPP } from "@/lib/config";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 
@@ -31,7 +31,7 @@ const PLANS = [
 const FAQ = [
   { q: "¿Cómo funciona el primer mes gratis?", a: "Te dejamos la tarjeta lista con tu marca y la usas un mes sin pagar. Si decides seguir, eliges el plan que te sirva." },
   { q: "¿Mis clientes tienen que descargar algo?", a: "No. La tarjeta se abre en el navegador del celular y se puede añadir a la pantalla de inicio como si fuera una app." },
-  { q: "¿Necesito comprar algún equipo?", a: "No. Tu equipo registra las visitas escaneando el QR con la cámara de un celular, una tablet o un computador." },
+  { q: "¿Necesito comprar algún equipo?", a: "Para empezar, no. Tu equipo registra las visitas escaneando el QR con la cámara de un celular, una tablet o un computador. Cuando llegue el NFC, para marcar con el celular necesitarás un lector en el mostrador." },
   { q: "¿Qué pasa si mi cliente cambia de celular?", a: "Vuelve a escanear el QR de tu negocio con el mismo nombre y celular, y recupera su tarjeta con todos sus sellos." },
   { q: "¿Sirve para mi tipo de negocio?", a: "Sirve para cualquier negocio con clientes que repiten: barberías, salones, cafeterías, panaderías, spas, gimnasios, lavaderos, tiendas y más." },
   { q: "¿Se pueden hacer trampas con los sellos?", a: "Solo tu equipo puede sellar, cada persona con su usuario. El sistema evita sellos repetidos por error y guarda quién registró cada visita." },
@@ -68,8 +68,8 @@ export default function Home() {
           </nav>
         </header>
 
-        <section className="mx-auto grid max-w-7xl items-center gap-12 px-4 pb-20 pt-8 sm:px-8 lg:grid-cols-[1.1fr_0.9fr] lg:pb-28 lg:pt-14">
-          <div>
+        <section className="mx-auto grid max-w-7xl items-end gap-10 px-4 pt-8 sm:px-8 lg:grid-cols-[1.1fr_0.9fr] lg:pt-10">
+          <div className="lg:pb-24">
             <h1 className={`${poster} text-[3.6rem] leading-[0.95] sm:text-8xl lg:text-[6.5rem]`}>
               Haz que tus clientes <span className="text-sun">vuelvan.</span>
             </h1>
@@ -80,13 +80,13 @@ export default function Home() {
               <WhatsAppButton className="bg-sun text-coal" />
               <a href={demoHref} className={`${btn} border-2 border-white/60 text-white`}>Ver la demo</a>
             </div>
+            <p className="mt-5 text-[15px] text-white/80">Hoy funciona con QR. La imagen muestra lo que viene: Wallet y NFC.</p>
           </div>
-          <div className="relative">
-            <WalletPhone />
+          <div className="relative mx-auto">
+            <WalletHand />
             <p className={`${poster} absolute right-1 top-4 flex size-28 rotate-12 items-center justify-center rounded-full bg-sun p-3 text-center text-[17px] leading-[1.05] text-coal sm:size-32 sm:text-xl`}>
               Primer mes gratis
             </p>
-            <p className="text-center text-sm text-white/80">Así se verá en Wallet. Muy pronto.</p>
           </div>
         </section>
       </div>
@@ -176,6 +176,19 @@ export default function Home() {
           </div>
         </section>
 
+        {/* NFC */}
+        <section className="bg-cobalt text-white">
+          <div className="mx-auto max-w-7xl px-4 py-20 sm:px-8 lg:py-24">
+            <h2 className={`${h2} max-w-4xl`}>
+              Hacia dónde vamos: <span className="text-sun">acerca el celular y listo.</span>
+            </h2>
+            <p className="mt-6 max-w-3xl text-xl leading-relaxed text-white/90">
+              Tu tarjeta en Apple Wallet y Google Wallet, con NFC. Tu cliente acerca el celular al lector de tu mostrador y el sello se marca solo, como cuando paga con el teléfono. El QR queda como respaldo.
+            </p>
+            <p className="mt-4 max-w-3xl text-lg text-white/80">Lo estamos preparando. Si empiezas hoy con QR, pasas sin perder clientes ni sellos.</p>
+          </div>
+        </section>
+
         {/* Planes */}
         <section id="planes" className="mx-auto max-w-7xl scroll-mt-4 px-4 py-20 sm:px-8 lg:py-28">
           <h2 className={h2}>Planes</h2>
@@ -192,9 +205,6 @@ export default function Home() {
               </div>
             ))}
           </div>
-          <p className="mt-8 max-w-2xl text-lg leading-relaxed text-graphite">
-            <strong className="text-coal">Lo que viene:</strong> estamos preparando tu tarjeta en Google Wallet y Apple Wallet, con avisos al celular. Si empiezas hoy, pasas sin perder clientes ni sellos.
-          </p>
         </section>
 
         {/* Preguntas */}
