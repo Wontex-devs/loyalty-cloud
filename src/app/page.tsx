@@ -1,10 +1,14 @@
 import type { Metadata } from "next";
+import { Bricolage_Grotesque, Onest } from "next/font/google";
 import Link from "next/link";
-import { ArrowRight, BarChart3, CalendarHeart, Check, Clock, Gift, MessageCircle, QrCode, ShieldCheck, Smartphone, Stamp, Users } from "lucide-react";
+import { MessageCircle } from "lucide-react";
 import { LoyaltyCardView } from "@/components/loyalty/loyalty-card";
 import { BrandPreview } from "@/components/marketing/brand-preview";
 import { DEMO_URL, PLATFORM_NAME, SALES_WHATSAPP } from "@/lib/config";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
+
+const display = Bricolage_Grotesque({ subsets: ["latin"], weight: ["600", "800"], variable: "--font-poster" });
+const text = Onest({ subsets: ["latin"], variable: "--font-text" });
 
 export const metadata: Metadata = {
   title: { absolute: `${PLATFORM_NAME} · Tarjeta de fidelización digital para tu negocio` },
@@ -12,34 +16,16 @@ export const metadata: Metadata = {
 };
 
 const demoHref = isSupabaseConfigured ? DEMO_URL : "/login";
-const whatsappHref = SALES_WHATSAPP
-  ? `https://wa.me/${SALES_WHATSAPP}?text=${encodeURIComponent(`Hola, quiero saber más sobre ${PLATFORM_NAME} para mi negocio.`)}`
-  : null;
+const whatsappHref = `https://wa.me/${SALES_WHATSAPP}?text=${encodeURIComponent(`Hola, quiero saber más sobre ${PLATFORM_NAME} para mi negocio.`)}`;
 
-const primaryBtn = "inline-flex h-12 items-center justify-center gap-2 rounded-full bg-night px-6 text-[15px] font-medium text-cream transition-opacity hover:opacity-85";
-const secondaryBtn = "inline-flex h-12 items-center justify-center gap-2 rounded-full border border-night/20 px-6 text-[15px] font-medium text-night transition-colors hover:border-night/50";
-const eyebrow = "text-xs font-semibold uppercase tracking-[0.2em] text-rose";
-const heading = "font-serif text-4xl font-semibold leading-[1.08] text-night sm:text-5xl";
-
-const STEPS = [
-  { icon: QrCode, title: "Se inscribe en segundos", text: "Escanea el QR de tu mostrador y escribe su nombre y su celular. No descarga nada." },
-  { icon: Stamp, title: "Suma un sello en cada visita", text: "Tu equipo escanea el código de su tarjeta con cualquier celular. Queda registrado con fecha y hora." },
-  { icon: Gift, title: "Vuelve por su premio", text: "Al completar los sellos, la recompensa aparece sola en su tarjeta y la canjea contigo." },
-];
-
-const GROUPS = ["Cerca del premio", "Cumpleaños del mes", "Hace tiempo no vienen", "Premio sin canjear", "Nuevos"];
-
-const STATS = [
-  { icon: Users, title: "Cuántos clientes vuelven", text: "Activos, nuevos y los que ya repiten." },
-  { icon: Clock, title: "Tus días y horas fuertes", text: "Para saber cuándo te conviene una promoción." },
-  { icon: Gift, title: "Premios ganados y canjeados", text: "Cuántos entregaste y cuántos siguen esperando." },
-  { icon: BarChart3, title: "Tu equipo y tus sedes", text: "Visitas registradas por empleado y por sede." },
-];
+const poster = "font-[family-name:var(--font-poster)] font-extrabold tracking-[-0.02em]";
+const h2 = `${poster} text-4xl leading-[1.02] sm:text-6xl`;
+const btn = "inline-flex h-14 items-center justify-center gap-2.5 rounded-lg px-6 text-base font-semibold transition-transform hover:-translate-y-0.5";
 
 const PLANS = [
-  { name: "Starter", lines: ["Hasta 300 clientes", "2 personas del equipo", "1 sede"] },
-  { name: "Pro", lines: ["Hasta 2.000 clientes", "10 personas del equipo", "3 sedes"], featured: true },
-  { name: "Business", lines: ["Clientes sin límite", "Equipo sin límite", "Sedes sin límite"] },
+  { name: "Starter", who: "Para un local con poco equipo", lines: ["300 clientes", "2 personas del equipo", "1 sede"] },
+  { name: "Pro", who: "Para el negocio que ya tiene movimiento", lines: ["2.000 clientes", "10 personas del equipo", "3 sedes"], featured: true },
+  { name: "Business", who: "Para cadenas y varias sedes", lines: ["Clientes sin límite", "Equipo sin límite", "Sedes sin límite"] },
 ];
 
 const FAQ = [
@@ -52,67 +38,53 @@ const FAQ = [
   { q: "¿Funciona con varias sedes?", a: "Sí. Según el plan puedes tener varias sedes y comparar sus visitas." },
 ];
 
-function Actions({ dark }: { dark?: boolean }) {
+function Punch({ bg, hole }: { bg: string; hole: string }) {
+  return <div aria-hidden className="punch-row" style={{ "--punch-bg": bg, "--punch-hole": hole } as React.CSSProperties} />;
+}
+
+function WhatsAppButton({ className }: { className: string }) {
   return (
-    <div className="flex flex-col gap-3 sm:flex-row">
-      <a href={demoHref} className={dark ? `${primaryBtn} bg-cream text-night` : primaryBtn}>
-        Ver la demo <ArrowRight className="size-4" />
-      </a>
-      {whatsappHref && (
-        <a href={whatsappHref} target="_blank" rel="noopener" className={dark ? `${secondaryBtn} border-cream/30 text-cream hover:border-cream/60` : secondaryBtn}>
-          <MessageCircle className="size-4" /> Escríbenos por WhatsApp
-        </a>
-      )}
-    </div>
+    <a href={whatsappHref} target="_blank" rel="noopener" className={`${btn} ${className}`}>
+      <MessageCircle className="size-5" /> Escríbenos por WhatsApp
+    </a>
   );
 }
 
 export default function Home() {
   return (
-    <div className="bg-cream text-night">
-      <header className="sticky top-0 z-40 border-b border-night/5 bg-cream/90 backdrop-blur">
-        <nav className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6" aria-label="Principal">
-          <Link href="/" className="font-serif text-xl font-semibold">
+    <div className={`${display.variable} ${text.variable} bg-white font-[family-name:var(--font-text)] text-coal`}>
+      {/* Portada */}
+      <div className="bg-cobalt text-white">
+        <header className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-8">
+          <Link href="/" className={`${poster} text-2xl`}>
             {PLATFORM_NAME}
           </Link>
-          <div className="hidden items-center gap-7 text-sm text-plum md:flex">
-            <a href="#como-funciona" className="hover:text-night">Cómo funciona</a>
-            <a href="#beneficios" className="hover:text-night">Beneficios</a>
-            <a href="#planes" className="hover:text-night">Planes</a>
-            <a href="#preguntas" className="hover:text-night">Preguntas</a>
-          </div>
-          <div className="flex items-center gap-4 text-sm">
-            <Link href="/login" className="text-plum hover:text-night">Entrar</Link>
-            <a href={demoHref} className="inline-flex h-9 items-center rounded-full bg-night px-4 font-medium text-cream">Ver la demo</a>
-          </div>
-        </nav>
-      </header>
+          <nav className="flex items-center gap-6 text-[15px] font-medium" aria-label="Principal">
+            <a href="#como-funciona" className="hidden hover:underline md:block">Cómo funciona</a>
+            <a href="#planes" className="hidden hover:underline md:block">Planes</a>
+            <a href="#preguntas" className="hidden hover:underline md:block">Preguntas</a>
+            <Link href="/login" className="hover:underline">Entrar</Link>
+          </nav>
+        </header>
 
-      <main>
-        {/* Portada */}
-        <section className="mx-auto grid max-w-6xl items-center gap-12 px-4 py-14 sm:px-6 lg:grid-cols-[1.1fr_0.9fr] lg:py-24">
+        <section className="mx-auto grid max-w-7xl items-center gap-12 px-4 pb-20 pt-8 sm:px-8 lg:grid-cols-[1.25fr_0.75fr] lg:pb-28 lg:pt-14">
           <div>
-            <p className={eyebrow}>Fidelización digital para negocios locales</p>
-            <h1 className="mt-5 font-serif text-5xl font-semibold leading-[1.02] sm:text-7xl">Haz que tus clientes vuelvan.</h1>
-            <p className="mt-6 max-w-xl text-lg leading-relaxed text-plum">
-              Una tarjeta de sellos con tu marca en el celular de cada cliente, y un panel que te dice quién vuelve, quién dejó de venir y a quién escribirle hoy.
+            <h1 className={`${poster} text-[3.6rem] leading-[0.95] sm:text-8xl lg:text-[7.5rem]`}>
+              Haz que tus clientes <span className="text-sun">vuelvan.</span>
+            </h1>
+            <p className="mt-8 max-w-xl text-xl leading-relaxed text-white/90">
+              La tarjeta de sellos de tu negocio, ahora en el celular de cada cliente. Y un panel que te dice quién volvió, quién dejó de venir y a quién escribirle hoy.
             </p>
-            <div className="mt-8">
-              <Actions />
+            <div className="mt-9 flex flex-col gap-3 sm:flex-row">
+              <WhatsAppButton className="bg-sun text-coal" />
+              <a href={demoHref} className={`${btn} border-2 border-white/60 text-white`}>Ver la demo</a>
             </div>
-            <ul className="mt-8 flex flex-col gap-2 text-sm text-plum sm:flex-row sm:gap-6">
-              {["Sin aplicaciones", "Sin equipos especiales", "Con tu logo y tus colores"].map((t) => (
-                <li key={t} className="flex items-center gap-2">
-                  <Check className="size-4 text-rose" /> {t}
-                </li>
-              ))}
-            </ul>
           </div>
-          <div className="relative mx-auto w-full max-w-sm">
+          <div className="mx-auto w-full max-w-sm lg:rotate-3">
             <LoyaltyCardView
               business={{
                 name: "Barbería Norte",
-                branding: { logoText: "BN", cardBackground: "#1C2333", cardForeground: "#E8DCC4", primary: "#E8DCC4", primaryForeground: "#1C2333", accent: "#C9B48A", stampIcon: "scissors", font: "sans" },
+                branding: { logoText: "BN", cardBackground: "#FFFFFF", cardForeground: "#131313", primary: "#131313", primaryForeground: "#FFFFFF", accent: "#F0482C", stampIcon: "scissors", font: "sans" },
               }}
               program={{ name: "Barbería Norte", stampsRequired: 6, rewardName: "Corte gratis" }}
               customerName="Andrés Ruiz"
@@ -120,224 +92,154 @@ export default function Home() {
               status="active"
               rewardsAvailable={0}
             />
-            <p className="mt-3 text-center text-xs text-plum">Ejemplo con un negocio inventado</p>
           </div>
         </section>
+      </div>
+      <Punch bg="#1b3fd8" hole="#ffffff" />
 
+      <main>
         {/* El problema */}
-        <section className="bg-night text-cream">
-          <div className="mx-auto grid max-w-6xl gap-10 px-4 py-16 sm:px-6 lg:grid-cols-[0.9fr_1.1fr] lg:py-20">
-            <h2 className="font-serif text-4xl font-semibold leading-[1.08] sm:text-5xl">Cada cliente que no vuelve se va sin avisarte.</h2>
-            <div className="grid gap-6 sm:grid-cols-3">
-              {[
-                ["El cartón se pierde", "Y con él se van los sellos y la razón para volver."],
-                ["La memoria no alcanza", "Nadie puede recordar quién dejó de venir hace dos meses."],
-                ["Escribirle a todos cansa", "Sin datos no sabes a quién escribirle, ni cuándo, ni qué decirle."],
-              ].map(([t, d]) => (
-                <div key={t}>
-                  <h3 className="font-serif text-2xl font-semibold text-rose-soft">{t}</h3>
-                  <p className="mt-2 text-[15px] leading-relaxed text-cream/75">{d}</p>
-                </div>
-              ))}
-            </div>
-          </div>
+        <section className="mx-auto max-w-7xl px-4 py-20 sm:px-8 lg:py-28">
+          <p className={`${poster} max-w-5xl text-4xl leading-[1.08] sm:text-6xl`}>
+            La tarjeta de cartón se pierde. La memoria no alcanza. <span className="text-tomato">Y el cliente que no vuelve no te avisa.</span>
+          </p>
+          <p className="mt-8 max-w-2xl text-xl leading-relaxed text-graphite">
+            Vendes todos los días, pero al cerrar no sabes quién es tu cliente fiel ni quién se fue a la competencia. Eso es lo que resolvemos.
+          </p>
         </section>
 
         {/* Cómo funciona */}
-        <section id="como-funciona" className="mx-auto max-w-6xl scroll-mt-20 px-4 py-16 sm:px-6 lg:py-24">
-          <p className={eyebrow}>Cómo funciona</p>
-          <h2 className={`${heading} mt-4`}>Tres pasos, y tu cliente ya tiene un motivo para volver</h2>
-          <ol className="mt-12 grid gap-10 md:grid-cols-3">
-            {STEPS.map((s, i) => (
-              <li key={s.title} className="border-t-2 border-rose/30 pt-6">
-                <div className="flex items-center justify-between">
-                  <span className="font-serif text-5xl font-semibold text-rose">{i + 1}</span>
-                  <s.icon className="size-6 text-plum" aria-hidden />
-                </div>
-                <h3 className="mt-4 text-lg font-semibold">{s.title}</h3>
-                <p className="mt-2 text-[15px] leading-relaxed text-plum">{s.text}</p>
-              </li>
-            ))}
-          </ol>
+        <section id="como-funciona" className="scroll-mt-4 bg-sun">
+          <div className="mx-auto max-w-7xl px-4 py-20 sm:px-8 lg:py-24">
+            <h2 className={h2}>Así funciona en tu mostrador</h2>
+            <ol className="mt-12 divide-y-2 divide-coal border-y-2 border-coal">
+              {[
+                ["Tu cliente escanea el QR", "Lo pones en la caja. Escribe su nombre y su celular y ya tiene su tarjeta. No descarga nada."],
+                ["Tu equipo le pone el sello", "Escanean su código con cualquier celular. Queda guardado con fecha y hora."],
+                ["Vuelve por su premio", "Al completar los sellos, el premio aparece solo en su tarjeta."],
+              ].map(([t, d], i) => (
+                <li key={t} className="grid gap-2 py-7 md:grid-cols-[6rem_1fr_1.2fr] md:items-baseline md:gap-6">
+                  <span className={`${poster} text-5xl`}>{i + 1}</span>
+                  <h3 className={`${poster} text-2xl sm:text-3xl`}>{t}</h3>
+                  <p className="text-lg leading-relaxed">{d}</p>
+                </li>
+              ))}
+            </ol>
+          </div>
         </section>
 
         {/* Beneficios */}
-        <section id="beneficios" className="scroll-mt-16 bg-blush">
-          <div className="mx-auto max-w-6xl space-y-20 px-4 py-16 sm:px-6 lg:py-24">
-            <div className="grid items-center gap-10 lg:grid-cols-2">
-              <div>
-                <p className={eyebrow}>Conoce a tus clientes</p>
-                <h2 className={`${heading} mt-4`}>Deja de adivinar quién es tu cliente fiel</h2>
-                <p className="mt-5 text-lg leading-relaxed text-plum">
-                  Cada visita queda guardada. Ves cuántas veces ha venido cada persona, cuándo fue la última, qué premios ha ganado y cuánto le falta para el siguiente. Esa base de clientes es tuya.
-                </p>
-              </div>
-              <div className="rounded-3xl bg-white p-6 shadow-pop sm:p-8">
-                <div className="flex items-center gap-4">
-                  <span className="flex size-14 items-center justify-center rounded-full bg-blush font-semibold text-rose">LG</span>
-                  <div>
-                    <p className="text-lg font-semibold">Laura Gómez</p>
-                    <p className="text-sm text-plum">Cliente desde marzo</p>
+        <section className="mx-auto max-w-7xl px-4 py-20 sm:px-8 lg:py-28">
+          <h2 className={`${h2} max-w-4xl`}>Todo lo que hoy no sabes de tus clientes</h2>
+          <div className="mt-12 grid gap-4 lg:grid-cols-6">
+            <div className="rounded-xl bg-tomato p-7 sm:p-10 lg:col-span-4">
+              <h3 className={`${poster} text-3xl sm:text-4xl`}>A quién escribirle, y el mensaje ya listo</h3>
+              <p className="mt-3 max-w-xl text-lg leading-relaxed">
+                Te mostramos a quién le falta poco para el premio, quién cumple años este mes y quién no viene hace tiempo. Tocas un botón y sale por tu WhatsApp, con su nombre.
+              </p>
+              <p className="mt-7 max-w-md rounded-xl rounded-tl-none bg-white p-5 text-[17px] leading-relaxed">
+                Hola Laura, ¡solo te falta 1 visita para tu manicura gratis en Estudio Lila! Te esperamos.
+              </p>
+            </div>
+            <div className="rounded-xl bg-coal p-7 text-white sm:p-10 lg:col-span-2">
+              <h3 className={`${poster} text-3xl`}>Cada cliente, con su historia</h3>
+              <dl className="mt-7 space-y-4">
+                {[["Laura Gómez", "cliente desde marzo"], ["14", "visitas"], ["8 de 10", "sellos"], ["Hace 4 días", "su última visita"]].map(([v, l]) => (
+                  <div key={l} className="border-b border-white/20 pb-3">
+                    <dd className="text-xl font-semibold">{v}</dd>
+                    <dt className="text-sm text-white/70">{l}</dt>
                   </div>
-                </div>
-                <dl className="mt-6 grid grid-cols-3 gap-3 text-center">
-                  {[["14", "visitas"], ["8/10", "sellos"], ["4 días", "desde su visita"]].map(([v, l]) => (
-                    <div key={l} className="rounded-2xl bg-cream px-2 py-4">
-                      <dd className="text-xl font-semibold">{v}</dd>
-                      <dt className="mt-1 text-xs text-plum">{l}</dt>
-                    </div>
-                  ))}
-                </dl>
-                <p className="mt-4 text-center text-xs text-plum">Ficha de ejemplo</p>
-              </div>
+                ))}
+              </dl>
             </div>
-
-            <div className="grid items-center gap-10 lg:grid-cols-2">
-              <div className="lg:order-2">
-                <p className={eyebrow}>Escríbeles en el momento justo</p>
-                <h2 className={`${heading} mt-4`}>Te decimos a quién escribirle, y el mensaje ya va listo</h2>
-                <p className="mt-5 text-lg leading-relaxed text-plum">
-                  La plataforma arma los grupos por ti. Eliges uno, tocas un botón por cliente y el mensaje sale con su nombre desde tu propio WhatsApp. Solo aparecen quienes aceptaron recibir mensajes.
-                </p>
-                <ul className="mt-6 flex flex-wrap gap-2">
-                  {GROUPS.map((g) => (
-                    <li key={g} className="rounded-full border border-night/10 bg-white px-4 py-2 text-sm font-medium">{g}</li>
-                  ))}
-                </ul>
-              </div>
-              <div className="rounded-3xl bg-white p-6 shadow-pop sm:p-8 lg:order-1">
-                <p className="flex items-center gap-2 text-sm font-semibold text-[#2F6B3F]">
-                  <MessageCircle className="size-4" /> WhatsApp · Laura Gómez
-                </p>
-                <p className="mt-4 rounded-2xl rounded-tl-sm bg-[#DFF3D6] p-5 text-[15px] leading-relaxed">
-                  Hola Laura, ¡solo te falta 1 visita para tu manicura gratis en Estudio Lila! Te esperamos.
-                </p>
-                <p className="mt-4 text-center text-xs text-plum">Mensaje de ejemplo; tú puedes cambiarlo</p>
-              </div>
+            <div className="rounded-xl bg-cobalt p-7 text-white sm:p-10 lg:col-span-2">
+              <h3 className={`${poster} text-3xl`}>¿Martes flojo?</h3>
+              <p className="mt-3 text-lg leading-relaxed text-white/90">Doble sello los martes. La creas una vez y se aplica sola.</p>
             </div>
-
-            <div className="grid items-center gap-10 lg:grid-cols-2">
-              <div>
-                <p className={eyebrow}>Llena tus días flojos</p>
-                <h2 className={`${heading} mt-4`}>¿Martes flojo? Doble sello los martes.</h2>
-                <p className="mt-5 text-lg leading-relaxed text-plum">
-                  Creas la promoción una vez y se aplica sola en los días que elijas. Las recompensas también: tú decides el premio, cuántos sellos hacen falta y cuándo vence.
-                </p>
-              </div>
-              <div>
-                <p className="mb-4 font-serif text-2xl font-semibold">Y ves en números qué funcionó</p>
-                <div className="grid gap-3 sm:grid-cols-2">
-                  {STATS.map((s) => (
-                    <div key={s.title} className="rounded-2xl bg-white p-5">
-                      <s.icon className="size-5 text-rose" aria-hidden />
-                      <h3 className="mt-3 font-semibold">{s.title}</h3>
-                      <p className="mt-1 text-sm leading-relaxed text-plum">{s.text}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
+            <div className="rounded-xl border-2 border-coal p-7 sm:p-10 lg:col-span-4">
+              <h3 className={`${poster} text-3xl`}>Tu negocio en números</h3>
+              <ul className="mt-5 grid gap-x-8 gap-y-2 text-lg sm:grid-cols-2">
+                <li>Cuántos clientes vuelven</li>
+                <li>Tus días y horas fuertes</li>
+                <li>Premios ganados y canjeados</li>
+                <li>Visitas por empleado y por sede</li>
+              </ul>
             </div>
           </div>
         </section>
 
         {/* Marca */}
-        <section className="mx-auto max-w-6xl px-4 py-16 text-center sm:px-6 lg:py-24">
-          <p className={eyebrow}>Tu marca, no la nuestra</p>
-          <h2 className={`${heading} mt-4`}>Una tarjeta que se siente de tu negocio</h2>
-          <p className="mx-auto mt-5 max-w-2xl text-lg leading-relaxed text-plum">
-            Tu logo, tus colores, el icono del sello y la tipografía. Prueba cómo cambia según el negocio:
-          </p>
-          <div className="mt-10">
+        <section className="bg-[#f2f2ee]">
+          <div className="mx-auto grid max-w-7xl items-center gap-12 px-4 py-20 sm:px-8 lg:grid-cols-2 lg:py-24">
+            <div>
+              <h2 className={h2}>Con tu marca, no con la nuestra</h2>
+              <p className="mt-6 max-w-lg text-xl leading-relaxed text-graphite">
+                Tu logo, tus colores, tu sello y tu letra. Toca un negocio y mira cómo cambia la tarjeta.
+              </p>
+            </div>
             <BrandPreview />
           </div>
         </section>
 
-        {/* Confianza */}
-        <section className="border-y border-night/5 bg-white">
-          <div className="mx-auto grid max-w-6xl gap-8 px-4 py-14 sm:px-6 md:grid-cols-3">
-            {[
-              { icon: Smartphone, t: "Fácil para tus clientes", d: "Sin aplicaciones ni contraseñas. Su tarjeta siempre está en el celular." },
-              { icon: Users, t: "Claro para tu equipo", d: "Cada persona entra con su usuario y solo ve lo que necesita." },
-              { icon: ShieldCheck, t: "Seguro para tus datos", d: "Solo tu negocio ve tu información, con tratamiento de datos según la Ley 1581." },
-            ].map((x) => (
-              <div key={x.t} className="flex gap-4">
-                <x.icon className="mt-1 size-6 shrink-0 text-rose" aria-hidden />
-                <div>
-                  <h3 className="font-semibold">{x.t}</h3>
-                  <p className="mt-1 text-[15px] leading-relaxed text-plum">{x.d}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
         {/* Planes */}
-        <section id="planes" className="mx-auto max-w-6xl scroll-mt-20 px-4 py-16 sm:px-6 lg:py-24">
-          <p className={eyebrow}>Planes</p>
-          <h2 className={`${heading} mt-4`}>Un plan para cada tamaño de negocio</h2>
-          <div className="mt-12 grid gap-5 md:grid-cols-3">
+        <section id="planes" className="mx-auto max-w-7xl scroll-mt-4 px-4 py-20 sm:px-8 lg:py-28">
+          <h2 className={h2}>Planes</h2>
+          <p className="mt-4 text-xl text-graphite">Todos incluyen la tarjeta con tu marca, mensajes por WhatsApp, promociones, premios y estadísticas.</p>
+          <div className="mt-10 grid gap-4 md:grid-cols-3">
             {PLANS.map((p) => (
-              <div key={p.name} className={p.featured ? "rounded-3xl bg-night p-8 text-cream" : "rounded-3xl border border-night/10 bg-white p-8"}>
-                <h3 className="font-serif text-3xl font-semibold">{p.name}</h3>
-                <p className={p.featured ? "mt-2 text-sm text-cream/70" : "mt-2 text-sm text-plum"}>Precio a consultar</p>
-                <ul className="mt-6 space-y-3 text-[15px]">
-                  {p.lines.map((l) => (
-                    <li key={l} className="flex items-center gap-2.5">
-                      <Check className={p.featured ? "size-4 text-rose-soft" : "size-4 text-rose"} /> {l}
-                    </li>
-                  ))}
+              <div key={p.name} className={p.featured ? "rounded-xl bg-sun p-8" : "rounded-xl border-2 border-coal/15 p-8"}>
+                <h3 className={`${poster} text-4xl`}>{p.name}</h3>
+                <p className="mt-2 text-[15px]">{p.who}</p>
+                <ul className="mt-6 space-y-2 text-lg font-medium">
+                  {p.lines.map((l) => <li key={l}>{l}</li>)}
                 </ul>
+                <a href={whatsappHref} target="_blank" rel="noopener" className="mt-7 inline-block font-semibold underline underline-offset-4">Pregunta el precio</a>
               </div>
             ))}
           </div>
-          <p className="mt-6 text-[15px] text-plum">Todos incluyen la tarjeta con tu marca, mensajes por WhatsApp, promociones, recompensas y estadísticas.</p>
-        </section>
-
-        {/* Lo que viene */}
-        <section className="bg-blush">
-          <div className="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-14 sm:px-6 md:flex-row md:items-center md:gap-10">
-            <CalendarHeart className="size-9 shrink-0 text-rose" aria-hidden />
-            <div>
-              <h2 className="font-serif text-3xl font-semibold">Lo que viene: tu tarjeta en la billetera del celular</h2>
-              <p className="mt-2 max-w-3xl text-[15px] leading-relaxed text-plum">
-                Estamos preparando Google Wallet y Apple Wallet, con avisos automáticos al celular. Quienes empiecen hoy pasan a la billetera sin perder clientes ni sellos.
-              </p>
-            </div>
-          </div>
+          <p className="mt-8 max-w-2xl text-lg leading-relaxed text-graphite">
+            <strong className="text-coal">Lo que viene:</strong> estamos preparando tu tarjeta en Google Wallet y Apple Wallet, con avisos al celular. Si empiezas hoy, pasas sin perder clientes ni sellos.
+          </p>
         </section>
 
         {/* Preguntas */}
-        <section id="preguntas" className="mx-auto max-w-3xl scroll-mt-20 px-4 py-16 sm:px-6 lg:py-24">
-          <h2 className={heading}>Preguntas frecuentes</h2>
-          <div className="mt-8 divide-y divide-night/10 border-y border-night/10">
-            {FAQ.map((f) => (
-              <details key={f.q} className="group py-5">
-                <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-medium [&::-webkit-details-marker]:hidden">
-                  {f.q}
-                  <span className="text-xl leading-none text-rose transition-transform group-open:rotate-45" aria-hidden>+</span>
-                </summary>
-                <p className="mt-3 text-[15px] leading-relaxed text-plum">{f.a}</p>
-              </details>
-            ))}
-          </div>
-        </section>
-
-        {/* Cierre */}
-        <section className="bg-night text-cream">
-          <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:py-24">
-            <h2 className="max-w-2xl font-serif text-5xl font-semibold leading-[1.05]">Tu próximo cliente fiel ya pasó por tu mostrador.</h2>
-            <p className="mt-5 max-w-xl text-lg leading-relaxed text-cream/75">Mira cómo funciona en la demo, con datos de ejemplo y sin crear una cuenta.</p>
-            <div className="mt-8">
-              <Actions dark />
+        <section id="preguntas" className="scroll-mt-4 border-t-2 border-coal/10">
+          <div className="mx-auto grid max-w-7xl gap-10 px-4 py-20 sm:px-8 lg:grid-cols-[0.8fr_1.2fr] lg:py-24">
+            <h2 className={h2}>Lo que siempre nos preguntan</h2>
+            <div className="divide-y-2 divide-coal/10 border-y-2 border-coal/10">
+              {FAQ.map((f) => (
+                <details key={f.q} className="group py-5">
+                  <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-lg font-semibold [&::-webkit-details-marker]:hidden">
+                    {f.q}
+                    <span className="text-2xl leading-none text-tomato transition-transform group-open:rotate-45" aria-hidden>+</span>
+                  </summary>
+                  <p className="mt-3 text-[17px] leading-relaxed text-graphite">{f.a}</p>
+                </details>
+              ))}
             </div>
           </div>
         </section>
       </main>
 
-      <footer className="bg-night text-cream/60">
-        <div className="mx-auto flex max-w-6xl flex-col gap-2 border-t border-cream/10 px-4 py-6 text-sm sm:flex-row sm:justify-between sm:px-6">
+      {/* Cierre */}
+      <Punch bg="#f0482c" hole="#ffffff" />
+      <section className="bg-tomato">
+        <div className="mx-auto max-w-7xl px-4 py-20 sm:px-8 lg:py-28">
+          <h2 className={`${poster} max-w-4xl text-5xl leading-[0.98] sm:text-8xl`}>¿Hablamos de tu negocio?</h2>
+          <p className="mt-6 max-w-xl text-xl leading-relaxed">Escríbenos y te mostramos cómo se vería la tarjeta con tu logo.</p>
+          <div className="mt-9 flex flex-col gap-3 sm:flex-row">
+            <WhatsAppButton className="bg-coal text-white" />
+            <a href={demoHref} className={`${btn} border-2 border-coal`}>Ver la demo</a>
+          </div>
+        </div>
+      </section>
+
+      <footer className="bg-coal text-white/70">
+        <div className="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-7 text-[15px] sm:flex-row sm:justify-between sm:px-8">
           <p>{PLATFORM_NAME} · by Wontex</p>
-          <a href="https://wontex-devs.com" className="hover:text-cream">wontex-devs.com</a>
+          <p>
+            WhatsApp 313 893 9222 · <a href="https://wontex-devs.com" className="hover:text-white">wontex-devs.com</a>
+          </p>
         </div>
       </footer>
     </div>

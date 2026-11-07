@@ -31,7 +31,7 @@ export function BrandPreview() {
   const e = EXAMPLES[i];
   return (
     <div>
-      <div className="mb-6 flex flex-wrap justify-center gap-2" role="group" aria-label="Tipo de negocio">
+      <div className="mb-6 flex flex-wrap gap-2" role="group" aria-label="Tipo de negocio">
         {EXAMPLES.map((x, n) => (
           <button
             key={x.label}
@@ -39,15 +39,15 @@ export function BrandPreview() {
             aria-pressed={n === i}
             onClick={() => setI(n)}
             className={cn(
-              "h-10 rounded-full border px-4 text-sm font-medium transition-colors",
-              n === i ? "border-night bg-night text-cream" : "border-night/15 bg-white/60 text-night hover:border-night/40",
+              "h-11 rounded-lg border-2 px-4 text-[15px] font-semibold transition-colors",
+              n === i ? "border-coal bg-coal text-white" : "border-coal/20 bg-white text-coal hover:border-coal",
             )}
           >
             {x.label}
           </button>
         ))}
       </div>
-      <div className="mx-auto max-w-sm">
+      <div className="max-w-sm">
         <LoyaltyCardView
           business={{ name: e.name, branding: e.branding }}
           program={{ name: e.name, stampsRequired: e.required, rewardName: e.reward }}

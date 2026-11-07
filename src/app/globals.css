@@ -22,13 +22,12 @@
   --color-info: #1d4ed8;
   --color-info-bg: #eff6ff;
 
-  /* Página de venta (misma paleta que la presentación comercial). */
-  --color-cream: #faf7f4;
-  --color-blush: #f1e9e4;
-  --color-rose: #8e4f4b;
-  --color-rose-soft: #d8a7a7;
-  --color-night: #17151a;
-  --color-plum: #5b5560;
+  /* Página de venta: colores de tinta de sello sobre papel. */
+  --color-cobalt: #1b3fd8;
+  --color-tomato: #f0482c;
+  --color-sun: #ffc928;
+  --color-coal: #131313;
+  --color-graphite: #4a4a4a;
 
   /* Marca del tenant: se sobrescriben por negocio en el layout del panel. */
   --color-brand: var(--brand, #111111);
@@ -83,3 +82,12 @@ body {
   50% { top: 88%; }
 }
 .animate-scan { animation: scan-line 2.4s ease-in-out infinite; }
+
+/* Borde perforado de tarjeta de sellos entre secciones de la página de venta. */
+.punch-row {
+  height: 36px;
+  background-color: var(--punch-bg);
+  background-image: radial-gradient(circle, var(--punch-hole) 10px, transparent 10.5px);
+  background-size: 36px 36px;
+  background-position: center;
+}
