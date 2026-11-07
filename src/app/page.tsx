@@ -84,7 +84,7 @@ export default function Home() {
             <LoyaltyCardView
               business={{
                 name: "Barbería Norte",
-                branding: { logoText: "BN", cardBackground: "#FFFFFF", cardForeground: "#131313", primary: "#131313", primaryForeground: "#FFFFFF", accent: "#F0482C", stampIcon: "scissors", font: "sans" },
+                branding: { logoText: "BN", cardBackground: "#FFFFFF", cardForeground: "#1B3FD8", primary: "#1B3FD8", primaryForeground: "#FFFFFF", accent: "#FFC928", stampIcon: "scissors", font: "sans" },
               }}
               program={{ name: "Barbería Norte", stampsRequired: 6, rewardName: "Corte gratis" }}
               customerName="Andrés Ruiz"
@@ -101,7 +101,7 @@ export default function Home() {
         {/* El problema */}
         <section className="mx-auto max-w-7xl px-4 py-20 sm:px-8 lg:py-28">
           <p className={`${poster} max-w-5xl text-4xl leading-[1.08] sm:text-6xl`}>
-            La tarjeta de cartón se pierde. La memoria no alcanza. <span className="text-tomato">Y el cliente que no vuelve no te avisa.</span>
+            La tarjeta de cartón se pierde. La memoria no alcanza. <span className="text-cobalt">Y el cliente que no vuelve no te avisa.</span>
           </p>
           <p className="mt-8 max-w-2xl text-xl leading-relaxed text-graphite">
             Vendes todos los días, pero al cerrar no sabes quién es tu cliente fiel ni quién se fue a la competencia. Eso es lo que resolvemos.
@@ -132,7 +132,7 @@ export default function Home() {
         <section className="mx-auto max-w-7xl px-4 py-20 sm:px-8 lg:py-28">
           <h2 className={`${h2} max-w-4xl`}>Todo lo que hoy no sabes de tus clientes</h2>
           <div className="mt-12 grid gap-4 lg:grid-cols-6">
-            <div className="rounded-xl bg-tomato p-7 sm:p-10 lg:col-span-4">
+            <div className="rounded-xl bg-sun p-7 sm:p-10 lg:col-span-4">
               <h3 className={`${poster} text-3xl sm:text-4xl`}>A quién escribirle, y el mensaje ya listo</h3>
               <p className="mt-3 max-w-xl text-lg leading-relaxed">
                 Te mostramos a quién le falta poco para el premio, quién cumple años este mes y quién no viene hace tiempo. Tocas un botón y sale por tu WhatsApp, con su nombre.
@@ -141,7 +141,7 @@ export default function Home() {
                 Hola Laura, ¡solo te falta 1 visita para tu manicura gratis en Estudio Lila! Te esperamos.
               </p>
             </div>
-            <div className="rounded-xl bg-coal p-7 text-white sm:p-10 lg:col-span-2">
+            <div className="rounded-xl bg-cobalt p-7 text-white sm:p-10 lg:col-span-2">
               <h3 className={`${poster} text-3xl`}>Cada cliente, con su historia</h3>
               <dl className="mt-7 space-y-4">
                 {[["Laura Gómez", "cliente desde marzo"], ["14", "visitas"], ["8 de 10", "sellos"], ["Hace 4 días", "su última visita"]].map(([v, l]) => (
@@ -169,7 +169,7 @@ export default function Home() {
         </section>
 
         {/* Marca */}
-        <section className="bg-[#f2f2ee]">
+        <section className="bg-[#eef1fd]">
           <div className="mx-auto grid max-w-7xl items-center gap-12 px-4 py-20 sm:px-8 lg:grid-cols-2 lg:py-24">
             <div>
               <h2 className={h2}>Con tu marca, no con la nuestra</h2>
@@ -211,7 +211,7 @@ export default function Home() {
                 <details key={f.q} className="group py-5">
                   <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-lg font-semibold [&::-webkit-details-marker]:hidden">
                     {f.q}
-                    <span className="text-2xl leading-none text-tomato transition-transform group-open:rotate-45" aria-hidden>+</span>
+                    <span className="text-2xl leading-none text-cobalt transition-transform group-open:rotate-45" aria-hidden>+</span>
                   </summary>
                   <p className="mt-3 text-[17px] leading-relaxed text-graphite">{f.a}</p>
                 </details>
@@ -222,23 +222,23 @@ export default function Home() {
       </main>
 
       {/* Cierre */}
-      <Punch bg="#f0482c" hole="#ffffff" />
-      <section className="bg-tomato">
+      <Punch bg="#1b3fd8" hole="#ffffff" />
+      <section className="bg-cobalt text-white">
         <div className="mx-auto max-w-7xl px-4 py-20 sm:px-8 lg:py-28">
           <h2 className={`${poster} max-w-4xl text-5xl leading-[0.98] sm:text-8xl`}>¿Hablamos de tu negocio?</h2>
-          <p className="mt-6 max-w-xl text-xl leading-relaxed">Escríbenos y te mostramos cómo se vería la tarjeta con tu logo.</p>
+          <p className="mt-6 max-w-xl text-xl leading-relaxed text-white/90">Escríbenos y te mostramos cómo se vería la tarjeta con tu logo.</p>
           <div className="mt-9 flex flex-col gap-3 sm:flex-row">
-            <WhatsAppButton className="bg-coal text-white" />
-            <a href={demoHref} className={`${btn} border-2 border-coal`}>Ver la demo</a>
+            <WhatsAppButton className="bg-sun text-coal" />
+            <a href={demoHref} className={`${btn} border-2 border-white/60 text-white`}>Ver la demo</a>
           </div>
         </div>
       </section>
 
-      <footer className="bg-coal text-white/70">
+      <footer className="bg-sun text-coal">
         <div className="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-7 text-[15px] sm:flex-row sm:justify-between sm:px-8">
           <p>{PLATFORM_NAME} · by Wontex</p>
           <p>
-            WhatsApp 313 893 9222 · <a href="https://wontex-devs.com" className="hover:text-white">wontex-devs.com</a>
+            WhatsApp 313 893 9222 · <a href="https://wontex-devs.com" className="underline underline-offset-2">wontex-devs.com</a>
           </p>
         </div>
       </footer>

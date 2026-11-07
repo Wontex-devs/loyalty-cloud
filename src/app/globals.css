@@ -22,12 +22,11 @@
   --color-info: #1d4ed8;
   --color-info-bg: #eff6ff;
 
-  /* Página de venta: colores de tinta de sello sobre papel. */
+  /* Página de venta: solo azul y amarillo sobre blanco. */
   --color-cobalt: #1b3fd8;
-  --color-tomato: #f0482c;
   --color-sun: #ffc928;
-  --color-coal: #131313;
-  --color-graphite: #4a4a4a;
+  --color-coal: #0e1a52;
+  --color-graphite: #3d4873;
 
   /* Marca del tenant: se sobrescriben por negocio en el layout del panel. */
   --color-brand: var(--brand, #111111);

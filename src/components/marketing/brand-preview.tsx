@@ -40,7 +40,7 @@ export function BrandPreview() {
             onClick={() => setI(n)}
             className={cn(
               "h-11 rounded-lg border-2 px-4 text-[15px] font-semibold transition-colors",
-              n === i ? "border-coal bg-coal text-white" : "border-coal/20 bg-white text-coal hover:border-coal",
+              n === i ? "border-cobalt bg-cobalt text-white" : "border-cobalt/25 bg-white text-coal hover:border-cobalt",
             )}
           >
             {x.label}
