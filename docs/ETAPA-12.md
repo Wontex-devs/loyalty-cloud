@@ -36,6 +36,13 @@
 2. Yo aplico la migración en producción y publico.
 3. **Aprobación de Google:** mientras tanto solo las cuentas de prueba (y los administradores del emisor) pueden guardar el pase y recibir avisos.
 
+## Estado de publicación
+| Proyecto | Estado |
+|---|---|
+| Pruebas (`loyalty-cloud`) | ✅ Migración aplicada (`db:verify --e2e`: 83 de 83) |
+| Producción (`loyalty-cloud-prod`) | ✅ Migración aplicada y código publicado. Los avisos reales siguen apagados hasta poner las claves de Google y `CRON_SECRET`. |
+| Demo | ✅ Publicada, con avisos simulados |
+
 ## Pruebas
 - `npm run test:db`: 185 casos, 24 nuevos:
   - permisos por rol y por comercio;
