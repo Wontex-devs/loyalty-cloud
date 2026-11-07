@@ -91,28 +91,51 @@ body {
   background-position: center;
 }
 
-/* Mano con el iPhone de la portada: escena de 600×720 que se escala por pantalla. */
-.hand-frame {
-  --hand-scale: 0.57;
+/* iPhone flotando en la portada: escena de 440×700 que se escala por pantalla. */
+.phone-frame {
+  --phone-scale: 0.72;
   position: relative;
-  width: calc(600px * var(--hand-scale));
-  height: calc(720px * var(--hand-scale));
-  overflow: hidden;
+  width: calc(440px * var(--phone-scale));
+  height: calc(700px * var(--phone-scale));
 }
-.hand-scene {
+.phone-scene {
   position: relative;
-  width: 600px;
-  height: 720px;
-  transform: scale(var(--hand-scale));
+  width: 440px;
+  height: 700px;
+  transform: scale(var(--phone-scale));
   transform-origin: top left;
 }
+.phone-float {
+  rotate: 4deg;
+  animation: phone-float 5s ease-in-out infinite;
+}
+.phone-shadow {
+  position: absolute;
+  bottom: 14px;
+  left: 90px;
+  width: 260px;
+  height: 34px;
+  border-radius: 50%;
+  background: rgb(6 10 36 / 0.45);
+  filter: blur(16px);
+}
+@keyframes phone-float {
+  50% {
+    translate: 0 -12px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .phone-float {
+    animation: none;
+  }
+}
 @media (min-width: 640px) {
-  .hand-frame {
-    --hand-scale: 0.8;
+  .phone-frame {
+    --phone-scale: 0.85;
   }
 }
 @media (min-width: 1024px) {
-  .hand-frame {
-    --hand-scale: 0.86;
+  .phone-frame {
+    --phone-scale: 0.92;
   }
 }

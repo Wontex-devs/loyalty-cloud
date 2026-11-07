@@ -3,7 +3,7 @@ import { Bricolage_Grotesque, Onest } from "next/font/google";
 import Link from "next/link";
 import { MessageCircle } from "lucide-react";
 import { BrandPreview } from "@/components/marketing/brand-preview";
-import { WalletHand } from "@/components/marketing/wallet-hand";
+import { WalletPhone } from "@/components/marketing/wallet-phone";
 import { DEMO_URL, PLATFORM_NAME, SALES_WHATSAPP } from "@/lib/config";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 
@@ -68,8 +68,8 @@ export default function Home() {
           </nav>
         </header>
 
-        <section className="mx-auto grid max-w-7xl items-end gap-10 px-4 pt-8 sm:px-8 lg:grid-cols-[1.1fr_0.9fr] lg:pt-10">
-          <div className="lg:pb-24">
+        <section className="mx-auto grid max-w-7xl items-center gap-10 px-4 pb-14 pt-8 sm:px-8 lg:grid-cols-[1.1fr_0.9fr] lg:pb-16 lg:pt-6">
+          <div>
             <h1 className={`${poster} text-[3.6rem] leading-[0.95] sm:text-8xl lg:text-[6.5rem]`}>
               Haz que tus clientes <span className="text-sun">vuelvan.</span>
             </h1>
@@ -83,8 +83,8 @@ export default function Home() {
             <p className="mt-5 text-[15px] text-white/80">Hoy funciona con QR. La imagen muestra lo que viene: Wallet y NFC.</p>
           </div>
           <div className="relative mx-auto">
-            <WalletHand />
-            <p className={`${poster} absolute right-1 top-4 flex size-28 rotate-12 items-center justify-center rounded-full bg-sun p-3 text-center text-[17px] leading-[1.05] text-coal sm:size-32 sm:text-xl`}>
+            <WalletPhone />
+            <p className={`${poster} absolute -right-2 top-[56%] flex size-28 lg:-right-14 rotate-12 items-center justify-center rounded-full bg-sun p-3 text-center text-[17px] leading-[1.05] text-coal sm:size-32 sm:text-xl`}>
               Primer mes gratis
             </p>
           </div>
