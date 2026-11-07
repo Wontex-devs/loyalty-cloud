@@ -58,6 +58,15 @@ export async function sendMagicLink(_: unknown, form: FormData): Promise<ActionR
   return { ok: true, message: "Si el correo tiene acceso, recibirás un enlace para entrar." };
 }
 
+export async function sendPasswordReset(_: unknown, form: FormData): Promise<ActionResult> {
+  const email = z.email().safeParse(form.get("email"));
+  if (!email.success) return { ok: false, message: "Correo no válido." };
+  const supabase = await createClient();
+  await supabase.auth.resetPasswordForEmail(email.data, { redirectTo: `${await origin()}/auth/callback?next=/account/password` });
+  // Misma respuesta exista o no la cuenta.
+  return { ok: true, message: "Si el correo tiene acceso, recibirás un enlace para cambiar tu contraseña." };
+}
+
 export async function signOut() {
   const supabase = await createClient();
   await supabase.auth.signOut();

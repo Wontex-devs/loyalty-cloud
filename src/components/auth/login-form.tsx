@@ -3,20 +3,23 @@
 import { Suspense, useActionState, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Mail } from "lucide-react";
-import { sendMagicLink, signInWithPassword, type ActionResult } from "@/lib/data/actions";
+import { sendMagicLink, sendPasswordReset, signInWithPassword, type ActionResult } from "@/lib/data/actions";
 import { Button, Field, Input } from "@/components/ui";
 
 function Form() {
   const params = useSearchParams();
   const next = params.get("next") ?? "";
   const linkError = params.get("error") === "link";
-  const [mode, setMode] = useState<"password" | "magic">("password");
+  const [mode, setMode] = useState<"password" | "magic" | "reset">("password");
   const [pwState, pwAction, pwPending] = useActionState<ActionResult | null, FormData>(signInWithPassword, null);
   const [mlState, mlAction, mlPending] = useActionState<ActionResult | null, FormData>(sendMagicLink, null);
-  const state = mode === "password" ? pwState : mlState;
+  const [rsState, rsAction, rsPending] = useActionState<ActionResult | null, FormData>(sendPasswordReset, null);
+  const state = mode === "password" ? pwState : mode === "magic" ? mlState : rsState;
+  const pending = pwPending || mlPending || rsPending;
+  const label = { password: pwPending ? "Entrando…" : "Entrar", magic: mlPending ? "Enviando…" : "Enviarme un enlace", reset: rsPending ? "Enviando…" : "Cambiar mi contraseña" }[mode];
 
   return (
-    <form action={mode === "password" ? pwAction : mlAction} className="mt-8 space-y-3">
+    <form action={{ password: pwAction, magic: mlAction, reset: rsAction }[mode]} className="mt-8 space-y-3">
       <input type="hidden" name="next" value={next} />
       <Field label="Correo">
         <Input name="email" type="email" autoComplete="email" required placeholder="tu@negocio.com" />
@@ -28,9 +31,14 @@ function Form() {
       )}
       {linkError && !state && <p className="text-sm text-danger">El enlace no es válido o ya expiró.</p>}
       {state && <p className={state.ok ? "text-sm text-success" : "text-sm text-danger"}>{state.message}</p>}
-      <Button className="w-full" disabled={pwPending || mlPending}>
-        {mode === "password" ? (pwPending ? "Entrando…" : "Entrar") : mlPending ? "Enviando…" : "Enviarme un enlace"}
+      <Button className="w-full" disabled={pending}>
+        {label}
       </Button>
+      {mode !== "reset" && (
+        <button type="button" onClick={() => setMode("reset")} className="w-full text-center text-[13px] font-medium text-muted hover:text-ink">
+          ¿Olvidaste tu contraseña?
+        </button>
+      )}
       <button
         type="button"
         onClick={() => setMode(mode === "password" ? "magic" : "password")}
