@@ -22,6 +22,14 @@
   --color-info: #1d4ed8;
   --color-info-bg: #eff6ff;
 
+  /* Página de venta (misma paleta que la presentación comercial). */
+  --color-cream: #faf7f4;
+  --color-blush: #f1e9e4;
+  --color-rose: #8e4f4b;
+  --color-rose-soft: #d8a7a7;
+  --color-night: #17151a;
+  --color-plum: #5b5560;
+
   /* Marca del tenant: se sobrescriben por negocio en el layout del panel. */
   --color-brand: var(--brand, #111111);
   --color-brand-fg: var(--brand-fg, #ffffff);

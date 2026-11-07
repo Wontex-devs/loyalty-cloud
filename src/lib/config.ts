@@ -7,3 +7,8 @@ export const PUBLIC_HOST_LABEL = (process.env.NEXT_PUBLIC_APP_URL || "http://loc
 export function publicOrigin() {
   return process.env.NEXT_PUBLIC_APP_URL || (typeof window !== "undefined" ? window.location.origin : "");
 }
+
+/** Demo pública que enlaza la página de venta. */
+export const DEMO_URL = process.env.NEXT_PUBLIC_DEMO_URL || "https://loyalty-cloud-demo.vercel.app/login";
+/** WhatsApp de ventas, solo dígitos con indicativo (573001234567). Sin él no se muestra el botón. */
+export const SALES_WHATSAPP = (process.env.NEXT_PUBLIC_SALES_WHATSAPP ?? "").replace(/\D/g, "");
