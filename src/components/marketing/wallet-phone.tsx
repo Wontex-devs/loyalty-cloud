@@ -21,7 +21,7 @@ function WalletBadge({ name, className, stripes, pocket }: { name: string; class
     <div className={`absolute flex items-center gap-2.5 rounded-2xl bg-black py-2.5 pl-3 pr-5 text-white shadow-[0_14px_30px_rgba(6,10,36,0.4)] ${className}`}>
       <WalletIcon stripes={stripes} pocket={pocket} />
       <p className="leading-tight">
-        <span className="block text-xs text-white/80">Muy pronto en</span>
+        <span className="block text-xs text-white/80">Hecha para</span>
         <span className="block whitespace-nowrap text-[17px] font-semibold">{name}</span>
       </p>
     </div>

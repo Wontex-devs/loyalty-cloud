@@ -80,7 +80,7 @@ export default function Home() {
               <WhatsAppButton className="bg-sun text-coal" />
               <a href={demoHref} className={`${btn} border-2 border-white/60 text-white`}>Ver la demo</a>
             </div>
-            <p className="mt-5 text-[15px] text-white/80">Hoy funciona con QR. La imagen muestra lo que viene: Wallet y NFC.</p>
+            <p className="mt-5 text-[15px] text-white/80">Empieza hoy con QR y pasa a Wallet sin perder un solo sello.</p>
           </div>
           <div className="relative mx-auto">
             <WalletPhone />
