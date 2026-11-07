@@ -12,11 +12,12 @@ const text = Onest({ subsets: ["latin"], variable: "--font-text" });
 
 export const metadata: Metadata = {
   title: { absolute: `${PLATFORM_NAME} · Tarjeta de fidelización digital para tu negocio` },
-  description: "Una tarjeta de sellos digital con tu marca y un panel que te dice quién vuelve y a quién escribirle. Tu primer mes es gratis.",
+  description: "Una tarjeta de sellos digital con tu marca y un panel que te dice quién vuelve y a quién escribirle. Plan Starter con primer mes gratis.",
 };
 
 const demoHref = isSupabaseConfigured ? DEMO_URL : "/login";
-const whatsappHref = `https://wa.me/${SALES_WHATSAPP}?text=${encodeURIComponent(`Hola, quiero mi primer mes gratis de ${PLATFORM_NAME} para mi negocio.`)}`;
+const whatsappLink = (text: string) => `https://wa.me/${SALES_WHATSAPP}?text=${encodeURIComponent(text)}`;
+const whatsappHref = whatsappLink(`Hola, quiero mi primer mes gratis del plan Starter de ${PLATFORM_NAME}.`);
 
 const poster = "font-[family-name:var(--font-poster)] font-extrabold tracking-[-0.02em]";
 const h2 = `${poster} text-4xl leading-[1.02] sm:text-6xl`;
@@ -29,7 +30,7 @@ const PLANS = [
 ];
 
 const FAQ = [
-  { q: "¿Cómo funciona el primer mes gratis?", a: "Te dejamos la tarjeta lista con tu marca y la usas un mes sin pagar. Si decides seguir, eliges el plan que te sirva." },
+  { q: "¿Cómo funciona el primer mes gratis?", a: "Aplica al plan Starter. Te dejamos la tarjeta lista con tu marca y la usas un mes sin pagar. Si decides seguir, pagas $59.900 al mes." },
   { q: "¿Mis clientes tienen que descargar algo?", a: "No. La tarjeta se abre en el navegador del celular y se puede añadir a la pantalla de inicio como si fuera una app." },
   { q: "¿Necesito comprar algún equipo?", a: "Para empezar, no. Tu equipo registra las visitas escaneando el QR con la cámara de un celular, una tablet o un computador. Cuando llegue el NFC, para marcar con el celular necesitarás un lector en el mostrador." },
   { q: "¿Qué pasa si mi cliente cambia de celular?", a: "Vuelve a escanear el QR de tu negocio con el mismo nombre y celular, y recupera su tarjeta con todos sus sellos." },
@@ -85,7 +86,7 @@ export default function Home() {
           <div className="relative mx-auto">
             <WalletPhone />
             <p className={`${poster} absolute -right-2 top-[70%] flex size-28 lg:-right-12 rotate-12 items-center justify-center rounded-full bg-sun p-3 text-center text-[17px] leading-[1.05] text-coal sm:size-32 sm:text-xl`}>
-              Primer mes gratis
+              Starter: primer mes gratis
             </p>
           </div>
         </section>
@@ -192,7 +193,7 @@ export default function Home() {
         {/* Planes */}
         <section id="planes" className="mx-auto max-w-7xl scroll-mt-4 px-4 py-20 sm:px-8 lg:py-28">
           <h2 className={h2}>Planes</h2>
-          <p className="mt-4 text-xl text-graphite"><strong className="text-coal">El primer mes te lo regalamos.</strong> Todos incluyen la tarjeta con tu marca, mensajes por WhatsApp, promociones, premios y estadísticas.</p>
+          <p className="mt-4 text-xl text-graphite"><strong className="text-coal">En Starter, el primer mes te lo regalamos.</strong> Todos incluyen la tarjeta con tu marca, mensajes por WhatsApp, promociones, premios y estadísticas.</p>
           <div className="mt-10 grid gap-4 md:grid-cols-3">
             {PLANS.map((p) => (
               <div key={p.name} className={p.featured ? "rounded-xl bg-sun p-8" : "rounded-xl border-2 border-coal/15 p-8"}>
@@ -212,7 +213,12 @@ export default function Home() {
                     <p className={`${poster} text-2xl`}>Precio ajustable</p>
                   )}
                 </div>
-                <a href={whatsappHref} target="_blank" rel="noopener" className="mt-5 block font-semibold underline underline-offset-4">
+                <a
+                  href={p.freeMonth ? whatsappHref : whatsappLink(`Hola, quiero saber más del plan ${p.name} de ${PLATFORM_NAME}.`)}
+                  target="_blank"
+                  rel="noopener"
+                  className="mt-5 block font-semibold underline underline-offset-4"
+                >
                   {p.freeMonth ? "Empezar gratis" : p.price ? "Quiero este plan" : "Hablemos de tu negocio"}
                 </a>
               </div>
@@ -244,7 +250,7 @@ export default function Home() {
       <section className="bg-cobalt text-white">
         <div className="mx-auto max-w-7xl px-4 py-20 sm:px-8 lg:py-28">
           <h2 className={`${poster} max-w-4xl text-5xl leading-[0.98] sm:text-8xl`}>¿Hablamos de tu negocio?</h2>
-          <p className="mt-6 max-w-xl text-xl leading-relaxed text-white/90">Escríbenos, te dejamos la tarjeta lista con tu logo y el primer mes te lo regalamos.</p>
+          <p className="mt-6 max-w-xl text-xl leading-relaxed text-white/90">Escríbenos y te dejamos la tarjeta lista con tu logo. Con el plan Starter, el primer mes te lo regalamos.</p>
           <div className="mt-9 flex flex-col gap-3 sm:flex-row">
             <WhatsAppButton className="bg-sun text-coal" />
             <a href={demoHref} className={`${btn} border-2 border-white/60 text-white`}>Ver la demo</a>
