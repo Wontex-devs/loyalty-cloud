@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import { Bricolage_Grotesque, Onest } from "next/font/google";
 import Link from "next/link";
 import { MessageCircle } from "lucide-react";
-import { LoyaltyCardView } from "@/components/loyalty/loyalty-card";
 import { BrandPreview } from "@/components/marketing/brand-preview";
+import { WalletPhone } from "@/components/marketing/wallet-phone";
 import { DEMO_URL, PLATFORM_NAME, SALES_WHATSAPP } from "@/lib/config";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 
@@ -12,11 +12,11 @@ const text = Onest({ subsets: ["latin"], variable: "--font-text" });
 
 export const metadata: Metadata = {
   title: { absolute: `${PLATFORM_NAME} · Tarjeta de fidelización digital para tu negocio` },
-  description: "Una tarjeta de sellos digital con tu marca y un panel que te dice quién vuelve, quién dejó de venir y a quién escribirle.",
+  description: "Una tarjeta de sellos digital con tu marca y un panel que te dice quién vuelve y a quién escribirle. Tu primer mes es gratis.",
 };
 
 const demoHref = isSupabaseConfigured ? DEMO_URL : "/login";
-const whatsappHref = `https://wa.me/${SALES_WHATSAPP}?text=${encodeURIComponent(`Hola, quiero saber más sobre ${PLATFORM_NAME} para mi negocio.`)}`;
+const whatsappHref = `https://wa.me/${SALES_WHATSAPP}?text=${encodeURIComponent(`Hola, quiero mi primer mes gratis de ${PLATFORM_NAME} para mi negocio.`)}`;
 
 const poster = "font-[family-name:var(--font-poster)] font-extrabold tracking-[-0.02em]";
 const h2 = `${poster} text-4xl leading-[1.02] sm:text-6xl`;
@@ -29,6 +29,7 @@ const PLANS = [
 ];
 
 const FAQ = [
+  { q: "¿Cómo funciona el primer mes gratis?", a: "Te dejamos la tarjeta lista con tu marca y la usas un mes sin pagar. Si decides seguir, eliges el plan que te sirva." },
   { q: "¿Mis clientes tienen que descargar algo?", a: "No. La tarjeta se abre en el navegador del celular y se puede añadir a la pantalla de inicio como si fuera una app." },
   { q: "¿Necesito comprar algún equipo?", a: "No. Tu equipo registra las visitas escaneando el QR con la cámara de un celular, una tablet o un computador." },
   { q: "¿Qué pasa si mi cliente cambia de celular?", a: "Vuelve a escanear el QR de tu negocio con el mismo nombre y celular, y recupera su tarjeta con todos sus sellos." },
@@ -45,7 +46,7 @@ function Punch({ bg, hole }: { bg: string; hole: string }) {
 function WhatsAppButton({ className }: { className: string }) {
   return (
     <a href={whatsappHref} target="_blank" rel="noopener" className={`${btn} ${className}`}>
-      <MessageCircle className="size-5" /> Escríbenos por WhatsApp
+      <MessageCircle className="size-5" /> Quiero mi primer mes gratis
     </a>
   );
 }
@@ -54,7 +55,7 @@ export default function Home() {
   return (
     <div className={`${display.variable} ${text.variable} bg-white font-[family-name:var(--font-text)] text-coal`}>
       {/* Portada */}
-      <div className="bg-cobalt text-white">
+      <div className="overflow-x-clip bg-cobalt text-white">
         <header className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-8">
           <Link href="/" className={`${poster} text-2xl`}>
             {PLATFORM_NAME}
@@ -67,9 +68,9 @@ export default function Home() {
           </nav>
         </header>
 
-        <section className="mx-auto grid max-w-7xl items-center gap-12 px-4 pb-20 pt-8 sm:px-8 lg:grid-cols-[1.25fr_0.75fr] lg:pb-28 lg:pt-14">
+        <section className="mx-auto grid max-w-7xl items-center gap-12 px-4 pb-20 pt-8 sm:px-8 lg:grid-cols-[1.1fr_0.9fr] lg:pb-28 lg:pt-14">
           <div>
-            <h1 className={`${poster} text-[3.6rem] leading-[0.95] sm:text-8xl lg:text-[7.5rem]`}>
+            <h1 className={`${poster} text-[3.6rem] leading-[0.95] sm:text-8xl lg:text-[6.5rem]`}>
               Haz que tus clientes <span className="text-sun">vuelvan.</span>
             </h1>
             <p className="mt-8 max-w-xl text-xl leading-relaxed text-white/90">
@@ -80,18 +81,12 @@ export default function Home() {
               <a href={demoHref} className={`${btn} border-2 border-white/60 text-white`}>Ver la demo</a>
             </div>
           </div>
-          <div className="mx-auto w-full max-w-sm lg:rotate-3">
-            <LoyaltyCardView
-              business={{
-                name: "Barbería Norte",
-                branding: { logoText: "BN", cardBackground: "#FFFFFF", cardForeground: "#1B3FD8", primary: "#1B3FD8", primaryForeground: "#FFFFFF", accent: "#FFC928", stampIcon: "scissors", font: "sans" },
-              }}
-              program={{ name: "Barbería Norte", stampsRequired: 6, rewardName: "Corte gratis" }}
-              customerName="Andrés Ruiz"
-              stamps={5}
-              status="active"
-              rewardsAvailable={0}
-            />
+          <div className="relative">
+            <WalletPhone />
+            <p className={`${poster} absolute right-1 top-4 flex size-28 rotate-12 items-center justify-center rounded-full bg-sun p-3 text-center text-[17px] leading-[1.05] text-coal sm:size-32 sm:text-xl`}>
+              Primer mes gratis
+            </p>
+            <p className="text-center text-sm text-white/80">Así se verá en Wallet. Muy pronto.</p>
           </div>
         </section>
       </div>
@@ -184,7 +179,7 @@ export default function Home() {
         {/* Planes */}
         <section id="planes" className="mx-auto max-w-7xl scroll-mt-4 px-4 py-20 sm:px-8 lg:py-28">
           <h2 className={h2}>Planes</h2>
-          <p className="mt-4 text-xl text-graphite">Todos incluyen la tarjeta con tu marca, mensajes por WhatsApp, promociones, premios y estadísticas.</p>
+          <p className="mt-4 text-xl text-graphite"><strong className="text-coal">El primer mes te lo regalamos.</strong> Todos incluyen la tarjeta con tu marca, mensajes por WhatsApp, promociones, premios y estadísticas.</p>
           <div className="mt-10 grid gap-4 md:grid-cols-3">
             {PLANS.map((p) => (
               <div key={p.name} className={p.featured ? "rounded-xl bg-sun p-8" : "rounded-xl border-2 border-coal/15 p-8"}>
@@ -226,7 +221,7 @@ export default function Home() {
       <section className="bg-cobalt text-white">
         <div className="mx-auto max-w-7xl px-4 py-20 sm:px-8 lg:py-28">
           <h2 className={`${poster} max-w-4xl text-5xl leading-[0.98] sm:text-8xl`}>¿Hablamos de tu negocio?</h2>
-          <p className="mt-6 max-w-xl text-xl leading-relaxed text-white/90">Escríbenos y te mostramos cómo se vería la tarjeta con tu logo.</p>
+          <p className="mt-6 max-w-xl text-xl leading-relaxed text-white/90">Escríbenos, te dejamos la tarjeta lista con tu logo y el primer mes te lo regalamos.</p>
           <div className="mt-9 flex flex-col gap-3 sm:flex-row">
             <WhatsAppButton className="bg-sun text-coal" />
             <a href={demoHref} className={`${btn} border-2 border-white/60 text-white`}>Ver la demo</a>

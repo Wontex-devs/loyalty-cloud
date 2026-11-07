@@ -90,3 +90,42 @@ body {
   background-size: 36px 36px;
   background-position: center;
 }
+
+/* iPhone isométrico de la portada: proyección sin perspectiva. */
+.iso-scene {
+  display: flex;
+  height: 600px;
+  align-items: center;
+  justify-content: center;
+}
+.iso-phone {
+  position: relative;
+  width: 290px;
+  height: 590px;
+  flex: none;
+  transform-style: preserve-3d;
+  transform: scale(var(--iso-scale, 0.92)) rotateX(48deg) rotateZ(-32deg);
+}
+.iso-edge {
+  position: absolute;
+  inset: 0;
+  border-radius: 46px;
+  background: #060a24;
+}
+.iso-shadow {
+  position: absolute;
+  inset: 24px;
+  border-radius: 46px;
+  background: rgb(6 10 36 / 0.55);
+  filter: blur(26px);
+  transform: translate3d(-34px, 34px, -40px);
+}
+@media (max-width: 640px) {
+  .iso-scene {
+    height: 410px;
+  }
+  .iso-phone {
+    --iso-scale: 0.6;
+  }
+}
+
