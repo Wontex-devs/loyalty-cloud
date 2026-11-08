@@ -1,4 +1,4 @@
-# Loyalty Cloud: fidelización digital de marca blanca
+# Wontex: fidelización digital de marca blanca
 
 Plataforma SaaS multiempresa de tarjetas de fidelización web.
 

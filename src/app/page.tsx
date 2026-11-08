@@ -263,7 +263,7 @@ export default function Home() {
 
       <footer className="bg-sun text-coal">
         <div className="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-7 text-[15px] sm:flex-row sm:justify-between sm:px-8">
-          <p>{PLATFORM_NAME} · by Wontex</p>
+          <p>{PLATFORM_NAME} · Fidelización digital para negocios</p>
           <p>
             WhatsApp 313 893 9222 · <a href="https://wontex-devs.com" className="underline underline-offset-2">wontex-devs.com</a>
           </p>

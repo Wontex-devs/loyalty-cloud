@@ -1,4 +1,4 @@
-# Guion para presentar Loyalty Cloud a un salón
+# Guion para presentar Wontex a un salón
 
 **Enlace de la demo:** https://loyalty-cloud-demo.vercel.app
 La demo usa datos de ejemplo (Beauty Club), no pide contraseña y no toca datos reales.

@@ -154,6 +154,6 @@ Recorrido sugerido de la demo:
 
 ## 10. Decisiones abiertas
 
-- Nombre y dominio definitivos de la plataforma (hoy aparece como "Loyalty Cloud" en `src/lib/config.ts`).
+- Nombre y dominio definitivos de la plataforma (hoy aparece como "Wontex" en `src/lib/config.ts`).
 - País por defecto del teléfono (configurado en +57 Colombia) y moneda de los planes (COP).
 - ¿Verificar el teléfono con OTP al inscribirse? Mejora la calidad de los datos, pero añade fricción y coste de SMS.
