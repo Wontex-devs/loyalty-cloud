@@ -1,0 +1,73 @@
+# Publicación automática en Vercel.
+# - Pull request: revisa el código y publica una vista previa en el proyecto demo (sin datos reales).
+# - Merge a main: revisa el código y publica en producción (app.wontex-devs.com) y en la demo.
+# Necesita el secreto VERCEL_TOKEN (Settings → Secrets and variables → Actions).
+name: Publicar
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: publicar-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  VERCEL_ORG_ID: team_VRb0FsZsiujcuKwofw3vXnne
+  PROD_PROJECT_ID: prj_GYEBm6faXVj0gDWqBQLLaHoi34GQ
+  DEMO_PROJECT_ID: prj_S09oF9QbHR23zsryD74WYO9Y6YXM
+  VERCEL_CLI: vercel@65.9.0
+
+jobs:
+  revisar:
+    name: Revisar el código
+    runs-on: ubuntu-latest
+    # Sin el secreto VERCEL_TOKEN solo se revisa el código y no se publica nada.
+    outputs:
+      publicar: ${{ steps.token.outputs.publicar }}
+    steps:
+      - id: token
+        run: echo "publicar=${{ secrets.VERCEL_TOKEN != '' }}" >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run test:unit
+
+  vista-previa:
+    name: Vista previa (demo)
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && needs.revisar.outputs.publicar == 'true'
+    needs: revisar
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # La demo no lleva las tareas programadas de producción.
+      - run: rm vercel.json
+      - name: Publicar vista previa
+        env:
+          VERCEL_PROJECT_ID: ${{ env.DEMO_PROJECT_ID }}
+        run: |
+          url=$(npx --yes $VERCEL_CLI deploy --yes --token="${{ secrets.VERCEL_TOKEN }}")
+          echo "Vista previa: $url" >> "$GITHUB_STEP_SUMMARY"
+
+  produccion:
+    name: Producción y demo
+    if: github.event_name == 'push' && needs.revisar.outputs.publicar == 'true'
+    needs: revisar
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Publicar producción
+        env:
+          VERCEL_PROJECT_ID: ${{ env.PROD_PROJECT_ID }}
+        run: npx --yes $VERCEL_CLI deploy --prod --yes --token="${{ secrets.VERCEL_TOKEN }}"
+      - run: rm vercel.json
+      - name: Publicar demo
+        env:
+          VERCEL_PROJECT_ID: ${{ env.DEMO_PROJECT_ID }}
+        run: npx --yes $VERCEL_CLI deploy --prod --yes --token="${{ secrets.VERCEL_TOKEN }}"
