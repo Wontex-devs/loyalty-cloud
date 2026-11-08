@@ -38,6 +38,12 @@
   --shadow-pop: 0 10px 30px -10px rgb(0 0 0 / 0.18), 0 2px 6px rgb(0 0 0 / 0.06);
 }
 
+/* Curvas de movimiento de la interfaz (nombres propios para no pisar `--ease-out` de Tailwind). */
+:root {
+  --ease-ui-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-ui-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+}
+
 html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -213,4 +219,74 @@ textarea {
   .phone-frame {
     --phone-scale: 0.92;
   }
+}
+
+/* Demostración NFC: por defecto se ve el estado final (sin JS o con movimiento reducido). */
+.nfc-anillo { opacity: 0; }
+.nfc-demo[data-fase="listo"] .nfc-celular { translate: -9rem 0; }
+.nfc-demo[data-fase="listo"] .nfc-sello { opacity: 0; }
+.nfc-demo[data-fase="reproduce"] .nfc-celular { animation: nfc-acercar 700ms var(--ease-ui-out) both; }
+.nfc-demo[data-fase="reproduce"] .nfc-anillo { animation: nfc-anillo 600ms var(--ease-ui-out) 650ms both; }
+.nfc-demo[data-fase="reproduce"] .nfc-sello { animation: stamp-in 500ms var(--ease-ui-out) 900ms both; }
+@keyframes nfc-acercar {
+  from { translate: -9rem 0; }
+  to { translate: 0 0; }
+}
+@keyframes nfc-anillo {
+  from { opacity: 0.5; scale: 1; }
+  to { opacity: 0; scale: 1.6; }
+}
+
+/* Cambio de tarjeta en «Con tu marca». */
+@keyframes tarjeta-entra {
+  from { opacity: 0; transform: translateY(8px) scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes tarjeta-entra-suave {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.animate-tarjeta { animation: tarjeta-entra 220ms var(--ease-ui-out) both; }
+@media (prefers-reduced-motion: reduce) {
+  .animate-tarjeta { animation: tarjeta-entra-suave 150ms var(--ease-ui-out) both; }
+}
+
+/* Preguntas frecuentes: la respuesta se abre con suavidad (solo donde el navegador lo permite). */
+@supports (interpolate-size: allow-keywords) {
+  :root {
+    interpolate-size: allow-keywords;
+  }
+  details.faq::details-content {
+    height: 0;
+    opacity: 0;
+    overflow: clip;
+    transition:
+      height 220ms var(--ease-ui-out),
+      opacity 220ms var(--ease-ui-out),
+      content-visibility 220ms allow-discrete;
+  }
+  details.faq[open]::details-content {
+    height: auto;
+    opacity: 1;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    details.faq::details-content {
+      height: auto;
+      transition: opacity 150ms var(--ease-ui-out), content-visibility 150ms allow-discrete;
+    }
+  }
+}
+
+/* Marca Lazo: el trazo se dibuja una sola vez (solo si la persona no pidió menos movimiento). */
+.lazo-trazo {
+  stroke-dasharray: 1;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .lazo-dibuja .lazo-trazo {
+    animation: lazo-dibuja 1000ms var(--ease-ui-out) 150ms both;
+  }
+}
+@keyframes lazo-dibuja {
+  from { stroke-dashoffset: 1; }
+  to { stroke-dashoffset: 0; }
 }

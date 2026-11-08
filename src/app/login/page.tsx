@@ -2,10 +2,10 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowRight, CreditCard, QrCode, ScanLine, Shield, Store, UserPlus } from "lucide-react";
+import { ArrowRight, QrCode, ScanLine, Shield, Store, UserPlus } from "lucide-react";
 import { useDemo } from "@/lib/demo/store";
 import { DEMO_FEATURED_TOKEN } from "@/lib/demo/data";
-import { PLATFORM_NAME } from "@/lib/config";
+import { LazoLogo } from "@/components/brand/lazo-logo";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { LoginForm } from "@/components/auth/login-form";
 
@@ -40,10 +40,7 @@ export default function LoginPage() {
     <div className="grid min-h-dvh lg:grid-cols-2">
       <div className="flex flex-col px-6 py-8 sm:px-12">
         <div className="flex items-center gap-2">
-          <div className="flex size-8 items-center justify-center rounded-lg bg-cobalt text-sun">
-            <CreditCard className="size-4" />
-          </div>
-          <span className="font-[family-name:var(--font-poster)] text-xl font-extrabold tracking-[-0.02em] text-coal">{PLATFORM_NAME}</span>
+          <LazoLogo animar className="text-coal" markClassName="text-cobalt" />
         </div>
 
         <div className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center py-10">

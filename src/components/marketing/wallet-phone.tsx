@@ -1,7 +1,7 @@
 "use client";
 
 import { QRCodeSVG } from "qrcode.react";
-import { ArrowLeft, Nfc, Scissors } from "lucide-react";
+import { ArrowLeft, Gift, Nfc, Scissors } from "lucide-react";
 
 /** Icono genérico de billetera: tarjetas de colores saliendo de un bolsillo. */
 function WalletIcon({ stripes, pocket }: { stripes: string[]; pocket: string }) {
@@ -50,12 +50,12 @@ export function WalletPhone() {
               <div className="notice-slide absolute inset-x-2.5 top-11 z-10 flex items-center gap-2.5 rounded-[20px] bg-white/95 p-3 shadow-[0_8px_24px_rgba(0,0,0,0.18)]">
                 <img src="/logos/el-faro.svg" alt="" className="size-10 shrink-0 rounded-xl bg-white p-1 ring-1 ring-black/10" />
                 <div className="min-w-0 flex-1 leading-snug">
-                  <p className="flex justify-between gap-2 text-[11px] text-[#6c6c70]">
+                  <p className="flex justify-between gap-2 text-xs text-[#5c5c60]">
                     <span>Wallet</span>
                     <span>ahora</span>
                   </p>
-                  <p className="text-[13px] font-semibold">Barbería El Faro</p>
-                  <p className="text-[12px] text-[#3c3c43]">Sello registrado. Vas 5 de 6.</p>
+                  <p className="text-sm font-semibold">Barbería El Faro</p>
+                  <p className="text-[13px] text-[#3c3c43]">Sello registrado. Vas 5 de 6.</p>
                 </div>
               </div>
 
@@ -64,19 +64,19 @@ export function WalletPhone() {
                 <div className="px-4 pt-3.5">
                   <div className="flex items-center gap-2.5">
                     <img src="/logos/el-faro.svg" alt="" className="size-9 rounded-full bg-white p-1" />
-                    <span className="text-[13px] font-medium">Barbería El Faro</span>
+                    <span className="text-sm font-medium">Barbería El Faro</span>
                   </div>
                   <p className="mt-2.5 text-[21px] font-semibold leading-none">Club del Faro</p>
                   <div className="mt-2.5 flex items-end justify-between leading-tight">
                     <div>
-                      <p className="text-[10px] text-white/75">Cortes</p>
+                      <p className="text-xs text-white/90">Cortes</p>
                       <p className="relative h-6 w-10 text-[19px] font-medium">
                         <span className="count-old absolute left-0">4/6</span>
                         <span className="count-new absolute left-0">5/6</span>
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className="text-[10px] text-white/75">Próximo premio</p>
+                      <p className="text-xs text-white/90">Próximo premio</p>
                       <p className="text-[15px] font-medium">Corte gratis</p>
                     </div>
                   </div>
@@ -88,13 +88,13 @@ export function WalletPhone() {
                       <Scissors className="size-3.5" />
                     </span>
                   ))}
-                  <span className="flex aspect-square items-center justify-center rounded-full border-[1.5px] border-dashed border-white/70 text-[7px] font-bold uppercase">Gratis</span>
+                  <span className="flex aspect-square items-center justify-center rounded-full border-[1.5px] border-dashed border-white/80 text-white"><Gift className="size-3.5" aria-hidden /></span>
                 </div>
 
                 <div className="mx-auto mt-3 w-fit rounded-xl bg-white p-2">
                   <QRCodeSVG value="Ejemplo de tarjeta" size={104} fgColor="#0e1a52" />
                 </div>
-                <p className="mt-2 flex items-center justify-center gap-1.5 text-[11px] text-white/90">
+                <p className="mt-2 flex items-center justify-center gap-1.5 px-2 text-xs leading-tight text-white">
                   <Nfc className="size-3.5" /> Acerca tu celular o muestra el código
                 </p>
               </div>
