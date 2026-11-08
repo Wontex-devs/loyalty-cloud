@@ -13,6 +13,9 @@ const text = Onest({ subsets: ["latin"], variable: "--font-text" });
 export const metadata: Metadata = {
   title: { absolute: `${PLATFORM_NAME} · Tarjeta de fidelización digital para tu negocio` },
   description: "Una tarjeta de sellos digital con tu marca y un panel que te dice quién vuelve y a quién escribirle. Plan Starter con primer mes gratis.",
+  // Solo el sitio real aparece en buscadores, con su dominio propio como dirección principal.
+  robots: { index: isSupabaseConfigured, follow: isSupabaseConfigured },
+  alternates: process.env.NEXT_PUBLIC_APP_URL ? { canonical: process.env.NEXT_PUBLIC_APP_URL } : undefined,
 };
 
 const demoHref = isSupabaseConfigured ? DEMO_URL : "/login";
