@@ -8,9 +8,9 @@ type ButtonVariant = "primary" | "secondary" | "ghost" | "danger" | "brand";
 type ButtonSize = "sm" | "md" | "lg";
 
 const buttonBase =
-  "inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:pointer-events-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink/20 whitespace-nowrap";
+  "inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:pointer-events-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cobalt/40 whitespace-nowrap active:translate-y-px";
 const buttonVariants: Record<ButtonVariant, string> = {
-  primary: "bg-ink text-white hover:bg-ink/85",
+  primary: "bg-cobalt text-white shadow-[0_6px_14px_-6px_rgb(27_63_216/0.6)] hover:bg-coal",
   brand: "bg-brand text-brand-fg hover:opacity-90",
   secondary: "bg-surface text-ink border border-line-strong hover:bg-canvas shadow-card",
   ghost: "text-ink-2 hover:bg-black/[0.04]",
@@ -96,7 +96,7 @@ export function Badge({ tone = "neutral", dot, className, children }: { tone?: T
 
 /* ---------- Form controls ---------- */
 const fieldBase =
-  "w-full rounded-lg border border-line-strong bg-surface px-3 text-sm text-ink placeholder:text-subtle shadow-card transition focus:border-ink/40 focus:outline-none focus:ring-4 focus:ring-ink/5 disabled:bg-canvas";
+  "w-full rounded-lg border border-line-strong bg-surface px-3 text-sm text-ink placeholder:text-subtle shadow-card transition focus:border-cobalt focus:outline-none focus:ring-4 focus:ring-cobalt/10 disabled:bg-canvas";
 
 export const Input = forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement>>(function Input(
   { className, ...props },
@@ -149,7 +149,7 @@ export function Switch({ checked, onChange, label }: { checked: boolean; onChang
       onClick={() => onChange(!checked)}
       className={cn(
         "relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors",
-        checked ? "bg-ink" : "bg-line-strong",
+        checked ? "bg-cobalt" : "bg-line-strong",
       )}
     >
       <span className={cn("inline-block size-4 rounded-full bg-white shadow transition-transform", checked ? "translate-x-4.5" : "translate-x-0.5")} />
@@ -170,7 +170,7 @@ export function PageHeader({
   return (
     <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
       <div>
-        <h1 className="text-xl font-semibold tracking-tight text-ink sm:text-[22px]">{title}</h1>
+        <h1 className="font-[family-name:var(--font-poster)] text-2xl font-extrabold tracking-[-0.02em] text-coal sm:text-[32px] sm:leading-tight">{title}</h1>
         {description && <p className="mt-1 text-sm text-muted">{description}</p>}
       </div>
       {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
@@ -198,7 +198,7 @@ export function StatCard({
         {Icon && <Icon className="size-4 text-subtle" strokeWidth={1.75} />}
       </div>
       <div className="mt-2 flex items-baseline gap-2">
-        <span className="tabular text-2xl font-semibold tracking-tight text-ink">{value}</span>
+        <span className="tabular font-[family-name:var(--font-poster)] text-3xl font-extrabold tracking-[-0.02em] text-coal">{value}</span>
         {delta && (
           <span className={cn("text-xs font-medium", delta.positive === false ? "text-danger" : "text-success")}>
             {delta.value}

@@ -40,14 +40,14 @@ export default function LoginPage() {
     <div className="grid min-h-dvh lg:grid-cols-2">
       <div className="flex flex-col px-6 py-8 sm:px-12">
         <div className="flex items-center gap-2">
-          <div className="flex size-7 items-center justify-center rounded-lg bg-ink text-white">
+          <div className="flex size-8 items-center justify-center rounded-lg bg-cobalt text-sun">
             <CreditCard className="size-4" />
           </div>
-          <span className="text-sm font-semibold tracking-tight">{PLATFORM_NAME}</span>
+          <span className="font-[family-name:var(--font-poster)] text-xl font-extrabold tracking-[-0.02em] text-coal">{PLATFORM_NAME}</span>
         </div>
 
         <div className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center py-10">
-          <h1 className="text-2xl font-semibold tracking-tight">Inicia sesión</h1>
+          <h1 className="font-[family-name:var(--font-poster)] text-4xl font-extrabold tracking-[-0.02em] text-coal">Inicia sesión</h1>
           <p className="mt-1 text-sm text-muted">Accede al panel de tu negocio.</p>
 
           {isSupabaseConfigured ? (
@@ -99,15 +99,28 @@ export default function LoginPage() {
         </div>
       </div>
 
-      <div className="relative hidden overflow-hidden bg-[#EBCFCB] lg:block">
-        <div className="absolute inset-0 bg-[radial-gradient(80%_60%_at_80%_10%,rgba(255,255,255,0.6),transparent_60%)]" />
-        <div className="relative flex h-full flex-col justify-end p-12 text-[#1A1416]">
-          <p className="font-serif text-5xl leading-[1.05]">
-            Clientes que vuelven,
+      <div className="relative hidden overflow-hidden bg-cobalt lg:block">
+        <div
+          aria-hidden
+          className="absolute inset-0 opacity-90"
+          style={{
+            backgroundImage: "radial-gradient(circle, rgb(255 255 255 / 0.16) 10px, transparent 10.5px)",
+            backgroundSize: "44px 44px",
+          }}
+        />
+        <p
+          aria-hidden
+          className="absolute -right-6 top-24 flex size-40 rotate-12 items-center justify-center rounded-full bg-sun p-4 text-center font-[family-name:var(--font-poster)] text-2xl font-extrabold leading-[1.05] text-coal"
+        >
+          Un sello más y es tuyo
+        </p>
+        <div className="relative flex h-full flex-col justify-end p-12 text-white">
+          <p className="font-[family-name:var(--font-poster)] text-7xl font-extrabold leading-[0.95] tracking-[-0.02em]">
+            Clientes que <span className="text-sun">vuelven,</span>
             <br />
             sin descargar apps.
           </p>
-          <p className="mt-4 max-w-md text-sm opacity-70">
+          <p className="mt-5 max-w-md text-base text-white/85">
             Tarjetas de fidelización digitales con la identidad de cada negocio. Un QR para inscribirse, un QR para sumar visitas.
           </p>
         </div>

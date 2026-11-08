@@ -50,7 +50,24 @@ body {
 }
 
 ::selection {
-  background: color-mix(in oklab, var(--brand-accent, #d8a7a7) 45%, white);
+  background: color-mix(in oklab, var(--brand-accent, var(--color-sun)) 55%, white);
+  color: var(--color-ink);
+}
+
+/* Detalles del navegador con la identidad de la plataforma. */
+:focus-visible {
+  outline: 2px solid var(--color-cobalt);
+  outline-offset: 2px;
+}
+a {
+  text-underline-offset: 3px;
+}
+html {
+  scrollbar-color: color-mix(in oklab, var(--color-cobalt) 35%, white) transparent;
+}
+input,
+textarea {
+  caret-color: var(--color-cobalt);
 }
 
 .tabular {
