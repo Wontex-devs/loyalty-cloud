@@ -18,3 +18,13 @@ npm run db:seed    # carga Beauty Club en tu proyecto Supabase
 - Google Wallet (Etapa 9): [docs/ETAPA-9-WALLET.md](docs/ETAPA-9-WALLET.md)
 - Pruebas, despliegue y plan del piloto (Etapa 5): [docs/ETAPA-5.md](docs/ETAPA-5.md) · Guía para el equipo: [docs/GUIA-EQUIPO.md](docs/GUIA-EQUIPO.md)
 - Comercio de ejemplo: **Beauty Club** (`/business/beautyclub`, `/join/beautyclub`)
+
+## Cómo colaborar desde GitHub
+
+Cada cambio que llega a `main` se publica solo en https://app.wontex-devs.com y en la demo (GitHub Actions, `.github/workflows/deploy.yml`).
+
+1. Crea una rama, haz tus cambios y abre un **pull request** hacia `main`.
+2. GitHub revisa el código (tipos y pruebas) y publica una **vista previa en modo demo**, sin datos reales. El enlace aparece en el resumen de la ejecución, en la pestaña *Actions*.
+3. Cuando el pull request se aprueba y se une a `main`, el cambio queda en producción en uno o dos minutos.
+
+No subas secretos ni archivos `.env`: las claves viven en Vercel.
