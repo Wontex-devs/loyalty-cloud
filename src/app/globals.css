@@ -69,6 +69,25 @@ input,
 textarea {
   caret-color: var(--color-cobalt);
 }
+/* Sobre fondo cobalto el foco se marca en amarillo para que se vea. */
+.on-cobalt :focus-visible {
+  outline-color: var(--color-sun);
+}
+
+/* Entrada al desplazarse: solo donde el navegador lo permite; si no, todo queda visible. */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .reveal {
+      animation: reveal-in linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 35%;
+    }
+  }
+}
+@keyframes reveal-in {
+  from { opacity: 0; translate: 0 28px; }
+  to { opacity: 1; translate: 0 0; }
+}
 
 .tabular {
   font-variant-numeric: tabular-nums;
