@@ -58,19 +58,33 @@ function WhatsAppButton({ className }: { className: string }) {
 export default function Home() {
   return (
     <div className={`${display.variable} ${text.variable} bg-white font-[family-name:var(--font-text)] text-coal`}>
-      {/* Portada */}
-      <div className="overflow-x-clip bg-cobalt text-white">
-        <header className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-8">
+      {/* Encabezado fijo: el botón de WhatsApp siempre queda a la vista */}
+      <header className="on-cobalt sticky top-0 z-40 bg-cobalt text-white shadow-[0_10px_24px_-18px_rgb(6_10_36/0.8)]">
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:h-20 sm:px-8">
           <Link href="/" className={`${poster} text-2xl`}>
             {PLATFORM_NAME}
           </Link>
-          <nav className="flex items-center gap-6 text-[15px] font-medium" aria-label="Principal">
-            <a href="#como-funciona" className="hidden hover:underline md:block">Cómo funciona</a>
-            <a href="#planes" className="hidden hover:underline md:block">Planes</a>
-            <a href="#preguntas" className="hidden hover:underline md:block">Preguntas</a>
+          <nav className="flex items-center gap-5 text-[15px] font-medium" aria-label="Principal">
+            <a href="#como-funciona" className="hidden hover:underline lg:block">Cómo funciona</a>
+            <a href="#planes" className="hidden hover:underline lg:block">Planes</a>
+            <a href="#preguntas" className="hidden hover:underline lg:block">Preguntas</a>
             <Link href="/login" className="hover:underline">Entrar</Link>
+            <a
+              href={whatsappHref}
+              target="_blank"
+              rel="noopener"
+              className="inline-flex h-10 items-center gap-2 rounded-lg bg-sun px-4 font-semibold text-coal transition-transform hover:-translate-y-0.5"
+            >
+              <MessageCircle className="size-4" />
+              <span className="hidden sm:inline">Primer mes gratis</span>
+              <span className="sm:hidden">WhatsApp</span>
+            </a>
           </nav>
-        </header>
+        </div>
+      </header>
+
+      {/* Portada */}
+      <div className="on-cobalt overflow-x-clip bg-cobalt text-white">
 
         <section className="mx-auto grid max-w-7xl items-center gap-10 px-4 pb-14 pt-8 sm:px-8 lg:grid-cols-[1.1fr_0.9fr] lg:pb-16 lg:pt-6">
           <div>
@@ -88,7 +102,7 @@ export default function Home() {
           </div>
           <div className="relative mx-auto">
             <WalletPhone />
-            <p className={`${poster} absolute -right-2 top-[70%] flex size-28 lg:-right-12 rotate-12 items-center justify-center rounded-full bg-sun p-3 text-center text-[17px] leading-[1.05] text-coal sm:size-32 sm:text-xl`}>
+            <p className={`${poster} absolute -right-2 top-[70%] flex size-28 lg:-right-12 rotate-12 items-center justify-center rounded-full bg-sun p-3 text-center text-[17px] leading-[1.05] text-coal shadow-[0_14px_28px_-12px_rgb(6_10_36/0.6)] sm:size-36 sm:text-2xl`}>
               Starter: primer mes gratis
             </p>
           </div>
@@ -98,7 +112,7 @@ export default function Home() {
 
       <main>
         {/* El problema */}
-        <section className="mx-auto max-w-7xl px-4 py-20 sm:px-8 lg:py-28">
+        <section className="reveal mx-auto max-w-7xl px-4 py-20 sm:px-8 lg:py-28">
           <p className={`${poster} max-w-5xl text-4xl leading-[1.08] sm:text-6xl`}>
             La tarjeta de cartón se pierde. La memoria no alcanza. <span className="text-cobalt">Y el cliente que no vuelve no te avisa.</span>
           </p>
@@ -109,7 +123,7 @@ export default function Home() {
 
         {/* Cómo funciona */}
         <section id="como-funciona" className="scroll-mt-4 bg-sun">
-          <div className="mx-auto max-w-7xl px-4 py-20 sm:px-8 lg:py-24">
+          <div className="reveal mx-auto max-w-7xl px-4 py-20 sm:px-8 lg:py-24">
             <h2 className={h2}>Así funciona en tu mostrador</h2>
             <ol className="mt-12 divide-y-2 divide-coal border-y-2 border-coal">
               {[
@@ -128,12 +142,12 @@ export default function Home() {
         </section>
 
         {/* Beneficios */}
-        <section className="mx-auto max-w-7xl px-4 py-20 sm:px-8 lg:py-28">
+        <section className="reveal mx-auto max-w-7xl px-4 py-20 sm:px-8 lg:py-28">
           <h2 className={`${h2} max-w-4xl`}>Todo lo que hoy no sabes de tus clientes</h2>
           <div className="mt-12 grid gap-4 lg:grid-cols-6">
-            <div className="rounded-xl bg-sun p-7 sm:p-10 lg:col-span-4">
-              <h3 className={`${poster} text-3xl sm:text-4xl`}>A quién escribirle, y el mensaje ya listo</h3>
-              <p className="mt-3 max-w-xl text-lg leading-relaxed">
+            <div className="rounded-xl bg-sun p-7 sm:p-12 lg:col-span-4 lg:row-span-1">
+              <h3 className={`${poster} text-3xl sm:text-5xl sm:leading-[1.02]`}>A quién escribirle, y el mensaje ya listo</h3>
+              <p className="mt-4 max-w-xl text-lg leading-relaxed">
                 Te mostramos a quién le falta poco para el premio, quién cumple años este mes y quién no viene hace tiempo. Tocas un botón y sale por tu WhatsApp, con su nombre.
               </p>
               <p className="mt-7 max-w-md rounded-xl rounded-tl-none bg-white p-5 text-[17px] leading-relaxed">
@@ -181,8 +195,8 @@ export default function Home() {
         </section>
 
         {/* NFC */}
-        <section className="bg-cobalt text-white">
-          <div className="mx-auto max-w-7xl px-4 py-20 sm:px-8 lg:py-24">
+        <section className="on-cobalt bg-cobalt text-white">
+          <div className="reveal mx-auto max-w-7xl px-4 py-20 sm:px-8 lg:py-24">
             <h2 className={`${h2} max-w-4xl`}>
               Hacia dónde vamos: <span className="text-sun">acerca el celular y listo.</span>
             </h2>
@@ -194,12 +208,19 @@ export default function Home() {
         </section>
 
         {/* Planes */}
-        <section id="planes" className="mx-auto max-w-7xl scroll-mt-4 px-4 py-20 sm:px-8 lg:py-28">
+        <section id="planes" className="reveal mx-auto max-w-7xl scroll-mt-20 px-4 py-20 sm:px-8 lg:py-28">
           <h2 className={h2}>Planes</h2>
           <p className="mt-4 text-xl text-graphite"><strong className="text-coal">En Starter, el primer mes te lo regalamos.</strong> Todos incluyen la tarjeta con tu marca, mensajes por WhatsApp, promociones, premios y estadísticas.</p>
-          <div className="mt-10 grid gap-4 md:grid-cols-3">
+          <div className="mt-10 grid gap-4 md:grid-cols-3 md:items-stretch">
             {PLANS.map((p) => (
-              <div key={p.name} className={p.featured ? "rounded-xl bg-sun p-8" : "rounded-xl border-2 border-coal/15 p-8"}>
+              <div
+                key={p.name}
+                className={
+                  p.featured
+                    ? "rounded-xl bg-coal p-8 text-white shadow-[0_24px_40px_-24px_rgb(14_26_82/0.7)] md:-my-4 md:py-12"
+                    : "rounded-xl border-2 border-coal/15 p-8"
+                }
+              >
                 <h3 className={`${poster} text-4xl`}>{p.name}</h3>
                 <p className="mt-2 text-[15px]">{p.who}</p>
                 <ul className="mt-6 space-y-2 text-lg font-medium">
@@ -210,7 +231,7 @@ export default function Home() {
                   {p.price ? (
                     <p className="text-lg">
                       {p.freeMonth && "Después, "}
-                      <strong className={`${poster} text-2xl`}>{p.price}</strong> al mes
+                      <strong className={`${poster} ${p.featured ? "text-4xl text-sun" : "text-3xl"}`}>{p.price}</strong> al mes
                     </p>
                   ) : (
                     <p className={`${poster} text-2xl`}>Precio ajustable</p>
@@ -220,7 +241,9 @@ export default function Home() {
                   href={p.freeMonth ? whatsappHref : whatsappLink(`Hola, quiero saber más del plan ${p.name} de ${PLATFORM_NAME}.`)}
                   target="_blank"
                   rel="noopener"
-                  className="mt-5 block font-semibold underline underline-offset-4"
+                  className={`mt-6 flex h-12 items-center justify-center rounded-lg px-4 font-semibold transition-transform hover:-translate-y-0.5 ${
+                    p.featured ? "bg-sun text-coal" : "border-2 border-coal text-coal"
+                  }`}
                 >
                   {p.freeMonth ? "Empezar gratis" : p.price ? "Quiero este plan" : "Hablemos de tu negocio"}
                 </a>
@@ -250,9 +273,9 @@ export default function Home() {
 
       {/* Cierre */}
       <Punch bg="#1b3fd8" hole="#ffffff" />
-      <section className="bg-cobalt text-white">
-        <div className="mx-auto max-w-7xl px-4 py-20 sm:px-8 lg:py-28">
-          <h2 className={`${poster} max-w-4xl text-5xl leading-[0.98] sm:text-8xl`}>¿Hablamos de tu negocio?</h2>
+      <section className="on-cobalt bg-cobalt text-white">
+        <div className="reveal mx-auto max-w-7xl px-4 py-24 sm:px-8 lg:py-36">
+          <h2 className={`${poster} max-w-4xl text-5xl leading-[0.98] sm:text-8xl`}>¿Hablamos de <span className="text-sun">tu negocio?</span></h2>
           <p className="mt-6 max-w-xl text-xl leading-relaxed text-white/90">Escríbenos y te dejamos la tarjeta lista con tu logo. Con el plan Starter, el primer mes te lo regalamos.</p>
           <div className="mt-9 flex flex-col gap-3 sm:flex-row">
             <WhatsAppButton className="bg-sun text-coal" />
