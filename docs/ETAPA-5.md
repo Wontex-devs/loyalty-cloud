@@ -96,7 +96,7 @@ Con HTTPS, la cámara de cualquier celular ya funciona como escáner.
 - No hay SMS ni WhatsApp: la clienta guarda el enlace de su tarjeta o la añade a la pantalla de inicio.
 
 ## 6. Producción actual
-- Sitio: https://loyalty-cloud-sigma.vercel.app. Proyecto Vercel `wontex/loyalty-cloud`, plan Hobby, funciones en São Paulo (`gru1`).
+- Sitio: https://lazo.wontex-devs.com (subdominio en Cloudflare, CNAME sin proxy hacia Vercel; https://loyalty-cloud-sigma.vercel.app sigue funcionando). Proyecto Vercel `wontex/loyalty-cloud`, plan Hobby, funciones en São Paulo (`gru1`).
 - Base de datos: proyecto Supabase `loyalty-cloud-prod` (`axuiaztmryljcxypogmt`, São Paulo). Las 7 migraciones están aplicadas y el registro libre está desactivado.
 - Auth: Site URL y redirect `…/auth/callback` configurados.
 - Superadministradora y propietaria de Beauty Club: `wontex.developer@gmail.com`.
