@@ -61,11 +61,11 @@ export function AppShell({
                       href={item.href}
                       className={cn(
                         "group flex h-8 items-center gap-2.5 rounded-md px-2 text-[13px] font-medium transition-colors",
-                        active ? "bg-black/[0.06] text-ink" : "text-ink-2 hover:bg-black/[0.035] hover:text-ink",
+                        active ? "bg-cobalt text-white shadow-[0_6px_14px_-8px_rgb(27_63_216/0.7)]" : "text-ink-2 hover:bg-cobalt/[0.07] hover:text-coal",
                         item.soon && "text-subtle",
                       )}
                     >
-                      <Icon className={cn("size-4", active ? "text-ink" : "text-muted")} strokeWidth={1.75} />
+                      <Icon className={cn("size-4", active ? "text-sun" : "text-muted")} strokeWidth={1.75} />
                       <span className="flex-1 truncate">{item.label}</span>
                       {item.soon && (
                         <span className="rounded border border-line px-1 text-[10px] font-medium text-subtle">Pronto</span>
