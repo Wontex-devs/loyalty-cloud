@@ -240,7 +240,7 @@ export default function Home() {
         {/* Planes */}
         <section id="planes" className="reveal mx-auto max-w-7xl scroll-mt-28 px-4 py-20 sm:px-8 lg:scroll-mt-20 lg:py-28">
           <h2 className={h2}>Planes</h2>
-          <p className="mt-4 text-xl text-graphite">Todos incluyen la tarjeta con tu marca, mensajes por WhatsApp, promociones, premios y estadísticas.</p>
+          <p className="mt-4 text-xl text-graphite">Todos incluyen la tarjeta con tu marca, avisos al celular de tus clientes, promociones, premios y estadísticas.</p>
           <div className="mt-10 grid gap-4 md:grid-cols-3 md:items-stretch">
             {PLANS.map((p) => (
               <div
