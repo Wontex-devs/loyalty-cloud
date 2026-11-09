@@ -41,7 +41,7 @@ Plataforma SaaS multiempresa de tarjetas de fidelización de marca blanca. Cambi
 ## Brand Commitments
 
 - Nombre de la plataforma: «Lazo» (antes «Wontex App»; definido en `src/lib/config.ts`). Pendiente: verificar disponibilidad de la marca en la SIC y del dominio.
-- Logo: una «L» que se cierra en lazo (`src/components/brand/lazo-logo.tsx`, favicon en `src/app/icon.svg`), en cobalto y amarillo.
+- Logo: un nudo trébol de un solo trazo (`src/components/brand/lazo-logo.tsx`, favicon en `src/app/icon.svg`), en cobalto y amarillo. Opcionalmente, con el borde de puntos de una tarjeta de sellos en tamaños grandes.
 - La página de venta ya usa azul cobalto y amarillo sobre blanco con letra Bricolage Grotesque; el estado vigente del sitio es la referencia hasta que se documente un sistema visual.
 
 ## Evidence on Hand

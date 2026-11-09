@@ -1,6 +1,6 @@
 # 005 — Que las preguntas frecuentes se abran con suavidad
 
-- **Status**: DONE (sin commit)
+- **Status**: DONE
 - **Commit**: 626f863 (más cambios sin commit de la portada del 8-nov-2026)
 - **Severity**: LOW
 - **Category**: Propósito (indicar el estado)

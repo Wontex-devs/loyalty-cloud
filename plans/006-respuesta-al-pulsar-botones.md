@@ -1,6 +1,6 @@
 # 006 — Respuesta al pulsar en los botones de la portada
 
-- **Status**: DONE (sin commit)
+- **Status**: DONE
 - **Commit**: 626f863 (más cambios sin commit de la portada del 8-nov-2026)
 - **Severity**: LOW
 - **Category**: Propósito (respuesta al toque)

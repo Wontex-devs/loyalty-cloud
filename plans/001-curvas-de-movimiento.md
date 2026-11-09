@@ -1,6 +1,6 @@
 # 001 — Definir las curvas de movimiento compartidas
 
-- **Status**: DONE (sin commit)
+- **Status**: DONE
 - **Commit**: 626f863 (más cambios sin commit de la portada del 8-nov-2026: `src/app/page.tsx`, `src/components/marketing/wallet-phone.tsx`, `src/app/globals.css`)
 - **Severity**: LOW (pero es requisito de los planes 002 a 005)
 - **Category**: Cohesión y tokens
