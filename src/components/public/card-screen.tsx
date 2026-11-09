@@ -53,6 +53,16 @@ export function CardScreen({
 
   useEffect(() => setUrl(`${window.location.origin}/card/${data.token}`), [data.token]);
 
+  // Guarda el enlace de la tarjeta en este celular: la pantalla del toque NFC (/tap) lo usa para saber quién es.
+  useEffect(() => {
+    if (!data.business.slug || !live) return;
+    try {
+      localStorage.setItem(`lazo:tarjeta:${data.business.slug}`, data.token);
+    } catch {
+      /* sin almacenamiento: el toque pedirá abrir la tarjeta de nuevo */
+    }
+  }, [data.business.slug, data.token, live]);
+
   // Animación cuando el empleado suma una visita.
   useEffect(() => {
     if (data.totalVisits > lastVisits.current) {

@@ -38,3 +38,8 @@ No intentes arreglarlo sumando o quitando visitas. Avisa a la encargada: ella **
 - No compartas tu usuario ni tu contraseña.
 - No tomes fotos de la lista de clientas.
 - Si una clienta pide borrar o corregir sus datos, avísale a la encargada.
+
+## Si el comercio usa la etiqueta NFC
+- La clienta acerca su celular a la etiqueta del mostrador y ve «¡Sello registrado!». **Tú no haces nada.**
+- Si dice que no le funcionó (por ejemplo, el celular le pide crear su tarjeta), súmale la visita con el escáner de QR como siempre.
+- Si te equivocas o ves un sello que no corresponde, avisa a la encargada: lo **revierte** indicando el motivo, igual que cualquier visita.

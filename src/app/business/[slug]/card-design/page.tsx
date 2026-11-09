@@ -11,6 +11,7 @@ import { can } from "@/lib/domain/permissions";
 import { PUBLIC_HOST_LABEL } from "@/lib/config";
 import { STAMP_ICONS, type BusinessBranding, type CardStatus } from "@/lib/domain/types";
 import { cn } from "@/lib/utils";
+import { NfcCard } from "@/components/business/nfc-card";
 import { Button, buttonClass, Card, CardHeader, Field, Input, PageHeader, Segmented } from "@/components/ui";
 
 const PRESETS: { name: string; colors: Partial<BusinessBranding> }[] = [
@@ -211,6 +212,8 @@ export default function CardDesignPage() {
               </div>
             </div>
           </Card>
+
+          <NfcCard businessId={business.id} slug={business.slug} />
         </div>
 
         <div className="lg:sticky lg:top-20 lg:self-start">

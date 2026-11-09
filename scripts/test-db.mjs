@@ -613,6 +613,88 @@ console.log("\nEtapa 12 · Avisos en la billetera");
   await db.query("update public.businesses set wallet_notifications = $2 where id = $1", [A, { ...settings, near: true, winbackDays: 45 }]);
 }
 
+console.log("\nEtapa 13 · Visita por toque NFC");
+{
+  let r = await joinProgram("negocio-a", "+573001110001", "Toque Uno");
+  const tokNfc = r.rows?.[0]?.public_token;
+  const cardNfc = (await db.query("select id from public.loyalty_cards where public_token = $1", [tokNfc])).rows[0]?.id;
+  r = await joinProgram("negocio-b", "+573001110002", "Otro Comercio");
+  const tokB = r.rows?.[0]?.public_token;
+
+  r = await as(U.ownerA, "select public.get_nfc_settings($1) as s", [A]);
+  const inicial = r.rows?.[0]?.s;
+  check("el dueño ve los ajustes de NFC: apagado y con secreto de 22 caracteres", r.ok && inicial?.enabled === false && /^[A-Za-z0-9_-]{22}$/.test(inicial?.secret ?? ""), r);
+  r = await as(U.staffA, "select public.get_nfc_settings($1)", [A]);
+  check("un empleado no puede ver el secreto (FORBIDDEN)", expectError(r, "FORBIDDEN"), r);
+  r = await as(U.ownerB, "select public.get_nfc_settings($1)", [A]);
+  check("otro comercio tampoco (FORBIDDEN)", expectError(r, "FORBIDDEN"), r);
+  r = await as(U.staffA, "select * from private.business_nfc");
+  check("la tabla del secreto no se puede leer desde la API", expectError(r, "permission denied"), r);
+
+  r = await as(U.ownerA, "select public.register_nfc_visit('negocio-a', $1, $2, 'nfc-key-0001')", [inicial?.secret, tokNfc]);
+  check("la clave pública y los usuarios no pueden registrar por NFC (solo el servidor)", expectError(r, "permission denied"), r);
+  r = await asService("select public.register_nfc_visit('negocio-a', $1, $2, 'nfc-key-0001')", [inicial?.secret, tokNfc]);
+  check("con el NFC apagado → NFC_DISABLED", expectError(r, "NFC_DISABLED"), r);
+
+  r = await as(U.staffA, "select public.set_nfc_settings($1, true, 120, false)", [A]);
+  check("un empleado no puede encender el NFC (FORBIDDEN)", expectError(r, "FORBIDDEN"), r);
+  r = await as(U.ownerA, "select public.set_nfc_settings($1, true, 5000, false)", [A]);
+  check("tiempo mínimo fuera de rango → INVALID_NFC_SETTINGS", expectError(r, "INVALID_NFC_SETTINGS"), r);
+  r = await as(U.adminA, "select public.set_nfc_settings($1, true, 120, false) as s", [A]);
+  check("el administrador enciende el NFC", r.ok && r.rows[0].s.enabled === true && r.rows[0].s.secret === inicial.secret, r);
+
+  r = await asService("select public.register_nfc_visit('negocio-a', 'secreto-incorrecto', $1, 'nfc-key-0002')", [tokNfc]);
+  check("etiqueta con secreto incorrecto → INVALID_TAG", expectError(r, "INVALID_TAG"), r);
+  r = await asService("select public.register_nfc_visit('negocio-a', $1, $2, 'nfc-key-0003')", [inicial.secret, tokB]);
+  check("la tarjeta de otro comercio no se acepta (CARD_NOT_FOUND)", expectError(r, "CARD_NOT_FOUND"), r);
+  r = await asService("select public.register_nfc_visit('no-existe', $1, $2, 'nfc-key-0004')", [inicial.secret, tokNfc]);
+  check("comercio inexistente → BUSINESS_NOT_FOUND", expectError(r, "BUSINESS_NOT_FOUND"), r);
+
+  const sellosAntes = (await db.query("select current_stamps from public.loyalty_cards where id = $1", [cardNfc])).rows[0].current_stamps;
+  r = await asService("select public.register_nfc_visit('negocio-a', $1, $2, 'nfc-key-0005') as res", [inicial.secret, tokNfc]);
+  const visitaNfc = r.rows?.[0]?.res;
+  check("el toque correcto registra la visita y suma un sello", r.ok && visitaNfc?.current_stamps === sellosAntes + 1 && visitaNfc?.card_id === cardNfc, r);
+  const v = (await db.query("select source, staff_id from public.visits where id = $1", [visitaNfc?.visit_id])).rows[0];
+  check("la visita queda con origen 'nfc' y sin empleado", v?.source === "nfc" && v?.staff_id === null, v);
+  r = await asService("select public.register_nfc_visit('negocio-a', $1, $2, 'nfc-key-0006')", [inicial.secret, tokNfc]);
+  check("un segundo toque enseguida → TOO_SOON", expectError(r, "TOO_SOON"), r);
+  r = await asService("select public.register_nfc_visit('negocio-a', $1, $2, 'nfc-key-0005')", [inicial.secret, tokNfc]);
+  check("repetir la misma petición → DUPLICATE_REQUEST", expectError(r, "DUPLICATE_REQUEST"), r);
+
+  // El NFC exige más tiempo (120 min) que el programa (60 min); el escáner del empleado solo el del programa.
+  await db.query("update public.loyalty_cards set last_visit_at = now() - interval '90 minutes' where id = $1", [cardNfc]);
+  r = await asService("select public.register_nfc_visit('negocio-a', $1, $2, 'nfc-key-0007')", [inicial.secret, tokNfc]);
+  check("a los 90 min el toque aún no vale (el comercio exige 120)", expectError(r, "TOO_SOON"), r);
+  r = await as(U.adminA, "select public.register_visit($1, 'nfc-key-0008') as res", [cardNfc]);
+  check("a los 90 min el empleado sí puede sellar (mismas reglas de siempre)", r.ok, r);
+  const vs = (await db.query("select source from public.visits where idempotency_key = 'nfc-key-0008'")).rows[0];
+  check("la visita del empleado queda con origen 'staff'", vs?.source === "staff", vs);
+
+  // Rotar el secreto invalida las etiquetas viejas.
+  r = await as(U.ownerA, "select public.set_nfc_settings($1, true, 120, true) as s", [A]);
+  const rotado = r.rows?.[0]?.s;
+  check("rotar el secreto genera uno nuevo", r.ok && rotado?.secret && rotado.secret !== inicial.secret, r);
+  await db.query("update public.loyalty_cards set last_visit_at = now() - interval '3 hours' where id = $1", [cardNfc]);
+  r = await asService("select public.register_nfc_visit('negocio-a', $1, $2, 'nfc-key-0009')", [inicial.secret, tokNfc]);
+  check("la etiqueta con el secreto viejo ya no funciona", expectError(r, "INVALID_TAG"), r);
+  r = await asService("select public.register_nfc_visit('negocio-a', $1, $2, 'nfc-key-0010')", [rotado.secret, tokNfc]);
+  check("la etiqueta con el secreto nuevo sí", r.ok, r);
+
+  // Reversión y auditoría.
+  r = await as(U.adminA, "select public.reverse_visit($1, 'Toque hecho por error') as res", [visitaNfc?.visit_id]);
+  check("una visita por NFC se puede revertir con motivo", r.ok, r);
+  const aud = (await db.query("select count(*)::int n from public.audit_logs where business_id = $1 and metadata::text like '%' || $2 || '%'", [A, rotado?.secret])).rows[0];
+  check("el secreto nunca aparece en la auditoría", aud.n === 0, aud);
+  const audNfc = (await db.query("select count(*)::int n from public.audit_logs where business_id = $1 and action = 'visit.created' and metadata->>'source' = 'nfc'", [A])).rows[0];
+  check("la auditoría registra el origen 'nfc' de las visitas", audNfc.n >= 2, audNfc);
+
+  // Con el comercio suspendido, el toque no funciona.
+  await db.query("update public.businesses set status = 'suspended' where id = $1", [A]);
+  r = await asService("select public.register_nfc_visit('negocio-a', $1, $2, 'nfc-key-0011')", [rotado.secret, tokNfc]);
+  check("comercio suspendido → BUSINESS_SUSPENDED", expectError(r, "BUSINESS_SUSPENDED"), r);
+  await db.query("update public.businesses set status = 'active' where id = $1", [A]);
+}
+
 console.log("\nPlanes comerciales");
 {
   const p = (await db.query("select id, price_monthly::int price, max_customers from public.plans order by id")).rows;

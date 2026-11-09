@@ -1,5 +1,5 @@
 -- Generado por npm run db:bundle. No editar: cambia las migraciones y vuelve a generarlo.
--- Incluye: 20261101000001_schema.sql, 20261101000002_rls.sql, 20261101000003_functions.sql, 20261101000004_reference_data.sql, 20261101000005_public_business.sql, 20261101000006_business_stats.sql, 20261101000007_pilot.sql, 20261101000008_customer_experience.sql, 20261101000009_promotions_birthdays.sql, 20261101000010_plans_locations.sql, 20261101000011_brand_assets.sql, 20261101000012_privacy_abuse.sql
+-- Incluye: 20261101000001_schema.sql, 20261101000002_rls.sql, 20261101000003_functions.sql, 20261101000004_reference_data.sql, 20261101000005_public_business.sql, 20261101000006_business_stats.sql, 20261101000007_pilot.sql, 20261101000008_customer_experience.sql, 20261101000009_promotions_birthdays.sql, 20261101000010_plans_locations.sql, 20261101000011_brand_assets.sql, 20261101000012_privacy_abuse.sql, 20261101000013_wallet_notifications.sql, 20261101000014_plan_prices.sql, 20261101000015_nfc_checkin.sql
 begin;
 
 -- >>> 20261101000001_schema.sql
@@ -2727,5 +2727,433 @@ grant execute on function public.unsubscribe_marketing(text) to anon, authentica
 -- Hallazgo B2: funciones de trigger sin permiso de ejecución directa.
 revoke all on function private.audit_config_change() from public, anon, authenticated;
 revoke all on function private.enforce_plan_limits() from public, anon, authenticated;
+
+-- >>> 20261101000013_wallet_notifications.sql
+-- =====================================================================
+-- Etapa 12 · Avisos en la billetera (Google Wallet; Apple Wallet usará lo mismo)
+-- - Cada comercio elige qué avisos automáticos envía.
+-- - Cada aviso queda registrado una sola vez (card_id, ref): no se repite
+--   aunque se reintente la visita o el proceso diario.
+-- - Los avisos de visita son transaccionales; cumpleaños, "te extrañamos" y
+--   campañas exigen el consentimiento de marketing.
+-- =====================================================================
+
+-- ---------- Ajustes por comercio ----------
+create function private.valid_wallet_settings(s jsonb)
+returns boolean
+language sql
+immutable
+set search_path = ''
+as $$
+  select jsonb_typeof(s) = 'object'
+    and not exists (select 1 from jsonb_object_keys(s) k
+                    where k not in ('stamp', 'near', 'reward', 'birthday', 'winback', 'winbackDays'))
+    and jsonb_typeof(s -> 'stamp') = 'boolean'
+    and jsonb_typeof(s -> 'near') = 'boolean'
+    and jsonb_typeof(s -> 'reward') = 'boolean'
+    and jsonb_typeof(s -> 'birthday') = 'boolean'
+    and jsonb_typeof(s -> 'winback') = 'boolean'
+    and jsonb_typeof(s -> 'winbackDays') = 'number'
+    and (s ->> 'winbackDays') ~ '^[0-9]+$'
+    and (s ->> 'winbackDays')::int between 14 and 180;
+$$;
+
+alter table public.businesses
+  add column wallet_notifications jsonb not null
+    default '{"stamp": true, "near": true, "reward": true, "birthday": true, "winback": true, "winbackDays": 45}'::jsonb
+    check (private.valid_wallet_settings(wallet_notifications));
+
+create function public.update_wallet_settings(p_business_id uuid, p_settings jsonb)
+returns void
+language plpgsql
+volatile security definer
+set search_path = ''
+as $$
+begin
+  if not private.has_role(p_business_id, '{owner,admin}') then raise exception 'FORBIDDEN'; end if;
+  if not private.valid_wallet_settings(p_settings) then raise exception 'INVALID_WALLET_SETTINGS'; end if;
+  update public.businesses set wallet_notifications = p_settings where id = p_business_id;
+  perform private.audit(p_business_id, 'wallet.settings_updated', 'business', p_business_id::text, p_settings);
+end;
+$$;
+
+-- ---------- Registro de avisos ----------
+create table public.wallet_notifications (
+  id           uuid primary key default gen_random_uuid(),
+  business_id  uuid not null,
+  card_id      uuid not null,
+  kind         text not null check (kind in ('stamp', 'near', 'reward', 'birthday', 'winback', 'campaign')),
+  -- Clave que impide repetir el mismo aviso: visit:<clave>, birthday:<año>, winback:<última visita>, campaign:<id>.
+  ref          text not null check (length(ref) between 3 and 120),
+  title        text not null check (length(title) between 1 and 60),
+  body         text not null check (length(body) between 1 and 300),
+  status       text not null default 'pending' check (status in ('pending', 'sent', 'not_saved', 'failed')),
+  staff_id     uuid references public.profiles (id) on delete set null,
+  created_at   timestamptz not null default now(),
+  unique (card_id, ref),
+  foreign key (card_id, business_id) references public.loyalty_cards (id, business_id) on delete cascade
+);
+create index wallet_notifications_business_idx on public.wallet_notifications (business_id, created_at desc);
+create index wallet_notifications_card_idx on public.wallet_notifications (card_id, kind, created_at desc);
+
+alter table public.wallet_notifications enable row level security;
+grant select on public.wallet_notifications to authenticated;
+grant all on public.wallet_notifications to service_role;
+-- Solo lectura para el panel; escribe el servidor (service_role) o las funciones de abajo.
+create policy wallet_notifications_read on public.wallet_notifications for select to authenticated
+  using (private.has_role(business_id, '{owner,admin}'));
+
+-- ---------- Campañas: un botón para todo un grupo ----------
+-- Filtra a quienes aceptaron mensajes, siguen activas y no recibieron otra campaña en 7 días.
+create function public.queue_wallet_campaign(p_business_id uuid, p_customer_ids uuid[], p_title text, p_body text)
+returns table (notification_id uuid, public_token text, title text, body text)
+language plpgsql
+volatile security definer
+set search_path = ''
+as $$
+declare
+  v_ref text := 'campaign:' || gen_random_uuid()::text;
+begin
+  if not private.has_role(p_business_id, '{owner,admin}') then raise exception 'FORBIDDEN'; end if;
+  if p_title is null or length(trim(p_title)) not between 1 and 40
+     or p_body is null or length(trim(p_body)) not between 1 and 240 then
+    raise exception 'INVALID_WALLET_MESSAGE';
+  end if;
+  if coalesce(array_length(p_customer_ids, 1), 0) not between 1 and 2000 then raise exception 'INVALID_WALLET_MESSAGE'; end if;
+  if exists (select 1 from public.businesses where id = p_business_id and status = 'suspended') then
+    raise exception 'BUSINESS_SUSPENDED';
+  end if;
+
+  return query
+  with eligible as (
+    select c.id as card_id, c.public_token as token, cu.full_name
+    from public.customers cu
+    join public.loyalty_cards c on c.customer_id = cu.id and c.business_id = cu.business_id
+    where cu.business_id = p_business_id
+      and cu.id = any (p_customer_ids)
+      and cu.marketing_consent
+      and cu.anonymized_at is null
+      and c.status <> 'blocked'
+      and not exists (select 1 from public.wallet_notifications n
+                      where n.card_id = c.id and n.kind = 'campaign' and n.created_at > now() - interval '7 days')
+  ), ins as (
+    insert into public.wallet_notifications (business_id, card_id, kind, ref, title, body, staff_id)
+    select p_business_id, e.card_id, 'campaign', v_ref, trim(p_title),
+           left(replace(trim(p_body), '{nombre}', split_part(trim(e.full_name), ' ', 1)), 300), auth.uid()
+    from eligible e
+    on conflict (card_id, ref) do nothing
+    returning id, card_id, wallet_notifications.title, wallet_notifications.body
+  )
+  select ins.id, e.token, ins.title, ins.body from ins join eligible e on e.card_id = ins.card_id;
+
+  perform private.audit(p_business_id, 'wallet.campaign_queued', 'business', p_business_id::text,
+                        jsonb_build_object('ref', v_ref, 'title', trim(p_title)));
+end;
+$$;
+
+-- ---------- Proceso diario: cumpleaños y "te extrañamos" (solo el servidor) ----------
+create function public.wallet_daily_candidates(p_now timestamptz default now())
+returns table (business_id uuid, card_id uuid, public_token text, kind text, ref text,
+               first_name text, business_name text, current_stamps integer, stamps_required integer, reward_name text)
+language sql
+stable security definer
+set search_path = ''
+as $$
+  with base as (
+    select b.id as business_id, b.name as business_name, b.wallet_notifications as s,
+           (p_now at time zone b.timezone) as local_now,
+           c.id as card_id, c.public_token, c.current_stamps, c.last_visit_at,
+           cu.full_name, cu.birth_month, cu.birth_day,
+           p.stamps_required, p.reward_name
+    from public.businesses b
+    join public.loyalty_cards c on c.business_id = b.id
+    join public.customers cu on cu.id = c.customer_id
+    join public.loyalty_programs p on p.id = c.program_id
+    where b.status <> 'suspended'
+      and c.status <> 'blocked'
+      and cu.marketing_consent
+      and cu.anonymized_at is null
+  )
+  select business_id, card_id, public_token, 'birthday', 'birthday:' || extract(year from local_now)::int,
+         split_part(trim(full_name), ' ', 1), business_name, current_stamps, stamps_required, reward_name
+  from base
+  where (s ->> 'birthday')::boolean
+    and birth_month = extract(month from local_now)::int
+    and coalesce(birth_day, 1) = extract(day from local_now)::int
+  union all
+  select business_id, card_id, public_token, 'winback', 'winback:' || to_char(last_visit_at, 'YYYYMMDDHH24MISS'),
+         split_part(trim(full_name), ' ', 1), business_name, current_stamps, stamps_required, reward_name
+  from base
+  where (s ->> 'winback')::boolean
+    and last_visit_at is not null
+    and last_visit_at < p_now - make_interval(days => (s ->> 'winbackDays')::int)
+    -- Solo quienes se enfriaron hace poco: al activar el aviso no se escribe a clientes de hace años.
+    and last_visit_at > p_now - make_interval(days => (s ->> 'winbackDays')::int + 30);
+$$;
+
+-- ---------- Permisos ----------
+revoke all on function private.valid_wallet_settings(jsonb) from public, anon, authenticated;
+grant execute on function private.valid_wallet_settings(jsonb) to authenticated, service_role;
+revoke all on function public.update_wallet_settings(uuid, jsonb) from public, anon, authenticated;
+grant execute on function public.update_wallet_settings(uuid, jsonb) to authenticated;
+revoke all on function public.queue_wallet_campaign(uuid, uuid[], text, text) from public, anon, authenticated;
+grant execute on function public.queue_wallet_campaign(uuid, uuid[], text, text) to authenticated;
+revoke all on function public.wallet_daily_candidates(timestamptz) from public, anon, authenticated;
+grant execute on function public.wallet_daily_candidates(timestamptz) to service_role;
+
+-- >>> 20261101000014_plan_prices.sql
+-- Precios y límites comerciales. Business se ajusta a cada negocio: su precio aquí es solo una referencia.
+update public.plans set price_monthly = 59900, max_customers = 100,
+  features = array['1 programa', 'Hasta 100 clientes', '2 empleados', '1 sede']
+where id = 'plan_starter';
+update public.plans set price_monthly = 119900, max_customers = 300,
+  features = array['3 programas', 'Hasta 300 clientes', '10 empleados', 'Hasta 3 sedes']
+where id = 'plan_pro';
+update public.plans set features = array['Plan a la medida', 'Clientes, equipo y sedes según tu negocio', 'Soporte prioritario']
+where id = 'plan_business';
+
+-- >>> 20261101000015_nfc_checkin.sql
+-- Etapa 13: visita por toque NFC.
+-- El comercio pega una etiqueta NFC en el mostrador con un enlace secreto. La clienta acerca el celular,
+-- se abre su tarjeta y se registra el sello. Reglas nuevas:
+--   · el secreto vive en `private`, fuera del alcance de la API y de los empleados;
+--   · solo el servidor (service_role) puede registrar una visita por toque;
+--   · cada visita guarda su origen (`staff` o `nfc`) y queda en el historial, donde se puede revertir;
+--   · entre dos toques debe pasar el tiempo mínimo del programa, o el del comercio si es mayor (por defecto 2 horas).
+
+-- ---------- Origen de la visita ----------
+alter table public.visits
+  add column source text not null default 'staff' check (source in ('staff', 'nfc'));
+
+-- ---------- Ajustes de NFC por comercio (privados) ----------
+create table private.business_nfc (
+  business_id  uuid primary key references public.businesses (id) on delete cascade,
+  enabled      boolean not null default false,
+  secret       text not null default private.generate_public_token(),
+  min_minutes  integer not null default 120 check (min_minutes between 0 and 1440),
+  updated_at   timestamptz not null default now()
+);
+
+-- ---------- Núcleo de la visita (compartido por el escáner y el toque NFC) ----------
+-- Es el cuerpo de register_visit de la Etapa 10, sin cambios de reglas.
+-- Quien lo llama ya comprobó los permisos: el empleado (register_visit) o la etiqueta (register_nfc_visit).
+create function private.record_visit(
+  p_card_id uuid,
+  p_idempotency_key text,
+  p_location_id uuid,
+  p_staff uuid,
+  p_source text,
+  p_min_minutes integer
+)
+returns jsonb
+language plpgsql
+volatile security definer
+set search_path = ''
+as $$
+declare
+  v_card     public.loyalty_cards;
+  v_program  public.loyalty_programs;
+  v_status   public.business_status;
+  v_visit_id uuid;
+  v_reward_id uuid;
+  v_stamps   integer;
+  v_promo    public.promotions;
+  v_bonus    integer := 0;
+  v_tz       text;
+  v_local    timestamp;
+  v_customer public.customers;
+  v_bday_id  uuid;
+begin
+  -- Bloqueo de fila: serializa visitas concurrentes sobre la misma tarjeta.
+  select * into v_card from public.loyalty_cards where id = p_card_id for update;
+  if not found then raise exception 'CARD_NOT_FOUND'; end if;
+
+  select status, timezone into v_status, v_tz from public.businesses where id = v_card.business_id;
+  v_local := now() at time zone v_tz;
+  if v_status = 'suspended' then raise exception 'BUSINESS_SUSPENDED'; end if;
+  if v_card.status = 'blocked' then raise exception 'CARD_BLOCKED'; end if;
+  -- La sede, si se indica, debe ser del mismo comercio y estar activa.
+  if p_location_id is not null and not exists (
+    select 1 from public.locations where id = p_location_id and business_id = v_card.business_id and active
+  ) then
+    raise exception 'INVALID_LOCATION';
+  end if;
+
+  if exists (select 1 from public.visits
+             where business_id = v_card.business_id and idempotency_key = p_idempotency_key) then
+    raise exception 'DUPLICATE_REQUEST';
+  end if;
+
+  select * into v_program from public.loyalty_programs where id = v_card.program_id;
+  if not v_program.active then raise exception 'PROGRAM_INACTIVE'; end if;
+
+  if v_card.last_visit_at is not null
+     and greatest(v_program.min_minutes_between_visits, coalesce(p_min_minutes, 0)) > 0
+     and v_card.last_visit_at > now() - make_interval(mins => greatest(v_program.min_minutes_between_visits, coalesce(p_min_minutes, 0))) then
+    raise exception 'TOO_SOON';
+  end if;
+
+  -- Promoción vigente hoy (p. ej. doble sello): suma sellos extra en la misma visita.
+  select * into v_promo from private.active_promotion(v_card.business_id);
+  v_bonus := coalesce(v_promo.bonus_stamps, 0);
+
+  insert into public.visits (business_id, card_id, kind, delta, staff_id, idempotency_key, bonus_stamps, promotion_id, location_id, source)
+  values (v_card.business_id, v_card.id, 'visit', 1, p_staff, p_idempotency_key, v_bonus, v_promo.id, p_location_id, p_source)
+  returning id into v_visit_id;
+
+  v_stamps := v_card.current_stamps + 1 + v_bonus;
+  if v_stamps >= v_program.stamps_required then
+    -- Los sellos que sobran pasan al siguiente ciclo (como máximo hasta quedar a uno de la meta).
+    v_stamps := least(v_stamps - v_program.stamps_required, v_program.stamps_required - 1);
+    insert into public.rewards (business_id, card_id, program_id, source_visit_id, name, expires_at)
+    values (v_card.business_id, v_card.id, v_program.id, v_visit_id, v_program.reward_name,
+            case when v_program.reward_expiry_days is not null
+                 then now() + make_interval(days => v_program.reward_expiry_days) end)
+    returning id into v_reward_id;
+  end if;
+
+  -- Regalo de cumpleaños: en la primera visita del mes de cumpleaños, una vez al año.
+  select * into v_customer from public.customers where id = v_card.customer_id;
+  if v_program.birthday_reward is not null and v_customer.birth_month = extract(month from v_local)::int then
+    insert into public.rewards (business_id, card_id, program_id, name, kind, birthday_year, expires_at)
+    values (v_card.business_id, v_card.id, v_program.id, v_program.birthday_reward, 'birthday',
+            extract(year from v_local)::int, now() + interval '30 days')
+    on conflict (card_id, birthday_year) do nothing
+    returning id into v_bday_id;
+  end if;
+
+  update public.loyalty_cards
+  set current_stamps = v_stamps,
+      total_visits   = total_visits + 1,
+      last_visit_at  = now(),
+      status         = case when v_reward_id is not null or v_bday_id is not null then 'reward_available' else status end
+  where id = v_card.id;
+
+  perform private.audit(v_card.business_id, 'visit.created', 'visit', v_visit_id::text,
+                        jsonb_build_object('card_id', v_card.id, 'bonus_stamps', v_bonus, 'promotion_id', v_promo.id, 'source', p_source));
+  if v_bday_id is not null then
+    perform private.audit(v_card.business_id, 'reward.birthday', 'reward', v_bday_id::text,
+                          jsonb_build_object('card_id', v_card.id));
+  end if;
+  if v_reward_id is not null then
+    perform private.audit(v_card.business_id, 'reward.earned', 'reward', v_reward_id::text,
+                          jsonb_build_object('card_id', v_card.id));
+  end if;
+
+  return jsonb_build_object('visit_id', v_visit_id, 'reward_id', v_reward_id, 'current_stamps', v_stamps,
+                            'bonus_stamps', v_bonus, 'birthday_reward_id', v_bday_id);
+end;
+$$;
+
+-- ---------- Registrar visita (empleado): mismas reglas de siempre, ahora sobre el núcleo ----------
+create or replace function public.register_visit(p_card_id uuid, p_idempotency_key text, p_location_id uuid default null)
+returns jsonb
+language plpgsql
+volatile security definer
+set search_path = ''
+as $$
+declare
+  v_business uuid;
+begin
+  if auth.uid() is null then raise exception 'FORBIDDEN'; end if;
+  select business_id into v_business from public.loyalty_cards where id = p_card_id;
+  if not found then raise exception 'CARD_NOT_FOUND'; end if;
+  if not private.is_member(v_business) then raise exception 'FORBIDDEN'; end if;
+  return private.record_visit(p_card_id, p_idempotency_key, p_location_id, auth.uid(), 'staff', 0);
+end;
+$$;
+
+-- ---------- Registrar visita por toque NFC (solo el servidor) ----------
+create function public.register_nfc_visit(p_slug text, p_secret text, p_card_token text, p_idempotency_key text)
+returns jsonb
+language plpgsql
+volatile security definer
+set search_path = ''
+as $$
+declare
+  v_business public.businesses;
+  v_nfc      private.business_nfc;
+  v_card     public.loyalty_cards;
+  v_result   jsonb;
+begin
+  select * into v_business from public.businesses where slug = lower(trim(p_slug));
+  if not found then raise exception 'BUSINESS_NOT_FOUND'; end if;
+  if v_business.status = 'suspended' then raise exception 'BUSINESS_SUSPENDED'; end if;
+
+  select * into v_nfc from private.business_nfc where business_id = v_business.id;
+  if not found or not v_nfc.enabled then raise exception 'NFC_DISABLED'; end if;
+  if p_secret is null or p_secret <> v_nfc.secret then raise exception 'INVALID_TAG'; end if;
+
+  select * into v_card from public.loyalty_cards
+  where public_token = p_card_token and business_id = v_business.id;
+  if not found then raise exception 'CARD_NOT_FOUND'; end if;
+
+  v_result := private.record_visit(v_card.id, p_idempotency_key, null, null, 'nfc', v_nfc.min_minutes);
+  return v_result || jsonb_build_object('card_id', v_card.id, 'business_id', v_business.id);
+end;
+$$;
+
+revoke all on function public.register_nfc_visit(text, text, text, text) from public, anon, authenticated;
+grant execute on function public.register_nfc_visit(text, text, text, text) to service_role;
+
+-- ---------- Ajustes de NFC en el panel (dueño, administrador o superadmin) ----------
+create function public.get_nfc_settings(p_business_id uuid)
+returns jsonb
+language plpgsql
+volatile security definer
+set search_path = ''
+as $$
+declare
+  v_nfc private.business_nfc;
+begin
+  if not (private.has_role(p_business_id, '{owner,admin}') or private.is_superadmin()) then
+    raise exception 'FORBIDDEN';
+  end if;
+  insert into private.business_nfc (business_id) values (p_business_id) on conflict (business_id) do nothing;
+  select * into v_nfc from private.business_nfc where business_id = p_business_id;
+  return jsonb_build_object('enabled', v_nfc.enabled, 'secret', v_nfc.secret, 'min_minutes', v_nfc.min_minutes);
+end;
+$$;
+
+create function public.set_nfc_settings(
+  p_business_id uuid,
+  p_enabled boolean,
+  p_min_minutes integer,
+  p_rotate boolean default false
+)
+returns jsonb
+language plpgsql
+volatile security definer
+set search_path = ''
+as $$
+declare
+  v_nfc private.business_nfc;
+begin
+  if not (private.has_role(p_business_id, '{owner,admin}') or private.is_superadmin()) then
+    raise exception 'FORBIDDEN';
+  end if;
+  if p_min_minutes is null or p_min_minutes not between 0 and 1440 then raise exception 'INVALID_NFC_SETTINGS'; end if;
+
+  insert into private.business_nfc (business_id) values (p_business_id) on conflict (business_id) do nothing;
+  update private.business_nfc
+  set enabled     = coalesce(p_enabled, false),
+      min_minutes = p_min_minutes,
+      secret      = case when coalesce(p_rotate, false) then private.generate_public_token() else secret end,
+      updated_at  = now()
+  where business_id = p_business_id
+  returning * into v_nfc;
+
+  -- El secreto nunca va a la auditoría.
+  perform private.audit(p_business_id, 'nfc.settings', 'business', p_business_id::text,
+                        jsonb_build_object('enabled', v_nfc.enabled, 'min_minutes', v_nfc.min_minutes,
+                                           'secret_rotated', coalesce(p_rotate, false)));
+  return jsonb_build_object('enabled', v_nfc.enabled, 'secret', v_nfc.secret, 'min_minutes', v_nfc.min_minutes);
+end;
+$$;
+
+revoke all on function public.get_nfc_settings(uuid) from public, anon, authenticated;
+revoke all on function public.set_nfc_settings(uuid, boolean, integer, boolean) from public, anon, authenticated;
+grant execute on function public.get_nfc_settings(uuid) to authenticated;
+grant execute on function public.set_nfc_settings(uuid, boolean, integer, boolean) to authenticated;
 
 commit;
