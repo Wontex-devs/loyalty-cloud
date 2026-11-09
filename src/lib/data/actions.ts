@@ -255,3 +255,61 @@ export async function createBusinessAction(input: {
   revalidatePath("/admin", "layout");
   return { ok: true, id: id as string, message: "Comercio creado." };
 }
+
+/* ---------- Administradores de la plataforma ---------- */
+
+const superadminInviteSchema = z.object({
+  fullName: z.string().trim().min(2, "Escribe el nombre.").max(80, "El nombre es muy largo."),
+  email: z.email("Correo no válido"),
+});
+
+/**
+ * Invita a un superadministrador de la plataforma. Solo lo puede hacer otro superadministrador.
+ * Si la persona no tiene cuenta, recibe un correo para crear su propia contraseña; la app nunca fija ni ve contraseñas.
+ */
+export async function inviteSuperadminAction(input: { fullName: string; email: string }): Promise<ActionResult> {
+  const parsed = superadminInviteSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, message: parsed.error.issues[0]?.message ?? "Datos no válidos." };
+
+  const session = await getSession();
+  if (session?.profile?.platformRole !== "superadmin") return fail({ message: "FORBIDDEN" });
+
+  const admin = createAdminClient();
+  const email = parsed.data.email.toLowerCase();
+  const { data: existing } = await admin.from("profiles").select("id, platform_role").eq("email", email).maybeSingle();
+  if (existing?.platform_role === "superadmin") return { ok: true, message: "Esa persona ya es superadministradora." };
+
+  let profileId = existing?.id as string | undefined;
+  if (!profileId) {
+    const { data, error } = await admin.auth.admin.inviteUserByEmail(email, {
+      data: { full_name: parsed.data.fullName },
+      redirectTo: `${await origin()}/auth/callback?next=/account/password`,
+    });
+    if (error || !data.user) {
+      return { ok: false, message: "No se pudo enviar la invitación. Si el correo no llega, puede haberse alcanzado el límite de envíos de Supabase: espera unos minutos." };
+    }
+    profileId = data.user.id;
+  }
+
+  // La service_role solo se usa aquí, después de comprobar que quien invita es superadministrador.
+  const { error: roleError } = await admin.from("profiles").update({ platform_role: "superadmin" }).eq("id", profileId);
+  if (roleError) return { ok: false, message: "Se envió la invitación, pero no se pudo dar el rol. Inténtalo de nuevo." };
+
+  const { error: auditError } = await admin.from("audit_logs").insert({
+    business_id: null,
+    actor_id: session.user.id,
+    action: "platform.superadmin_granted",
+    entity: "profile",
+    entity_id: profileId,
+    metadata: { invited: !existing },
+  });
+  if (auditError) console.error("[admin] no se pudo registrar la auditoría", auditError.message);
+
+  revalidatePath("/admin", "layout");
+  return {
+    ok: true,
+    message: existing
+      ? "Listo: esa persona ya tenía cuenta y ahora es superadministradora."
+      : "Invitación enviada. Al abrir el correo y crear su contraseña tendrá acceso de superadministrador.",
+  };
+}

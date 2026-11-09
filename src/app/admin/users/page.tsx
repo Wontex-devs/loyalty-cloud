@@ -1,9 +1,9 @@
 "use client";
 
-import { UserPlus } from "lucide-react";
+import { InviteAdmin } from "@/components/admin/invite-admin";
 import { useDemo } from "@/lib/demo/store";
 import { ROLE_LABELS } from "@/lib/domain/permissions";
-import { Avatar, Badge, Button, Card, PageHeader, Table, Td, Th } from "@/components/ui";
+import { Avatar, Badge, Card, PageHeader, Table, Td, Th } from "@/components/ui";
 import { formatDate } from "@/lib/utils";
 
 export default function UsersPage() {
@@ -13,11 +13,7 @@ export default function UsersPage() {
       <PageHeader
         title="Usuarios"
         description="Cuentas con acceso a paneles. Los clientes finales no tienen cuenta."
-        actions={
-          <Button disabled title="Próximamente">
-            <UserPlus className="size-4" /> Invitar administrador
-          </Button>
-        }
+        actions={<InviteAdmin />}
       />
       <Card>
         <Table>
