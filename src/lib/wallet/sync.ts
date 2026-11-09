@@ -22,11 +22,12 @@ const origin = () => (process.env.NEXT_PUBLIC_APP_URL ?? "").replace(/\/$/, "");
  * Actualiza los pases de billetera de una tarjeta después de responder (no frena la caja)
  * y, tras una visita, le envía su aviso. Si la clienta no guardó el pase, Google responde 404.
  */
-export function scheduleCardWalletSync(cardId: string, visit?: VisitNoticeInput) {
+export function scheduleCardWalletSync(cardId: string, visit?: VisitNoticeInput, opts?: { service?: boolean }) {
   if (!googleWalletConfig()) return;
   after(async () => {
     try {
-      const supabase = await createClient();
+      // El toque NFC no trae sesión de empleado: ahí se lee la tarjeta con la clave del servidor.
+      const supabase = opts?.service ? createAdminClient() : await createClient();
       const { data } = await supabase.from("loyalty_cards").select("public_token, business_id").eq("id", cardId).maybeSingle();
       if (!data?.public_token) return;
       const card = await getPublicCard(data.public_token);

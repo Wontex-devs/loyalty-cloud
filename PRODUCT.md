@@ -26,7 +26,7 @@ Plataforma SaaS multiempresa de tarjetas de fidelización de marca blanca. Cambi
 ## Operating Context
 
 - Inscripción: el cliente escanea el QR (cartel) de la caja, escribe nombre y celular y acepta términos.
-- Visita: el equipo escanea el QR de la tarjeta del cliente y confirma +1 sello; si no hay celular, se busca por nombre o teléfono.
+- Flujo que comunica la portada (decisión del usuario): el QR se usa una sola vez, para crear la tarjeta; la tarjeta queda en la Wallet del celular; los sellos se marcan con NFC acercando el celular al lector del mostrador. Nota: el panel y la guía del equipo (`docs/GUIA-EQUIPO.md`) todavía describen la visita con escáner de QR y búsqueda por nombre o teléfono; no están actualizados a este flujo.
 - Premio: al completar los sellos aparece la recompensa y se canjea una sola vez; las reversiones quedan registradas con motivo.
 - Venta: el canal comercial es WhatsApp; hay una demo pública con datos de ejemplo.
 - Idioma y mercado: español de Colombia, precios en pesos.

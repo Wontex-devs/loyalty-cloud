@@ -19,6 +19,8 @@ export interface LoyaltyCardViewProps {
   highlightLastStamp?: boolean;
   compact?: boolean;
   className?: string;
+  /** Foto opcional del local: va de fondo en la parte de arriba y se funde con el color de la tarjeta. */
+  coverUrl?: string;
 }
 
 const STATUS_LABEL: Record<CardStatus, string> = {
@@ -40,6 +42,7 @@ export function LoyaltyCardView({
   highlightLastStamp,
   compact,
   className,
+  coverUrl,
 }: LoyaltyCardViewProps) {
   const b = business.branding;
   const remaining = Math.max(program.stampsRequired - stamps, 0);
@@ -53,6 +56,18 @@ export function LoyaltyCardView({
       className={cn("relative mx-auto w-full max-w-[440px] overflow-hidden rounded-[28px] shadow-pop", className)}
       style={{ background: b.cardBackground, color: b.cardForeground }}
     >
+      {/* Foto del local de fondo: se ve arriba y se funde con el color de la tarjeta hacia abajo */}
+      {coverUrl && (
+        <>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={coverUrl} alt="" className="pointer-events-none absolute inset-x-0 top-0 h-3/5 w-full object-cover" />
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-x-0 top-0 h-3/5"
+            style={{ background: `linear-gradient(to bottom, ${b.cardBackground}8c 0%, ${b.cardBackground}b3 45%, ${b.cardBackground} 100%)` }}
+          />
+        </>
+      )}
       {/* Textura sutil */}
       <div
         className="pointer-events-none absolute inset-0 opacity-60"

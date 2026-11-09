@@ -37,7 +37,7 @@ const PLANS = [
 const FAQ = [
   { q: "¿Cómo funciona el primer mes gratis?", a: "Aplica al plan Starter. Te dejamos la tarjeta lista con tu marca y la usas un mes sin pagar. Si decides seguir, pagas $59.900 al mes." },
   { q: "¿Mis clientes tienen que descargar algo?", a: "No. La tarjeta se abre en el navegador del celular y se puede añadir a la pantalla de inicio como si fuera una app." },
-  { q: "¿Necesito comprar algún equipo?", a: "Para empezar, no. Tu equipo registra las visitas escaneando el QR con la cámara de un celular, una tablet o un computador. Si quieres que tu cliente marque con el celular por NFC, necesitas un lector en el mostrador." },
+  { q: "¿Necesito comprar algún equipo?", a: "Para marcar los sellos con NFC necesitas un lector en el mostrador. El QR solo se usa una vez, para que tu cliente cree su tarjeta; lo pones en un cartel en la caja." },
   { q: "¿Qué pasa si mi cliente cambia de celular?", a: "Vuelve a escanear el QR de tu negocio con el mismo nombre y celular, y recupera su tarjeta con todos sus sellos." },
   { q: "¿Sirve para mi tipo de negocio?", a: "Sirve para cualquier negocio con clientes que repiten: barberías, salones, cafeterías, panaderías, spas, gimnasios, lavaderos, tiendas y más." },
   { q: "¿Se pueden hacer trampas con los sellos?", a: "Solo tu equipo puede sellar, cada persona con su usuario. El sistema evita sellos repetidos por error y guarda quién registró cada visita." },
@@ -108,7 +108,7 @@ export default function Home() {
               <WhatsAppButton className="bg-sun text-coal" />
               <a href={demoHref} className={`${btn} border-2 border-white/60 text-white`}>Ver la demo</a>
             </div>
-            <p className="mt-5 text-[15px] text-white/80">Empieza hoy con el QR y pasa a NFC sin perder un solo sello.</p>
+            <p className="mt-5 text-[15px] text-white/80">Tu cliente se inscribe con un QR, guarda la tarjeta en su Wallet y suma sellos con NFC.</p>
           </div>
           <div className="relative mx-auto">
             <WalletPhone />
@@ -137,9 +137,9 @@ export default function Home() {
             <h2 className={`${h2} reveal`}>Así funciona en tu mostrador</h2>
             <ol className="mt-12 divide-y-2 divide-coal border-y-2 border-coal">
               {[
-                ["Tu cliente escanea el QR", "Lo pones en la caja. Escribe su nombre y su celular y ya tiene su tarjeta. No descarga nada."],
-                ["Tu equipo le pone el sello", "Escanean su código con cualquier celular. Queda guardado con fecha y hora."],
-                ["Vuelve por su premio", "Al completar los sellos, el premio aparece solo en su tarjeta."],
+                ["Escanea el QR una sola vez", "Lo pones en la caja. Tu cliente escribe su nombre y su celular y ya tiene su tarjeta. No descarga nada."],
+                ["La guarda en su Wallet", "La tarjeta queda en la billetera de su celular, siempre a la mano."],
+                ["Acerca el celular y se marca el sello", "Con NFC el sello queda guardado con fecha y hora. Al completar los sellos, el premio aparece solo en su tarjeta."],
               ].map(([t, d], i) => (
                 <li key={t} className="reveal grid gap-2 py-7 md:grid-cols-[6rem_1fr_1.2fr] md:items-baseline md:gap-6">
                   <span className={`${poster} text-5xl`}>{i + 1}</span>
@@ -209,16 +209,14 @@ export default function Home() {
         </section>
 
         {/* Marca */}
-        <section className="bg-[#eef1fd]">
-          <div className="mx-auto grid max-w-7xl items-center gap-12 px-4 py-20 sm:px-8 lg:grid-cols-2 lg:py-24">
-            <div>
-              <h2 className={h2}>Con tu marca, no con la nuestra</h2>
-              <p className="mt-6 max-w-lg text-xl leading-relaxed text-graphite">
-                Tu logo, tus colores, tu sello, tu letra y el nombre de tu club. Toca un negocio y mira cómo cambia la tarjeta.
-              </p>
-            </div>
-            <BrandPreview />
+        <section className="overflow-x-clip bg-[#eef1fd] pb-16 lg:pb-20">
+          <div className="mx-auto max-w-7xl px-4 pt-20 sm:px-8 lg:pt-24">
+            <h2 className={`${h2} max-w-3xl`}>Con tu marca, no con la nuestra</h2>
+            <p className="mt-6 max-w-2xl text-xl leading-relaxed text-graphite">
+              Tu logo, tus colores, tu sello, tu letra y el nombre de tu club. Así se ven los locales de Barranquilla que ya usan la misma plataforma.
+            </p>
           </div>
+          <BrandPreview />
         </section>
 
         {/* NFC */}
@@ -229,9 +227,9 @@ export default function Home() {
                 Con NFC: <span className="text-sun">acerca el celular y listo.</span>
               </h2>
               <p className="mt-6 max-w-3xl text-xl leading-relaxed text-white/90">
-                Tu cliente acerca el celular al lector de tu mostrador y el sello se marca solo, como cuando paga con el teléfono. El QR queda como respaldo.
+                Tu cliente acerca el celular al lector de tu mostrador y el sello se marca solo, como cuando paga con el teléfono.
               </p>
-              <p className="mt-4 max-w-3xl text-lg text-white/85">Puedes empezar con QR y pasar a NFC sin perder clientes ni sellos.</p>
+              <p className="mt-4 max-w-3xl text-lg text-white/85">El QR solo sirve la primera vez, para crear la tarjeta. Después, todo es acercar el celular.</p>
             </div>
             <NfcDemo />
           </div>
