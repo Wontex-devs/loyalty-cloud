@@ -1,6 +1,6 @@
 # 003 — Animar el cambio de tarjeta en «Con tu marca»
 
-- **Status**: DONE (sin commit)
+- **Status**: REEMPLAZADO (el carrusel de «Con tu marca» sustituyó este fundido)
 - **Commit**: 626f863 (más cambios sin commit de la portada del 8-nov-2026)
 - **Severity**: MEDIUM
 - **Category**: Propósito (evitar un cambio brusco)

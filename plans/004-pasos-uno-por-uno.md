@@ -1,6 +1,6 @@
 # 004 — Que los tres pasos de «Así funciona» entren uno por uno
 
-- **Status**: DONE (sin commit)
+- **Status**: DONE
 - **Commit**: 626f863 (más cambios sin commit de la portada del 8-nov-2026)
 - **Severity**: LOW
 - **Category**: Oportunidades perdidas (explicación, secuencia)
