@@ -695,6 +695,23 @@ console.log("\nEtapa 13 · Visita por toque NFC");
   await db.query("update public.businesses set status = 'active' where id = $1", [A]);
 }
 
+console.log("\nAdministradores de la plataforma");
+{
+  let r = await as(U.ownerA, "update public.profiles set platform_role = 'superadmin' where id = $1", [U.ownerA]);
+  check("un usuario no puede darse a sí mismo el rol de superadministrador", !r.ok || r.affected === 0, r);
+  const antes = (await db.query("select platform_role from public.profiles where id = $1", [U.ownerA])).rows[0].platform_role;
+  check("y su rol sigue siendo 'user'", antes === "user", antes);
+  // La invitación de Auth crea la persona y su perfil; el servidor le da el rol.
+  const nuevo = (await db.query("insert into auth.users (email, raw_user_meta_data) values ('invitado@test.local', '{\"full_name\":\"Invitado\"}') returning id")).rows[0].id;
+  r = await asService("update public.profiles set platform_role = 'superadmin' where id = $1 returning platform_role", [nuevo]);
+  check("el servidor sí puede dar el rol (después de comprobar a quien invita)", r.ok && r.rows[0]?.platform_role === "superadmin", r);
+  r = await asService(
+    "insert into public.audit_logs (business_id, actor_id, action, entity, entity_id, metadata) values (null, $1, 'platform.superadmin_granted', 'profile', $2, '{\"invited\":true}')",
+    [U.super, nuevo],
+  );
+  check("el cambio queda en la auditoría, sin comercio", r.ok, r);
+}
+
 console.log("\nPlanes comerciales");
 {
   const p = (await db.query("select id, price_monthly::int price, max_customers from public.plans order by id")).rows;
