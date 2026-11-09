@@ -237,14 +237,39 @@ textarea {
   to { opacity: 0; scale: 1.6; }
 }
 
-/* Carrusel de «Con tu marca»: la barra del negocio activo se llena y, al terminar, pasa al siguiente. */
-@keyframes carrusel-progreso {
-  from { transform: scaleX(0); }
-  to { transform: scaleX(1); }
+/* Carrusel continuo de «Con tu marca»: movimiento constante, por eso va en línea recta (linear). */
+.marquee {
+  overflow-x: clip;
+  mask-image: linear-gradient(to right, transparent, #000 5%, #000 95%, transparent);
 }
-.carrusel-progreso {
-  transform-origin: left;
-  animation: carrusel-progreso 4500ms linear both;
+.marquee-pista {
+  animation: marquee 50s linear infinite;
+}
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.marquee-pausado .marquee-pista {
+  animation-play-state: paused;
+}
+@media (hover: hover) and (pointer: fine) {
+  .marquee:hover .marquee-pista {
+    animation-play-state: paused;
+  }
+}
+/* Con «reducir movimiento»: sin animación; queda una fila que se desplaza a mano. */
+@media (prefers-reduced-motion: reduce) {
+  .marquee {
+    overflow-x: auto;
+    mask-image: none;
+  }
+  .marquee-pista {
+    animation: none;
+  }
+  .marquee-copia,
+  .marquee-boton {
+    display: none;
+  }
 }
 
 /* Preguntas frecuentes: la respuesta se abre con suavidad (solo donde el navegador lo permite). */

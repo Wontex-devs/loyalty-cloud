@@ -1,6 +1,5 @@
 "use client";
 
-import { QRCodeSVG } from "qrcode.react";
 import { ArrowLeft, Gift, Nfc, Scissors } from "lucide-react";
 
 /** Icono genérico de billetera: tarjetas de colores saliendo de un bolsillo. */
@@ -91,11 +90,11 @@ export function WalletPhone() {
                   <span className="flex aspect-square items-center justify-center rounded-full border-[1.5px] border-dashed border-white/80 text-white"><Gift className="size-3.5" aria-hidden /></span>
                 </div>
 
-                <div className="mx-auto mt-3 w-fit rounded-xl bg-white p-2">
-                  <QRCodeSVG value="Ejemplo de tarjeta" size={104} fgColor="#0e1a52" />
+                <div className="mx-auto mt-3 flex size-[120px] items-center justify-center rounded-xl bg-white text-coal">
+                  <Nfc className="size-16" strokeWidth={1.5} />
                 </div>
                 <p className="mt-2 flex items-center justify-center gap-1.5 px-2 text-xs leading-tight text-white">
-                  <Nfc className="size-3.5" /> Acerca tu celular o muestra el código
+                  <Nfc className="size-3.5" /> Acerca tu celular al lector
                 </p>
               </div>
             </div>
