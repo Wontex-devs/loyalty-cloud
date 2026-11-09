@@ -3,6 +3,8 @@ import { Bricolage_Grotesque, Onest } from "next/font/google";
 import Link from "next/link";
 import { MessageCircle } from "lucide-react";
 import { BrandPreview } from "@/components/marketing/brand-preview";
+import { LazoLogo } from "@/components/brand/lazo-logo";
+import { NfcDemo } from "@/components/marketing/nfc-demo";
 import { WalletPhone } from "@/components/marketing/wallet-phone";
 import { DEMO_URL, PLATFORM_NAME, SALES_WHATSAPP } from "@/lib/config";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
@@ -23,8 +25,8 @@ const whatsappLink = (text: string) => `https://wa.me/${SALES_WHATSAPP}?text=${e
 const whatsappHref = whatsappLink(`Hola, quiero mi primer mes gratis del plan Starter de ${PLATFORM_NAME}.`);
 
 const poster = "font-[family-name:var(--font-poster)] font-extrabold tracking-[-0.02em]";
-const h2 = `${poster} text-4xl leading-[1.02] sm:text-6xl`;
-const btn = "inline-flex h-14 items-center justify-center gap-2.5 rounded-lg px-6 text-base font-semibold transition-transform hover:-translate-y-0.5";
+const h2 = `${poster} text-balance text-4xl leading-[1.02] sm:text-6xl`;
+const btn = "inline-flex h-14 items-center justify-center gap-2.5 rounded-lg px-6 text-base font-semibold transition-transform duration-150 ease-out hover:-translate-y-0.5 active:scale-[0.97]";
 
 const PLANS = [
   { name: "Starter", who: "Para un local que empieza", lines: ["100 clientes", "2 personas del equipo", "1 sede"], price: "$59.900", freeMonth: true },
@@ -35,7 +37,7 @@ const PLANS = [
 const FAQ = [
   { q: "¿Cómo funciona el primer mes gratis?", a: "Aplica al plan Starter. Te dejamos la tarjeta lista con tu marca y la usas un mes sin pagar. Si decides seguir, pagas $59.900 al mes." },
   { q: "¿Mis clientes tienen que descargar algo?", a: "No. La tarjeta se abre en el navegador del celular y se puede añadir a la pantalla de inicio como si fuera una app." },
-  { q: "¿Necesito comprar algún equipo?", a: "Para empezar, no. Tu equipo registra las visitas escaneando el QR con la cámara de un celular, una tablet o un computador. Cuando llegue el NFC, para marcar con el celular necesitarás un lector en el mostrador." },
+  { q: "¿Necesito comprar algún equipo?", a: "Para empezar, no. Tu equipo registra las visitas escaneando el QR con la cámara de un celular, una tablet o un computador. Si quieres que tu cliente marque con el celular por NFC, necesitas un lector en el mostrador." },
   { q: "¿Qué pasa si mi cliente cambia de celular?", a: "Vuelve a escanear el QR de tu negocio con el mismo nombre y celular, y recupera su tarjeta con todos sus sellos." },
   { q: "¿Sirve para mi tipo de negocio?", a: "Sirve para cualquier negocio con clientes que repiten: barberías, salones, cafeterías, panaderías, spas, gimnasios, lavaderos, tiendas y más." },
   { q: "¿Se pueden hacer trampas con los sellos?", a: "Solo tu equipo puede sellar, cada persona con su usuario. El sistema evita sellos repetidos por error y guarda quién registró cada visita." },
@@ -57,14 +59,14 @@ function WhatsAppButton({ className }: { className: string }) {
 
 export default function Home() {
   return (
-    <div className={`${display.variable} ${text.variable} bg-white font-[family-name:var(--font-text)] text-coal`}>
+    <div className={`${display.variable} ${text.variable} bg-white font-[family-name:var(--font-text)] text-coal [&_h1]:text-balance [&_p]:text-pretty`}>
       {/* Encabezado fijo: el botón de WhatsApp siempre queda a la vista */}
       <header className="on-cobalt sticky top-0 z-40 bg-cobalt text-white shadow-[0_10px_24px_-18px_rgb(6_10_36/0.8)]">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:h-20 sm:px-8">
-          <Link href="/" className={`${poster} text-2xl`}>
-            {PLATFORM_NAME}
+          <Link href="/" aria-label={PLATFORM_NAME} className="whitespace-nowrap">
+            <LazoLogo animar markClassName="text-sun" />
           </Link>
-          <nav className="flex items-center gap-5 text-[15px] font-medium" aria-label="Principal">
+          <nav className="flex items-center gap-4 text-[15px] font-medium sm:gap-5" aria-label="Principal">
             <a href="#como-funciona" className="hidden hover:underline lg:block">Cómo funciona</a>
             <a href="#planes" className="hidden hover:underline lg:block">Planes</a>
             <a href="#preguntas" className="hidden hover:underline lg:block">Preguntas</a>
@@ -73,14 +75,22 @@ export default function Home() {
               href={whatsappHref}
               target="_blank"
               rel="noopener"
-              className="inline-flex h-10 items-center gap-2 rounded-lg bg-sun px-4 font-semibold text-coal transition-transform hover:-translate-y-0.5"
+              className="inline-flex h-10 items-center gap-2 rounded-lg bg-sun px-4 font-semibold text-coal transition-transform duration-150 ease-out hover:-translate-y-0.5 active:scale-[0.97]"
             >
               <MessageCircle className="size-4" />
-              <span className="hidden sm:inline">Primer mes gratis</span>
+              <span className="hidden sm:inline">Quiero mi primer mes gratis</span>
               <span className="sm:hidden">WhatsApp</span>
             </a>
           </nav>
         </div>
+        {/* En celular y tableta los enlaces a cada sección van en una segunda fila */}
+        <nav aria-label="Secciones" className="border-t border-white/15 lg:hidden">
+          <div className="mx-auto flex max-w-7xl items-center gap-1 px-2 text-sm font-medium sm:px-6">
+            <a href="#como-funciona" className="flex h-11 items-center px-3 hover:underline">Cómo funciona</a>
+            <a href="#planes" className="flex h-11 items-center px-3 hover:underline">Planes</a>
+            <a href="#preguntas" className="flex h-11 items-center px-3 hover:underline">Preguntas</a>
+          </div>
+        </nav>
       </header>
 
       {/* Portada */}
@@ -92,13 +102,13 @@ export default function Home() {
               Haz que tus clientes <span className="text-sun">vuelvan.</span>
             </h1>
             <p className="mt-8 max-w-xl text-xl leading-relaxed text-white/90">
-              La tarjeta de sellos de tu negocio, ahora en el celular de cada cliente. Y un panel que te dice quién volvió, quién dejó de venir y a quién escribirle hoy.
+              La tarjeta de sellos de tu negocio, ahora en el celular de cada cliente. Y un panel que te dice quién volvió, quién dejó de venir y a quién avisarle hoy.
             </p>
             <div className="mt-9 flex flex-col gap-3 sm:flex-row">
               <WhatsAppButton className="bg-sun text-coal" />
               <a href={demoHref} className={`${btn} border-2 border-white/60 text-white`}>Ver la demo</a>
             </div>
-            <p className="mt-5 text-[15px] text-white/80">Empieza hoy con QR y pasa a Wallet sin perder un solo sello.</p>
+            <p className="mt-5 text-[15px] text-white/80">Empieza hoy con el QR y pasa a NFC sin perder un solo sello.</p>
           </div>
           <div className="relative mx-auto">
             <WalletPhone />
@@ -122,16 +132,16 @@ export default function Home() {
         </section>
 
         {/* Cómo funciona */}
-        <section id="como-funciona" className="scroll-mt-4 bg-sun">
-          <div className="reveal mx-auto max-w-7xl px-4 py-20 sm:px-8 lg:py-24">
-            <h2 className={h2}>Así funciona en tu mostrador</h2>
+        <section id="como-funciona" className="scroll-mt-28 bg-sun lg:scroll-mt-20">
+          <div className="mx-auto max-w-7xl px-4 py-20 sm:px-8 lg:py-24">
+            <h2 className={`${h2} reveal`}>Así funciona en tu mostrador</h2>
             <ol className="mt-12 divide-y-2 divide-coal border-y-2 border-coal">
               {[
                 ["Tu cliente escanea el QR", "Lo pones en la caja. Escribe su nombre y su celular y ya tiene su tarjeta. No descarga nada."],
                 ["Tu equipo le pone el sello", "Escanean su código con cualquier celular. Queda guardado con fecha y hora."],
                 ["Vuelve por su premio", "Al completar los sellos, el premio aparece solo en su tarjeta."],
               ].map(([t, d], i) => (
-                <li key={t} className="grid gap-2 py-7 md:grid-cols-[6rem_1fr_1.2fr] md:items-baseline md:gap-6">
+                <li key={t} className="reveal grid gap-2 py-7 md:grid-cols-[6rem_1fr_1.2fr] md:items-baseline md:gap-6">
                   <span className={`${poster} text-5xl`}>{i + 1}</span>
                   <h3 className={`${poster} text-2xl sm:text-3xl`}>{t}</h3>
                   <p className="text-lg leading-relaxed">{d}</p>
@@ -146,13 +156,22 @@ export default function Home() {
           <h2 className={`${h2} max-w-4xl`}>Todo lo que hoy no sabes de tus clientes</h2>
           <div className="mt-12 grid gap-4 lg:grid-cols-6">
             <div className="rounded-xl bg-sun p-7 sm:p-12 lg:col-span-4 lg:row-span-1">
-              <h3 className={`${poster} text-3xl sm:text-5xl sm:leading-[1.02]`}>A quién escribirle, y el mensaje ya listo</h3>
+              <h3 className={`${poster} text-3xl sm:text-5xl sm:leading-[1.02]`}>A quién avisarle, y el aviso ya listo</h3>
               <p className="mt-4 max-w-xl text-lg leading-relaxed">
-                Te mostramos a quién le falta poco para el premio, quién cumple años este mes y quién no viene hace tiempo. Tocas un botón y sale por tu WhatsApp, con su nombre.
+                Te mostramos a quién le falta poco para el premio, quién cumple años este mes y quién no viene hace tiempo. Con un botón, el aviso le llega al celular como una notificación, con su nombre. Solo a quienes aceptaron recibir mensajes.
               </p>
-              <p className="mt-7 max-w-md rounded-xl rounded-tl-none bg-white p-5 text-[17px] leading-relaxed">
-                Hola Laura, ¡solo te falta 1 visita para tu manicura gratis en Estudio Lila! Te esperamos.
-              </p>
+              <div className="mt-7 flex max-w-md items-start gap-3 rounded-2xl bg-white p-4 shadow-[0_14px_28px_-16px_rgb(14_26_82/0.5)]">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/logos/estudio-lila.svg" alt="" className="size-10 shrink-0 rounded-xl bg-white p-1 ring-1 ring-black/10" />
+                <div className="min-w-0 text-[15px] leading-snug">
+                  <p className="flex justify-between gap-2 text-sm text-graphite">
+                    <span>Estudio Lila</span>
+                    <span>ahora</span>
+                  </p>
+                  <p className="mt-0.5 font-semibold">¡Ya casi tienes tu premio!</p>
+                  <p>Hola Laura, estás a muy poco de tu premio. ¡Te esperamos!</p>
+                </div>
+              </div>
             </div>
             <div className="rounded-xl bg-cobalt p-7 text-white sm:p-10 lg:col-span-2">
               <h3 className={`${poster} text-3xl`}>Cada cliente, con su historia</h3>
@@ -160,7 +179,7 @@ export default function Home() {
                 {[["Laura Gómez", "cliente desde marzo"], ["14", "visitas"], ["8 de 10", "sellos"], ["Hace 4 días", "su última visita"]].map(([v, l]) => (
                   <div key={l} className="border-b border-white/20 pb-3">
                     <dd className="text-xl font-semibold">{v}</dd>
-                    <dt className="text-sm text-white/70">{l}</dt>
+                    <dt className="text-sm text-white/85">{l}</dt>
                   </div>
                 ))}
               </dl>
@@ -171,12 +190,20 @@ export default function Home() {
             </div>
             <div className="rounded-xl border-2 border-coal p-7 sm:p-10 lg:col-span-4">
               <h3 className={`${poster} text-3xl`}>Tu negocio en números</h3>
-              <ul className="mt-5 grid gap-x-8 gap-y-2 text-lg sm:grid-cols-2">
-                <li>Cuántos clientes vuelven</li>
-                <li>Tus días y horas fuertes</li>
-                <li>Premios ganados y canjeados</li>
-                <li>Visitas por empleado y por sede</li>
-              </ul>
+              <dl className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+                {[
+                  ["89%", "de tus clientes vuelven"],
+                  ["65", "visitas en 30 días"],
+                  ["Sábado", "tu día más fuerte"],
+                  ["12", "premios canjeados"],
+                ].map(([v, l]) => (
+                  <div key={l} className="rounded-lg bg-[#eef1fd] p-4">
+                    <dd className={`${poster} tabular text-3xl text-cobalt`}>{v}</dd>
+                    <dt className="mt-1 text-[15px] leading-snug text-graphite">{l}</dt>
+                  </div>
+                ))}
+              </dl>
+              <p className="mt-4 text-sm text-graphite">Ejemplo con datos ficticios. También ves las visitas por empleado y por sede.</p>
             </div>
           </div>
         </section>
@@ -196,21 +223,24 @@ export default function Home() {
 
         {/* NFC */}
         <section className="on-cobalt bg-cobalt text-white">
-          <div className="reveal mx-auto max-w-7xl px-4 py-20 sm:px-8 lg:py-24">
-            <h2 className={`${h2} max-w-4xl`}>
-              Hacia dónde vamos: <span className="text-sun">acerca el celular y listo.</span>
-            </h2>
-            <p className="mt-6 max-w-3xl text-xl leading-relaxed text-white/90">
-              Tu tarjeta en Apple Wallet y Google Wallet, con NFC. Tu cliente acerca el celular al lector de tu mostrador y el sello se marca solo, como cuando paga con el teléfono. El QR queda como respaldo.
-            </p>
-            <p className="mt-4 max-w-3xl text-lg text-white/80">Lo estamos preparando. Si empiezas hoy con QR, pasas sin perder clientes ni sellos.</p>
+          <div className="reveal mx-auto grid max-w-7xl items-center gap-10 px-4 py-20 sm:px-8 lg:grid-cols-[1.2fr_0.8fr] lg:py-24">
+            <div>
+              <h2 className={`${h2} max-w-4xl`}>
+                Con NFC: <span className="text-sun">acerca el celular y listo.</span>
+              </h2>
+              <p className="mt-6 max-w-3xl text-xl leading-relaxed text-white/90">
+                Tu cliente acerca el celular al lector de tu mostrador y el sello se marca solo, como cuando paga con el teléfono. El QR queda como respaldo.
+              </p>
+              <p className="mt-4 max-w-3xl text-lg text-white/85">Puedes empezar con QR y pasar a NFC sin perder clientes ni sellos.</p>
+            </div>
+            <NfcDemo />
           </div>
         </section>
 
         {/* Planes */}
-        <section id="planes" className="reveal mx-auto max-w-7xl scroll-mt-20 px-4 py-20 sm:px-8 lg:py-28">
+        <section id="planes" className="reveal mx-auto max-w-7xl scroll-mt-28 px-4 py-20 sm:px-8 lg:scroll-mt-20 lg:py-28">
           <h2 className={h2}>Planes</h2>
-          <p className="mt-4 text-xl text-graphite"><strong className="text-coal">En Starter, el primer mes te lo regalamos.</strong> Todos incluyen la tarjeta con tu marca, mensajes por WhatsApp, promociones, premios y estadísticas.</p>
+          <p className="mt-4 text-xl text-graphite">Todos incluyen la tarjeta con tu marca, avisos al celular de tus clientes, promociones, premios y estadísticas.</p>
           <div className="mt-10 grid gap-4 md:grid-cols-3 md:items-stretch">
             {PLANS.map((p) => (
               <div
@@ -221,6 +251,16 @@ export default function Home() {
                     : "rounded-xl border-2 border-coal/15 p-8"
                 }
               >
+                {/* Borde perforado de tarjeta de sellos */}
+                <div
+                  aria-hidden
+                  className="mb-6 h-3"
+                  style={{
+                    backgroundImage: `radial-gradient(circle, ${p.featured ? "rgb(255 255 255 / 0.28)" : "rgb(14 26 82 / 0.18)"} 4px, transparent 4.5px)`,
+                    backgroundSize: "20px 12px",
+                    backgroundRepeat: "repeat-x",
+                  }}
+                />
                 <h3 className={`${poster} text-4xl`}>{p.name}</h3>
                 <p className="mt-2 text-[15px]">{p.who}</p>
                 <ul className="mt-6 space-y-2 text-lg font-medium">
@@ -241,11 +281,11 @@ export default function Home() {
                   href={p.freeMonth ? whatsappHref : whatsappLink(`Hola, quiero saber más del plan ${p.name} de ${PLATFORM_NAME}.`)}
                   target="_blank"
                   rel="noopener"
-                  className={`mt-6 flex h-12 items-center justify-center rounded-lg px-4 font-semibold transition-transform hover:-translate-y-0.5 ${
+                  className={`mt-6 flex h-12 items-center justify-center rounded-lg px-4 font-semibold transition-transform duration-150 ease-out hover:-translate-y-0.5 active:scale-[0.97] ${
                     p.featured ? "bg-sun text-coal" : "border-2 border-coal text-coal"
                   }`}
                 >
-                  {p.freeMonth ? "Empezar gratis" : p.price ? "Quiero este plan" : "Hablemos de tu negocio"}
+                  {p.freeMonth ? "Quiero mi primer mes gratis" : p.price ? "Quiero este plan" : "Hablemos de tu negocio"}
                 </a>
               </div>
             ))}
@@ -253,12 +293,12 @@ export default function Home() {
         </section>
 
         {/* Preguntas */}
-        <section id="preguntas" className="scroll-mt-4 border-t-2 border-coal/10">
+        <section id="preguntas" className="scroll-mt-28 border-t-2 border-coal/10 lg:scroll-mt-20">
           <div className="mx-auto grid max-w-7xl gap-10 px-4 py-20 sm:px-8 lg:grid-cols-[0.8fr_1.2fr] lg:py-24">
             <h2 className={h2}>Lo que siempre nos preguntan</h2>
             <div className="divide-y-2 divide-coal/10 border-y-2 border-coal/10">
               {FAQ.map((f) => (
-                <details key={f.q} className="group py-5">
+                <details key={f.q} className="faq group py-5">
                   <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-lg font-semibold [&::-webkit-details-marker]:hidden">
                     {f.q}
                     <span className="text-2xl leading-none text-cobalt transition-transform group-open:rotate-45" aria-hidden>+</span>
@@ -276,7 +316,7 @@ export default function Home() {
       <section className="on-cobalt bg-cobalt text-white">
         <div className="reveal mx-auto max-w-7xl px-4 py-24 sm:px-8 lg:py-36">
           <h2 className={`${poster} max-w-4xl text-5xl leading-[0.98] sm:text-8xl`}>¿Hablamos de <span className="text-sun">tu negocio?</span></h2>
-          <p className="mt-6 max-w-xl text-xl leading-relaxed text-white/90">Escríbenos y te dejamos la tarjeta lista con tu logo. Con el plan Starter, el primer mes te lo regalamos.</p>
+          <p className="mt-6 max-w-xl text-xl leading-relaxed text-white/90">Escríbenos y te dejamos la tarjeta lista con tu logo.</p>
           <div className="mt-9 flex flex-col gap-3 sm:flex-row">
             <WhatsAppButton className="bg-sun text-coal" />
             <a href={demoHref} className={`${btn} border-2 border-white/60 text-white`}>Ver la demo</a>

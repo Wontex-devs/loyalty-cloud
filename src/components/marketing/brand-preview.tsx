@@ -40,7 +40,7 @@ export function BrandPreview() {
             aria-pressed={n === i}
             onClick={() => setI(n)}
             className={cn(
-              "flex h-12 items-center gap-2 rounded-lg border-2 bg-white pl-1.5 pr-3.5 text-[15px] font-semibold transition-colors",
+              "flex h-12 items-center gap-2 rounded-lg border-2 bg-white pl-1.5 pr-3.5 text-[15px] font-semibold transition-[color,border-color,transform] duration-150 active:scale-[0.97]",
               n === i ? "border-cobalt text-coal" : "border-cobalt/20 text-coal hover:border-cobalt",
             )}
           >
@@ -51,14 +51,16 @@ export function BrandPreview() {
         ))}
       </div>
       <div className="max-w-sm">
-        <LoyaltyCardView
-          business={{ name: e.name, branding: e.branding }}
-          program={{ name: e.club, stampsRequired: e.required, rewardName: e.reward }}
-          customerName={e.customer}
-          stamps={e.stamps}
-          status="active"
-          rewardsAvailable={0}
-        />
+        <div key={i} className="animate-tarjeta">
+          <LoyaltyCardView
+            business={{ name: e.name, branding: e.branding }}
+            program={{ name: e.club, stampsRequired: e.required, rewardName: e.reward }}
+            customerName={e.customer}
+            stamps={e.stamps}
+            status="active"
+            rewardsAvailable={0}
+          />
+        </div>
         <p className="mt-3 text-sm text-graphite">Negocios inventados para mostrar la tarjeta.</p>
       </div>
     </div>
