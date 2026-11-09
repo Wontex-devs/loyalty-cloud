@@ -1,4 +1,4 @@
-# Wontex: fidelización digital de marca blanca
+# Lazo: fidelización digital de marca blanca
 
 Plataforma SaaS multiempresa de tarjetas de fidelización web.
 
