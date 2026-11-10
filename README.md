@@ -17,6 +17,7 @@ npm run db:seed    # carga Beauty Club en tu proyecto Supabase
 - Recompensas, canjes, historial y estadísticas (Etapa 4): [docs/ETAPA-4.md](docs/ETAPA-4.md)
 - Google Wallet (Etapa 9): [docs/ETAPA-9-WALLET.md](docs/ETAPA-9-WALLET.md)
 - Visita por toque NFC con etiqueta en el mostrador (Etapa 13): [docs/ETAPA-13-NFC.md](docs/ETAPA-13-NFC.md)
+- Borradores legales (contrato con el comercio y políticas de datos): [docs/legal/README.md](docs/legal/README.md)
 - Pruebas, despliegue y plan del piloto (Etapa 5): [docs/ETAPA-5.md](docs/ETAPA-5.md) · Guía para el equipo: [docs/GUIA-EQUIPO.md](docs/GUIA-EQUIPO.md)
 - Comercio de ejemplo: **Beauty Club** (`/business/beautyclub`, `/join/beautyclub`)
 
