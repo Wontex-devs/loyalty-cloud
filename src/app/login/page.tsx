@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowRight, QrCode, ScanLine, Shield, Store, UserPlus } from "lucide-react";
@@ -15,6 +16,7 @@ const ROLES = [
     title: "Superadministrador",
     who: "Natalia Huertas · Plataforma",
     href: "/admin",
+    renameId: "usr_super",
   },
   {
     icon: Store,
@@ -22,6 +24,7 @@ const ROLES = [
     who: "Valentina Ríos · Beauty Club",
     href: "/business/beautyclub",
     profile: "usr_owner",
+    renameId: "usr_owner",
   },
   {
     icon: ScanLine,
@@ -29,12 +32,16 @@ const ROLES = [
     who: "Laura Gómez · Beauty Club",
     href: "/business/beautyclub/scan",
     profile: "usr_staff1",
+    renameId: "usr_staff1",
   },
 ];
 
 export default function LoginPage() {
   const router = useRouter();
-  const { setActingProfile } = useDemo();
+  const { setActingProfile, renameProfile } = useDemo();
+  const [nombre, setNombre] = useState("");
+  const [apellido, setApellido] = useState("");
+  const nombreCompleto = `${nombre.trim()} ${apellido.trim()}`.trim();
 
   return (
     <div className="grid min-h-dvh lg:grid-cols-2">
@@ -61,11 +68,37 @@ export default function LoginPage() {
             <div className="h-px flex-1 bg-line" /> Demostración · entrar como <div className="h-px flex-1 bg-line" />
           </div>
 
+          <div className="mb-4 grid grid-cols-2 gap-2">
+            <label className="text-xs font-medium text-ink-2">
+              Nombre
+              <input
+                value={nombre}
+                onChange={(e) => setNombre(e.target.value)}
+                autoComplete="given-name"
+                maxLength={40}
+                placeholder="Tu nombre"
+                className="mt-1 h-10 w-full rounded-lg border border-line-strong bg-surface px-3 text-sm font-normal"
+              />
+            </label>
+            <label className="text-xs font-medium text-ink-2">
+              Apellido
+              <input
+                value={apellido}
+                onChange={(e) => setApellido(e.target.value)}
+                autoComplete="family-name"
+                maxLength={40}
+                placeholder="Tu apellido"
+                className="mt-1 h-10 w-full rounded-lg border border-line-strong bg-surface px-3 text-sm font-normal"
+              />
+            </label>
+          </div>
+
           <div className="space-y-2">
             {ROLES.map((r) => (
               <button
                 key={r.title}
                 onClick={() => {
+                  if (nombreCompleto) renameProfile(r.renameId, nombreCompleto);
                   if (r.profile) setActingProfile(r.profile);
                   router.push(r.href);
                 }}
@@ -76,7 +109,7 @@ export default function LoginPage() {
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-medium">{r.title}</p>
-                  <p className="truncate text-xs text-muted">{r.who}</p>
+                  <p className="truncate text-xs text-muted">{nombreCompleto ? `${nombreCompleto} · ${r.who.split(" · ")[1]}` : r.who}</p>
                 </div>
                 <ArrowRight className="size-4 text-subtle transition group-hover:translate-x-0.5 group-hover:text-ink" />
               </button>

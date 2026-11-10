@@ -1,14 +1,18 @@
 <!doctype html>
 <html lang="es">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Cambia tu contraseña</title></head>
 <body style="margin:0;background:#eef1fd;padding:24px 12px;font-family:Arial,Helvetica,sans-serif;color:#0e1a52">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden">
-    <tr><td style="background:#1b3fd8;padding:22px 28px;color:#ffffff;font-size:20px;font-weight:bold">Wontex</td></tr>
-    <tr><td style="padding:28px">
-      <h1 style="margin:0 0 12px;font-size:24px;line-height:1.2">Cambia tu contraseña</h1>
-      <p style="margin:0 0 24px;font-size:16px;line-height:1.5">Recibimos una solicitud para cambiar tu contraseña de Wontex.</p>
-      <a href="{{ .SiteURL }}/auth/callback?token_hash={{ .TokenHash }}&amp;type=recovery&amp;next=/account/password" style="display:inline-block;background:#ffc928;color:#0e1a52;font-size:16px;font-weight:bold;text-decoration:none;padding:14px 22px;border-radius:8px">Crear una contraseña nueva</a>
-      <p style="margin:24px 0 0;font-size:13px;line-height:1.5;color:#3d4873">Si no fuiste tú, ignora este correo: tu contraseña sigue igual.</p>
+  <div style="display:none;max-height:0;overflow:hidden;opacity:0">Cambia tu contraseña de Lazo.</div>
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;margin:0 auto;background:#ffffff;border-radius:16px;overflow:hidden">
+    <tr><td style="background:#1b3fd8;padding:24px 32px;color:#ffffff;font-size:26px;font-weight:bold;letter-spacing:-0.5px">Lazo<span style="color:#ffc928">.</span></td></tr>
+    <tr><td style="padding:32px">
+      <h1 style="margin:0 0 14px;font-size:26px;line-height:1.2">Cambia tu contraseña</h1>
+      <p style="margin:0 0 28px;font-size:16px;line-height:1.6">Recibimos una solicitud para cambiar la contraseña de tu cuenta de Lazo. El enlace sirve una sola vez y vence pronto.</p>
+      <a href="{{ .SiteURL }}/auth/callback?token_hash={{ .TokenHash }}&amp;type=recovery&amp;next=/account/password" style="display:inline-block;background:#ffc928;color:#0e1a52;font-size:16px;font-weight:bold;text-decoration:none;padding:15px 26px;border-radius:10px">Crear una contraseña nueva</a>
+      <p style="margin:28px 0 0;font-size:13px;line-height:1.5;color:#3d4873">Si el botón no funciona, copia y pega este enlace en tu navegador:<br><span style="word-break:break-all;color:#1b3fd8">{{ .SiteURL }}/auth/callback?token_hash={{ .TokenHash }}&amp;type=recovery&amp;next=/account/password</span></p>
+      <p style="margin:20px 0 0;font-size:13px;line-height:1.5;color:#3d4873">Si no fuiste tú, ignora este correo: tu contraseña sigue igual.</p>
     </td></tr>
+    <tr><td style="background:#f6f7fe;padding:18px 32px;font-size:12px;line-height:1.5;color:#3d4873">Lazo · Tarjetas de fidelización digitales para tu negocio.<br>Este correo se envió porque alguien usó tu dirección en Lazo. Nunca te pediremos tu contraseña por correo.</td></tr>
   </table>
 </body>
 </html>

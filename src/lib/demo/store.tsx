@@ -99,6 +99,8 @@ export interface DemoApi {
   state: DemoState;
   hydrated: boolean;
   setActingProfile: (id: string) => void;
+  /** Solo demo: cambia el nombre de un perfil de ejemplo para recorrer la plataforma con el nombre propio. */
+  renameProfile: (id: string, fullName: string) => void;
   joinProgram: (businessId: string, input: JoinInput) => Promise<JoinResult>;
   registerVisit: (cardId: string, idempotencyKey: string, locationId?: string) => Promise<OpResult>;
   reverseVisit: (visitId: string, reason: string) => Promise<OpResult>;
@@ -213,6 +215,8 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
       state,
       hydrated,
       setActingProfile: (id) => setState((s) => ({ ...s, actingProfileId: id })),
+      renameProfile: (id, fullName) =>
+        setState((s) => ({ ...s, profiles: s.profiles.map((p) => (p.id === id ? { ...p, fullName } : p)) })),
 
       joinProgram: async (businessId, input) => {
         const program = state.programs.find((p) => p.businessId === businessId && p.active);

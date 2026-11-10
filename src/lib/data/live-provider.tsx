@@ -71,6 +71,7 @@ export function LiveProvider({ snapshot, children }: { snapshot: DemoState; chil
       state,
       hydrated: true,
       setActingProfile: () => {},
+      renameProfile: () => {},
       // La inscripción pública no pasa por aquí: /join usa joinProgramAction directamente.
       joinProgram: async () => ({ ok: false, message: "No disponible desde el panel." }),
       registerVisit: async (cardId, idempotencyKey, locationId) => {
