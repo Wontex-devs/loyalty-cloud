@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
 <html lang="es">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Continuar · Lazo</title></head>
 <body style="margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:#eef1fd;font-family:Arial,Helvetica,sans-serif;color:#0e1a52">
-  <form method="post" action="/auth/callback" style="max-width:420px;width:100%;margin:16px;background:#fff;border-radius:16px;padding:32px;text-align:center">
+  <form method="post" action="/auth/callback" onsubmit="var b=this.querySelector('button');if(b.disabled)return false;b.disabled=true;b.textContent='Entrando…';" style="max-width:420px;width:100%;margin:16px;background:#fff;border-radius:16px;padding:32px;text-align:center">
     <p style="margin:0 0 18px;font-size:26px;font-weight:bold;color:#1b3fd8">Lazo<span style="color:#ffc928">.</span></p>
     <h1 style="margin:0 0 10px;font-size:22px">Un paso más</h1>
     <p style="margin:0 0 24px;font-size:16px;line-height:1.5">Pulsa el botón para continuar de forma segura.</p>
@@ -47,7 +47,15 @@ export async function GET(request: NextRequest) {
   return new NextResponse(html, { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store", "referrer-policy": "no-referrer" } });
 }
 
-/** Valida el token cuando la persona pulsa «Continuar». */
+/** Margen para reconocer un segundo envío del mismo botón: la persona acaba de entrar con este enlace. */
+const MARGEN_REENVIO_MS = 2 * 60 * 1000;
+
+/**
+ * Valida el token cuando la persona pulsa «Continuar».
+ * Si pulsa varias veces, el primer envío entra y gasta el token, y los demás fallan con «token no encontrado».
+ * El navegador muestra la respuesta del último, así que antes salía «enlace no válido» aunque ya hubiera entrado.
+ * Ahora, si falla pero en este navegador hay una sesión que acaba de iniciar, se sigue al destino.
+ */
 export async function POST(request: NextRequest) {
   const form = await request.formData();
   const tokenHash = String(form.get("token_hash") ?? "");
@@ -59,5 +67,9 @@ export async function POST(request: NextRequest) {
 
   const supabase = await createClient();
   const { error } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type });
-  return NextResponse.redirect(new URL(error ? "/login?error=link" : next, origen), 303);
+  if (!error) return NextResponse.redirect(new URL(next, origen), 303);
+
+  const { data } = await supabase.auth.getUser();
+  const recien = data.user?.last_sign_in_at ? Date.now() - new Date(data.user.last_sign_in_at).getTime() < MARGEN_REENVIO_MS : false;
+  return NextResponse.redirect(new URL(recien ? next : "/login?error=link", origen), 303);
 }
