@@ -1,6 +1,6 @@
 # Publicación automática en Vercel.
 # - Pull request: revisa el código y publica una vista previa en el proyecto demo (sin datos reales).
-# - Merge a main: revisa el código y publica en producción (app.wontex-devs.com) y en la demo.
+# - Merge a main: revisa el código y publica en producción (app.wontex-devs.com).
 # Necesita el secreto VERCEL_TOKEN (Settings → Secrets and variables → Actions).
 name: Publicar
 
@@ -56,7 +56,7 @@ jobs:
           echo "Vista previa: $url" >> "$GITHUB_STEP_SUMMARY"
 
   produccion:
-    name: Producción y demo
+    name: Producción
     if: github.event_name == 'push' && needs.revisar.outputs.publicar == 'true'
     needs: revisar
     runs-on: ubuntu-latest
@@ -65,9 +65,4 @@ jobs:
       - name: Publicar producción
         env:
           VERCEL_PROJECT_ID: ${{ env.PROD_PROJECT_ID }}
-        run: npx --yes $VERCEL_CLI deploy --prod --yes --token="${{ secrets.VERCEL_TOKEN }}"
-      - run: rm vercel.json
-      - name: Publicar demo
-        env:
-          VERCEL_PROJECT_ID: ${{ env.DEMO_PROJECT_ID }}
         run: npx --yes $VERCEL_CLI deploy --prod --yes --token="${{ secrets.VERCEL_TOKEN }}"

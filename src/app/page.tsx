@@ -6,7 +6,7 @@ import { BrandPreview } from "@/components/marketing/brand-preview";
 import { LazoLogo } from "@/components/brand/lazo-logo";
 import { NfcDemo } from "@/components/marketing/nfc-demo";
 import { WalletPhone } from "@/components/marketing/wallet-phone";
-import { DEMO_URL, PLATFORM_NAME, SALES_WHATSAPP } from "@/lib/config";
+import { PLATFORM_NAME, SALES_WHATSAPP } from "@/lib/config";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 
 const display = Bricolage_Grotesque({ subsets: ["latin"], weight: ["600", "800"], variable: "--font-poster" });
@@ -20,7 +20,6 @@ export const metadata: Metadata = {
   alternates: process.env.NEXT_PUBLIC_APP_URL ? { canonical: process.env.NEXT_PUBLIC_APP_URL } : undefined,
 };
 
-const demoHref = isSupabaseConfigured ? DEMO_URL : "/login";
 const whatsappLink = (text: string) => `https://wa.me/${SALES_WHATSAPP}?text=${encodeURIComponent(text)}`;
 const whatsappHref = whatsappLink(`Hola, quiero mi primer mes gratis del plan Starter de ${PLATFORM_NAME}.`);
 
@@ -106,7 +105,7 @@ export default function Home() {
             </p>
             <div className="mt-9 flex flex-col gap-3 sm:flex-row">
               <WhatsAppButton className="bg-sun text-coal" />
-              <a href={demoHref} className={`${btn} border-2 border-white/60 text-white`}>Ver la demo</a>
+              <a href="/login" className={`${btn} border-2 border-white/60 text-white`}>Entrar a mi panel</a>
             </div>
             <p className="mt-5 text-[15px] text-white/80">Tu cliente se inscribe con un QR, guarda la tarjeta en su Wallet y suma sellos con NFC.</p>
           </div>
@@ -315,7 +314,7 @@ export default function Home() {
           <p className="mt-6 max-w-xl text-xl leading-relaxed text-white/90">Escríbenos y te dejamos la tarjeta lista con tu logo.</p>
           <div className="mt-9 flex flex-col gap-3 sm:flex-row">
             <WhatsAppButton className="bg-sun text-coal" />
-            <a href={demoHref} className={`${btn} border-2 border-white/60 text-white`}>Ver la demo</a>
+            <a href="/login" className={`${btn} border-2 border-white/60 text-white`}>Entrar a mi panel</a>
           </div>
         </div>
       </section>

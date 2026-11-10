@@ -9,6 +9,5 @@ export function publicOrigin() {
 }
 
 /** Demo pública que enlaza la página de venta. */
-export const DEMO_URL = process.env.NEXT_PUBLIC_DEMO_URL || "https://loyalty-cloud-demo.vercel.app/login";
 /** WhatsApp de ventas: solo dígitos, con indicativo. */
 export const SALES_WHATSAPP = (process.env.NEXT_PUBLIC_SALES_WHATSAPP || "573138939222").replace(/\D/g, "");
