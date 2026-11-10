@@ -177,6 +177,7 @@ export function LoyaltyCardView({
             </div>
           </>
         )}
+        {!qrValue && memberSince && <p className="mt-4 text-xs opacity-60">Miembro desde {memberSince}</p>}
       </div>
     </div>
   );

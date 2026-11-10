@@ -29,11 +29,12 @@ test("IDs válidos para Google (emisor.prefijo-…)", () => {
   assert.match(objectId(cfg, card.token), /^3388000000012345678\.card-[A-Za-z0-9_-]+$/);
 });
 
-test("el pase muestra sellos, QR con el enlace y progreso", () => {
+test("el pase muestra sellos, el enlace a la tarjeta y progreso, sin QR (los sellos se suman por NFC)", () => {
   const p = passFromCard(card, origin);
   const o = loyaltyObject(cfg, p);
   assert.equal(o.loyaltyPoints.balance.string, "6/9");
-  assert.equal(o.barcode.value, `${origin}/card/${card.token}`);
+  assert.equal("barcode" in o, false);
+  assert.equal(o.linksModuleData.uris[0].uri, `${origin}/card/${card.token}`);
   assert.equal(o.state, "ACTIVE");
   assert.match(o.textModulesData[0].body, /faltan 3 visitas para: Manicura gratis/);
   assert.equal("secondaryLoyaltyPoints" in o, false);

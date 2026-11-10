@@ -129,7 +129,7 @@ export default function ScanPage() {
 
   return (
     <div className="mx-auto max-w-xl">
-      <PageHeader title="Registrar visita" description="Escanea el QR de la tarjeta del cliente o búscalo por nombre o teléfono." />
+      <PageHeader title="Registrar visita" description="Busca al cliente por nombre o teléfono. Si te muestra un código QR, también puedes escanearlo." />
 
       {activeLocations.length > 1 && (
         <label className="mb-4 flex items-center gap-2 text-sm">

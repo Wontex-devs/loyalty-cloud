@@ -47,7 +47,6 @@ export function loyaltyObject(cfg: Pick<GoogleWalletConfig, "issuerId">, p: Wall
     hexBackgroundColor: p.business.background,
     loyaltyPoints: { label: "Sellos", balance: { string: `${p.stamps}/${p.program.stampsRequired}` } },
     ...(p.rewardsAvailable.length ? { secondaryLoyaltyPoints: { label: "Premios", balance: { int: p.rewardsAvailable.length } } } : {}),
-    barcode: { type: "QR_CODE", value: p.cardUrl, alternateText: p.business.name },
     textModulesData: modules,
     linksModuleData: { uris: [{ id: "card", uri: p.cardUrl, description: "Ver mi tarjeta" }] },
   };
