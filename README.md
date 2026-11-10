@@ -22,7 +22,7 @@ npm run db:seed    # carga Beauty Club en tu proyecto Supabase
 
 ## Cómo colaborar desde GitHub
 
-Cada cambio que llega a `main` se publica solo en https://app.wontex-devs.com y en la demo (GitHub Actions, `.github/workflows/deploy.yml`).
+Cada cambio que llega a `main` se publica solo en https://app.wontex-devs.com (GitHub Actions, `.github/workflows/deploy.yml`).
 
 1. Crea una rama, haz tus cambios y abre un **pull request** hacia `main`.
 2. GitHub revisa el código (tipos y pruebas) y publica una **vista previa en modo demo**, sin datos reales. El enlace aparece en el resumen de la ejecución, en la pestaña *Actions*.
