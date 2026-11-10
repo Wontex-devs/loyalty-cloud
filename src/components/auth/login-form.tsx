@@ -29,7 +29,7 @@ function Form() {
           <Input name="password" type="password" autoComplete="current-password" required />
         </Field>
       )}
-      {linkError && !state && <p className="text-sm text-danger">El enlace no es válido o ya expiró.</p>}
+      {linkError && !state && <p className="text-sm text-danger">El enlace ya se usó o expiró. Si ya creaste tu contraseña, entra con ella. Si no, pulsa «¿Olvidaste tu contraseña?» y te enviamos un enlace nuevo.</p>}
       {state && <p className={state.ok ? "text-sm text-success" : "text-sm text-danger"}>{state.message}</p>}
       <Button className="w-full" disabled={pending}>
         {label}
