@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Cake, Check, Copy, Gift, PartyPopper, Share2, Sparkles } from "lucide-react";
+import { Cake, Check, Copy, Gift, PartyPopper, Share2, Sparkles, Nfc } from "lucide-react";
 import { LoyaltyCardView } from "@/components/loyalty/loyalty-card";
 import { InstallCard } from "./install-card";
 import { WalletButtons } from "./wallet-buttons";
@@ -142,10 +142,19 @@ export function CardScreen({
           stamps={Math.min(data.stamps, data.program.stampsRequired)}
           status={data.status}
           rewardsAvailable={data.rewards.length}
-          qrValue={url || data.token}
           memberSince={formatDate(data.memberSince)}
           highlightLastStamp={bump}
         />
+
+        {data.status !== "blocked" && (
+          <div className="mt-4 flex items-center gap-3 rounded-2xl bg-white p-4 text-sm shadow-card">
+            <Nfc className="size-6 shrink-0" style={{ color: b.cardForeground }} aria-hidden />
+            <p>
+              <span className="font-semibold">Para sumar tu sello</span>, acerca tu celular a la etiqueta del mostrador. Si no tiene etiqueta, da tu nombre en
+              caja.
+            </p>
+          </div>
+        )}
 
         <div className="mt-4 grid grid-cols-2 gap-2">
           <button onClick={share} className="flex h-11 items-center justify-center gap-2 rounded-xl bg-white text-sm font-medium shadow-card">

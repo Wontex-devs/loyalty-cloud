@@ -236,7 +236,6 @@ export default function CardDesignPage() {
               stamps={previewState === "active" ? 6 : 0}
               status={previewState}
               rewardsAvailable={previewState === "active" ? 0 : 1}
-              qrValue={`https://${PUBLIC_HOST_LABEL}/card/preview`}
               memberSince="jul. 2026"
             />
           </div>
