@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Bricolage_Grotesque, Onest } from "next/font/google";
 import Link from "next/link";
-import { MessageCircle } from "lucide-react";
+import { LogIn, MessageCircle } from "lucide-react";
 import { BrandPreview } from "@/components/marketing/brand-preview";
 import { LazoLogo } from "@/components/brand/lazo-logo";
 import { NfcDemo } from "@/components/marketing/nfc-demo";
@@ -59,7 +59,7 @@ function WhatsAppButton({ className }: { className: string }) {
 export default function Home() {
   return (
     <div className={`${display.variable} ${text.variable} bg-white font-[family-name:var(--font-text)] text-coal [&_h1]:text-balance [&_p]:text-pretty`}>
-      {/* Encabezado fijo: el botón de WhatsApp siempre queda a la vista */}
+      {/* Encabezado fijo: el acceso de los clientes siempre queda a la vista */}
       <header className="on-cobalt sticky top-0 z-40 bg-cobalt text-white shadow-[0_10px_24px_-18px_rgb(6_10_36/0.8)]">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:h-20 sm:px-8">
           <Link href="/" aria-label={PLATFORM_NAME} className="whitespace-nowrap">
@@ -69,17 +69,14 @@ export default function Home() {
             <a href="#como-funciona" className="hidden hover:underline lg:block">Cómo funciona</a>
             <a href="#planes" className="hidden hover:underline lg:block">Planes</a>
             <a href="#preguntas" className="hidden hover:underline lg:block">Preguntas</a>
-            <Link href="/login" className="hover:underline">Entrar</Link>
-            <a
-              href={whatsappHref}
-              target="_blank"
-              rel="noopener"
-              className="inline-flex h-10 items-center gap-2 rounded-lg bg-sun px-4 font-semibold text-coal transition-transform duration-150 ease-out hover:-translate-y-0.5 active:scale-[0.97]"
+            <Link
+              href="/login"
+              className="inline-flex h-11 items-center gap-2 rounded-lg bg-sun px-5 font-semibold text-coal shadow-[0_6px_16px_-8px_rgb(6_10_36/0.6)] transition-transform duration-150 ease-out hover:-translate-y-0.5 active:scale-[0.97]"
             >
-              <MessageCircle className="size-4" />
-              <span className="hidden sm:inline">Quiero mi primer mes gratis</span>
-              <span className="sm:hidden">WhatsApp</span>
-            </a>
+              <LogIn className="size-4" aria-hidden />
+              <span className="hidden sm:inline">Portal de clientes · Entrar</span>
+              <span className="sm:hidden">Entrar</span>
+            </Link>
           </nav>
         </div>
         {/* En celular y tableta los enlaces a cada sección van en una segunda fila */}
@@ -105,7 +102,7 @@ export default function Home() {
             </p>
             <div className="mt-9 flex flex-col gap-3 sm:flex-row">
               <WhatsAppButton className="bg-sun text-coal" />
-              <a href="/login" className={`${btn} border-2 border-white/60 text-white`}>Entrar a mi panel</a>
+              <a href="#como-funciona" className={`${btn} border-2 border-white/60 text-white`}>Ver cómo funciona</a>
             </div>
             <p className="mt-5 text-[15px] text-white/80">Tu cliente se inscribe con un QR, guarda la tarjeta en su Wallet y suma sellos con NFC.</p>
           </div>
@@ -314,7 +311,7 @@ export default function Home() {
           <p className="mt-6 max-w-xl text-xl leading-relaxed text-white/90">Escríbenos y te dejamos la tarjeta lista con tu logo.</p>
           <div className="mt-9 flex flex-col gap-3 sm:flex-row">
             <WhatsAppButton className="bg-sun text-coal" />
-            <a href="/login" className={`${btn} border-2 border-white/60 text-white`}>Entrar a mi panel</a>
+            <a href="#planes" className={`${btn} border-2 border-white/60 text-white`}>Ver los planes</a>
           </div>
         </div>
       </section>
