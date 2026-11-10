@@ -213,7 +213,7 @@ export default function Home() {
           <div className="mx-auto max-w-7xl px-4 pt-20 sm:px-8 lg:pt-24">
             <h2 className={`${h2} max-w-3xl`}>Con tu marca, no con la nuestra</h2>
             <p className="mt-6 max-w-2xl text-xl leading-relaxed text-graphite">
-              Tu logo, tus colores, tu sello, tu letra y el nombre de tu club. Así se ven los locales de Barranquilla que ya usan la misma plataforma.
+              Tu logo, tus colores, tu sello, tu letra y el nombre de tu club. Así se ven algunas tarjetas de ejemplo en la misma plataforma.
             </p>
           </div>
           <BrandPreview />
