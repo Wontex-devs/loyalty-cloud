@@ -13,6 +13,7 @@ import { Avatar, Badge, Button, ButtonLink, Card, CardHeader, EmptyState, Field,
 import { formatDate, formatMoney, formatNumber } from "@/lib/utils";
 import { Store } from "lucide-react";
 import { BrandMark } from "@/components/loyalty/brand-mark";
+import { DeleteBusiness } from "@/components/admin/delete-business";
 
 export default function AdminBusinessDetail() {
   const { id } = useParams<{ id: string }>();
@@ -125,6 +126,8 @@ export default function AdminBusinessDetail() {
           </ul>
         </Card>
       </div>
+
+      <DeleteBusiness businessId={b.id} slug={b.slug} nombre={b.name} />
     </>
   );
 }

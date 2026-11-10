@@ -6,6 +6,7 @@ const DB_ERRORS: Record<string, string> = {
   INVALID_BRANDING: "La personalización de la marca no es válida.",
   SLUG_TAKEN: "Ese identificador ya está en uso.",
   BUSINESS_NOT_FOUND: "No se encontró el establecimiento.",
+  CONFIRMATION_MISMATCH: "El identificador escrito no coincide. Escríbelo exactamente igual para confirmar.",
   BUSINESS_SUSPENDED: "El establecimiento está suspendido.",
   BUSINESS_UNAVAILABLE: "Este programa no está disponible en este momento.",
   TERMS_REQUIRED: "Debes aceptar los términos y la política de datos.",

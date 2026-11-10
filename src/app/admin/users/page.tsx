@@ -2,6 +2,7 @@
 
 import { InviteAdmin } from "@/components/admin/invite-admin";
 import { RevokeAdmin } from "@/components/admin/revoke-admin";
+import { DeleteUser } from "@/components/admin/delete-user";
 import { useDemo } from "@/lib/demo/store";
 import { ROLE_LABELS } from "@/lib/domain/permissions";
 import { Avatar, Badge, Card, PageHeader, Table, Td, Th } from "@/components/ui";
@@ -53,7 +54,16 @@ export default function UsersPage() {
                     </div>
                   </Td>
                   <Td className="text-muted">{formatDate(p.createdAt)}</Td>
-                  <Td>{p.platformRole === "superadmin" ? <RevokeAdmin profileId={p.id} nombre={p.fullName} /> : <span className="text-muted">—</span>}</Td>
+                  <Td>
+                    {p.id === state.actingProfileId ? (
+                      <span className="text-xs text-muted">Tu cuenta</span>
+                    ) : (
+                      <div className="flex flex-wrap items-start gap-1">
+                        {p.platformRole === "superadmin" && <RevokeAdmin profileId={p.id} nombre={p.fullName} />}
+                        <DeleteUser profileId={p.id} nombre={p.fullName} correo={p.email} />
+                      </div>
+                    )}
+                  </Td>
                 </tr>
               );
             })}

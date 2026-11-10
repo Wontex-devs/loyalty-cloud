@@ -346,3 +346,84 @@ export async function revokeSuperadminAction(profileId: string): Promise<ActionR
   revalidatePath("/admin", "layout");
   return { ok: true, message: "Listo: esa persona ya no es administradora de la plataforma." };
 }
+
+/**
+ * Elimina la cuenta de una persona del panel (dueño, empleado o administrador). Solo un superadministrador.
+ * - No se puede eliminar a uno mismo ni al último superadministrador.
+ * - Si es la única propietaria de algún comercio, primero hay que eliminar ese comercio o darle otro propietario.
+ * - Las visitas y canjes que registró siguen en el historial, sin su nombre.
+ */
+export async function deleteUserAction(profileId: string): Promise<ActionResult> {
+  if (!z.uuid().safeParse(profileId).success) return { ok: false, message: "Datos no válidos." };
+
+  const session = await getSession();
+  if (session?.profile?.platformRole !== "superadmin") return fail({ message: "FORBIDDEN" });
+  if (profileId === session.user.id) return { ok: false, message: "No puedes eliminar tu propia cuenta." };
+
+  const admin = createAdminClient();
+  const { data: target } = await admin.from("profiles").select("id, platform_role").eq("id", profileId).maybeSingle();
+  if (!target) return { ok: true, message: "Esa cuenta ya no existe." };
+  if (target.platform_role === "superadmin") {
+    const { count } = await admin.from("profiles").select("id", { count: "exact", head: true }).eq("platform_role", "superadmin");
+    if ((count ?? 0) <= 1) return { ok: false, message: "Debe quedar al menos un administrador de la plataforma." };
+  }
+
+  // ¿Es la única propietaria de algún comercio?
+  const { data: propios } = await admin.from("business_memberships").select("business_id").eq("profile_id", profileId).eq("role", "owner");
+  const ids = (propios ?? []).map((m) => m.business_id as string);
+  if (ids.length) {
+    const { data: otros } = await admin.from("business_memberships").select("business_id").in("business_id", ids).eq("role", "owner").neq("profile_id", profileId);
+    const conOtroDueno = new Set((otros ?? []).map((m) => m.business_id as string));
+    const solos = ids.filter((id) => !conOtroDueno.has(id));
+    if (solos.length) {
+      const { data: negocios } = await admin.from("businesses").select("name").in("id", solos);
+      const nombres = (negocios ?? []).map((n) => n.name).join(", ");
+      return { ok: false, message: `Es la única propietaria de: ${nombres}. Elimina primero ese comercio o asígnale otro propietario.` };
+    }
+  }
+
+  const { error: auditError } = await admin.from("audit_logs").insert({
+    business_id: null,
+    actor_id: session.user.id,
+    action: "platform.user_deleted",
+    entity: "profile",
+    entity_id: profileId,
+    metadata: { platform_role: target.platform_role },
+  });
+  if (auditError) console.error("[admin] no se pudo registrar la auditoría", auditError.message);
+
+  const { error } = await admin.auth.admin.deleteUser(profileId);
+  if (error) return { ok: false, message: "No se pudo eliminar la cuenta. Inténtalo de nuevo." };
+
+  revalidatePath("/admin", "layout");
+  return { ok: true, message: "Cuenta eliminada." };
+}
+
+/**
+ * Elimina un comercio con todos sus datos: clientes, tarjetas, visitas, canjes, sedes, equipo y logo.
+ * Solo un superadministrador, escribiendo el identificador del comercio para confirmar. No se puede deshacer.
+ */
+export async function deleteBusinessAction(businessId: string, confirmSlug: string): Promise<ActionResult> {
+  if (!z.uuid().safeParse(businessId).success) return { ok: false, message: "Datos no válidos." };
+
+  const session = await getSession();
+  if (session?.profile?.platformRole !== "superadmin") return fail({ message: "FORBIDDEN" });
+
+  // La función de la base comprueba de nuevo el rol y la confirmación, y deja la auditoría.
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("admin_delete_business", { p_business_id: businessId, p_confirm_slug: confirmSlug.trim() });
+  if (error) return fail(error);
+
+  // El logo vive en Storage (brand-assets/<id>/…), fuera de la base: se borra aparte.
+  try {
+    const admin = createAdminClient();
+    const bucket = admin.storage.from("brand-assets");
+    const { data: archivos } = await bucket.list(businessId);
+    if (archivos?.length) await bucket.remove(archivos.map((f) => `${businessId}/${f.name}`));
+  } catch (e) {
+    console.error("[admin] no se pudo borrar el logo del comercio eliminado", e);
+  }
+
+  revalidatePath("/admin", "layout");
+  return { ok: true, message: "Comercio eliminado." };
+}

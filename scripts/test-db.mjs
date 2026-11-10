@@ -712,6 +712,33 @@ console.log("\nAdministradores de la plataforma");
   check("el cambio queda en la auditoría, sin comercio", r.ok, r);
 }
 
+console.log("\nEliminar comercios y usuarios");
+{
+  let r = await as(U.ownerA, "select public.admin_delete_business($1, 'negocio-a')", [A]);
+  check("un dueño no puede eliminar comercios", !r.ok && r.error.includes("FORBIDDEN"), r);
+  r = await as(U.super, "select public.admin_delete_business($1, 'otro-nombre')", [A]);
+  check("el superadministrador debe escribir el identificador exacto", !r.ok && r.error.includes("CONFIRMATION_MISMATCH"), r);
+  const visitasA = (await db.query("select count(*)::int n from public.visits where business_id = $1", [A])).rows[0].n;
+  r = await as(U.ownerA, "select set_config('lazo.eliminando_comercio', $1, true); delete from public.visits where business_id = $1::uuid", [A]);
+  const visitasDespues = (await db.query("select count(*)::int n from public.visits where business_id = $1", [A])).rows[0].n;
+  check("nadie puede borrar visitas a mano, aunque ponga la marca de borrado", visitasA > 0 && visitasDespues === visitasA, { visitasA, visitasDespues, r });
+  r = await asService("delete from public.visits where business_id = $1", [A]);
+  check("tampoco el servidor (service_role)", !r.ok || r.affected === 0, r);
+
+  // Eliminar un usuario que registró visitas: su cuenta se va y el historial queda sin su nombre.
+  const conStaff = (await db.query("select count(*)::int n from public.visits where staff_id = $1", [U.staffA2])).rows[0].n;
+  let borrado = true;
+  try {
+    await db.query("delete from auth.users where id = $1", [U.staffA2]);
+  } catch (e) {
+    borrado = e.message;
+  }
+  const sigue = (await db.query("select count(*)::int n from public.profiles where id = $1", [U.staffA2])).rows[0].n;
+  const sinNombre = (await db.query("select count(*)::int n from public.visits where staff_id is null and business_id = $1", [A])).rows[0].n;
+  check("se puede eliminar un usuario que registró visitas", borrado === true && sigue === 0, borrado);
+  check("sus visitas siguen en el historial, sin su nombre", conStaff === 0 || sinNombre >= conStaff, { conStaff, sinNombre });
+}
+
 console.log("\nPlanes comerciales");
 {
   const p = (await db.query("select id, price_monthly::int price, max_customers from public.plans order by id")).rows;
@@ -745,6 +772,37 @@ console.log("\nDatos de demostración");
   if (seedOk) {
     const n = (await seedDb.query("select (select count(*) from public.customers)::int c, (select count(*) from public.visits)::int v, (select count(*) from public.rewards)::int r")).rows[0];
     check(`la semilla de Beauty Club cumple todas las restricciones (${n.c} clientes, ${n.v} visitas, ${n.r} recompensas)`, n.c > 0 && n.v > 0, n);
+
+    // Eliminar un comercio con todo su historial (visitas, canjes, contactos, auditoría).
+    const biz = (await seedDb.query("select id, slug from public.businesses where slug = 'beautyclub'")).rows[0];
+    const otros = (await seedDb.query("select count(*)::int n from public.businesses where id <> $1", [biz.id])).rows[0].n;
+    const sup = (await seedDb.query("select id from public.profiles limit 1")).rows[0].id;
+    await seedDb.query("update public.profiles set platform_role = 'superadmin' where id = $1", [sup]);
+    let error = null;
+    await seedDb.query("begin");
+    try {
+      await seedDb.query("select set_config('request.jwt.claims', $1, true)", [JSON.stringify({ sub: sup, role: "authenticated" })]);
+      await seedDb.query("set local role authenticated");
+      await seedDb.query("select public.admin_delete_business($1, $2)", [biz.id, biz.slug]);
+      await seedDb.query("commit");
+    } catch (e) {
+      error = e.message;
+      await seedDb.query("rollback");
+    }
+    check("el superadministrador elimina un comercio con todo su historial", error === null, error);
+    const quedan = (await seedDb.query(
+      `select (select count(*) from public.businesses where id = $1)::int b,
+              (select count(*) from public.customers where business_id = $1)::int c,
+              (select count(*) from public.visits where business_id = $1)::int v,
+              (select count(*) from public.redemptions where business_id = $1)::int r,
+              (select count(*) from public.audit_logs where business_id = $1)::int a`,
+      [biz.id],
+    )).rows[0];
+    check("no queda nada de ese comercio", Object.values(quedan).every((x) => x === 0), quedan);
+    const reg = (await seedDb.query("select count(*)::int n from public.audit_logs where action = 'platform.business_deleted' and entity_id = $1 and business_id is null", [biz.id])).rows[0].n;
+    check("la eliminación queda en la auditoría de la plataforma", reg === 1, reg);
+    const otrosDespues = (await seedDb.query("select count(*)::int n from public.businesses")).rows[0].n;
+    check("los demás comercios siguen intactos", otrosDespues === otros, { otros, otrosDespues });
   }
 }
 
