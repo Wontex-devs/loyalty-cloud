@@ -46,7 +46,8 @@ export function LegalScreen({ data }: { data: LegalData }) {
         <h2 className="mb-2 font-semibold text-ink">1. Términos del programa</h2>
         <ul className="mb-3 list-disc space-y-1 pl-5">
           <li>
-            Cada visita registrada por el personal de {data.name} suma un sello. Al completar {program.stampsRequired} sellos obtienes: {program.rewardName}.
+            Cada visita registrada por el personal de {data.name}, o al acercar tu celular a la etiqueta NFC del establecimiento, suma un sello. Al completar{" "}
+            {program.stampsRequired} sellos obtienes: {program.rewardName}.
           </li>
           <li>La tarjeta es personal, gratuita y no se puede canjear por dinero.</li>
           {program.rewardExpiryDays ? <li>Las recompensas vencen {program.rewardExpiryDays} días después de obtenerlas.</li> : null}
@@ -65,7 +66,8 @@ export function LegalScreen({ data }: { data: LegalData }) {
         <h2 className="mt-8 mb-2 font-semibold text-ink">3. Datos que tratamos</h2>
         <p>
           Nombre, número de celular, correo electrónico (opcional), día y mes de cumpleaños (opcional, sin año) y el historial de visitas, recompensas y canjes de tu
-          tarjeta.
+          tarjeta. Para evitar sellos fraudulentos tratamos de forma temporal la dirección IP desde la que se usa el toque NFC. El enlace de tu tarjeta se guarda en
+          el navegador de tu celular para reconocerte al acercarlo; no usamos cookies de publicidad.
         </p>
 
         <h2 className="mt-8 mb-2 font-semibold text-ink">4. Para qué los usamos</h2>
@@ -91,7 +93,8 @@ export function LegalScreen({ data }: { data: LegalData }) {
         <p>
           La plataforma {PLATFORM_NAME} actúa como encargada del tratamiento: aloja la información por cuenta de {holder} y no la usa para fines propios. Los datos se
           almacenan en servidores de proveedores de nube que pueden estar fuera de Colombia, con medidas de seguridad como cifrado en tránsito y control de acceso por
-          establecimiento. Al aceptar, autorizas esta transmisión.
+          establecimiento. Al aceptar, autorizas esta transmisión. Si decides añadir tu tarjeta a Google Wallet, Google recibe tu nombre, tus sellos y el código de tu
+          tarjeta, y los trata según sus propias políticas.
         </p>
 
         <h2 className="mt-8 mb-2 font-semibold text-ink">7. Vigencia</h2>
