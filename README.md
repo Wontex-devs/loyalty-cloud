@@ -25,7 +25,7 @@ npm run db:seed    # carga Beauty Club en tu proyecto Supabase
 Cada cambio que llega a `main` se publica solo en https://app.wontex-devs.com (GitHub Actions, `.github/workflows/deploy.yml`).
 
 1. Crea una rama, haz tus cambios y abre un **pull request** hacia `main`.
-2. GitHub revisa el código (tipos y pruebas) y publica una **vista previa en modo demo**, sin datos reales. El enlace aparece en el resumen de la ejecución, en la pestaña *Actions*.
+2. GitHub revisa el código (tipos y pruebas). Mientras la revisión no pase en verde, no se debe unir.
 3. Cuando la revisión pasa, tú mismo unes el pull request a `main` (no hace falta aprobación de nadie) y el cambio queda en producción en uno o dos minutos.
 
 No subas secretos ni archivos `.env`: las claves viven en Vercel.
