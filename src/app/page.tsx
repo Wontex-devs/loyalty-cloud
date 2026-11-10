@@ -71,10 +71,10 @@ export default function Home() {
             <a href="#preguntas" className="hidden hover:underline lg:block">Preguntas</a>
             <Link
               href="/login"
-              className="inline-flex h-11 items-center gap-2 rounded-lg bg-white px-4 font-semibold text-cobalt transition-transform duration-150 ease-out hover:-translate-y-0.5 active:scale-[0.97]"
+              className="inline-flex h-11 items-center gap-2 rounded-lg bg-sun px-5 font-semibold text-coal shadow-[0_6px_16px_-8px_rgb(6_10_36/0.6)] transition-transform duration-150 ease-out hover:-translate-y-0.5 active:scale-[0.97]"
             >
               <LogIn className="size-4" aria-hidden />
-              <span className="hidden sm:inline">Ya soy cliente · Entrar</span>
+              <span className="hidden sm:inline">Portal de clientes · Entrar</span>
               <span className="sm:hidden">Entrar</span>
             </Link>
           </nav>
