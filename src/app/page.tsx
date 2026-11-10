@@ -29,13 +29,13 @@ const h2 = `${poster} text-balance text-4xl leading-[1.02] sm:text-6xl`;
 const btn = "inline-flex h-14 items-center justify-center gap-2.5 rounded-lg px-6 text-base font-semibold transition-transform duration-150 ease-out hover:-translate-y-0.5 active:scale-[0.97]";
 
 const PLANS = [
-  { name: "Starter", who: "Para un local que empieza", lines: ["100 clientes", "2 personas del equipo", "1 sede"], price: "$59.900", freeMonth: true },
-  { name: "Pro", who: "Para el negocio que ya tiene movimiento", lines: ["300 clientes", "10 personas del equipo", "3 sedes"], price: "$119.900", featured: true },
-  { name: "Business", who: "Para cadenas y varias sedes", lines: ["Clientes a tu medida", "Equipo a tu medida", "Sedes a tu medida"] },
+  { name: "Starter", who: "Para un local que empieza", lines: ["100 clientes", "2 personas del equipo", "1 sede"], price: "$79.990", chip: "Primer mes gratis", cta: "Quiero mi primer mes gratis", freeMonth: true },
+  { name: "Pro", who: "Para el negocio que ya tiene movimiento", lines: ["300 clientes", "10 personas del equipo", "3 sedes"], price: "$139.990", chip: "Recomendado", cta: "Quiero este plan", featured: true },
+  { name: "Business", who: "Para cadenas y varias sedes", lines: ["Clientes a tu medida", "Equipo a tu medida", "Sedes a tu medida"], price: "A medida", cta: "Hablemos de tu negocio", custom: true },
 ];
 
 const FAQ = [
-  { q: "¿Cómo funciona el primer mes gratis?", a: "Aplica al plan Starter. Te dejamos la tarjeta lista con tu marca y la usas un mes sin pagar. Si decides seguir, pagas $59.900 al mes." },
+  { q: "¿Cómo funciona el primer mes gratis?", a: "Aplica al plan Starter. Te dejamos la tarjeta lista con tu marca y la usas un mes sin pagar. Si decides seguir, pagas $79.990 al mes." },
   { q: "¿Mis clientes tienen que descargar algo?", a: "No. La tarjeta se abre en el navegador del celular y se puede añadir a la pantalla de inicio como si fuera una app." },
   { q: "¿Necesito comprar algún equipo?", a: "Para marcar los sellos con NFC necesitas un lector en el mostrador. El QR solo se usa una vez, para que tu cliente cree su tarjeta; lo pones en un cartel en la caja." },
   { q: "¿Qué pasa si mi cliente cambia de celular?", a: "Vuelve a escanear el QR de tu negocio con el mismo nombre y celular, y recupera su tarjeta con todos sus sellos." },
@@ -213,7 +213,7 @@ export default function Home() {
           <div className="mx-auto max-w-7xl px-4 pt-20 sm:px-8 lg:pt-24">
             <h2 className={`${h2} max-w-3xl`}>Con tu marca, no con la nuestra</h2>
             <p className="mt-6 max-w-2xl text-xl leading-relaxed text-graphite">
-              Tu logo, tus colores, tu sello, tu letra y el nombre de tu club. Así se ven los locales de Barranquilla que ya usan la misma plataforma.
+              Tu logo, tus colores, tu sello, tu letra y el nombre de tu club. Así se ven algunas tarjetas de ejemplo en la misma plataforma.
             </p>
           </div>
           <BrandPreview />
@@ -239,15 +239,13 @@ export default function Home() {
         <section id="planes" className="reveal mx-auto max-w-7xl scroll-mt-28 px-4 py-20 sm:px-8 lg:scroll-mt-20 lg:py-28">
           <h2 className={h2}>Planes</h2>
           <p className="mt-4 text-xl text-graphite">Todos incluyen la tarjeta con tu marca, avisos al celular de tus clientes, promociones, premios y estadísticas.</p>
-          <div className="mt-10 grid gap-4 md:grid-cols-3 md:items-stretch">
+          <div className="mt-10 grid gap-5 md:grid-cols-3 md:items-stretch">
             {PLANS.map((p) => (
               <div
                 key={p.name}
-                className={
-                  p.featured
-                    ? "rounded-xl bg-coal p-8 text-white shadow-[0_24px_40px_-24px_rgb(14_26_82/0.7)] md:-my-4 md:py-12"
-                    : "rounded-xl border-2 border-coal/15 p-8"
-                }
+                className={`flex flex-col rounded-xl p-8 ${
+                  p.featured ? "bg-coal text-white shadow-[0_24px_40px_-24px_rgb(14_26_82/0.7)]" : "border-2 border-coal/15"
+                }`}
               >
                 {/* Borde perforado de tarjeta de sellos */}
                 <div
@@ -259,32 +257,32 @@ export default function Home() {
                     backgroundRepeat: "repeat-x",
                   }}
                 />
-                <h3 className={`${poster} text-4xl`}>{p.name}</h3>
-                <p className="mt-2 text-[15px]">{p.who}</p>
-                <ul className="mt-6 space-y-2 text-lg font-medium">
+                <div className="flex items-center justify-between gap-3">
+                  <h3 className={`${poster} text-4xl`}>{p.name}</h3>
+                  <span className={`rounded-lg px-3 py-1.5 text-sm font-semibold ${p.freeMonth ? "bg-sun text-coal" : p.featured ? "bg-white/15 text-white" : "invisible"}`}>
+                    {p.chip}
+                  </span>
+                </div>
+                <p className="mt-2 min-h-12 text-[15px]">{p.who}</p>
+                <ul className="mt-4 space-y-2 text-lg font-medium">
                   {p.lines.map((l) => <li key={l}>{l}</li>)}
                 </ul>
-                <div className="mt-6">
-                  {p.freeMonth && <p className="mb-3 w-fit rounded-lg bg-sun px-3 py-1.5 font-semibold">Primer mes gratis</p>}
-                  {p.price ? (
-                    <p className="text-lg">
-                      {p.freeMonth && "Después, "}
-                      <strong className={`${poster} ${p.featured ? "text-4xl text-sun" : "text-3xl"}`}>{p.price}</strong> al mes
-                    </p>
-                  ) : (
-                    <p className={`${poster} text-2xl`}>Precio ajustable</p>
-                  )}
+                <div className="mt-auto pt-8">
+                  <p className="flex items-baseline gap-2 text-lg">
+                    <strong className={`${poster} whitespace-nowrap text-4xl ${p.featured ? "text-sun" : ""}`}>{p.price}</strong>
+                    <span className="min-h-7">{p.custom ? "" : "al mes"}</span>
+                  </p>
+                  <a
+                    href={p.freeMonth ? whatsappHref : whatsappLink(`Hola, quiero saber más del plan ${p.name} de ${PLATFORM_NAME}.`)}
+                    target="_blank"
+                    rel="noopener"
+                    className={`mt-5 flex h-12 items-center justify-center rounded-lg px-4 font-semibold transition-transform duration-150 ease-out hover:-translate-y-0.5 active:scale-[0.97] ${
+                      p.featured ? "bg-sun text-coal" : "border-2 border-coal text-coal"
+                    }`}
+                  >
+                    {p.cta}
+                  </a>
                 </div>
-                <a
-                  href={p.freeMonth ? whatsappHref : whatsappLink(`Hola, quiero saber más del plan ${p.name} de ${PLATFORM_NAME}.`)}
-                  target="_blank"
-                  rel="noopener"
-                  className={`mt-6 flex h-12 items-center justify-center rounded-lg px-4 font-semibold transition-transform duration-150 ease-out hover:-translate-y-0.5 active:scale-[0.97] ${
-                    p.featured ? "bg-sun text-coal" : "border-2 border-coal text-coal"
-                  }`}
-                >
-                  {p.freeMonth ? "Quiero mi primer mes gratis" : p.price ? "Quiero este plan" : "Hablemos de tu negocio"}
-                </a>
               </div>
             ))}
           </div>

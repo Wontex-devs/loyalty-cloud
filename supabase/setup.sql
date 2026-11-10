@@ -1,5 +1,5 @@
 -- Generado por npm run db:bundle. No editar: cambia las migraciones y vuelve a generarlo.
--- Incluye: 20261101000001_schema.sql, 20261101000002_rls.sql, 20261101000003_functions.sql, 20261101000004_reference_data.sql, 20261101000005_public_business.sql, 20261101000006_business_stats.sql, 20261101000007_pilot.sql, 20261101000008_customer_experience.sql, 20261101000009_promotions_birthdays.sql, 20261101000010_plans_locations.sql, 20261101000011_brand_assets.sql, 20261101000012_privacy_abuse.sql, 20261101000013_wallet_notifications.sql, 20261101000014_plan_prices.sql, 20261101000015_nfc_checkin.sql
+-- Incluye: 20261101000001_schema.sql, 20261101000002_rls.sql, 20261101000003_functions.sql, 20261101000004_reference_data.sql, 20261101000005_public_business.sql, 20261101000006_business_stats.sql, 20261101000007_pilot.sql, 20261101000008_customer_experience.sql, 20261101000009_promotions_birthdays.sql, 20261101000010_plans_locations.sql, 20261101000011_brand_assets.sql, 20261101000012_privacy_abuse.sql, 20261101000013_wallet_notifications.sql, 20261101000014_plan_prices.sql, 20261101000015_nfc_checkin.sql, 20261101000016_plan_prices_v2.sql
 begin;
 
 -- >>> 20261101000001_schema.sql
@@ -3155,5 +3155,10 @@ revoke all on function public.get_nfc_settings(uuid) from public, anon, authenti
 revoke all on function public.set_nfc_settings(uuid, boolean, integer, boolean) from public, anon, authenticated;
 grant execute on function public.get_nfc_settings(uuid) to authenticated;
 grant execute on function public.set_nfc_settings(uuid, boolean, integer, boolean) to authenticated;
+
+-- >>> 20261101000016_plan_prices_v2.sql
+-- Nuevos precios mensuales: Starter $79.990 y Pro $139.990. Business sigue a la medida.
+update public.plans set price_monthly = 79990 where id = 'plan_starter';
+update public.plans set price_monthly = 139990 where id = 'plan_pro';
 
 commit;

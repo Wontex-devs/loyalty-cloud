@@ -33,7 +33,7 @@ Plataforma SaaS multiempresa de tarjetas de fidelización de marca blanca. Cambi
 
 ## Capabilities and Constraints
 
-- Planes (según la portada actual): Starter $59.900/mes (100 clientes, 2 personas del equipo, 1 sede, primer mes gratis); Pro $119.900/mes (300 clientes, 10 personas, 3 sedes); Business a la medida.
+- Planes (según la portada actual): Starter $79.990/mes (100 clientes, 2 personas del equipo, 1 sede, primer mes gratis); Pro $139.990/mes (300 clientes, 10 personas, 3 sedes); Business a la medida.
 - Datos personales de clientes bajo Habeas Data (Ley 1581 de 2012): solo los ve cada negocio, consentimiento al inscribirse, el cliente puede dejar de recibir mensajes y pedir el borrado.
 - Multiempresa con aislamiento por comercio; Wallet (Google Wallet, Apple Wallet) y NFC como evolución de la tarjeta.
 - **NFC:** el usuario confirmó que NFC funciona; la portada ya lo presenta en presente. No se han confirmado los detalles (qué lector, Apple Wallet, Google Wallet), por eso el texto no los nombra.
