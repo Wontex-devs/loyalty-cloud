@@ -1,6 +1,7 @@
 "use client";
 
 import { InviteAdmin } from "@/components/admin/invite-admin";
+import { RevokeAdmin } from "@/components/admin/revoke-admin";
 import { useDemo } from "@/lib/demo/store";
 import { ROLE_LABELS } from "@/lib/domain/permissions";
 import { Avatar, Badge, Card, PageHeader, Table, Td, Th } from "@/components/ui";
@@ -23,6 +24,7 @@ export default function UsersPage() {
               <Th>Rol de plataforma</Th>
               <Th>Comercios</Th>
               <Th>Alta</Th>
+              <Th>Acciones</Th>
             </tr>
           </thead>
           <tbody>
@@ -51,6 +53,7 @@ export default function UsersPage() {
                     </div>
                   </Td>
                   <Td className="text-muted">{formatDate(p.createdAt)}</Td>
+                  <Td>{p.platformRole === "superadmin" ? <RevokeAdmin profileId={p.id} nombre={p.fullName} /> : <span className="text-muted">—</span>}</Td>
                 </tr>
               );
             })}

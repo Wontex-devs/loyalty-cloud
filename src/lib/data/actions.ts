@@ -313,3 +313,36 @@ export async function inviteSuperadminAction(input: { fullName: string; email: s
       : "Invitación enviada. Al abrir el correo y crear su contraseña tendrá acceso de superadministrador.",
   };
 }
+
+/**
+ * Quita el rol de superadministrador a otra persona. No borra su cuenta ni sus datos: solo pierde el acceso a la plataforma.
+ * No se puede quitar a uno mismo ni al último superadministrador.
+ */
+export async function revokeSuperadminAction(profileId: string): Promise<ActionResult> {
+  if (!z.uuid().safeParse(profileId).success) return { ok: false, message: "Datos no válidos." };
+
+  const session = await getSession();
+  if (session?.profile?.platformRole !== "superadmin") return fail({ message: "FORBIDDEN" });
+  if (profileId === session.user.id) return { ok: false, message: "No puedes quitarte el acceso a ti mismo. Pídeselo a otro administrador." };
+
+  const admin = createAdminClient();
+  const { count } = await admin.from("profiles").select("id", { count: "exact", head: true }).eq("platform_role", "superadmin");
+  if ((count ?? 0) <= 1) return { ok: false, message: "Debe quedar al menos un administrador de la plataforma." };
+
+  const { data, error } = await admin.from("profiles").update({ platform_role: "user" }).eq("id", profileId).eq("platform_role", "superadmin").select("id");
+  if (error) return { ok: false, message: "No se pudo quitar el acceso. Inténtalo de nuevo." };
+  if (!data?.length) return { ok: true, message: "Esa persona ya no era administradora." };
+
+  const { error: auditError } = await admin.from("audit_logs").insert({
+    business_id: null,
+    actor_id: session.user.id,
+    action: "platform.superadmin_revoked",
+    entity: "profile",
+    entity_id: profileId,
+    metadata: {},
+  });
+  if (auditError) console.error("[admin] no se pudo registrar la auditoría", auditError.message);
+
+  revalidatePath("/admin", "layout");
+  return { ok: true, message: "Listo: esa persona ya no es administradora de la plataforma." };
+}
