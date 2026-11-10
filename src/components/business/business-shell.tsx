@@ -54,42 +54,46 @@ export function BusinessShell({ slug, children }: { slug: string; children: Reac
   const base = `/business/${slug}`;
   const m = membership ?? { role: "staff" as const, canRedeem: false };
 
+  // Solo lo del día a día a la vista; lo demás queda en «Más opciones».
+  const masOpciones = [
+    ...(can(m, "analytics.read") ? [{ href: `${base}/history`, label: "Historial", icon: History }] : []),
+    ...(can(m, "program.edit")
+      ? [
+          { href: `${base}/promotions`, label: "Promociones", icon: Tag },
+          { href: `${base}/campaigns`, label: "Campañas", icon: Megaphone },
+        ]
+      : []),
+    ...(can(m, "staff.manage")
+      ? [
+          { href: `${base}/staff`, label: "Empleados", icon: UserCog },
+          { href: `${base}/analytics`, label: "Estadísticas", icon: BarChart3 },
+          { href: `${base}/settings`, label: "Configuración", icon: Settings },
+        ]
+      : []),
+  ];
+
   const sections: NavSection[] = [
     {
       items: [
-        ...(can(m, "analytics.read") ? [{ href: base, label: "Dashboard", icon: LayoutDashboard, exact: true }] : []),
+        ...(can(m, "analytics.read") ? [{ href: base, label: "Inicio", icon: LayoutDashboard, exact: true }] : []),
         { href: `${base}/scan`, label: "Registrar visita", icon: ScanLine },
         { href: `${base}/customers`, label: "Clientes", icon: Users },
         ...(can(m, "rewards.redeem") || can(m, "analytics.read") ? [{ href: `${base}/rewards`, label: "Recompensas", icon: Gift }] : []),
-        ...(can(m, "analytics.read") ? [{ href: `${base}/history`, label: "Historial", icon: History }] : []),
       ],
     },
     ...(can(m, "program.edit")
       ? [
           {
-            title: "Programa",
+            title: "Mi programa",
             items: [
               ...(!onboardingSteps(scope).complete ? [{ href: `${base}/onboarding`, label: "Primeros pasos", icon: ListChecks }] : []),
-              { href: `${base}/program`, label: "Mi programa", icon: Sparkles },
-              { href: `${base}/card-design`, label: "Mi tarjeta digital", icon: CreditCard },
-              { href: `${base}/promotions`, label: "Promociones", icon: Tag },
-              { href: `${base}/campaigns`, label: "Campañas", icon: Megaphone },
+              { href: `${base}/card-design`, label: "Tarjeta, QR y NFC", icon: CreditCard },
+              { href: `${base}/program`, label: "Sellos y premio", icon: Sparkles },
             ],
           },
         ]
       : []),
-    ...(can(m, "staff.manage")
-      ? [
-          {
-            title: "Negocio",
-            items: [
-              { href: `${base}/staff`, label: "Empleados", icon: UserCog },
-              { href: `${base}/analytics`, label: "Estadísticas", icon: BarChart3 },
-              { href: `${base}/settings`, label: "Configuración", icon: Settings },
-            ],
-          },
-        ]
-      : []),
+    ...(masOpciones.length ? [{ title: "Más opciones", items: masOpciones, collapsible: true }] : []),
   ];
 
   const team = state.memberships.filter((x) => x.businessId === business.id && x.active);

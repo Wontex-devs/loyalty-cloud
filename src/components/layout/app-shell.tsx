@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Menu, X, type LucideIcon } from "lucide-react";
+import { ChevronDown, Menu, X, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export interface NavItem {
@@ -17,6 +17,8 @@ export interface NavItem {
 export interface NavSection {
   title?: string;
   items: NavItem[];
+  /** Se muestra cerrada con un botón para desplegarla (se abre sola si estás en una de sus páginas). */
+  collapsible?: boolean;
 }
 
 /** Shell común (sidebar + topbar) para el panel de plataforma y el panel del comercio. */
@@ -37,6 +39,7 @@ export function AppShell({
 }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const [abiertas, setAbiertas] = useState<Record<number, boolean>>({});
   useEffect(() => setOpen(false), [pathname]);
 
   const isActive = (item: NavItem) =>
@@ -46,11 +49,24 @@ export function AppShell({
     <div className="flex h-full flex-col">
       <div className="px-3 pt-3 pb-2">{header}</div>
       <nav className="flex-1 overflow-y-auto px-3 py-2">
-        {sections.map((section, i) => (
+        {sections.map((section, i) => {
+          const desplegada = !section.collapsible || abiertas[i] || section.items.some(isActive);
+          return (
           <div key={i} className="mb-4">
-            {section.title && (
-              <p className="mb-1 px-2 text-[11px] font-medium tracking-wide text-subtle uppercase">{section.title}</p>
+            {section.collapsible ? (
+              <button
+                type="button"
+                onClick={() => setAbiertas((a) => ({ ...a, [i]: !desplegada }))}
+                aria-expanded={desplegada}
+                className="mb-1 flex h-8 w-full items-center gap-2 rounded-md px-2 text-[13px] font-medium text-muted hover:bg-cobalt/[0.07] hover:text-coal"
+              >
+                <span className="flex-1 text-left">{section.title}</span>
+                <ChevronDown className={cn("size-4 transition-transform duration-200", desplegada && "rotate-180")} aria-hidden />
+              </button>
+            ) : (
+              section.title && <p className="mb-1 px-2 text-[11px] font-medium tracking-wide text-subtle uppercase">{section.title}</p>
             )}
+            {desplegada && (
             <ul className="space-y-0.5">
               {section.items.map((item) => {
                 const active = isActive(item);
@@ -75,8 +91,10 @@ export function AppShell({
                 );
               })}
             </ul>
+            )}
           </div>
-        ))}
+          );
+        })}
       </nav>
       {footer && <div className="border-t border-line p-3">{footer}</div>}
     </div>
