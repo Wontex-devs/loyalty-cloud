@@ -29,13 +29,13 @@ const h2 = `${poster} text-balance text-4xl leading-[1.02] sm:text-6xl`;
 const btn = "inline-flex h-14 items-center justify-center gap-2.5 rounded-lg px-6 text-base font-semibold transition-transform duration-150 ease-out hover:-translate-y-0.5 active:scale-[0.97]";
 
 const PLANS = [
-  { name: "Starter", who: "Para un local que empieza", lines: ["100 clientes", "2 personas del equipo", "1 sede"], price: "$80.000", chip: "Primer mes gratis", cta: "Quiero mi primer mes gratis", freeMonth: true },
-  { name: "Pro", who: "Para el negocio que ya tiene movimiento", lines: ["300 clientes", "10 personas del equipo", "3 sedes"], price: "$140.000", chip: "Recomendado", cta: "Quiero este plan", featured: true },
+  { name: "Starter", who: "Para un local que empieza", lines: ["100 clientes", "2 personas del equipo", "1 sede"], price: "$79.990", chip: "Primer mes gratis", cta: "Quiero mi primer mes gratis", freeMonth: true },
+  { name: "Pro", who: "Para el negocio que ya tiene movimiento", lines: ["300 clientes", "10 personas del equipo", "3 sedes"], price: "$139.990", chip: "Recomendado", cta: "Quiero este plan", featured: true },
   { name: "Business", who: "Para cadenas y varias sedes", lines: ["Clientes a tu medida", "Equipo a tu medida", "Sedes a tu medida"], price: "A medida", cta: "Hablemos de tu negocio", custom: true },
 ];
 
 const FAQ = [
-  { q: "¿Cómo funciona el primer mes gratis?", a: "Aplica al plan Starter. Te dejamos la tarjeta lista con tu marca y la usas un mes sin pagar. Si decides seguir, pagas $80.000 al mes." },
+  { q: "¿Cómo funciona el primer mes gratis?", a: "Aplica al plan Starter. Te dejamos la tarjeta lista con tu marca y la usas un mes sin pagar. Si decides seguir, pagas $79.990 al mes." },
   { q: "¿Mis clientes tienen que descargar algo?", a: "No. La tarjeta se abre en el navegador del celular y se puede añadir a la pantalla de inicio como si fuera una app." },
   { q: "¿Necesito comprar algún equipo?", a: "Para marcar los sellos con NFC necesitas un lector en el mostrador. El QR solo se usa una vez, para que tu cliente cree su tarjeta; lo pones en un cartel en la caja." },
   { q: "¿Qué pasa si mi cliente cambia de celular?", a: "Vuelve a escanear el QR de tu negocio con el mismo nombre y celular, y recupera su tarjeta con todos sus sellos." },

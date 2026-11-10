@@ -33,6 +33,6 @@ La demo usa datos de ejemplo (Beauty Club), no pide contraseña y no toca datos 
 ## Planes
 | Plan | Precio al mes | Clientes | Equipo | Sedes |
 |---|---|---|---|---|
-| Starter | $80.000 (primer mes gratis) | 100 | 2 | 1 |
-| Pro | $140.000 | 300 | 10 | 3 |
+| Starter | $79.990 (primer mes gratis) | 100 | 2 | 1 |
+| Pro | $139.990 | 300 | 10 | 3 |
 | Business | Ajustable | A la medida | A la medida | A la medida |

@@ -3157,8 +3157,8 @@ grant execute on function public.get_nfc_settings(uuid) to authenticated;
 grant execute on function public.set_nfc_settings(uuid, boolean, integer, boolean) to authenticated;
 
 -- >>> 20261101000016_plan_prices_v2.sql
--- Nuevos precios mensuales: Starter $80.000 y Pro $140.000. Business sigue a la medida.
-update public.plans set price_monthly = 80000 where id = 'plan_starter';
-update public.plans set price_monthly = 140000 where id = 'plan_pro';
+-- Nuevos precios mensuales: Starter $79.990 y Pro $139.990. Business sigue a la medida.
+update public.plans set price_monthly = 79990 where id = 'plan_starter';
+update public.plans set price_monthly = 139990 where id = 'plan_pro';
 
 commit;

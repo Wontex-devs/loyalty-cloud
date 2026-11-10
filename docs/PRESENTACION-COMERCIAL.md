@@ -70,7 +70,7 @@ Creas la promoción una vez y se aplica sola. Las recompensas también: aparecen
 ## 12. Planes
 | | Starter | Pro | Business |
 |---|---|---|---|
-| Precio | $80.000 / mes, primer mes gratis | $140.000 / mes | Ajustable |
+| Precio | $79.990 / mes, primer mes gratis | $139.990 / mes | Ajustable |
 | Clientes | 100 | 300 | A la medida |
 | Equipo | 2 | 10 | A la medida |
 | Sedes | 1 | 3 | A la medida |
