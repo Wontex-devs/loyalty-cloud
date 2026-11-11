@@ -242,23 +242,12 @@ textarea {
   overflow-x: clip;
   mask-image: linear-gradient(to right, transparent, #000 5%, #000 95%, transparent);
 }
-/* Avanza por jalones de Nudo: una tarjeta (10 % de la pista) cada 3 s, con 1 s de espera y 0,8 s de jalón.
-   Dentro de los fotogramas las curvas van escritas (son --ease-ui-out y --ease-ui-in-out): con var() el navegador las ignora. */
 .marquee-pista {
-  animation: marquee 15s linear infinite;
+  animation: marquee 50s linear infinite;
 }
 @keyframes marquee {
-  0% { transform: translateX(0); }
-  6.667% { transform: translateX(0); animation-timing-function: cubic-bezier(0.77, 0, 0.175, 1); }
-  12% { transform: translateX(-10%); }
-  26.667% { transform: translateX(-10%); animation-timing-function: cubic-bezier(0.77, 0, 0.175, 1); }
-  32% { transform: translateX(-20%); }
-  46.667% { transform: translateX(-20%); animation-timing-function: cubic-bezier(0.77, 0, 0.175, 1); }
-  52% { transform: translateX(-30%); }
-  66.667% { transform: translateX(-30%); animation-timing-function: cubic-bezier(0.77, 0, 0.175, 1); }
-  72% { transform: translateX(-40%); }
-  86.667% { transform: translateX(-40%); animation-timing-function: cubic-bezier(0.77, 0, 0.175, 1); }
-  92%, 100% { transform: translateX(-50%); }
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
 }
 .marquee-pausado .marquee-pista {
   animation-play-state: paused;
@@ -323,89 +312,175 @@ textarea {
   to { stroke-dashoffset: 0; }
 }
 
-/* Nudo jala la fila de tarjetas con su lazo (sección de marcas).
-   Todo va al mismo compás de 3 s que .marquee-pista: espera, se inclina hacia la cuerda, jala y recupera. */
-.jalon {
-  --paso: 320px; /* distancia entre tarjetas: su ancho + 20 px */
-}
-@media (min-width: 40rem) {
-  .jalon { --paso: 360px; }
-}
-.nudo-jala {
-  transform-box: view-box;
-  transform-origin: 60px 112px;
-  transform: rotate(-5deg);
-}
-.nudo-ojos {
-  transform-box: fill-box;
-  transform-origin: center;
-}
-.nudo-carga {
-  transform-origin: 50% -40px; /* cuelga del punto donde el gancho toca la cuerda */
-}
-.nudo-cuerda {
-  width: calc(100% + var(--paso));
-  /* Franjas cada 10 px exactos en horizontal: un jalón siempre es múltiplo y al reiniciar no se nota el salto. */
-  background: repeating-linear-gradient(115deg, #c98a2b 0 4.532px, #e8bb6c 4.532px 9.063px);
-}
+/* Escena del problema: el cliente se va y Nudo lo trae de vuelta. Una sola línea de tiempo de 9 s.
+   Sin movimiento (reducir movimiento) queda el cuadro central: el cliente ya enlazado.
+   Dentro de los fotogramas las curvas van escritas (--ease-ui-out y --ease-ui-in-out): con var() el navegador las ignora. */
+.nudo-jala { transform-box: view-box; transform-origin: 60px 112px; transform: rotate(-5deg); }
+.nudo-ojos { transform-box: fill-box; transform-origin: center; }
+.escena-puerta { transform-box: fill-box; transform-origin: left center; transform: scaleX(0.18); }
+.escena-cliente { transform: translateX(175px); }
+.escena-cliente-tira { transform-box: fill-box; transform-origin: center bottom; transform: rotate(-7deg); }
+.escena-pierna-a, .escena-pierna-b { transform-box: fill-box; transform-origin: center top; }
+.escena-cuerda { transform-box: view-box; transform-origin: 100px 242px; transform: scaleX(2.94); }
+.escena-punta { transform: translateX(394px); }
+.escena-serio, .escena-alerta, .escena-premio, .escena-globo-se-va { opacity: 0; }
+.escena-premio { transform-box: fill-box; transform-origin: center; }
 
 @media (prefers-reduced-motion: no-preference) {
-  .nudo-jala { animation: nudo-jala 3s linear infinite; }
-  @keyframes nudo-jala {
-    0%, 20% { transform: translateX(0) rotate(-5deg); animation-timing-function: cubic-bezier(0.77, 0, 0.175, 1); }
-    33.333% { transform: translateX(3px) rotate(3deg); animation-timing-function: cubic-bezier(0.23, 1, 0.32, 1); }
-    46% { transform: translateX(-5px) rotate(-15deg); animation-timing-function: ease-in-out; }
-    62% { transform: translateX(-4px) rotate(-12deg); animation-timing-function: ease-in-out; }
-    100% { transform: translateX(0) rotate(-5deg); }
-  }
-  .nudo-manos { animation: nudo-manos 3s linear infinite; }
-  @keyframes nudo-manos {
-    0%, 20% { transform: translateX(0); animation-timing-function: cubic-bezier(0.77, 0, 0.175, 1); }
-    33.333% { transform: translateX(4px); animation-timing-function: cubic-bezier(0.23, 1, 0.32, 1); }
-    46% { transform: translateX(-14px); animation-timing-function: ease-in-out; }
-    62% { transform: translateX(-12px); animation-timing-function: ease-in-out; }
-    100% { transform: translateX(0); }
-  }
-  .nudo-ojos { animation: nudo-pestanea 4.6s linear infinite; }
+  .escena .nudo-ojos { animation: nudo-pestanea 4.6s linear infinite; }
   @keyframes nudo-pestanea {
     0%, 94%, 100% { transform: scaleY(1); }
     97% { transform: scaleY(0.1); }
   }
-  .nudo-cuerda { animation: nudo-cuerda 3s linear infinite; }
-  @keyframes nudo-cuerda {
-    0%, 33.333% { transform: translateX(0); animation-timing-function: cubic-bezier(0.77, 0, 0.175, 1); }
-    60%, 100% { transform: translateX(calc(var(--paso) * -1)); }
+  .escena-puerta { animation: escena-puerta 9s linear infinite; }
+  @keyframes escena-puerta {
+    0% { transform: scaleX(1); animation-timing-function: cubic-bezier(0.23, 1, 0.32, 1); }
+    4%, 10% { transform: scaleX(0.18); animation-timing-function: cubic-bezier(0.77, 0, 0.175, 1); }
+    14%, 80% { transform: scaleX(1); animation-timing-function: cubic-bezier(0.23, 1, 0.32, 1); }
+    84%, 90% { transform: scaleX(0.18); animation-timing-function: cubic-bezier(0.77, 0, 0.175, 1); }
+    94%, 100% { transform: scaleX(1); }
   }
-  /* La cuerda vibra un instante cuando las tarjetas se frenan. */
-  .nudo-tension { animation: nudo-tension 3s linear infinite; }
-  @keyframes nudo-tension {
-    0%, 56% { transform: translateY(0); }
-    60% { transform: translateY(1.5px); }
-    65% { transform: translateY(-1px); }
-    70%, 100% { transform: translateY(0); }
+  .escena-cliente { animation: escena-cliente 9s linear infinite; }
+  @keyframes escena-cliente {
+    0%, 6% { transform: translateX(0); }
+    40% { transform: translateX(350px); }
+    58% { transform: translateX(350px); animation-timing-function: cubic-bezier(0.77, 0, 0.175, 1); }
+    66% { transform: translateX(233px); }
+    67% { transform: translateX(233px); animation-timing-function: cubic-bezier(0.77, 0, 0.175, 1); }
+    75% { transform: translateX(116px); }
+    76% { transform: translateX(116px); animation-timing-function: cubic-bezier(0.77, 0, 0.175, 1); }
+    84%, 100% { transform: translateX(0); }
   }
-  /* Las tarjetas se quedan atrás al arrancar y se mecen al frenar; la onda se aleja de Nudo. */
-  .nudo-carga { animation: nudo-carga 3s ease-in-out infinite; }
-  .nudo-carga:nth-child(2) { animation-delay: 40ms; }
-  .nudo-carga:nth-child(3) { animation-delay: 80ms; }
-  .nudo-carga:nth-child(4) { animation-delay: 120ms; }
-  .nudo-carga:nth-child(5) { animation-delay: 160ms; }
-  @keyframes nudo-carga {
-    0%, 33.333% { transform: rotate(0); }
-    44% { transform: rotate(-2.4deg); }
-    60% { transform: rotate(1.8deg); }
-    72% { transform: rotate(-0.9deg); }
-    84% { transform: rotate(0.35deg); }
-    100% { transform: rotate(0); }
+  .escena-cliente-ve { animation: escena-cliente-ve 9s linear infinite; }
+  @keyframes escena-cliente-ve {
+    0%, 4% { opacity: 0; }
+    6%, 86% { opacity: 1; }
+    90%, 100% { opacity: 0; }
   }
-  .jalon[data-pausado] :is(.nudo-jala, .nudo-manos, .nudo-cuerda, .nudo-tension, .nudo-carga) {
-    animation-play-state: paused;
+  .escena-cliente-tira { animation: escena-cliente-tira 9s ease-in-out infinite; }
+  @keyframes escena-cliente-tira {
+    0%, 54% { transform: rotate(0); }
+    58%, 84% { transform: rotate(-7deg); }
+    88%, 100% { transform: rotate(0); }
   }
-}
-@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
-  .jalon:has(.marquee:hover) :is(.nudo-jala, .nudo-manos, .nudo-cuerda, .nudo-tension, .nudo-carga) {
-    animation-play-state: paused;
+  .escena-pierna-a { animation: escena-pierna-a 9s ease-in-out infinite; }
+  @keyframes escena-pierna-a {
+    0%, 6% { transform: rotate(0); }
+    9.4% { transform: rotate(20deg); }
+    12.8% { transform: rotate(-20deg); }
+    16.2% { transform: rotate(20deg); }
+    19.6% { transform: rotate(-20deg); }
+    23.0% { transform: rotate(20deg); }
+    26.4% { transform: rotate(-20deg); }
+    29.8% { transform: rotate(20deg); }
+    33.2% { transform: rotate(-20deg); }
+    36.6% { transform: rotate(20deg); }
+    40%, 58% { transform: rotate(0); }
+    60%, 84% { transform: rotate(16deg); }
+    87%, 100% { transform: rotate(0); }
   }
+  .escena-pierna-b { animation: escena-pierna-b 9s ease-in-out infinite; }
+  @keyframes escena-pierna-b {
+    0%, 6% { transform: rotate(0); }
+    9.4% { transform: rotate(-20deg); }
+    12.8% { transform: rotate(20deg); }
+    16.2% { transform: rotate(-20deg); }
+    19.6% { transform: rotate(20deg); }
+    23.0% { transform: rotate(-20deg); }
+    26.4% { transform: rotate(20deg); }
+    29.8% { transform: rotate(-20deg); }
+    33.2% { transform: rotate(20deg); }
+    36.6% { transform: rotate(-20deg); }
+    40%, 58% { transform: rotate(0); }
+    60%, 84% { transform: rotate(-16deg); }
+    87%, 100% { transform: rotate(0); }
+  }
+  .escena-serio { animation: escena-serio 9s linear infinite; }
+  @keyframes escena-serio {
+    0%, 55% { opacity: 1; }
+    57%, 100% { opacity: 0; }
+  }
+  .escena-feliz { animation: escena-feliz 9s linear infinite; }
+  @keyframes escena-feliz {
+    0%, 55% { opacity: 0; }
+    57%, 100% { opacity: 1; }
+  }
+  .escena-alerta { animation: escena-alerta 9s linear infinite; }
+  @keyframes escena-alerta {
+    0%, 51% { opacity: 0; }
+    53%, 58% { opacity: 1; }
+    60%, 100% { opacity: 0; }
+  }
+  .escena-cuerda { animation: escena-cuerda 9s linear infinite; }
+  @keyframes escena-cuerda {
+    0%, 45.9% { transform: scaleX(0.29); opacity: 0; }
+    46% { transform: scaleX(0.29); opacity: 1; animation-timing-function: cubic-bezier(0.23, 1, 0.32, 1); }
+    52%, 58% { transform: scaleX(4.69); opacity: 1; animation-timing-function: cubic-bezier(0.77, 0, 0.175, 1); }
+    66% { transform: scaleX(3.52); }
+    67% { transform: scaleX(3.52); animation-timing-function: cubic-bezier(0.77, 0, 0.175, 1); }
+    75% { transform: scaleX(2.35); }
+    76% { transform: scaleX(2.35); animation-timing-function: cubic-bezier(0.77, 0, 0.175, 1); }
+    84% { transform: scaleX(1.19); opacity: 1; animation-timing-function: cubic-bezier(0.23, 1, 0.32, 1); }
+    88% { transform: scaleX(0.29); opacity: 1; }
+    90%, 100% { transform: scaleX(0.29); opacity: 0; }
+  }
+  .escena-punta { animation: escena-punta 9s linear infinite; }
+  @keyframes escena-punta {
+    0%, 45.9% { transform: translateX(129px); opacity: 0; }
+    46% { transform: translateX(129px); opacity: 1; animation-timing-function: cubic-bezier(0.23, 1, 0.32, 1); }
+    52%, 58% { transform: translateX(569px); opacity: 1; animation-timing-function: cubic-bezier(0.77, 0, 0.175, 1); }
+    66% { transform: translateX(452px); }
+    67% { transform: translateX(452px); animation-timing-function: cubic-bezier(0.77, 0, 0.175, 1); }
+    75% { transform: translateX(335px); }
+    76% { transform: translateX(335px); animation-timing-function: cubic-bezier(0.77, 0, 0.175, 1); }
+    84% { transform: translateX(219px); opacity: 1; }
+    87%, 100% { transform: translateX(219px); opacity: 0; }
+  }
+  .escena .nudo-jala { animation: escena-nudo 9s linear infinite; }
+  @keyframes escena-nudo {
+    0%, 40% { transform: translateX(0) rotate(-5deg); animation-timing-function: cubic-bezier(0.77, 0, 0.175, 1); }
+    46% { transform: translateX(3px) rotate(4deg); animation-timing-function: cubic-bezier(0.23, 1, 0.32, 1); }
+    50% { transform: translateX(-2px) rotate(-10deg); animation-timing-function: ease-in-out; }
+    58% { transform: translateX(0) rotate(-4deg); animation-timing-function: cubic-bezier(0.23, 1, 0.32, 1); }
+    62% { transform: translateX(-5px) rotate(-15deg); animation-timing-function: ease-in-out; }
+    67% { transform: translateX(0) rotate(-4deg); animation-timing-function: cubic-bezier(0.23, 1, 0.32, 1); }
+    71% { transform: translateX(-5px) rotate(-15deg); animation-timing-function: ease-in-out; }
+    76% { transform: translateX(0) rotate(-4deg); animation-timing-function: cubic-bezier(0.23, 1, 0.32, 1); }
+    80% { transform: translateX(-5px) rotate(-15deg); animation-timing-function: ease-in-out; }
+    90%, 100% { transform: translateX(0) rotate(-5deg); }
+  }
+  .escena .nudo-manos { animation: escena-manos 9s linear infinite; }
+  @keyframes escena-manos {
+    0%, 40% { transform: translateX(0); animation-timing-function: cubic-bezier(0.77, 0, 0.175, 1); }
+    46% { transform: translateX(4px); animation-timing-function: cubic-bezier(0.23, 1, 0.32, 1); }
+    50% { transform: translateX(-4px); animation-timing-function: ease-in-out; }
+    58% { transform: translateX(0); animation-timing-function: cubic-bezier(0.23, 1, 0.32, 1); }
+    62% { transform: translateX(-13px); animation-timing-function: ease-in-out; }
+    67% { transform: translateX(0); animation-timing-function: cubic-bezier(0.23, 1, 0.32, 1); }
+    71% { transform: translateX(-13px); animation-timing-function: ease-in-out; }
+    76% { transform: translateX(0); animation-timing-function: cubic-bezier(0.23, 1, 0.32, 1); }
+    80% { transform: translateX(-13px); animation-timing-function: ease-in-out; }
+    90%, 100% { transform: translateX(0); }
+  }
+  .escena-premio { animation: escena-premio 9s linear infinite; }
+  @keyframes escena-premio {
+    0%, 88% { opacity: 0; transform: scale(0.9); animation-timing-function: cubic-bezier(0.23, 1, 0.32, 1); }
+    92%, 97% { opacity: 1; transform: scale(1); }
+    100% { opacity: 0; transform: scale(1); }
+  }
+  .escena-globo-se-va { animation: escena-globo-se-va 9s linear infinite; }
+  @keyframes escena-globo-se-va {
+    0%, 10% { opacity: 0; }
+    13%, 41% { opacity: 1; }
+    44%, 100% { opacity: 0; }
+  }
+  .escena-globo-trae { animation: escena-globo-trae 9s linear infinite; }
+  @keyframes escena-globo-trae {
+    0%, 54% { opacity: 0; }
+    57%, 94% { opacity: 1; }
+    97%, 100% { opacity: 0; }
+  }
+  .escena[data-pausado] * { animation-play-state: paused; }
 }
 
 /* Nudo en la esquina de la portada, como widget */

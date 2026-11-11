@@ -4,6 +4,7 @@ import Link from "next/link";
 import { LogIn, MessageCircle } from "lucide-react";
 import { BrandPreview } from "@/components/marketing/brand-preview";
 import { LazoLogo } from "@/components/brand/lazo-logo";
+import { EscenaCliente } from "@/components/marketing/escena-cliente";
 import { Mascota, NudoDibujo } from "@/components/marketing/mascota";
 import { NfcDemo } from "@/components/marketing/nfc-demo";
 import { WalletPhone } from "@/components/marketing/wallet-phone";
@@ -130,6 +131,7 @@ export default function Home() {
           <p className="mt-8 max-w-2xl text-xl leading-relaxed text-graphite">
             Vendes todos los días, pero al cerrar no sabes quién es tu cliente fiel ni quién se fue a la competencia. Eso es lo que resolvemos.
           </p>
+          <EscenaCliente />
         </section>
 
         {/* Cómo funciona */}
