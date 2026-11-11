@@ -4,50 +4,63 @@ import { useEffect, useState } from "react";
 import { X } from "lucide-react";
 
 const FRASES = [
-  "¡Hola! Soy Lacito.",
+  "¡Hola! Soy Nudo.",
   "Yo ayudo a que tus clientes vuelvan.",
   "Un toque con el celular y el sello queda listo.",
   "Sin apps que descargar: tu tarjeta va en el celular.",
   "¿Ya eres cliente? Entra por el botón de arriba.",
 ];
 
-const CLAVE_OCULTO = "lazo:lacito:oculto";
+const CLAVE_OCULTO = "lazo:nudo:oculto";
 const CONTORNO = "#0e1a52";
+const CUERDA = "#c98a2b";
 
-/** Dibujo de Lacito: un moño con cara, porque «lazo» también es eso. Las clases de movimiento están en globals.css. */
+/** Dibujo de Nudo: un muchacho redondo con gorra que hace girar su lazo. Las clases de movimiento están en globals.css. */
 function Dibujo() {
   return (
     <svg viewBox="0 0 120 120" className="size-full overflow-visible" aria-hidden>
+      <g className="nudo-brazo" fill="none" strokeLinecap="round">
+        <path d="M86 72C96 66 102 58 104 48" stroke={CONTORNO} strokeWidth="11" />
+        <path d="M86 72C96 66 102 58 104 48" stroke="#ffc928" strokeWidth="4.5" />
+        <path d="M104 44V25" stroke={CONTORNO} strokeWidth="6.5" />
+        <path d="M104 44V25" stroke={CUERDA} strokeWidth="3" />
+        <ellipse cx="104" cy="18" rx="20" ry="7" stroke={CONTORNO} strokeWidth="6.5" />
+        <ellipse cx="104" cy="18" rx="20" ry="7" stroke={CUERDA} strokeWidth="3" />
+        <ellipse className="nudo-giro" cx="104" cy="18" rx="20" ry="7" stroke="#fff" strokeWidth="3" pathLength="100" strokeDasharray="16 84" />
+        <circle cx="104" cy="46" r="6" fill="#ffc928" stroke={CONTORNO} strokeWidth="3.5" />
+      </g>
       <g stroke={CONTORNO} strokeWidth="3.5" strokeLinejoin="round" strokeLinecap="round">
-        <g className="lacito-cintas">
-          <path d="M54 74C50 88 44 98 38 108L50 104L56 112C60 100 62 88 62 76Z" fill="#e8a900" />
-          <path d="M66 74C70 88 76 98 82 108L70 104L64 112C60 100 58 88 58 76Z" fill="#e8a900" />
-        </g>
-        <g className="lacito-ala-izq">
-          <path d="M54 50C40 30 14 28 10 46C7 60 12 78 24 80C36 82 46 72 54 66Z" fill="#ffc928" />
-          <path d="M44 57C36 51 27 49 21 53" fill="none" stroke="#e8a900" />
-        </g>
-        <g className="lacito-ala-der">
-          <path d="M66 50C80 30 106 28 110 46C113 60 108 78 96 80C84 82 74 72 66 66Z" fill="#ffc928" />
-          <path d="M76 57C84 51 93 49 99 53" fill="none" stroke="#e8a900" />
-        </g>
-        <rect x="38" y="36" width="44" height="44" rx="18" fill="#ffdd66" />
+        <ellipse cx="48" cy="107" rx="10" ry="6" fill="#e8a900" />
+        <ellipse cx="72" cy="107" rx="10" ry="6" fill="#e8a900" />
+        <circle cx="60" cy="70" r="33" fill="#ffc928" />
+        <path d="M36 89Q60 101 84 89" fill="none" stroke="#e8a900" />
       </g>
-      <ellipse cx="45" cy="65" rx="4.2" ry="2.8" fill="#ff9aa2" />
-      <ellipse cx="75" cy="65" rx="4.2" ry="2.8" fill="#ff9aa2" />
-      <g className="lacito-ojos">
-        <ellipse cx="51" cy="56" rx="4" ry="5.2" fill={CONTORNO} />
-        <ellipse cx="69" cy="56" rx="4" ry="5.2" fill={CONTORNO} />
-        <circle cx="52.3" cy="54" r="1.5" fill="#fff" />
-        <circle cx="70.3" cy="54" r="1.5" fill="#fff" />
+      <g fill="none" strokeLinecap="round">
+        <path d="M34 76C26 80 24 88 28 93" stroke={CONTORNO} strokeWidth="11" />
+        <path d="M34 76C26 80 24 88 28 93" stroke="#ffc928" strokeWidth="4.5" />
       </g>
-      <path d="M54.5 65.5Q60 71.5 65.5 65.5" fill="none" stroke={CONTORNO} strokeWidth="3" strokeLinecap="round" />
+      <g stroke={CONTORNO} strokeWidth="3.5" strokeLinejoin="round">
+        <path d="M36 57C24 54 13 58 10 63C20 67 32 65 40 62Z" fill="#1b3fd8" />
+        <path d="M29 59C29 30 91 30 91 59C72 53 48 53 29 59Z" fill="#fff" />
+        <circle cx="60" cy="37" r="3" fill="#1b3fd8" />
+      </g>
+      <g fill="none" stroke={CONTORNO} strokeWidth="4" strokeLinecap="round">
+        <path d="M43 62L54 64" />
+        <path d="M66 64L77 62" />
+      </g>
+      <g className="nudo-ojos">
+        <ellipse cx="49" cy="72" rx="4" ry="5" fill={CONTORNO} />
+        <ellipse cx="71" cy="72" rx="4" ry="5" fill={CONTORNO} />
+        <circle cx="50.2" cy="70" r="1.4" fill="#fff" />
+        <circle cx="72.2" cy="70" r="1.4" fill="#fff" />
+      </g>
+      <path d="M50 84Q61 91 71 82" fill="none" stroke={CONTORNO} strokeWidth="3.2" strokeLinecap="round" />
     </svg>
   );
 }
 
 /**
- * Lacito, la mascota de Lazo: flota en la esquina de la portada y dice frases cortas de vez en cuando.
+ * Nudo, la mascota de Lazo: flota en la esquina de la portada y dice frases cortas de vez en cuando.
  * Al tocarlo salta y cambia de frase. Se puede cerrar y no vuelve durante esa visita.
  */
 export function Mascota() {
@@ -99,7 +112,7 @@ export function Mascota() {
   };
 
   return (
-    <div className="lacito pointer-events-none fixed right-3 bottom-3 z-30 flex items-end gap-1 sm:right-6 sm:bottom-6">
+    <div className="nudo pointer-events-none fixed right-3 bottom-3 z-30 flex items-end gap-1 sm:right-6 sm:bottom-6">
       {bocadillo && frase >= 0 && (
         <p
           key={frase}
@@ -113,11 +126,11 @@ export function Mascota() {
         <button
           type="button"
           onClick={tocar}
-          aria-label="Lacito, la mascota de Lazo. Tócalo para que diga otra cosa"
-          className="lacito-boton block size-full cursor-pointer"
+          aria-label="Nudo, la mascota de Lazo. Tócalo para que diga otra cosa"
+          className="nudo-boton block size-full cursor-pointer"
         >
-          <span className="lacito-salto block size-full" data-saltando={saltando || undefined} onAnimationEnd={() => setSaltando(false)}>
-            <span className="lacito-flota block size-full">
+          <span className="nudo-salto block size-full" data-saltando={saltando || undefined} onAnimationEnd={() => setSaltando(false)}>
+            <span className="nudo-flota block size-full">
               <Dibujo />
             </span>
           </span>
@@ -125,8 +138,8 @@ export function Mascota() {
         <button
           type="button"
           onClick={cerrar}
-          aria-label="Ocultar a Lacito"
-          className="absolute -top-1 -right-1 flex size-6 items-center justify-center rounded-full border-2 border-coal bg-white text-coal"
+          aria-label="Ocultar a Nudo"
+          className="absolute bottom-0 -left-1 flex size-6 items-center justify-center rounded-full border-2 border-coal bg-white text-coal"
         >
           <X className="size-3.5" strokeWidth={3} aria-hidden />
         </button>

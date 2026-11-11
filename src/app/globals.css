@@ -312,65 +312,57 @@ textarea {
   to { stroke-dashoffset: 0; }
 }
 
-/* Lacito, la mascota de la portada */
-.lacito-ala-izq,
-.lacito-ala-der {
+/* Nudo, la mascota de la portada */
+.nudo-brazo {
   transform-box: view-box;
-  transform-origin: 60px 58px;
+  transform-origin: 86px 72px;
 }
-.lacito-cintas {
-  transform-box: view-box;
-  transform-origin: 60px 74px;
-}
-.lacito-ojos {
+.nudo-ojos {
   transform-box: fill-box;
   transform-origin: center;
-  animation: lacito-parpadea 4.6s linear infinite;
+  animation: nudo-parpadea 4.6s linear infinite;
 }
-@keyframes lacito-parpadea {
+@keyframes nudo-parpadea {
   0%, 94%, 100% { opacity: 1; }
   97% { opacity: 0.15; }
 }
-.lacito > div { animation: lacito-aparece 300ms ease-out 500ms both; }
-@keyframes lacito-aparece {
+.nudo > div { animation: nudo-aparece 300ms ease-out 500ms both; }
+@keyframes nudo-aparece {
   from { opacity: 0; }
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .lacito > div { animation: lacito-entra 500ms var(--ease-ui-out) 500ms both; }
-  @keyframes lacito-entra {
+  .nudo > div { animation: nudo-entra 500ms var(--ease-ui-out) 500ms both; }
+  @keyframes nudo-entra {
     from { opacity: 0; transform: translateY(16px) scale(0.92); }
   }
-  .lacito-ojos { animation-name: lacito-pestanea; }
-  @keyframes lacito-pestanea {
+  .nudo-ojos { animation-name: nudo-pestanea; }
+  @keyframes nudo-pestanea {
     0%, 94%, 100% { transform: scaleY(1); }
     97% { transform: scaleY(0.1); }
   }
-  .lacito-flota { animation: lacito-flota 1.8s ease-in-out infinite alternate; }
-  @keyframes lacito-flota {
-    to { transform: translateY(-5px); }
+  .nudo-flota { animation: nudo-flota 1.8s ease-in-out infinite alternate; }
+  @keyframes nudo-flota {
+    to { transform: translateY(-4px); }
   }
-  .lacito-ala-izq { animation: lacito-ala-izq 1.8s ease-in-out infinite alternate; }
-  @keyframes lacito-ala-izq {
-    to { transform: rotate(-6deg); }
+  .nudo-brazo { animation: nudo-brazo 0.9s ease-in-out infinite alternate; }
+  @keyframes nudo-brazo {
+    from { transform: rotate(-3deg); }
+    to { transform: rotate(4deg); }
   }
-  .lacito-ala-der { animation: lacito-ala-der 1.8s ease-in-out infinite alternate; }
-  @keyframes lacito-ala-der {
-    to { transform: rotate(6deg); }
+  .nudo-giro { animation: nudo-giro 0.9s linear infinite; }
+  @keyframes nudo-giro {
+    from { stroke-dashoffset: 100; }
+    to { stroke-dashoffset: 0; }
   }
-  .lacito-cintas { animation: lacito-cintas 1.8s ease-in-out infinite alternate; }
-  @keyframes lacito-cintas {
-    from { transform: rotate(-2.5deg); }
-    to { transform: rotate(2.5deg); }
-  }
-  .lacito-salto[data-saltando] { animation: lacito-salta 520ms var(--ease-ui-out); }
-  @keyframes lacito-salta {
+  .nudo-salto[data-saltando] { animation: nudo-salta 520ms var(--ease-ui-out); }
+  @keyframes nudo-salta {
     35% { transform: translateY(-22px) rotate(-5deg) scale(1.06); }
     70% { transform: translateY(0) scale(1.05, 0.95); }
   }
-  .lacito-boton { transition: transform 160ms var(--ease-ui-out); }
-  .lacito-boton:active { transform: scale(0.95); }
+  .nudo-boton { transition: transform 160ms var(--ease-ui-out); }
+  .nudo-boton:active { transform: scale(0.95); }
 }
 @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
-  .lacito-boton:hover { transform: scale(1.05); }
+  .nudo-boton:hover { transform: scale(1.05); }
 }
