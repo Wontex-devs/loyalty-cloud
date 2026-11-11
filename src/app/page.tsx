@@ -65,7 +65,7 @@ export default function Home() {
       <header className="on-cobalt sticky top-0 z-40 bg-cobalt text-white shadow-[0_10px_24px_-18px_rgb(6_10_36/0.8)]">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:h-20 sm:px-8">
           <Link href="/" aria-label={PLATFORM_NAME} className="whitespace-nowrap">
-            <LazoLogo animar markClassName="text-sun" />
+            <LazoLogo animar className="text-[32px]" markClassName="text-sun" />
           </Link>
           <nav className="flex items-center gap-4 text-[15px] font-medium sm:gap-5" aria-label="Principal">
             <a href="#como-funciona" className="hidden hover:underline lg:block">Cómo funciona</a>
@@ -131,8 +131,8 @@ export default function Home() {
           <p className="mt-8 max-w-2xl text-xl leading-relaxed text-graphite">
             Vendes todos los días, pero al cerrar no sabes quién es tu cliente fiel ni quién se fue a la competencia. Eso es lo que resolvemos.
           </p>
-          <EscenaCliente />
         </section>
+        <EscenaCliente />
 
         {/* Cómo funciona */}
         <section id="como-funciona" className="scroll-mt-28 bg-sun lg:scroll-mt-20">
@@ -311,7 +311,7 @@ export default function Home() {
 
       {/* Cierre */}
       <Punch bg="#1b3fd8" hole="#ffffff" />
-      <section data-nudo-cierre className="on-cobalt relative overflow-hidden bg-cobalt text-white">
+      <section className="on-cobalt relative overflow-hidden bg-cobalt text-white">
         {/* Nudo como imagen del cierre */}
         <div aria-hidden className="pointer-events-none absolute right-2 -bottom-3 w-[210px] sm:right-8 sm:w-[240px] lg:right-[7%] lg:bottom-6 lg:w-[400px]">
           <NudoDibujo />

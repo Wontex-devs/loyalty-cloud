@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { Check, Loader2, Nfc } from "lucide-react";
 import { nfcTapAction, type NfcTapResult } from "@/lib/data/nfc-actions";
-import { PLATFORM_NAME } from "@/lib/config";
+import { LazoLogo } from "@/components/brand/lazo-logo";
 import type { BusinessBranding } from "@/lib/domain/types";
 
 /** Clave con la que la tarjeta pública guarda su enlace en este celular (ver card-screen.tsx). */
@@ -158,7 +158,7 @@ export function NfcTapVista({
           </>
         )}
 
-        <p className="mt-10 text-[11px] opacity-50">Tecnología de {PLATFORM_NAME}</p>
+        <p className="mt-10 flex items-baseline justify-center gap-1 text-[11px] opacity-50">Tecnología de <LazoLogo className="text-[13px]" /></p>
       </div>
     </main>
   );
