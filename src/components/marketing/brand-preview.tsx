@@ -43,7 +43,7 @@ function Juego({ copia = false }: { copia?: boolean }) {
   return (
     <div className={cn("flex gap-5 pr-5", copia && "marquee-copia")} aria-hidden={copia || undefined} inert={copia}>
       {EXAMPLES.map((e) => (
-        <div key={e.name} className="relative flex w-[300px] shrink-0 sm:w-[340px]">
+        <div key={e.name} className="nudo-carga relative flex w-[300px] shrink-0 sm:w-[340px]">
           {/* Gancho que une la tarjeta a la cuerda de Nudo */}
           <span aria-hidden className="absolute -top-10 left-1/2 h-10 w-[7px] -translate-x-1/2 border-x border-coal bg-[#c98a2b]" />
           <span aria-hidden className="absolute -top-2 left-1/2 z-10 size-4 -translate-x-1/2 rounded-full border-2 border-coal bg-white" />

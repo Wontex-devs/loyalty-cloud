@@ -28,6 +28,9 @@ function Dibujo() {
           <circle cx="79.2" cy="68" r="1.4" fill="#fff" />
         </g>
         <path d="M59 84Q68 90 78 81" fill="none" stroke={CONTORNO} strokeWidth="3.2" strokeLinecap="round" />
+      </g>
+      {/* Las manos solo se mueven en horizontal: así no se despegan de la cuerda cuando el cuerpo se inclina. */}
+      <g className="nudo-manos">
         <g fill="none" strokeLinecap="round">
           <path d="M84 80C90 79 96 78 101 77" stroke={CONTORNO} strokeWidth="11" />
           <path d="M84 80C90 79 96 78 101 77" stroke="#ffc928" strokeWidth="4.5" />
@@ -45,7 +48,7 @@ function Dibujo() {
 export function NudoJalando() {
   return (
     <>
-      <div aria-hidden className="absolute top-[66px] right-0 left-[110px] z-10 h-2 overflow-hidden border-y border-coal sm:left-[126px] lg:top-[101px] lg:left-[190px]">
+      <div aria-hidden className="nudo-tension absolute top-[66px] right-0 left-[80px] z-10 h-2 overflow-hidden border-y border-coal sm:left-[96px] lg:top-[101px] lg:left-[150px]">
         <div className="nudo-cuerda h-full" />
       </div>
       <div className="absolute top-0 left-4 z-20 h-[110px] w-[128px] sm:left-8 lg:left-12 lg:h-[165px] lg:w-[192px]">

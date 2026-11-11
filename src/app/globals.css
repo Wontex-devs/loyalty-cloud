@@ -242,12 +242,23 @@ textarea {
   overflow-x: clip;
   mask-image: linear-gradient(to right, transparent, #000 5%, #000 95%, transparent);
 }
+/* Avanza por jalones de Nudo: una tarjeta (10 % de la pista) cada 3 s, con 1 s de espera y 0,8 s de jalón.
+   Dentro de los fotogramas las curvas van escritas (son --ease-ui-out y --ease-ui-in-out): con var() el navegador las ignora. */
 .marquee-pista {
-  animation: marquee 50s linear infinite;
+  animation: marquee 15s linear infinite;
 }
 @keyframes marquee {
-  from { transform: translateX(0); }
-  to { transform: translateX(-50%); }
+  0% { transform: translateX(0); }
+  6.667% { transform: translateX(0); animation-timing-function: cubic-bezier(0.77, 0, 0.175, 1); }
+  12% { transform: translateX(-10%); }
+  26.667% { transform: translateX(-10%); animation-timing-function: cubic-bezier(0.77, 0, 0.175, 1); }
+  32% { transform: translateX(-20%); }
+  46.667% { transform: translateX(-20%); animation-timing-function: cubic-bezier(0.77, 0, 0.175, 1); }
+  52% { transform: translateX(-30%); }
+  66.667% { transform: translateX(-30%); animation-timing-function: cubic-bezier(0.77, 0, 0.175, 1); }
+  72% { transform: translateX(-40%); }
+  86.667% { transform: translateX(-40%); animation-timing-function: cubic-bezier(0.77, 0, 0.175, 1); }
+  92%, 100% { transform: translateX(-50%); }
 }
 .marquee-pausado .marquee-pista {
   animation-play-state: paused;
@@ -312,45 +323,87 @@ textarea {
   to { stroke-dashoffset: 0; }
 }
 
-/* Nudo jala la fila de tarjetas con su lazo (sección de marcas) */
+/* Nudo jala la fila de tarjetas con su lazo (sección de marcas).
+   Todo va al mismo compás de 3 s que .marquee-pista: espera, se inclina hacia la cuerda, jala y recupera. */
+.jalon {
+  --paso: 320px; /* distancia entre tarjetas: su ancho + 20 px */
+}
+@media (min-width: 40rem) {
+  .jalon { --paso: 360px; }
+}
 .nudo-jala {
   transform-box: view-box;
   transform-origin: 60px 112px;
-  transform: rotate(-7deg);
+  transform: rotate(-5deg);
 }
 .nudo-ojos {
   transform-box: fill-box;
   transform-origin: center;
 }
+.nudo-carga {
+  transform-origin: 50% -40px; /* cuelga del punto donde el gancho toca la cuerda */
+}
 .nudo-cuerda {
-  width: calc(100% + 24px);
-  background: repeating-linear-gradient(115deg, #c98a2b 0 5px, #e8bb6c 5px 10px);
+  width: calc(100% + var(--paso));
+  /* Franjas cada 10 px exactos en horizontal: un jalón siempre es múltiplo y al reiniciar no se nota el salto. */
+  background: repeating-linear-gradient(115deg, #c98a2b 0 4.532px, #e8bb6c 4.532px 9.063px);
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .nudo-jala { animation: nudo-jala 0.9s ease-in-out infinite alternate; }
+  .nudo-jala { animation: nudo-jala 3s linear infinite; }
   @keyframes nudo-jala {
-    from { transform: rotate(-3deg); }
-    to { transform: rotate(-11deg); }
+    0%, 20% { transform: translateX(0) rotate(-5deg); animation-timing-function: cubic-bezier(0.77, 0, 0.175, 1); }
+    33.333% { transform: translateX(3px) rotate(3deg); animation-timing-function: cubic-bezier(0.23, 1, 0.32, 1); }
+    46% { transform: translateX(-5px) rotate(-15deg); animation-timing-function: ease-in-out; }
+    62% { transform: translateX(-4px) rotate(-12deg); animation-timing-function: ease-in-out; }
+    100% { transform: translateX(0) rotate(-5deg); }
+  }
+  .nudo-manos { animation: nudo-manos 3s linear infinite; }
+  @keyframes nudo-manos {
+    0%, 20% { transform: translateX(0); animation-timing-function: cubic-bezier(0.77, 0, 0.175, 1); }
+    33.333% { transform: translateX(4px); animation-timing-function: cubic-bezier(0.23, 1, 0.32, 1); }
+    46% { transform: translateX(-14px); animation-timing-function: ease-in-out; }
+    62% { transform: translateX(-12px); animation-timing-function: ease-in-out; }
+    100% { transform: translateX(0); }
   }
   .nudo-ojos { animation: nudo-pestanea 4.6s linear infinite; }
   @keyframes nudo-pestanea {
     0%, 94%, 100% { transform: scaleY(1); }
     97% { transform: scaleY(0.1); }
   }
-  /* La cuerda avanza a la misma velocidad que las tarjetas. */
-  .nudo-cuerda { animation: nudo-cuerda 0.3065s linear infinite; }
+  .nudo-cuerda { animation: nudo-cuerda 3s linear infinite; }
   @keyframes nudo-cuerda {
-    to { transform: translateX(-11.03px); }
+    0%, 33.333% { transform: translateX(0); animation-timing-function: cubic-bezier(0.77, 0, 0.175, 1); }
+    60%, 100% { transform: translateX(calc(var(--paso) * -1)); }
   }
-  .jalon[data-pausado] .nudo-jala,
-  .jalon[data-pausado] .nudo-cuerda {
+  /* La cuerda vibra un instante cuando las tarjetas se frenan. */
+  .nudo-tension { animation: nudo-tension 3s linear infinite; }
+  @keyframes nudo-tension {
+    0%, 56% { transform: translateY(0); }
+    60% { transform: translateY(1.5px); }
+    65% { transform: translateY(-1px); }
+    70%, 100% { transform: translateY(0); }
+  }
+  /* Las tarjetas se quedan atrás al arrancar y se mecen al frenar; la onda se aleja de Nudo. */
+  .nudo-carga { animation: nudo-carga 3s ease-in-out infinite; }
+  .nudo-carga:nth-child(2) { animation-delay: 40ms; }
+  .nudo-carga:nth-child(3) { animation-delay: 80ms; }
+  .nudo-carga:nth-child(4) { animation-delay: 120ms; }
+  .nudo-carga:nth-child(5) { animation-delay: 160ms; }
+  @keyframes nudo-carga {
+    0%, 33.333% { transform: rotate(0); }
+    44% { transform: rotate(-2.4deg); }
+    60% { transform: rotate(1.8deg); }
+    72% { transform: rotate(-0.9deg); }
+    84% { transform: rotate(0.35deg); }
+    100% { transform: rotate(0); }
+  }
+  .jalon[data-pausado] :is(.nudo-jala, .nudo-manos, .nudo-cuerda, .nudo-tension, .nudo-carga) {
     animation-play-state: paused;
   }
 }
 @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
-  .jalon:has(.marquee:hover) .nudo-jala,
-  .jalon:has(.marquee:hover) .nudo-cuerda {
+  .jalon:has(.marquee:hover) :is(.nudo-jala, .nudo-manos, .nudo-cuerda, .nudo-tension, .nudo-carga) {
     animation-play-state: paused;
   }
 }
