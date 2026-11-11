@@ -12,24 +12,10 @@ export function WalletButtons({ token, google }: { token: string; google: boolea
   if (!google || ios === null || ios) return null;
 
   return (
-    <a
-      href={`/card/${token}/google-wallet`}
-      className="mt-4 flex h-12 w-full items-center justify-center gap-2.5 rounded-full bg-black text-[15px] font-medium text-white shadow-card"
-    >
-      <WalletGlyph />
-      Añadir a Google Wallet
+    // Botón oficial de Google (guía de marca): no se puede alterar su forma ni su color.
+    <a href={`/card/${token}/google-wallet`} className="mt-4 block">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src="/google-wallet/anadir-a-google-wallet-es419.svg" alt="Agregar a la Billetera de Google" width={378} height={50} className="mx-auto h-auto w-full max-w-[378px]" />
     </a>
-  );
-}
-
-function WalletGlyph() {
-  return (
-    <svg viewBox="0 0 24 24" className="size-5" aria-hidden>
-      <rect x="2" y="5" width="20" height="14" rx="3" fill="#fff" opacity=".18" />
-      <path d="M2 9.5h20" stroke="#4285F4" strokeWidth="2.2" />
-      <path d="M2 12.5h20" stroke="#EA4335" strokeWidth="2.2" />
-      <path d="M2 15.5h20" stroke="#FBBC04" strokeWidth="2.2" />
-      <rect x="2" y="5" width="20" height="14" rx="3" fill="none" stroke="#34A853" strokeWidth="1.6" />
-    </svg>
   );
 }
