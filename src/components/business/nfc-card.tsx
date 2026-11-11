@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { Check, Copy, Loader2, Nfc, RefreshCw } from "lucide-react";
 import { getNfcSettingsAction, setNfcSettingsAction, type NfcSettings } from "@/lib/data/nfc-actions";
 import { Button, Card, CardHeader, Field, Select, Switch } from "@/components/ui";
@@ -160,6 +161,14 @@ export function NfcCard({ businessId, slug }: { businessId: string; slug: string
               <li>Pégala en el mostrador, donde el cliente pueda tocarla.</li>
               <li>Pruébala con tu propia tarjeta. Cada toque queda en el historial como visita por NFC y se puede revertir.</li>
             </ol>
+
+            <p className="rounded-lg border border-line bg-canvas px-3 py-2 text-xs text-muted">
+              ¿Tienes un lector NFC conectado al computador de la caja? Abre el{" "}
+              <Link href={`/business/${slug}/lector`} className="font-medium text-ink underline">
+                Lector NFC
+              </Link>{" "}
+              y tus clientes con la tarjeta en Google Wallet solo acercan el celular.
+            </p>
           </>
         )}
         {aviso && ajustes && <p className={aviso.ok ? "text-success" : "text-danger"}>{aviso.texto}</p>}

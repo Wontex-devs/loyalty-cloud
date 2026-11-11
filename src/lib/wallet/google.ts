@@ -10,6 +10,8 @@ export interface GoogleWalletConfig {
   issuerId: string;
   clientEmail: string;
   privateKey: string;
+  /** Smart Tap: el lector NFC del mostrador lee la tarjeta guardada en Google Wallet. */
+  smartTap?: boolean;
 }
 
 const API = "https://walletobjects.googleapis.com/walletobjects/v1";
@@ -22,7 +24,7 @@ export const objectId = (cfg: Pick<GoogleWalletConfig, "issuerId">, token: strin
 const text = (value: string) => ({ defaultValue: { language: "es", value } });
 
 /** Clase = diseño común del comercio (nombre, logo, color). */
-export function loyaltyClass(cfg: Pick<GoogleWalletConfig, "issuerId">, p: Pick<WalletPass, "business" | "program">) {
+export function loyaltyClass(cfg: Pick<GoogleWalletConfig, "issuerId" | "smartTap">, p: Pick<WalletPass, "business" | "program">) {
   return {
     id: classId(cfg, p.business.slug),
     issuerName: p.business.name,
@@ -32,11 +34,13 @@ export function loyaltyClass(cfg: Pick<GoogleWalletConfig, "issuerId">, p: Pick<
     hexBackgroundColor: p.business.background,
     countryCode: "CO",
     reviewStatus: "UNDER_REVIEW",
+    // El mismo emisor canjea: un solo Collector ID para todos los comercios.
+    ...(cfg.smartTap ? { enableSmartTap: true, redemptionIssuers: [cfg.issuerId] } : {}),
   };
 }
 
 /** Objeto = la tarjeta de un cliente (sellos, QR, recompensas). */
-export function loyaltyObject(cfg: Pick<GoogleWalletConfig, "issuerId">, p: WalletPass) {
+export function loyaltyObject(cfg: Pick<GoogleWalletConfig, "issuerId" | "smartTap">, p: WalletPass) {
   const modules = [{ id: "progress", header: "Tu progreso", body: progressText(p) }];
   if (p.promotion) modules.push({ id: "promo", header: `Hoy: ${p.promotion.name}`, body: `Tu visita de hoy suma ${1 + p.promotion.bonusStamps} sellos.` });
   return {
@@ -50,6 +54,8 @@ export function loyaltyObject(cfg: Pick<GoogleWalletConfig, "issuerId">, p: Wall
     ...(p.rewardsAvailable.length ? { secondaryLoyaltyPoints: { label: "Premios", balance: { int: p.rewardsAvailable.length } } } : {}),
     textModulesData: modules,
     linksModuleData: { uris: [{ id: "card", uri: p.cardUrl, description: "Ver mi tarjeta" }] },
+    // Lo que el lector escribe en la pantalla «Lector NFC»: el mismo token del QR.
+    ...(cfg.smartTap ? { smartTapRedemptionValue: p.token } : {}),
   };
 }
 
