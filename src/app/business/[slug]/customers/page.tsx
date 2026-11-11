@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Download, Loader2, Search, Users } from "lucide-react";
-import { useDemo } from "@/lib/demo/store";
+import { useData } from "@/lib/data/store";
 import { useScope } from "@/components/business/business-shell";
 import { Avatar, Badge, Button, Card, EmptyState, Input, PageHeader, Progress, Segmented, Table, Td, Th } from "@/components/ui";
 import { can } from "@/lib/domain/permissions";
@@ -18,7 +18,7 @@ export default function CustomersPage() {
   const { business, customers, cards, program, membership } = useScope();
   const [q, setQ] = useState("");
   const [filter, setFilter] = useState<Filter>("all");
-  const { exportCustomers } = useDemo();
+  const { exportCustomers } = useData();
   const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState<string | null>(null);
   const required = program?.stampsRequired ?? 1;

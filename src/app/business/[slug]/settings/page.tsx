@@ -5,7 +5,7 @@ import Link from "next/link";
 import { ExternalLink, Loader2 } from "lucide-react";
 import { useScope, RequirePermission } from "@/components/business/business-shell";
 import { can } from "@/lib/domain/permissions";
-import { useDemo } from "@/lib/demo/store";
+import { useData } from "@/lib/data/store";
 import type { BusinessSettingsInput } from "@/lib/domain/schemas";
 import { PUBLIC_HOST_LABEL } from "@/lib/config";
 import { Badge, Button, ButtonLink, Card, CardHeader, Field, Input, PageHeader, Select } from "@/components/ui";
@@ -17,7 +17,7 @@ const TIMEZONES = ["America/Bogota", "America/Mexico_City", "America/Lima", "Ame
 export default function SettingsPage() {
   const scope = useScope();
   const { business, membership, locations } = scope;
-  const { state, updateBusinessSettings } = useDemo();
+  const { state, updateBusinessSettings } = useData();
   const plan = state.plans.find((p) => p.id === business.planId);
   const legal = business.legal ?? {};
 

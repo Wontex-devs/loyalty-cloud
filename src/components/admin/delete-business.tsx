@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, Trash2 } from "lucide-react";
 import { deleteBusinessAction } from "@/lib/data/actions";
-import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { Button, Card, CardHeader, Field, Input } from "@/components/ui";
 
 /**
@@ -51,14 +50,12 @@ export function DeleteBusiness({ businessId, slug, nombre }: { businessId: strin
             autoComplete="off"
             spellCheck={false}
             className="font-mono"
-            disabled={!isSupabaseConfigured}
           />
         </Field>
         <Button
           variant="danger"
           onClick={() => void eliminar()}
-          disabled={!isSupabaseConfigured || !coincide || trabajando}
-          title={isSupabaseConfigured ? undefined : "Funciona en la versión real, no en la demostración"}
+          disabled={!coincide || trabajando}
         >
           {trabajando ? <Loader2 className="size-4 animate-spin" /> : <Trash2 className="size-4" />} Eliminar para siempre
         </Button>

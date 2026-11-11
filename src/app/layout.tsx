@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Cormorant_Garamond, Bricolage_Grotesque } from "next/font/google";
-import { DemoProvider } from "@/lib/demo/store";
 import { PLATFORM_NAME } from "@/lib/config";
 import "./globals.css";
 
@@ -21,7 +20,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="es" className={`${inter.variable} ${display.variable} ${poster.variable}`}>
       <body className="font-sans">
-        <DemoProvider>{children}</DemoProvider>
+        {children}
       </body>
     </html>
   );

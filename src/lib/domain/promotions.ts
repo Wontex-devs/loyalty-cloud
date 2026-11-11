@@ -1,4 +1,4 @@
-/** Promociones (p. ej. doble sello). En live las evalúa Postgres; en demo, este módulo. */
+/** Promociones (p. ej. doble sello). Las evalúa Postgres; este módulo calcula la del día en el panel. */
 import type { Promotion } from "./types";
 
 /** Fecha local AAAA-MM-DD y día ISO de la semana (1 = lunes … 7 = domingo). */

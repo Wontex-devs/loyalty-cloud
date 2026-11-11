@@ -223,13 +223,13 @@ textarea {
   }
 }
 
-/* Demostración NFC: por defecto se ve el estado final (sin JS o con movimiento reducido). */
+/* Animación NFC de la portada: por defecto se ve el estado final (sin JS o con movimiento reducido). */
 .nfc-anillo { opacity: 0; }
-.nfc-demo[data-fase="listo"] .nfc-celular { translate: -9rem 0; }
-.nfc-demo[data-fase="listo"] .nfc-sello { opacity: 0; }
-.nfc-demo[data-fase="reproduce"] .nfc-celular { animation: nfc-acercar 700ms var(--ease-ui-out) both; }
-.nfc-demo[data-fase="reproduce"] .nfc-anillo { animation: nfc-anillo 600ms var(--ease-ui-out) 650ms both; }
-.nfc-demo[data-fase="reproduce"] .nfc-sello { animation: stamp-in 500ms var(--ease-ui-out) 900ms both; }
+.nfc-animacion[data-fase="listo"] .nfc-celular { translate: -9rem 0; }
+.nfc-animacion[data-fase="listo"] .nfc-sello { opacity: 0; }
+.nfc-animacion[data-fase="reproduce"] .nfc-celular { animation: nfc-acercar 700ms var(--ease-ui-out) both; }
+.nfc-animacion[data-fase="reproduce"] .nfc-anillo { animation: nfc-anillo 600ms var(--ease-ui-out) 650ms both; }
+.nfc-animacion[data-fase="reproduce"] .nfc-sello { animation: stamp-in 500ms var(--ease-ui-out) 900ms both; }
 @keyframes nfc-acercar {
   from { translate: -9rem 0; }
   to { translate: 0 0; }

@@ -5,7 +5,7 @@ import { ArrowUpRight, Gift, Repeat, Sparkles, Users, CalendarCheck } from "luci
 import { onboardingSteps } from "@/components/business/onboarding";
 import { useScope, RequirePermission } from "@/components/business/business-shell";
 import { BarChart, dailySeries } from "@/components/business/charts";
-import { Avatar, Badge, ButtonLink, Card, CardHeader, PageHeader, Progress, StatCard } from "@/components/ui";
+import { Avatar, Badge, Card, CardHeader, PageHeader, Progress, StatCard } from "@/components/ui";
 import { can } from "@/lib/domain/permissions";
 import { formatNumber, formatRelative } from "@/lib/utils";
 

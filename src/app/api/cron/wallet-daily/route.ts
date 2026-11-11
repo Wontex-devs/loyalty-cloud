@@ -1,6 +1,5 @@
 import { timingSafeEqual } from "node:crypto";
 import { NextResponse } from "next/server";
-import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { googleWalletConfig } from "@/lib/wallet/config";
 import { dailyNotice } from "@/lib/wallet/messages";
@@ -24,7 +23,7 @@ function authorized(req: Request) {
  */
 export async function GET(req: Request) {
   if (!authorized(req)) return NextResponse.json({ ok: false }, { status: 401 });
-  if (!isSupabaseConfigured || !googleWalletConfig()) return NextResponse.json({ ok: true, skipped: "wallet-disabled" });
+  if (!googleWalletConfig()) return NextResponse.json({ ok: true, skipped: "wallet-disabled" });
 
   const { data, error } = await createAdminClient().rpc("wallet_daily_candidates");
   if (error) {

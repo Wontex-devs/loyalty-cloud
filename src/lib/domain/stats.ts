@@ -1,6 +1,6 @@
 /**
- * Estadísticas del comercio. En modo live las calcula Postgres (business_stats);
- * en demo se calculan aquí con la misma definición, para que el panel sea igual.
+ * Estadísticas del comercio. Las calcula Postgres (business_stats); este módulo
+ * guarda la misma definición para las pruebas.
  */
 import type { Customer, Location, LoyaltyCard, Profile, Redemption, Reward, Visit } from "./types";
 

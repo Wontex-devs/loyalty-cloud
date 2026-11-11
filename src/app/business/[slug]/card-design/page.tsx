@@ -6,7 +6,7 @@ import { QRCodeCanvas, QRCodeSVG } from "qrcode.react";
 import { useScope, RequirePermission } from "@/components/business/business-shell";
 import { LoyaltyCardView } from "@/components/loyalty/loyalty-card";
 import { BrandMark, FILLED_STAMP_ICONS, STAMP_ICON_COMPONENTS, STAMP_ICON_LABELS } from "@/components/loyalty/brand-mark";
-import { useDemo } from "@/lib/demo/store";
+import { useData } from "@/lib/data/store";
 import { can } from "@/lib/domain/permissions";
 import { PUBLIC_HOST_LABEL } from "@/lib/config";
 import { STAMP_ICONS, type BusinessBranding, type CardStatus } from "@/lib/domain/types";
@@ -38,7 +38,7 @@ const COLOR_FIELDS: { key: keyof BusinessBranding; label: string }[] = [
 
 export default function CardDesignPage() {
   const { business, program, membership } = useScope();
-  const { updateBranding, setLogo, setCover } = useDemo();
+  const { updateBranding, setLogo, setCover } = useData();
   const fileRef = useRef<HTMLInputElement>(null);
   const coverRef = useRef<HTMLInputElement>(null);
   const [coverBusy, setCoverBusy] = useState(false);

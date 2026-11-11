@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { BellRing, Check, Send, Wallet } from "lucide-react";
 import { useScope } from "@/components/business/business-shell";
-import { useDemo } from "@/lib/demo/store";
+import { useData } from "@/lib/data/store";
 import { WALLET_NOTICE_LABELS, walletSettings } from "@/lib/wallet/messages";
 import type { WalletSettings } from "@/lib/domain/types";
 import { Badge, Button, Card, CardHeader, Field, Input, Switch, Textarea } from "@/components/ui";
@@ -24,7 +24,7 @@ export function WalletCampaignCard({
   defaultBody: string;
 }) {
   const { business } = useScope();
-  const { sendWalletCampaign } = useDemo();
+  const { sendWalletCampaign } = useData();
   const [title, setTitle] = useState(defaultTitle);
   const [body, setBody] = useState(defaultBody);
   const [busy, setBusy] = useState(false);
@@ -86,7 +86,7 @@ const AUTO: { key: keyof Omit<WalletSettings, "winbackDays">; label: string; hin
 /** Avisos automáticos: el comercio decide cuáles envía. */
 export function WalletSettingsCard() {
   const { business } = useScope();
-  const { updateWalletSettings } = useDemo();
+  const { updateWalletSettings } = useData();
   const [draft, setDraft] = useState<WalletSettings>(() => walletSettings(business.walletNotifications));
   const [days, setDays] = useState(String(draft.winbackDays));
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);

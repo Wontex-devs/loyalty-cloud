@@ -4,14 +4,14 @@ import { useState } from "react";
 import { Check } from "lucide-react";
 import { useScope, RequirePermission } from "@/components/business/business-shell";
 import { LoyaltyCardView } from "@/components/loyalty/loyalty-card";
-import { useDemo } from "@/lib/demo/store";
+import { useData } from "@/lib/data/store";
 import { can } from "@/lib/domain/permissions";
 import { programSchema, type ProgramInput } from "@/lib/domain/schemas";
 import { Badge, Button, Card, CardHeader, Field, Input, PageHeader, Switch, Textarea } from "@/components/ui";
 
 export default function ProgramPage() {
   const { business, program, membership, cards } = useScope();
-  const { updateProgram } = useDemo();
+  const { updateProgram } = useData();
   const [form, setForm] = useState<ProgramInput | null>(() =>
     program
       ? {

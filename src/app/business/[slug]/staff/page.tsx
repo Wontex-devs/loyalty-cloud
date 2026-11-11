@@ -4,7 +4,7 @@ import { isFull, usageOf } from "@/components/business/plan-usage";
 import { useState } from "react";
 import { UserPlus, X } from "lucide-react";
 import { useScope, RequirePermission } from "@/components/business/business-shell";
-import { useDemo } from "@/lib/demo/store";
+import { useData } from "@/lib/data/store";
 import { can, ROLE_LABELS } from "@/lib/domain/permissions";
 import { staffInviteSchema } from "@/lib/domain/schemas";
 import { Avatar, Badge, Button, Card, CardHeader, Field, Input, PageHeader, Select, Switch, Table, Td, Th } from "@/components/ui";
@@ -24,7 +24,7 @@ export default function StaffPage() {
   const scope = useScope();
   const { business, memberships, profiles, visits, membership, plan } = scope;
   const staffFull = isFull(usageOf(scope).staff, plan?.maxStaff);
-  const { inviteStaff, toggleMembership } = useDemo();
+  const { inviteStaff, toggleMembership } = useData();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ fullName: "", email: "", role: "staff" as BusinessRole, canRedeem: false });
   const [errors, setErrors] = useState<Record<string, string>>({});

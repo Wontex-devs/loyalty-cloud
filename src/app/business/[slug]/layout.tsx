@@ -1,6 +1,5 @@
 import { redirect } from "next/navigation";
 import { BusinessShell } from "@/components/business/business-shell";
-import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { getSession, loadBusinessSnapshot } from "@/lib/data/queries";
 import { LiveProvider } from "@/lib/data/live-provider";
 import { NoAccess } from "@/components/layout/no-access";
@@ -13,8 +12,6 @@ export default async function BusinessLayout({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  if (!isSupabaseConfigured) return <BusinessShell slug={slug}>{children}</BusinessShell>;
-
   const session = await getSession();
   if (!session) redirect(`/login?next=/business/${slug}`);
 

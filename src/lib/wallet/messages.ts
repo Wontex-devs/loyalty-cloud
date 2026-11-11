@@ -1,6 +1,6 @@
 /**
  * Textos de los avisos en la billetera. Los usan el servidor (Google Wallet hoy,
- * Apple Wallet después) y la demo, para que se vean iguales en todas partes.
+ * Apple Wallet después) y el panel, para que se vean iguales en todas partes.
  */
 import type { WalletNoticeKind, WalletSettings } from "../domain/types.ts";
 

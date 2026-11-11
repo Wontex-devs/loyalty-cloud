@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { Check, MessageCircle, ShieldCheck, Users } from "lucide-react";
 import { useScope, RequirePermission } from "@/components/business/business-shell";
-import { useDemo } from "@/lib/demo/store";
+import { useData } from "@/lib/data/store";
 import { can } from "@/lib/domain/permissions";
 import { activePromotion, localDay } from "@/lib/domain/promotions";
 import { isRewardUsable } from "@/lib/domain/stats";
@@ -63,7 +63,7 @@ const DAY = 86400000;
 
 export default function CampaignsPage() {
   const { business, program, membership, customers, cards, rewards, contacts, promotions } = useScope();
-  const { logContact } = useDemo();
+  const { logContact } = useData();
   const [segment, setSegment] = useState<Segment>("near");
   const [templates, setTemplates] = useState<Record<Segment, string>>(
     () => Object.fromEntries(SEGMENTS.map((s) => [s.value, s.template])) as Record<Segment, string>,

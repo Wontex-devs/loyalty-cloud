@@ -11,7 +11,7 @@ npm run db:verify  # comprobaciones contra el proyecto Supabase real (--e2e: flu
 npm run db:seed    # carga Beauty Club en tu proyecto Supabase
 ```
 
-- Arquitectura, modelo de datos, seguridad y recorrido de la demo: [docs/ARQUITECTURA.md](docs/ARQUITECTURA.md)
+- Arquitectura, modelo de datos y seguridad: [docs/ARQUITECTURA.md](docs/ARQUITECTURA.md)
 - Conectar Supabase (Etapa 2): [docs/ETAPA-2-SUPABASE.md](docs/ETAPA-2-SUPABASE.md)
 - Inscripción, QR y visitas (Etapa 3): [docs/ETAPA-3.md](docs/ETAPA-3.md)
 - Recompensas, canjes, historial y estadísticas (Etapa 4): [docs/ETAPA-4.md](docs/ETAPA-4.md)

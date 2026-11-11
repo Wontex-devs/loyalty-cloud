@@ -1,4 +1,4 @@
-import type { BusinessScope } from "@/lib/demo/store";
+import type { BusinessScope } from "@/lib/data/store";
 
 export type StepId = "business" | "program" | "brand" | "team" | "launch";
 

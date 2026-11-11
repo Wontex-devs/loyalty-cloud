@@ -1,7 +1,7 @@
 # Arquitectura: plataforma de fidelización de marca blanca
 
 > Estado: **Etapa 3 completada** (inscripción, QR, tarjetas y visitas reales; ver [ETAPA-3.md](ETAPA-3.md)). Etapa 2 (Supabase: esquema, Auth, roles y RLS; ver [ETAPA-2-SUPABASE.md](ETAPA-2-SUPABASE.md)).
-> Sin `.env.local` la app sigue en modo demo (Etapa 1). Las Etapas 3 a 5 requieren aprobación explícita.
+> La app necesita `.env.local` con las variables de Supabase (ver `.env.example`). Ya no existe el modo de demostración.
 
 ## 1. Punto de partida
 
@@ -53,11 +53,10 @@ src/
       loyalty-engine.ts         Reglas de negocio puras (visitas, recompensas, canjes, reversiones)
       schemas.ts                Validaciones Zod
       permissions.ts            Matriz rol → permisos
-    demo/                     Solo Etapa 1: datos semilla + store en navegador
 docs/ARQUITECTURA.md
 ```
 
-**Regla clave:** las pantallas consumen `useScope()` / `useDemo()`. En la Etapa 2 esa capa pasa a usar Server Actions y consultas a Supabase, sin rediseñar las vistas. `lib/domain` no cambia.
+**Regla clave:** las pantallas consumen `useScope()` / `useData()` (`lib/data/store.tsx`), que llena `LiveProvider` con datos de Supabase bajo RLS; las escrituras van a Server Actions. `lib/domain` no cambia.
 
 ## 4. Multiempresa (multi-tenant)
 
@@ -135,15 +134,6 @@ Todas estas reglas ya están programadas en `lib/domain/loyalty-engine.ts` y se 
 export PATH="$HOME/.local/node/bin:$PATH"   # Node local instalado en la Etapa 1
 npm run dev                                  # http://localhost:3000
 ```
-
-Recorrido sugerido de la demo:
-1. `/login` → **Administrador del comercio** → Dashboard de Beauty Club.
-2. **Registrar visita** → busca "Isabella" (8/9 sellos) → Confirmar → gana la recompensa → Canjear.
-3. Abre `/join/beautyclub` en otra pestaña, regístrate y verás tu tarjeta. Escanéala (búscala por nombre) en el panel: la tarjeta se actualiza sola.
-4. Cambia de usuario en la esquina inferior izquierda (p. ej. Daniela, empleada sin permiso de canje) para comprobar los permisos.
-5. **Mi tarjeta digital** → cambia los colores y verás la vista previa en vivo.
-6. `/login` → **Superadministrador** → suspende un comercio.
-7. Configuración → "Restablecer datos demo" para volver al estado inicial.
 
 ## 9. Próximas etapas (pendientes de aprobación)
 

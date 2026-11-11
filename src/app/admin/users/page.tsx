@@ -3,13 +3,13 @@
 import { InviteAdmin } from "@/components/admin/invite-admin";
 import { RevokeAdmin } from "@/components/admin/revoke-admin";
 import { DeleteUser } from "@/components/admin/delete-user";
-import { useDemo } from "@/lib/demo/store";
+import { useData } from "@/lib/data/store";
 import { ROLE_LABELS } from "@/lib/domain/permissions";
 import { Avatar, Badge, Card, PageHeader, Table, Td, Th } from "@/components/ui";
 import { formatDate } from "@/lib/utils";
 
 export default function UsersPage() {
-  const { state } = useDemo();
+  const { state } = useData();
   return (
     <>
       <PageHeader

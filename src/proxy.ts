@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
-import { isSupabaseConfigured, SUPABASE_ANON_KEY, SUPABASE_URL } from "@/lib/supabase/config";
+import { SUPABASE_ANON_KEY, SUPABASE_URL } from "@/lib/supabase/config";
 
 const PROTECTED = ["/admin", "/business", "/account"];
 
@@ -9,8 +9,6 @@ const PROTECTED = ["/admin", "/business", "/account"];
  * La autorización fina (rol, membresía) se comprueba en los layouts y en RLS.
  */
 export async function proxy(request: NextRequest) {
-  if (!isSupabaseConfigured) return NextResponse.next();
-
   let response = NextResponse.next({ request });
   const supabase = createServerClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     cookies: {

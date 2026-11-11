@@ -3,13 +3,13 @@
 import { useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, ExternalLink, Pause, Play } from "lucide-react";
+import { ArrowLeft, Pause, Play } from "lucide-react";
 import { usePlatform } from "@/components/admin/use-platform";
 import { BUSINESS_STATUS } from "@/components/business/status";
-import { useDemo } from "@/lib/demo/store";
+import { useData } from "@/lib/data/store";
 import { ROLE_LABELS } from "@/lib/domain/permissions";
 import { PUBLIC_HOST_LABEL } from "@/lib/config";
-import { Avatar, Badge, Button, ButtonLink, Card, CardHeader, EmptyState, Field, Input, Select, StatCard } from "@/components/ui";
+import { Avatar, Badge, Button, Card, CardHeader, EmptyState, Field, Input, Select, StatCard } from "@/components/ui";
 import { formatDate, formatMoney, formatNumber } from "@/lib/utils";
 import { Store } from "lucide-react";
 import { BrandMark } from "@/components/loyalty/brand-mark";
@@ -18,7 +18,7 @@ import { DeleteBusiness } from "@/components/admin/delete-business";
 export default function AdminBusinessDetail() {
   const { id } = useParams<{ id: string }>();
   const { rows, state } = usePlatform();
-  const { setBusinessStatus, setBusinessPlan, mode } = useDemo();
+  const { setBusinessStatus, setBusinessPlan } = useData();
   const [planChoice, setPlanChoice] = useState("");
   const [savingPlan, setSavingPlan] = useState(false);
   const [planMsg, setPlanMsg] = useState<{ ok: boolean; text: string } | null>(null);
@@ -49,11 +49,6 @@ export default function AdminBusinessDetail() {
           </p>
         </div>
         <div className="flex gap-2">
-          {mode === "demo" && b.id === "biz_beauty" && (
-            <ButtonLink href={`/business/${b.slug}`} variant="secondary">
-              <ExternalLink className="size-4" /> Abrir panel
-            </ButtonLink>
-          )}
           <Button variant={suspended ? "primary" : "danger"} onClick={() => setBusinessStatus(b.id, suspended ? "active" : "suspended")}>
             {suspended ? <Play className="size-4" /> : <Pause className="size-4" />}
             {suspended ? "Reactivar" : "Suspender"}

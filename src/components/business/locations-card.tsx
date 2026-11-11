@@ -2,13 +2,13 @@
 
 import { useState } from "react";
 import { Loader2, MapPin, Plus } from "lucide-react";
-import { useDemo } from "@/lib/demo/store";
+import { useData } from "@/lib/data/store";
 import type { Location, Plan } from "@/lib/domain/types";
 import { Badge, Button, Card, CardHeader, Input } from "@/components/ui";
 
 /** Sedes del comercio: alta, cambio de nombre y activación (según el plan). */
 export function LocationsCard({ businessId, locations, plan }: { businessId: string; locations: Location[]; plan?: Plan }) {
-  const { saveLocation } = useDemo();
+  const { saveLocation } = useData();
   const [form, setForm] = useState<{ id?: string; name: string; address: string } | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);

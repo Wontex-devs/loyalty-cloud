@@ -6,7 +6,7 @@ import { Check, Nfc, Smartphone } from "lucide-react";
 type Fase = "estatico" | "listo" | "reproduce";
 
 /** Ilustración decorativa: el celular se acerca al lector y el sello se marca. Se reproduce una sola vez al entrar en pantalla. */
-export function NfcDemo() {
+export function NfcAnimacion() {
   const ref = useRef<HTMLDivElement>(null);
   const [fase, setFase] = useState<Fase>("estatico");
 
@@ -28,7 +28,7 @@ export function NfcDemo() {
   }, []);
 
   return (
-    <div ref={ref} aria-hidden data-fase={fase} className="nfc-demo relative mx-auto h-56 w-full max-w-sm">
+    <div ref={ref} aria-hidden data-fase={fase} className="nfc-animacion relative mx-auto h-56 w-full max-w-sm">
       {/* Lector */}
       <div className="absolute right-4 top-1/2 flex size-28 -translate-y-1/2 items-center justify-center rounded-2xl border-2 border-white/40 bg-white/10">
         <Nfc className="size-12 text-white" strokeWidth={1.5} />

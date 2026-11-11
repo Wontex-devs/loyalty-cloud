@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Check } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { businessSchema } from "@/lib/domain/schemas";
-import { useDemo } from "@/lib/demo/store";
+import { useData } from "@/lib/data/store";
 import { createBusinessAction } from "@/lib/data/actions";
 import { useRouter } from "next/navigation";
 import { PUBLIC_HOST_LABEL } from "@/lib/config";
@@ -23,10 +23,9 @@ export default function NewBusinessPage() {
   const [form, setForm] = useState({ name: "", slug: "", category: "Salón de uñas", city: "", planId: "plan_starter", ownerName: "", ownerEmail: "" });
   const [slugTouched, setSlugTouched] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [done, setDone] = useState(false);
   const [serverMsg, setServerMsg] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-  const { mode, state } = useDemo();
+  const { state } = useData();
   const plans = state.plans;
   const router = useRouter();
 
@@ -38,7 +37,6 @@ export default function NewBusinessPage() {
       return;
     }
     setErrors({});
-    if (mode === "demo") return setDone(true);
     setSaving(true);
     const res = await createBusinessAction(form);
     setSaving(false);
@@ -54,16 +52,7 @@ export default function NewBusinessPage() {
       </Link>
       <PageHeader title="Nuevo establecimiento" description="Crea el comercio, asigna un plan e invita a su propietario." />
 
-      {done ? (
-        <Card className="p-8 text-center">
-          <div className="mx-auto flex size-10 items-center justify-center rounded-full bg-success-bg text-success">
-            <Check className="size-5" />
-          </div>
-          <p className="mt-4 font-semibold">Formulario válido</p>
-          <p className="mt-1 text-sm text-muted">En modo demo no se guarda. Con Supabase configurado se crea el comercio, su programa inicial y se invita al propietario.</p>
-        </Card>
-      ) : (
-        <form onSubmit={submit} className="space-y-4">
+      <form onSubmit={submit} className="space-y-4">
           <Card>
             <CardHeader title="Comercio" />
             <div className="grid gap-4 p-5 sm:grid-cols-2">
@@ -130,7 +119,6 @@ export default function NewBusinessPage() {
             <Button type="submit" disabled={saving}>{saving ? "Creando…" : "Crear establecimiento"}</Button>
           </div>
         </form>
-      )}
     </div>
   );
 }
