@@ -20,7 +20,7 @@ const origin = () => (process.env.NEXT_PUBLIC_APP_URL ?? "").replace(/\/$/, "");
 
 /**
  * Actualiza los pases de billetera de una tarjeta después de responder (no frena la caja)
- * y, tras una visita, le envía su aviso. Si la clienta no guardó el pase, Google responde 404.
+ * y, tras una visita, le envía su aviso. Si el cliente no guardó el pase, Google responde 404.
  */
 export function scheduleCardWalletSync(cardId: string, visit?: VisitNoticeInput, opts?: { service?: boolean }) {
   if (!googleWalletConfig()) return;

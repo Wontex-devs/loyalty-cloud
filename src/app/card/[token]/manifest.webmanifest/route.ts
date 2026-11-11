@@ -6,7 +6,7 @@ type Ctx = { params: Promise<{ token: string }> };
 
 /**
  * Manifiesto por tarjeta: al "añadir a la pantalla de inicio", el icono abre
- * directamente la tarjeta de esa clienta, con el nombre y colores del comercio.
+ * directamente la tarjeta de ese cliente, con el nombre y colores del comercio.
  */
 export async function GET(_req: Request, { params }: Ctx) {
   const { token } = await params;

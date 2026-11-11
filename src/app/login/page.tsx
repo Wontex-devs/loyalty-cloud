@@ -30,7 +30,7 @@ const ROLES = [
     icon: ScanLine,
     title: "Empleado",
     who: "Laura Gómez · Beauty Club",
-    href: "/business/beautyclub/scan",
+    href: "/business/beautyclub/customers",
     profile: "usr_staff1",
     renameId: "usr_staff1",
   },

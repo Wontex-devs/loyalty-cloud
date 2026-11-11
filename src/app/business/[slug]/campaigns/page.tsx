@@ -53,7 +53,7 @@ const SEGMENTS: { value: Segment; label: string; hint: string; template: string;
   {
     value: "all",
     label: "Todas",
-    hint: "Todas las clientas que aceptaron recibir mensajes.",
+    hint: "Todas las clientes que aceptaron recibir mensajes.",
     template: "Hola {nombre}, tenemos novedades en {negocio}. Tu tarjeta: {enlace}",
     wallet: { title: "Novedades para ti", body: "Hola {nombre}, tenemos novedades. ¡Te esperamos!" },
   },
@@ -134,7 +134,7 @@ export default function CampaignsPage() {
       <div className="mb-4 flex items-start gap-2 rounded-lg border border-line bg-surface px-4 py-3 text-sm text-muted">
         <ShieldCheck className="mt-0.5 size-4 shrink-0" />
         <p>
-          Los avisos a la billetera llegan como notificación al celular y respetan un máximo de una campaña por clienta a la semana. Los de WhatsApp los abres y envías tú, uno por uno. Todo queda registrado.
+          Los avisos a la billetera llegan como notificación al celular y respetan un máximo de una campaña por cliente a la semana. Los de WhatsApp los abres y envías tú, uno por uno. Todo queda registrado.
         </p>
       </div>
 
@@ -146,7 +146,7 @@ export default function CampaignsPage() {
         <Card>
           <div className="border-b border-line px-5 py-3 text-sm">
             <p className="font-medium">
-              {allowed.length} {allowed.length === 1 ? "clienta" : "clientas"} · {current.hint}
+              {allowed.length} {allowed.length === 1 ? "cliente" : "clientes"} · {current.hint}
             </p>
             {withoutConsent > 0 && <p className="text-xs text-muted">{withoutConsent} más en este grupo no aceptaron mensajes y no aparecen.</p>}
           </div>

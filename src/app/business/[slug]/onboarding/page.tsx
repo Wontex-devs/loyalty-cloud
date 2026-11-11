@@ -20,7 +20,7 @@ const PRESETS: { name: string; colors: Partial<BusinessBranding> }[] = [
   { name: "Lavanda", colors: { cardBackground: "#E3DDF2", cardForeground: "#2B2340", primary: "#2B2340", primaryForeground: "#FFFFFF", accent: "#B9AEDB" } },
 ];
 
-/** Asistente de alta: deja un comercio nuevo listo para su primera clienta en pocos minutos. */
+/** Asistente de alta: deja un comercio nuevo listo para su primer cliente en pocos minutos. */
 export default function OnboardingPage() {
   const scope = useScope();
   const { business, program, membership } = scope;
@@ -78,7 +78,7 @@ export default function OnboardingPage() {
 
   return (
     <RequirePermission allowed={!!membership && can(membership, "program.edit")}>
-      <PageHeader title="Primeros pasos" description={`Deja ${business.name} listo para recibir a su primera clienta. Puedes volver aquí cuando quieras.`} />
+      <PageHeader title="Primeros pasos" description={`Deja ${business.name} listo para recibir a su primer cliente. Puedes volver aquí cuando quieras.`} />
 
       <Card className="mb-4 p-5">
         <div className="mb-2 flex justify-between text-sm">
@@ -121,7 +121,7 @@ export default function OnboardingPage() {
                       <Field label="Ciudad">
                         <Input value={biz.city} onChange={(e) => setBiz({ ...biz, city: e.target.value })} />
                       </Field>
-                      <Field label="Razón social o titular" hint="Responsable de los datos de tus clientas.">
+                      <Field label="Razón social o titular" hint="Responsable de los datos de tus clientes.">
                         <Input value={biz.legalName} onChange={(e) => setBiz({ ...biz, legalName: e.target.value })} />
                       </Field>
                       <Field label="NIT o cédula">
@@ -193,7 +193,7 @@ export default function OnboardingPage() {
 
                   {s.id === "team" && (
                     <div className="space-y-3 text-sm">
-                      <p className="text-muted">Invita a quienes registran visitas en caja. Cada persona entra con su propio usuario y tú decides quién puede entregar premios.</p>
+                      <p className="text-muted">Invita a quienes te ayudan a atender el programa. Cada persona entra con su propio usuario y tú decides quién puede entregar premios.</p>
                       <div className="flex justify-between gap-2">
                         <ButtonLink href={`/business/${business.slug}/staff`} variant="secondary">
                           <UserPlus className="size-4" /> Invitar a mi equipo
@@ -219,7 +219,7 @@ export default function OnboardingPage() {
                           Abrir página de inscripción
                         </ButtonLink>
                       </div>
-                      {s.done && <p className="font-medium text-success">¡Ya tienes tu primera clienta! Tu programa está en marcha.</p>}
+                      {s.done && <p className="font-medium text-success">¡Ya tienes tu primer cliente! Tu programa está en marcha.</p>}
                     </div>
                   )}
                 </div>
@@ -233,7 +233,7 @@ export default function OnboardingPage() {
           <LoyaltyCardView
             business={{ ...business, branding: { ...business.branding, logoText: logo || business.branding.logoText } }}
             program={{ name: business.name, stampsRequired: Math.max(2, Math.min(30, prog.stampsRequired || 2)), rewardName: prog.rewardName || "Tu recompensa" }}
-            customerName="Nombre de la clienta"
+            customerName="Nombre del cliente"
             stamps={Math.min(prog.welcomeStamps, prog.stampsRequired - 1)}
             status="active"
             rewardsAvailable={0}

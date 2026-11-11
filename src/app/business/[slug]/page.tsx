@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowUpRight, Gift, ScanLine, Repeat, Sparkles, Users, CalendarCheck } from "lucide-react";
+import { ArrowUpRight, Gift, Repeat, Sparkles, Users, CalendarCheck } from "lucide-react";
 import { onboardingSteps } from "@/components/business/onboarding";
 import { useScope, RequirePermission } from "@/components/business/business-shell";
 import { BarChart, dailySeries } from "@/components/business/charts";
@@ -55,11 +55,6 @@ export default function BusinessDashboard() {
       <PageHeader
         title={`Hola, ${s.actingProfile?.fullName.split(" ")[0]}`}
         description={`Así va ${program?.name ?? "tu programa"} en los últimos 30 días.`}
-        actions={
-          <ButtonLink href={`${base}/scan`} variant="brand">
-            <ScanLine className="size-4" /> Registrar visita
-          </ButtonLink>
-        }
       />
 
       {!setup.complete && (
@@ -80,7 +75,7 @@ export default function BusinessDashboard() {
       {customerLimitNear && (
         <div className="mb-4 rounded-xl border border-warning/30 bg-warning-bg px-4 py-3 text-sm text-warning">
           Llevas {formatNumber(customers.length)} de {formatNumber(s.plan!.maxCustomers!)} clientes de tu plan {s.plan!.name}. Al llegar al límite no se podrán inscribir
-          clientas nuevas: pide un cambio de plan a tiempo.
+          clientes nuevas: pide un cambio de plan a tiempo.
         </div>
       )}
 

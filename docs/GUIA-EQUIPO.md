@@ -2,32 +2,28 @@
 
 Una página para imprimir y dejar en caja.
 
-## Inscribir a una clienta nueva (1 minuto)
+## Inscribir a un cliente nuevo (1 minuto)
 1. Pídele que escanee con la cámara de su celular el **cartel con el QR** de caja.
 2. Escribe su nombre y su celular, y acepta los términos.
 3. Su tarjeta se abre en el celular. Dile: *"Guárdala en favoritos o en tu pantalla de inicio"*.
 
-Si ya estaba inscrita y vuelve a escanear, recupera su misma tarjeta: no se duplica.
+Si ya estaba inscrito y vuelve a escanear, recupera su misma tarjeta: no se duplica.
 
-## Sumar una visita (10 segundos)
-1. En el panel, abre **Registrar visita** y pulsa **Escanear con la cámara**.
-2. La clienta te muestra el QR de **su tarjeta**. No es el cartel de caja.
-3. Revisa el nombre y pulsa **Confirmar visita (+1 sello)**. Su tarjeta se actualiza sola.
-
-Si no tiene el celular a mano, búscala por **nombre o teléfono** en la misma pantalla.
+## Sumar una visita
+El cliente desbloquea su celular y lo acerca a la **etiqueta NFC del mostrador**. Se abre su tarjeta y el sello queda registrado. El equipo no tiene que hacer nada.
 
 ## Entregar una recompensa
-Cuando escaneas una tarjeta con recompensa, aparece la sección **"Recompensas disponibles"**.
-1. Pulsa **Canjear** y entrega el servicio.
-2. Cada recompensa se canjea **una sola vez**. Si el sistema dice que ya se canjeó, no la entregues.
+1. En el panel, abre **Recompensas** y busca al cliente.
+2. Pulsa **Canjear** y entrega el premio.
+3. Cada recompensa se canjea **una sola vez**. Si el sistema dice que ya se canjeó, no la entregues.
 
-Solo puede canjear quien tenga permiso. Si no te aparece el botón, llama a la encargada.
+Solo puede canjear quien tenga permiso. Si no te aparece el botón, llama al encargado.
 
 ## Mensajes que puedes ver
 | Mensaje | Qué hacer |
 |---|---|
 | "Ya se registró una visita hace muy poco" | La visita de hoy ya se sumó. No hagas nada más. |
-| "La tarjeta está bloqueada" | Llama a la encargada. |
+| "La tarjeta está bloqueada" | Llama al encargado. |
 | "La recompensa ya venció" | Explica la fecha de vencimiento. La encargada decide si hace una excepción. |
 | "Esta operación ya fue registrada" | Pulsaste dos veces; solo se sumó una. |
 

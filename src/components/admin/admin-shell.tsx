@@ -10,7 +10,7 @@ import { SignOutButton } from "@/components/auth/sign-out-button";
 const sections: NavSection[] = [
   {
     items: [
-      { href: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
+      { href: "/admin", label: "Inicio", icon: LayoutDashboard, exact: true },
       { href: "/admin/businesses", label: "Establecimientos", icon: Store },
       { href: "/admin/users", label: "Usuarios", icon: Users },
       { href: "/admin/plans", label: "Planes", icon: Layers },

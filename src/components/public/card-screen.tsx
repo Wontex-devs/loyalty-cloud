@@ -24,7 +24,7 @@ export interface PublicCardData {
   recent: { kind: "visit" | "reversal"; delta: number; bonus?: number; createdAt: string }[];
   /** Promoción vigente hoy en el comercio (p. ej. doble sello). */
   promotion?: { name: string; bonusStamps: number } | null;
-  /** La clienta aceptó recibir mensajes: se le ofrece darse de baja. */
+  /** El cliente aceptó recibir mensajes: se le ofrece darse de baja. */
   marketingConsent?: boolean;
 }
 
@@ -150,8 +150,7 @@ export function CardScreen({
           <div className="mt-4 flex items-center gap-3 rounded-2xl bg-white p-4 text-sm shadow-card">
             <Nfc className="size-6 shrink-0" style={{ color: b.cardForeground }} aria-hidden />
             <p>
-              <span className="font-semibold">Para sumar tu sello</span>, acerca tu celular a la etiqueta del mostrador. Si no tiene etiqueta, da tu nombre en
-              caja.
+              <span className="font-semibold">Para sumar tu sello</span>, acerca tu celular a la etiqueta del mostrador.
             </p>
           </div>
         )}

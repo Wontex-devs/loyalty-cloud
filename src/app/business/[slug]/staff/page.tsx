@@ -12,7 +12,6 @@ import { formatDate } from "@/lib/utils";
 import type { BusinessRole } from "@/lib/domain/types";
 
 const PERMS = [
-  ["Registrar visitas", true, true, true],
   ["Canjear recompensas", true, true, "Configurable"],
   ["Revertir visitas", true, true, false],
   ["Editar programa y tarjeta", true, true, false],
@@ -49,7 +48,7 @@ export default function StaffPage() {
     <RequirePermission allowed={!!membership && can(membership, "staff.manage")}>
       <PageHeader
         title="Empleados"
-        description="Gestiona quién puede registrar visitas y canjear recompensas."
+        description="Gestiona quién puede ver a tus clientes y canjear recompensas."
         actions={
           <Button onClick={() => setOpen(true)} disabled={staffFull} title={staffFull ? "Alcanzaste el límite de tu plan" : undefined}>
             <UserPlus className="size-4" /> Invitar empleado

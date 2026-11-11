@@ -58,7 +58,7 @@ export default function ProgramPage() {
   return (
     <RequirePermission allowed={!!membership && can(membership, "program.edit")}>
       <PageHeader
-        title="Mi programa"
+        title="Sellos y premio"
         description="Define cómo tus clientes acumulan visitas y qué reciben al completar la tarjeta."
         actions={
           <div className="flex items-center gap-2 text-sm">
@@ -85,7 +85,7 @@ export default function ProgramPage() {
           </Card>
 
           <Card>
-            <CardHeader title="Regla de acumulación" description="Un sello por visita registrada por tu equipo." />
+            <CardHeader title="Regla de acumulación" description="Un sello por cada visita." />
             <div className="grid gap-4 p-5 sm:grid-cols-2">
               <Field
                 label="Visitas necesarias"

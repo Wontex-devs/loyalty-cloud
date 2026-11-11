@@ -85,7 +85,7 @@ export default function PromotionsPage() {
         <Card className="mb-4">
           <CardHeader title={editing === "new" ? "Nueva promoción" : "Editar promoción"} />
           <form onSubmit={save} className="grid gap-4 p-5 sm:grid-cols-2">
-            <Field label="Nombre" hint="Lo verán tus clientas en su tarjeta.">
+            <Field label="Nombre" hint="Lo verán tus clientes en su tarjeta.">
               <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
             </Field>
             <Field label="Tipo">

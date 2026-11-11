@@ -46,7 +46,7 @@ export function LegalScreen({ data }: { data: LegalData }) {
         <h2 className="mb-2 font-semibold text-ink">1. Términos del programa</h2>
         <ul className="mb-3 list-disc space-y-1 pl-5">
           <li>
-            Cada visita registrada por el personal de {data.name}, o al acercar tu celular a la etiqueta NFC del establecimiento, suma un sello. Al completar{" "}
+            Cada visita a {data.name}, al acercar tu celular a la etiqueta NFC del establecimiento, suma un sello. Al completar{" "}
             {program.stampsRequired} sellos obtienes: {program.rewardName}.
           </li>
           <li>La tarjeta es personal, gratuita y no se puede canjear por dinero.</li>
@@ -73,7 +73,7 @@ export function LegalScreen({ data }: { data: LegalData }) {
         <h2 className="mt-8 mb-2 font-semibold text-ink">4. Para qué los usamos</h2>
         <ul className="list-disc space-y-1 pl-5">
           <li>Crear y administrar tu tarjeta de fidelización, registrar tus visitas y entregarte tus recompensas.</li>
-          <li>Identificarte en caja y evitar registros duplicados o fraudulentos.</li>
+          <li>Identificarte y evitar registros duplicados o fraudulentos.</li>
           <li>Si nos diste tu cumpleaños: entregarte un regalo en tu mes de cumpleaños.</li>
           <li>Elaborar estadísticas internas del establecimiento.</li>
           <li>
