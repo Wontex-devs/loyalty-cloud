@@ -38,7 +38,7 @@
 4. Vuelve a publicar el sitio. El botón aparece en las tarjetas.
 5. **Aprobación de Google:** mientras tanto solo pueden guardar el pase las cuentas de prueba. Para todas las clientas, pide el acceso de publicación en la consola. Google revisa el diseño en unos días.
 
-**Antes del lanzamiento público:** Google exige su botón oficial *Add to Google Wallet*. Hay que cambiar el botón provisional por la imagen oficial de su guía de marca.
+**Botón:** la tarjeta usa el botón oficial *Add to Google Wallet* de la guía de marca de Google (`public/google-wallet/`, versión es-419).
 
 ## Apple Wallet (siguiente etapa)
 - **Lo que necesita:**

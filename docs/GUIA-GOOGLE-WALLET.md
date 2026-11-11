@@ -46,7 +46,7 @@ Si el botón no aparece: revise que las dos variables estén en Production, que 
 
 1. En la consola de Wallet, en la pestaña de la API, pulse **Solicitar acceso de publicación**.
 2. Suba una captura del pase y el logo del comercio cuando lo pida. Google revisa el diseño y responde en unos días.
-3. **Antes de publicar:** reemplazar el botón provisional por el botón oficial *Add to Google Wallet*, que se descarga de la guía de marca de Google. Se guarda en `public/` y se cambia en `src/components/public/wallet-buttons.tsx`.
+3. El botón oficial *Add to Google Wallet* (es-419) ya está en `public/google-wallet/`. Si Google lo actualiza, se reemplaza ese archivo sin alterar su forma ni su color.
 
 ## Lista de comprobación
 
@@ -58,4 +58,4 @@ Si el botón no aparece: revise que las dos variables estén en Production, que 
 - [ ] Variables cargadas en Vercel y Redeploy hecho
 - [ ] Pase guardado y actualizado en un Android de prueba
 - [ ] Acceso de publicación solicitado
-- [ ] Botón oficial puesto
+- [x] Botón oficial puesto
