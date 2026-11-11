@@ -10,7 +10,7 @@ export interface WalletPass {
   cardUrl: string;
   active: boolean;
   customerName: string;
-  business: { name: string; slug: string; logoText: string; background: string; foreground: string; logoUrl: string };
+  business: { name: string; slug: string; logoText: string; background: string; foreground: string; logoUrl: string; coverUrl?: string };
   program: { name: string; stampsRequired: number; rewardName: string };
   stamps: number;
   rewardsAvailable: { name: string; birthday: boolean }[];
@@ -32,6 +32,7 @@ export function passFromCard(card: PublicCardData, origin: string): WalletPass {
       background: b.cardBackground,
       foreground: b.cardForeground,
       logoUrl: `${origin}/join/${slug}/icon/660`,
+      coverUrl: b.coverUrl || undefined,
     },
     program: card.program,
     stamps: Math.min(card.stamps, card.program.stampsRequired),

@@ -15,14 +15,18 @@ import { NfcCard } from "@/components/business/nfc-card";
 import { Button, buttonClass, Card, CardHeader, Field, Input, PageHeader, Segmented } from "@/components/ui";
 
 const PRESETS: { name: string; colors: Partial<BusinessBranding> }[] = [
-  { name: "Rosa empolvado", colors: { cardBackground: "#EBCFCB", cardForeground: "#1A1416", primary: "#1A1416", accent: "#D8A7A7" } },
-  { name: "Negro & rosa", colors: { cardBackground: "#141112", cardForeground: "#F1D3CF", primary: "#141112", accent: "#E7B9B3" } },
-  { name: "Marfil", colors: { cardBackground: "#F6F1EA", cardForeground: "#1F1B16", primary: "#1F1B16", accent: "#CDB9A0" } },
-  { name: "Salvia", colors: { cardBackground: "#D5DDCF", cardForeground: "#1E2A1E", primary: "#1E2A1E", accent: "#A9B99E" } },
-  { name: "Lavanda", colors: { cardBackground: "#E3DCF0", cardForeground: "#2B2140", primary: "#2B2140", accent: "#B8A6D9" } },
-  { name: "Champán", colors: { cardBackground: "#EFE2C8", cardForeground: "#3A2E1C", primary: "#3A2E1C", accent: "#C9A96E" } },
-  { name: "Azul noche", colors: { cardBackground: "#1C2333", cardForeground: "#E8DCC4", primary: "#1C2333", accent: "#C9B48A" } },
-  { name: "Terracota", colors: { cardBackground: "#E7C4AF", cardForeground: "#3B1F14", primary: "#3B1F14", accent: "#C97B5A" } },
+  { name: "Azul Lazo", colors: { cardBackground: "#1b3fd8", cardForeground: "#ffc928", primary: "#1b3fd8", primaryForeground: "#ffc928", accent: "#ffc928" } },
+  { name: "Noche", colors: { cardBackground: "#0e1a52", cardForeground: "#ffffff", primary: "#0e1a52", primaryForeground: "#ffffff", accent: "#ffffff" } },
+  { name: "Sol", colors: { cardBackground: "#ffc928", cardForeground: "#0e1a52", primary: "#0e1a52", primaryForeground: "#ffc928", accent: "#0e1a52" } },
+  { name: "Blanco", colors: { cardBackground: "#ffffff", cardForeground: "#1b3fd8", primary: "#1b3fd8", primaryForeground: "#ffffff", accent: "#1b3fd8" } },
+  { name: "Coral", colors: { cardBackground: "#ff7a66", cardForeground: "#0e1a52", primary: "#0e1a52", primaryForeground: "#ff7a66", accent: "#0e1a52" } },
+  { name: "Selva", colors: { cardBackground: "#0f5c4a", cardForeground: "#f6efd9", primary: "#0f5c4a", primaryForeground: "#f6efd9", accent: "#f6efd9" } },
+  { name: "Vino", colors: { cardBackground: "#6d1f3a", cardForeground: "#ffe8d6", primary: "#6d1f3a", primaryForeground: "#ffe8d6", accent: "#ffe8d6" } },
+  { name: "Uva", colors: { cardBackground: "#4b2e83", cardForeground: "#ffffff", primary: "#4b2e83", primaryForeground: "#ffffff", accent: "#ffffff" } },
+  { name: "Carbón", colors: { cardBackground: "#141414", cardForeground: "#ffc928", primary: "#141414", primaryForeground: "#ffc928", accent: "#ffc928" } },
+  { name: "Arena", colors: { cardBackground: "#f1e6d3", cardForeground: "#2b2b2b", primary: "#2b2b2b", primaryForeground: "#f1e6d3", accent: "#2b2b2b" } },
+  { name: "Menta", colors: { cardBackground: "#bfe8d4", cardForeground: "#0f3d2e", primary: "#0f3d2e", primaryForeground: "#bfe8d4", accent: "#0f3d2e" } },
+  { name: "Cielo", colors: { cardBackground: "#cfe3ff", cardForeground: "#0e1a52", primary: "#0e1a52", primaryForeground: "#cfe3ff", accent: "#0e1a52" } },
 ];
 
 const COLOR_FIELDS: { key: keyof BusinessBranding; label: string }[] = [
@@ -34,8 +38,11 @@ const COLOR_FIELDS: { key: keyof BusinessBranding; label: string }[] = [
 
 export default function CardDesignPage() {
   const { business, program, membership } = useScope();
-  const { updateBranding, setLogo } = useDemo();
+  const { updateBranding, setLogo, setCover } = useDemo();
   const fileRef = useRef<HTMLInputElement>(null);
+  const coverRef = useRef<HTMLInputElement>(null);
+  const [coverBusy, setCoverBusy] = useState(false);
+  const [coverError, setCoverError] = useState<string | null>(null);
   const [logoBusy, setLogoBusy] = useState(false);
   const [logoError, setLogoError] = useState<string | null>(null);
   const changeLogo = async (file: File | null) => {
@@ -44,6 +51,13 @@ export default function CardDesignPage() {
     const res = await setLogo(business.id, file);
     setLogoBusy(false);
     if (!res.ok) setLogoError(res.message);
+  };
+  const changeCover = async (file: File | null) => {
+    setCoverBusy(true);
+    setCoverError(null);
+    const res = await setCover(business.id, file);
+    setCoverBusy(false);
+    if (!res.ok) setCoverError(res.message);
   };
   const [previewState, setPreviewState] = useState<CardStatus>("active");
   const b = business.branding;
@@ -102,7 +116,46 @@ export default function CardDesignPage() {
           </Card>
 
           <Card>
-            <CardHeader title="Estilos predefinidos" />
+            <CardHeader title="Foto de fondo" description="Una foto horizontal de tu local o tu producto. Se ve en la parte de arriba de la tarjeta y se funde con su color." />
+            <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center">
+              <div className="flex h-20 w-32 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-line bg-canvas">
+                {b.coverUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={b.coverUrl} alt="" className="size-full object-cover" />
+                ) : (
+                  <ImageUp className="size-5 text-subtle" aria-hidden />
+                )}
+              </div>
+              <div className="flex-1">
+                <p className="text-sm text-muted">JPG o PNG de hasta 8 MB. La ajustamos sola para que cargue rápido.</p>
+                {coverError && <p className="mt-1 text-sm text-danger">{coverError}</p>}
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <input
+                  ref={coverRef}
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp"
+                  className="hidden"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    e.target.value = "";
+                    if (f) changeCover(f);
+                  }}
+                />
+                <Button variant="secondary" onClick={() => coverRef.current?.click()} disabled={coverBusy}>
+                  {coverBusy ? <Loader2 className="size-4 animate-spin" /> : <ImageUp className="size-4" />} {b.coverUrl ? "Cambiar foto" : "Subir foto"}
+                </Button>
+                {b.coverUrl && (
+                  <Button variant="ghost" onClick={() => changeCover(null)} disabled={coverBusy} aria-label="Quitar foto de fondo">
+                    <Trash2 className="size-4" />
+                  </Button>
+                )}
+              </div>
+            </div>
+          </Card>
+
+          <Card>
+            <CardHeader title="Colores predeterminados" description="Elige uno y ajústalo abajo si quieres." />
             <div className="grid grid-cols-2 gap-3 p-5 sm:grid-cols-4">
               {PRESETS.map((p) => (
                 <button

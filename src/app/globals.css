@@ -240,7 +240,6 @@ textarea {
 /* Carrusel continuo de «Con tu marca»: movimiento constante, por eso va en línea recta (linear). */
 .marquee {
   overflow-x: clip;
-  mask-image: linear-gradient(to right, transparent, #000 5%, #000 95%, transparent);
 }
 .marquee-pista {
   animation: marquee 50s linear infinite;
@@ -261,7 +260,6 @@ textarea {
 @media (prefers-reduced-motion: reduce) {
   .marquee {
     overflow-x: auto;
-    mask-image: none;
   }
   .marquee-pista {
     animation: none;
@@ -311,3 +309,222 @@ textarea {
   from { stroke-dashoffset: 1; }
   to { stroke-dashoffset: 0; }
 }
+
+/* Escena del problema: el cliente se va y Nudo lo trae de vuelta. Una sola línea de tiempo de 9 s.
+   Sin movimiento (reducir movimiento) queda el cuadro central: el cliente ya enlazado.
+   Dentro de los fotogramas las curvas van escritas (--ease-ui-out y --ease-ui-in-out): con var() el navegador las ignora. */
+.nudo-jala { transform-box: view-box; transform-origin: 60px 112px; transform: rotate(-5deg); }
+.nudo-ojos { transform-box: fill-box; transform-origin: center; }
+.escena-puerta { transform-box: fill-box; transform-origin: left center; transform: scaleX(0.18); }
+.escena-cliente { transform: translateX(175px); }
+.escena-cliente-tira { transform-box: fill-box; transform-origin: center bottom; transform: rotate(-7deg); }
+.escena-pierna-a, .escena-pierna-b { transform-box: fill-box; transform-origin: center top; }
+.escena-cuerda { transform-box: view-box; transform-origin: 100px 242px; transform: scaleX(2.94); }
+.escena-punta { transform: translateX(394px); }
+.escena-serio, .escena-alerta, .escena-premio, .escena-globo-se-va { opacity: 0; }
+.escena-premio { transform-box: fill-box; transform-origin: center; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .escena .nudo-ojos { animation: nudo-pestanea 4.6s linear infinite; }
+  @keyframes nudo-pestanea {
+    0%, 94%, 100% { transform: scaleY(1); }
+    97% { transform: scaleY(0.1); }
+  }
+  .escena-puerta { animation: escena-puerta 9s linear infinite; }
+  @keyframes escena-puerta {
+    0% { transform: scaleX(1); animation-timing-function: cubic-bezier(0.23, 1, 0.32, 1); }
+    4%, 10% { transform: scaleX(0.18); animation-timing-function: cubic-bezier(0.77, 0, 0.175, 1); }
+    14%, 80% { transform: scaleX(1); animation-timing-function: cubic-bezier(0.23, 1, 0.32, 1); }
+    84%, 90% { transform: scaleX(0.18); animation-timing-function: cubic-bezier(0.77, 0, 0.175, 1); }
+    94%, 100% { transform: scaleX(1); }
+  }
+  .escena-cliente { animation: escena-cliente 9s linear infinite; }
+  @keyframes escena-cliente {
+    0%, 6% { transform: translateX(0); }
+    40% { transform: translateX(350px); }
+    58% { transform: translateX(350px); animation-timing-function: cubic-bezier(0.77, 0, 0.175, 1); }
+    66% { transform: translateX(233px); }
+    67% { transform: translateX(233px); animation-timing-function: cubic-bezier(0.77, 0, 0.175, 1); }
+    75% { transform: translateX(116px); }
+    76% { transform: translateX(116px); animation-timing-function: cubic-bezier(0.77, 0, 0.175, 1); }
+    84%, 100% { transform: translateX(0); }
+  }
+  .escena-cliente-ve { animation: escena-cliente-ve 9s linear infinite; }
+  @keyframes escena-cliente-ve {
+    0%, 4% { opacity: 0; }
+    6%, 86% { opacity: 1; }
+    90%, 100% { opacity: 0; }
+  }
+  .escena-cliente-tira { animation: escena-cliente-tira 9s ease-in-out infinite; }
+  @keyframes escena-cliente-tira {
+    0%, 54% { transform: rotate(0); }
+    58%, 84% { transform: rotate(-7deg); }
+    88%, 100% { transform: rotate(0); }
+  }
+  .escena-pierna-a { animation: escena-pierna-a 9s ease-in-out infinite; }
+  @keyframes escena-pierna-a {
+    0%, 6% { transform: rotate(0); }
+    9.4% { transform: rotate(20deg); }
+    12.8% { transform: rotate(-20deg); }
+    16.2% { transform: rotate(20deg); }
+    19.6% { transform: rotate(-20deg); }
+    23.0% { transform: rotate(20deg); }
+    26.4% { transform: rotate(-20deg); }
+    29.8% { transform: rotate(20deg); }
+    33.2% { transform: rotate(-20deg); }
+    36.6% { transform: rotate(20deg); }
+    40%, 58% { transform: rotate(0); }
+    60%, 84% { transform: rotate(16deg); }
+    87%, 100% { transform: rotate(0); }
+  }
+  .escena-pierna-b { animation: escena-pierna-b 9s ease-in-out infinite; }
+  @keyframes escena-pierna-b {
+    0%, 6% { transform: rotate(0); }
+    9.4% { transform: rotate(-20deg); }
+    12.8% { transform: rotate(20deg); }
+    16.2% { transform: rotate(-20deg); }
+    19.6% { transform: rotate(20deg); }
+    23.0% { transform: rotate(-20deg); }
+    26.4% { transform: rotate(20deg); }
+    29.8% { transform: rotate(-20deg); }
+    33.2% { transform: rotate(20deg); }
+    36.6% { transform: rotate(-20deg); }
+    40%, 58% { transform: rotate(0); }
+    60%, 84% { transform: rotate(-16deg); }
+    87%, 100% { transform: rotate(0); }
+  }
+  .escena-serio { animation: escena-serio 9s linear infinite; }
+  @keyframes escena-serio {
+    0%, 55% { opacity: 1; }
+    57%, 100% { opacity: 0; }
+  }
+  .escena-feliz { animation: escena-feliz 9s linear infinite; }
+  @keyframes escena-feliz {
+    0%, 55% { opacity: 0; }
+    57%, 100% { opacity: 1; }
+  }
+  .escena-alerta { animation: escena-alerta 9s linear infinite; }
+  @keyframes escena-alerta {
+    0%, 51% { opacity: 0; }
+    53%, 58% { opacity: 1; }
+    60%, 100% { opacity: 0; }
+  }
+  .escena-cuerda { animation: escena-cuerda 9s linear infinite; }
+  @keyframes escena-cuerda {
+    0%, 45.9% { transform: scaleX(0.29); opacity: 0; }
+    46% { transform: scaleX(0.29); opacity: 1; animation-timing-function: cubic-bezier(0.23, 1, 0.32, 1); }
+    52%, 58% { transform: scaleX(4.69); opacity: 1; animation-timing-function: cubic-bezier(0.77, 0, 0.175, 1); }
+    66% { transform: scaleX(3.52); }
+    67% { transform: scaleX(3.52); animation-timing-function: cubic-bezier(0.77, 0, 0.175, 1); }
+    75% { transform: scaleX(2.35); }
+    76% { transform: scaleX(2.35); animation-timing-function: cubic-bezier(0.77, 0, 0.175, 1); }
+    84% { transform: scaleX(1.19); opacity: 1; animation-timing-function: cubic-bezier(0.23, 1, 0.32, 1); }
+    88% { transform: scaleX(0.29); opacity: 1; }
+    90%, 100% { transform: scaleX(0.29); opacity: 0; }
+  }
+  .escena-punta { animation: escena-punta 9s linear infinite; }
+  @keyframes escena-punta {
+    0%, 45.9% { transform: translateX(129px); opacity: 0; }
+    46% { transform: translateX(129px); opacity: 1; animation-timing-function: cubic-bezier(0.23, 1, 0.32, 1); }
+    52%, 58% { transform: translateX(569px); opacity: 1; animation-timing-function: cubic-bezier(0.77, 0, 0.175, 1); }
+    66% { transform: translateX(452px); }
+    67% { transform: translateX(452px); animation-timing-function: cubic-bezier(0.77, 0, 0.175, 1); }
+    75% { transform: translateX(335px); }
+    76% { transform: translateX(335px); animation-timing-function: cubic-bezier(0.77, 0, 0.175, 1); }
+    84% { transform: translateX(219px); opacity: 1; }
+    87%, 100% { transform: translateX(219px); opacity: 0; }
+  }
+  .escena .nudo-jala { animation: escena-nudo 9s linear infinite; }
+  @keyframes escena-nudo {
+    0%, 40% { transform: translateX(0) rotate(-5deg); animation-timing-function: cubic-bezier(0.77, 0, 0.175, 1); }
+    46% { transform: translateX(3px) rotate(4deg); animation-timing-function: cubic-bezier(0.23, 1, 0.32, 1); }
+    50% { transform: translateX(-2px) rotate(-10deg); animation-timing-function: ease-in-out; }
+    58% { transform: translateX(0) rotate(-4deg); animation-timing-function: cubic-bezier(0.23, 1, 0.32, 1); }
+    62% { transform: translateX(-5px) rotate(-15deg); animation-timing-function: ease-in-out; }
+    67% { transform: translateX(0) rotate(-4deg); animation-timing-function: cubic-bezier(0.23, 1, 0.32, 1); }
+    71% { transform: translateX(-5px) rotate(-15deg); animation-timing-function: ease-in-out; }
+    76% { transform: translateX(0) rotate(-4deg); animation-timing-function: cubic-bezier(0.23, 1, 0.32, 1); }
+    80% { transform: translateX(-5px) rotate(-15deg); animation-timing-function: ease-in-out; }
+    90%, 100% { transform: translateX(0) rotate(-5deg); }
+  }
+  .escena .nudo-manos { animation: escena-manos 9s linear infinite; }
+  @keyframes escena-manos {
+    0%, 40% { transform: translateX(0); animation-timing-function: cubic-bezier(0.77, 0, 0.175, 1); }
+    46% { transform: translateX(4px); animation-timing-function: cubic-bezier(0.23, 1, 0.32, 1); }
+    50% { transform: translateX(-4px); animation-timing-function: ease-in-out; }
+    58% { transform: translateX(0); animation-timing-function: cubic-bezier(0.23, 1, 0.32, 1); }
+    62% { transform: translateX(-13px); animation-timing-function: ease-in-out; }
+    67% { transform: translateX(0); animation-timing-function: cubic-bezier(0.23, 1, 0.32, 1); }
+    71% { transform: translateX(-13px); animation-timing-function: ease-in-out; }
+    76% { transform: translateX(0); animation-timing-function: cubic-bezier(0.23, 1, 0.32, 1); }
+    80% { transform: translateX(-13px); animation-timing-function: ease-in-out; }
+    90%, 100% { transform: translateX(0); }
+  }
+  .escena-premio { animation: escena-premio 9s linear infinite; }
+  @keyframes escena-premio {
+    0%, 88% { opacity: 0; transform: scale(0.9); animation-timing-function: cubic-bezier(0.23, 1, 0.32, 1); }
+    92%, 97% { opacity: 1; transform: scale(1); }
+    100% { opacity: 0; transform: scale(1); }
+  }
+  .escena-globo-se-va { animation: escena-globo-se-va 9s linear infinite; }
+  @keyframes escena-globo-se-va {
+    0%, 10% { opacity: 0; }
+    13%, 41% { opacity: 1; }
+    44%, 100% { opacity: 0; }
+  }
+  .escena-globo-trae { animation: escena-globo-trae 9s linear infinite; }
+  @keyframes escena-globo-trae {
+    0%, 54% { opacity: 0; }
+    57%, 94% { opacity: 1; }
+    97%, 100% { opacity: 0; }
+  }
+  .escena[data-pausado] * { animation-play-state: paused; }
+}
+
+/* Nudo en la esquina de la portada, como widget */
+.nudo-brazo {
+  transform-box: view-box;
+  transform-origin: 86px 72px;
+}
+.nudo > div { animation: nudo-aparece 300ms ease-out 500ms both; }
+@keyframes nudo-aparece {
+  from { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .nudo > div { animation: nudo-entra 500ms var(--ease-ui-out) 500ms both; }
+  @keyframes nudo-entra {
+    from { opacity: 0; transform: translateY(16px) scale(0.92); }
+  }
+  .nudo-flota { animation: nudo-flota 1.8s ease-in-out infinite alternate; }
+  @keyframes nudo-flota {
+    to { transform: translateY(-4px); }
+  }
+  .nudo-brazo { animation: nudo-brazo 0.9s ease-in-out infinite alternate; }
+  @keyframes nudo-brazo {
+    from { transform: rotate(-3deg); }
+    to { transform: rotate(4deg); }
+  }
+  .nudo-giro { animation: nudo-giro 0.9s linear infinite; }
+  @keyframes nudo-giro {
+    from { stroke-dashoffset: 100; }
+    to { stroke-dashoffset: 0; }
+  }
+  .nudo-salto[data-saltando] { animation: nudo-salta 520ms var(--ease-ui-out); }
+  @keyframes nudo-salta {
+    35% { transform: translateY(-22px) rotate(-5deg) scale(1.06); }
+    70% { transform: translateY(0) scale(1.05, 0.95); }
+  }
+  .nudo-boton { transition: transform 160ms var(--ease-ui-out); }
+  .nudo-boton:active { transform: scale(0.95); }
+}
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .nudo-boton:hover { transform: scale(1.05); }
+}
+
+/* Silueta de Nudo, quieta y en tono sobre el azul */
+.nudo-silueta {
+  filter: brightness(0) invert(1);
+  opacity: 0.09;
+}
+.nudo-silueta * { animation: none !important; }

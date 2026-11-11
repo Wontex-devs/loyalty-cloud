@@ -53,6 +53,7 @@ export const brandingSchema = z.object({
   logoText: z.string().trim().min(1).max(3),
   // La base de datos además exige que sea de la carpeta del propio comercio en Storage.
   logoUrl: z.union([z.literal(""), z.url({ protocol: /^https$/ })]),
+  coverUrl: z.union([z.literal(""), z.url({ protocol: /^https$/ })]),
   stampIcon: z.enum(STAMP_ICONS),
   font: z.enum(["serif", "sans"]),
   primary: hex,

@@ -28,6 +28,7 @@ export function loyaltyClass(cfg: Pick<GoogleWalletConfig, "issuerId">, p: Pick<
     issuerName: p.business.name,
     programName: p.program.name,
     programLogo: { sourceUri: { uri: p.business.logoUrl }, contentDescription: text(p.business.name) },
+    ...(p.business.coverUrl ? { heroImage: { sourceUri: { uri: p.business.coverUrl }, contentDescription: text(p.business.name) } } : {}),
     hexBackgroundColor: p.business.background,
     countryCode: "CO",
     reviewStatus: "UNDER_REVIEW",

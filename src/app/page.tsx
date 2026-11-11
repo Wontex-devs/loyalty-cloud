@@ -4,6 +4,8 @@ import Link from "next/link";
 import { LogIn, MessageCircle } from "lucide-react";
 import { BrandPreview } from "@/components/marketing/brand-preview";
 import { LazoLogo } from "@/components/brand/lazo-logo";
+import { EscenaCliente } from "@/components/marketing/escena-cliente";
+import { Mascota, NudoDibujo } from "@/components/marketing/mascota";
 import { NfcDemo } from "@/components/marketing/nfc-demo";
 import { WalletPhone } from "@/components/marketing/wallet-phone";
 import { PLATFORM_NAME, SALES_WHATSAPP } from "@/lib/config";
@@ -106,7 +108,11 @@ export default function Home() {
             </div>
             <p className="mt-5 text-[15px] text-white/80">Tu cliente se inscribe con un QR, guarda la tarjeta en su Wallet y suma sellos con NFC.</p>
           </div>
-          <div className="relative mx-auto">
+          <div className="relative isolate mx-auto">
+            {/* Silueta de Nudo de fondo, detrás del celular */}
+            <div aria-hidden className="nudo-silueta pointer-events-none absolute top-1/2 left-1/2 -z-10 w-[165%] max-w-none -translate-x-1/2 -translate-y-1/2">
+              <NudoDibujo />
+            </div>
             <WalletPhone />
             <p className={`${poster} absolute -right-2 top-[70%] flex size-28 lg:-right-12 rotate-12 items-center justify-center rounded-full bg-sun p-3 text-center text-[17px] leading-[1.05] text-coal shadow-[0_14px_28px_-12px_rgb(6_10_36/0.6)] sm:size-36 sm:text-2xl`}>
               Starter: primer mes gratis
@@ -125,6 +131,7 @@ export default function Home() {
           <p className="mt-8 max-w-2xl text-xl leading-relaxed text-graphite">
             Vendes todos los días, pero al cerrar no sabes quién es tu cliente fiel ni quién se fue a la competencia. Eso es lo que resolvemos.
           </p>
+          <EscenaCliente />
         </section>
 
         {/* Cómo funciona */}
@@ -156,9 +163,8 @@ export default function Home() {
               <p className="mt-4 max-w-xl text-lg leading-relaxed">
                 Te mostramos a quién le falta poco para el premio, quién cumple años este mes y quién no viene hace tiempo. Con un botón, el aviso le llega al celular como una notificación, con su nombre. Solo a quienes aceptaron recibir mensajes.
               </p>
-              <div className="mt-7 flex max-w-md items-start gap-3 rounded-2xl bg-white p-4 shadow-[0_14px_28px_-16px_rgb(14_26_82/0.5)]">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src="/logos/estudio-lila.svg" alt="" className="size-10 shrink-0 rounded-xl bg-white p-1 ring-1 ring-black/10" />
+              <div className="mt-7 flex max-w-md items-start gap-3 rounded-2xl border-2 border-coal bg-white p-4">
+                <span aria-hidden className={`${poster} flex size-10 shrink-0 items-center justify-center rounded-xl bg-cobalt text-lg text-white`}>E</span>
                 <div className="min-w-0 text-[15px] leading-snug">
                   <p className="flex justify-between gap-2 text-sm text-graphite">
                     <span>Estudio Lila</span>
@@ -305,8 +311,12 @@ export default function Home() {
 
       {/* Cierre */}
       <Punch bg="#1b3fd8" hole="#ffffff" />
-      <section className="on-cobalt bg-cobalt text-white">
-        <div className="reveal mx-auto max-w-7xl px-4 py-24 sm:px-8 lg:py-36">
+      <section data-nudo-cierre className="on-cobalt relative overflow-hidden bg-cobalt text-white">
+        {/* Nudo como imagen del cierre */}
+        <div aria-hidden className="pointer-events-none absolute right-2 -bottom-3 w-[210px] sm:right-8 sm:w-[240px] lg:right-[7%] lg:bottom-6 lg:w-[400px]">
+          <NudoDibujo />
+        </div>
+        <div className="reveal relative mx-auto max-w-7xl px-4 pt-24 pb-60 sm:px-8 lg:py-36">
           <h2 className={`${poster} max-w-4xl text-5xl leading-[0.98] sm:text-8xl`}>¿Hablamos de <span className="text-sun">tu negocio?</span></h2>
           <p className="mt-6 max-w-xl text-xl leading-relaxed text-white/90">Escríbenos y te dejamos la tarjeta lista con tu logo.</p>
           <div className="mt-9 flex flex-col gap-3 sm:flex-row">
@@ -324,6 +334,7 @@ export default function Home() {
           </p>
         </div>
       </footer>
+      <Mascota />
     </div>
   );
 }

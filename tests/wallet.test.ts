@@ -2,7 +2,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createVerify, generateKeyPairSync } from "node:crypto";
-import { classId, loyaltyObject, objectId, saveUrl } from "../src/lib/wallet/google.ts";
+import { classId, loyaltyClass, loyaltyObject, objectId, saveUrl } from "../src/lib/wallet/google.ts";
 import { passFromCard, progressText } from "../src/lib/wallet/pass.ts";
 import type { PublicCardData } from "../src/components/public/card-screen.tsx";
 
@@ -118,4 +118,11 @@ test("mensaje de Google: con aviso al celular y visible 30 días", () => {
   assert.equal(m.messageType, "TEXT_AND_NOTIFY");
   assert.equal(m.header, "T");
   assert.equal(m.displayInterval.end.date, new Date(now + 30 * 86400000).toISOString());
+});
+
+test("la clase del pase lleva la foto de fondo solo si el comercio tiene una", () => {
+  const sin = passFromCard(card, origin);
+  assert.equal("heroImage" in loyaltyClass(cfg, sin), false);
+  const con = { ...sin, business: { ...sin.business, coverUrl: "https://x.supabase.co/storage/v1/object/public/brand-assets/a/foto.jpg" } };
+  assert.equal(loyaltyClass(cfg, con).heroImage?.sourceUri.uri, con.business.coverUrl);
 });
