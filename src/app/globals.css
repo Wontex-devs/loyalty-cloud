@@ -354,3 +354,51 @@ textarea {
     animation-play-state: paused;
   }
 }
+
+/* Nudo en la esquina de la portada, como widget */
+.nudo-brazo {
+  transform-box: view-box;
+  transform-origin: 86px 72px;
+}
+.nudo > div { animation: nudo-aparece 300ms ease-out 500ms both; }
+@keyframes nudo-aparece {
+  from { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .nudo > div { animation: nudo-entra 500ms var(--ease-ui-out) 500ms both; }
+  @keyframes nudo-entra {
+    from { opacity: 0; transform: translateY(16px) scale(0.92); }
+  }
+  .nudo-flota { animation: nudo-flota 1.8s ease-in-out infinite alternate; }
+  @keyframes nudo-flota {
+    to { transform: translateY(-4px); }
+  }
+  .nudo-brazo { animation: nudo-brazo 0.9s ease-in-out infinite alternate; }
+  @keyframes nudo-brazo {
+    from { transform: rotate(-3deg); }
+    to { transform: rotate(4deg); }
+  }
+  .nudo-giro { animation: nudo-giro 0.9s linear infinite; }
+  @keyframes nudo-giro {
+    from { stroke-dashoffset: 100; }
+    to { stroke-dashoffset: 0; }
+  }
+  .nudo-salto[data-saltando] { animation: nudo-salta 520ms var(--ease-ui-out); }
+  @keyframes nudo-salta {
+    35% { transform: translateY(-22px) rotate(-5deg) scale(1.06); }
+    70% { transform: translateY(0) scale(1.05, 0.95); }
+  }
+  .nudo-boton { transition: transform 160ms var(--ease-ui-out); }
+  .nudo-boton:active { transform: scale(0.95); }
+}
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .nudo-boton:hover { transform: scale(1.05); }
+}
+
+/* Silueta de Nudo, quieta y en tono sobre el azul */
+.nudo-silueta {
+  filter: brightness(0) invert(1);
+  opacity: 0.09;
+}
+.nudo-silueta * { animation: none !important; }
