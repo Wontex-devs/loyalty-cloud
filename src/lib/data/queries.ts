@@ -43,7 +43,7 @@ export function homePathFor(session: Session) {
   if (session.profile?.platformRole === "superadmin") return "/admin";
   const first = session.memberships.find((x) => x.business);
   if (!first?.business) return "/account/no-access";
-  return first.role === "staff" ? `/business/${first.business.slug}/scan` : `/business/${first.business.slug}`;
+  return first.role === "staff" ? `/business/${first.business.slug}/customers` : `/business/${first.business.slug}`;
 }
 
 const MAX_ROWS = 10000;

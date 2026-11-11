@@ -1,7 +1,7 @@
 "use server";
 
 /**
- * Server Actions del toque NFC: la clienta acerca el celular a la etiqueta del mostrador y se registra su visita,
+ * Server Actions del toque NFC: el cliente acerca el celular a la etiqueta del mostrador y se registra su visita,
  * y el panel enciende o actualiza la etiqueta. Las reglas viven en Postgres (register_nfc_visit, set_nfc_settings).
  */
 import { headers } from "next/headers";

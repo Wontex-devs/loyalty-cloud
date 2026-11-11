@@ -296,7 +296,7 @@ export default function CustomerDetailPage() {
           )}
           {isOwner && !anonymized && (
             <Card className="border-danger/20 p-5 text-sm">
-              <p className="font-semibold">Eliminar datos de la clienta</p>
+              <p className="font-semibold">Eliminar datos del cliente</p>
               <p className="mt-1 text-muted">
                 Para atender una solicitud de supresión (Ley 1581). Se borran su nombre, celular, correo y cumpleaños, y su tarjeta deja de
                 funcionar. Las visitas quedan en tus estadísticas sin datos personales. No se puede deshacer.

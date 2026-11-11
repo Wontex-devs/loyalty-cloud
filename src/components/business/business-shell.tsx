@@ -4,7 +4,6 @@ import { createContext, useContext } from "react";
 import Link from "next/link";
 import {
   BarChart3,
-  ChevronsUpDown,
   CreditCard,
   ExternalLink,
   Gift,
@@ -12,7 +11,6 @@ import {
   ListChecks,
   LayoutDashboard,
   Megaphone,
-  ScanLine,
   Settings,
   Sparkles,
   Tag,
@@ -25,7 +23,7 @@ import { useBusiness, useDemo, type BusinessScope } from "@/lib/demo/store";
 import { LazoLogo } from "@/components/brand/lazo-logo";
 import { can } from "@/lib/domain/permissions";
 import { ROLE_LABELS } from "@/lib/domain/permissions";
-import { Avatar, Badge, ButtonLink, EmptyState } from "@/components/ui";
+import { Avatar, ButtonLink, EmptyState } from "@/components/ui";
 import { AlertTriangle, Lock } from "lucide-react";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 import { BrandMark } from "@/components/loyalty/brand-mark";
@@ -40,7 +38,7 @@ export function useScope() {
 }
 
 export function BusinessShell({ slug, children }: { slug: string; children: React.ReactNode }) {
-  const { hydrated, state, setActingProfile, mode } = useDemo();
+  const { hydrated, state } = useDemo();
   const scope = useBusiness(slug);
 
   if (!scope) {
@@ -77,7 +75,6 @@ export function BusinessShell({ slug, children }: { slug: string; children: Reac
     {
       items: [
         ...(can(m, "analytics.read") ? [{ href: base, label: "Inicio", icon: LayoutDashboard, exact: true }] : []),
-        { href: `${base}/scan`, label: "Registrar visita", icon: ScanLine },
         { href: `${base}/customers`, label: "Clientes", icon: Users },
         ...(can(m, "rewards.redeem") || can(m, "analytics.read") ? [{ href: `${base}/rewards`, label: "Recompensas", icon: Gift }] : []),
       ],
@@ -97,8 +94,6 @@ export function BusinessShell({ slug, children }: { slug: string; children: Reac
     ...(masOpciones.length ? [{ title: "Más opciones", items: masOpciones, collapsible: true }] : []),
   ];
 
-  const team = state.memberships.filter((x) => x.businessId === business.id && x.active);
-
   const header = (
     <>
       <LazoLogo className="mb-2 px-1.5 pt-1 text-[22px] text-coal" markClassName="text-cobalt" />
@@ -117,7 +112,7 @@ export function BusinessShell({ slug, children }: { slug: string; children: Reac
   );
 
   const footer = (
-    <label className="relative flex cursor-pointer items-center gap-2.5 rounded-lg p-1.5 hover:bg-black/[0.035]">
+    <div className="flex items-center gap-2.5 rounded-lg p-1.5">
       <Avatar name={scope.actingProfile?.fullName ?? "?"} className="size-7" />
       <div className="min-w-0 flex-1">
         <p className="truncate text-[13px] font-medium">{scope.actingProfile?.fullName}</p>
@@ -126,32 +121,12 @@ export function BusinessShell({ slug, children }: { slug: string; children: Reac
           {membership?.role === "staff" && (membership.canRedeem ? " · puede canjear" : " · sin canjes")}
         </p>
       </div>
-      {mode === "demo" && <ChevronsUpDown className="size-3.5 text-subtle" />}
-      {/* Selector de sesión simulada para probar permisos por rol (solo demo) */}
-      {mode === "demo" && (
-      <select
-        aria-label="Cambiar usuario de demostración"
-        className="absolute inset-0 cursor-pointer opacity-0"
-        value={state.actingProfileId}
-        onChange={(e) => setActingProfile(e.target.value)}
-      >
-        {team.map((t) => {
-          const p = state.profiles.find((x) => x.id === t.profileId);
-          return (
-            <option key={t.id} value={t.profileId}>
-              {p?.fullName} — {ROLE_LABELS[t.role]}
-            </option>
-          );
-        })}
-      </select>
-      )}
-    </label>
+    </div>
   );
 
   const topbar = (
     <>
       <span className="mr-auto hidden sm:block">
-        {mode === "demo" && <Badge tone="warning">Demostración · datos de ejemplo</Badge>}
       </span>
       <ButtonLink href={`/join/${slug}`} target="_blank" variant="ghost" size="sm">
         <span className="hidden sm:inline">Página de registro</span> <ExternalLink className="size-3.5" />
@@ -195,8 +170,8 @@ export function RequirePermission({ allowed, children }: { allowed: boolean; chi
       title="No tienes permiso para ver esta sección"
       description="Pide a un administrador del comercio que ajuste tu rol."
       action={
-        <Link href="scan" className="text-sm font-medium underline">
-          Ir a registrar visita
+        <Link href="customers" className="text-sm font-medium underline">
+          Ir a clientes
         </Link>
       }
     />

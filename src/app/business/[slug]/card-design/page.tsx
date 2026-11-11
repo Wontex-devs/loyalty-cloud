@@ -77,7 +77,7 @@ export default function CardDesignPage() {
 
   return (
     <RequirePermission allowed={!!membership && can(membership, "business.branding.edit")}>
-      <PageHeader title="Mi tarjeta digital" description="Personaliza la identidad visual que verán tus clientes. Los cambios se aplican al instante en todas las tarjetas." />
+      <PageHeader title="Tarjeta, QR y NFC" description="Personaliza la identidad visual que verán tus clientes. Los cambios se aplican al instante en todas las tarjetas." />
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_400px]">
         <div className="space-y-4">

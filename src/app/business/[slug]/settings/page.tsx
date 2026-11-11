@@ -17,7 +17,7 @@ const TIMEZONES = ["America/Bogota", "America/Mexico_City", "America/Lima", "Ame
 export default function SettingsPage() {
   const scope = useScope();
   const { business, membership, locations } = scope;
-  const { reset, mode, state, updateBusinessSettings } = useDemo();
+  const { state, updateBusinessSettings } = useDemo();
   const plan = state.plans.find((p) => p.id === business.planId);
   const legal = business.legal ?? {};
 
@@ -134,15 +134,6 @@ export default function SettingsPage() {
               Abrir historial
             </ButtonLink>
           </Card>
-          {mode === "demo" && (
-            <Card className="border-danger/20 p-5 text-sm">
-              <p className="font-semibold">Prototipo</p>
-              <p className="mt-1 text-muted">Restablece los datos de demostración a su estado inicial.</p>
-              <Button type="button" variant="secondary" size="sm" className="mt-3" onClick={reset}>
-                Restablecer datos demo
-              </Button>
-            </Card>
-          )}
         </div>
       </div>
     </RequirePermission>

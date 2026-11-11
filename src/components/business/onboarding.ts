@@ -12,7 +12,7 @@ export function onboardingSteps(scope: BusinessScope) {
     // create_business deja el negro por defecto (#111111): cambiarlo indica que se eligió una marca.
     { id: "brand", title: "Tu marca", done: business.branding.primary.toLowerCase() !== "#111111" },
     { id: "team", title: "Tu equipo", done: memberships.some((m) => m.role !== "owner" && m.active), optional: true },
-    { id: "launch", title: "Primera clienta inscrita", done: customers.length > 0 },
+    { id: "launch", title: "Primer cliente inscrito", done: customers.length > 0 },
   ];
   const required = steps.filter((s) => !s.optional);
   return { steps, done: steps.filter((s) => s.done).length, total: steps.length, complete: required.every((s) => s.done) };

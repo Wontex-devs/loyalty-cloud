@@ -35,7 +35,7 @@ export function loyaltyClass(cfg: Pick<GoogleWalletConfig, "issuerId">, p: Pick<
   };
 }
 
-/** Objeto = la tarjeta de una clienta (sellos, QR, recompensas). */
+/** Objeto = la tarjeta de un cliente (sellos, QR, recompensas). */
 export function loyaltyObject(cfg: Pick<GoogleWalletConfig, "issuerId">, p: WalletPass) {
   const modules = [{ id: "progress", header: "Tu progreso", body: progressText(p) }];
   if (p.promotion) modules.push({ id: "promo", header: `Hoy: ${p.promotion.name}`, body: `Tu visita de hoy suma ${1 + p.promotion.bonusStamps} sellos.` });
@@ -61,7 +61,7 @@ export function signJwt(claims: Record<string, unknown>, privateKey: string) {
   return `${unsigned}.${b64url(signature)}`;
 }
 
-/** Enlace "Guardar en Google Wallet": crea la clase y el objeto al guardarlo la clienta. */
+/** Enlace "Guardar en Google Wallet": crea la clase y el objeto al guardarlo el cliente. */
 export function saveUrl(cfg: GoogleWalletConfig, p: WalletPass, origin: string, now = Date.now()) {
   const jwt = signJwt(
     {
@@ -96,7 +96,7 @@ async function accessToken(cfg: GoogleWalletConfig) {
   return data.access_token;
 }
 
-/** PATCH de un recurso. 404 = la clienta aún no guardó el pase: no es un error. */
+/** PATCH de un recurso. 404 = el cliente aún no guardó el pase: no es un error. */
 async function patch(cfg: GoogleWalletConfig, kind: "loyaltyClass" | "loyaltyObject", id: string, body: unknown) {
   const res = await fetch(`${API}/${kind}/${encodeURIComponent(id)}`, {
     method: "PATCH",
@@ -110,7 +110,7 @@ async function patch(cfg: GoogleWalletConfig, kind: "loyaltyClass" | "loyaltyObj
 
 /**
  * Mensaje con aviso en el celular. Google permite hasta 3 avisos al día por pase;
- * el mensaje queda visible en el pase durante 30 días. false = la clienta no guardó el pase.
+ * el mensaje queda visible en el pase durante 30 días. false = el cliente no guardó el pase.
  */
 export function walletMessage(m: { id: string; title: string; body: string }, now = Date.now()) {
   return {

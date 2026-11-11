@@ -38,7 +38,7 @@ export function LocationsCard({ businessId, locations, plan }: { businessId: str
     <Card>
       <CardHeader
         title="Sedes"
-        description={`Si tienes más de un local, el equipo elige la sede al registrar visitas y verás las estadísticas por sede. Tu plan permite ${plan?.maxLocations ?? "sedes ilimitadas"}${plan?.maxLocations ? (plan.maxLocations === 1 ? " sede activa" : " sedes activas") : ""}.`}
+        description={`Si tienes más de un local, agrégalo aquí. Tu plan permite ${plan?.maxLocations ?? "sedes ilimitadas"}${plan?.maxLocations ? (plan.maxLocations === 1 ? " sede activa" : " sedes activas") : ""}.`}
         action={
           !form && (
             <Button size="sm" variant="secondary" type="button" disabled={full} onClick={() => setForm({ name: "", address: "" })} title={full ? "Alcanzaste el límite de tu plan" : undefined}>

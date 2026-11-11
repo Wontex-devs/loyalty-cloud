@@ -9,7 +9,7 @@ const KEY = "install-card-dismissed";
 /**
  * Invita a instalar la tarjeta como app. Android/Chrome: botón nativo.
  * iPhone (Safari no tiene botón): instrucciones de "Compartir → Añadir a pantalla de inicio".
- * No aparece si ya está instalada o si la clienta lo cerró.
+ * No aparece si ya está instalada o si el cliente lo cerró.
  */
 export function InstallCard({ color }: { color: string }) {
   const [event, setEvent] = useState<InstallEvent | null>(null);

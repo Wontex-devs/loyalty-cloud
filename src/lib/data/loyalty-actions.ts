@@ -224,7 +224,7 @@ export async function savePromotionAction(businessId: string, input: PromotionIn
   return { ok: true };
 }
 
-/** Deja constancia de un mensaje de WhatsApp enviado a mano (solo clientas con consentimiento). */
+/** Deja constancia de un mensaje de WhatsApp enviado a mano (solo clientes con consentimiento). */
 export async function logContactAction(customerId: string, segment: string): Promise<OpActionResult> {
   if (!z.uuid().safeParse(customerId).success) return { ok: false, message: "Cliente no válido." };
   const supabase = await createClient();
@@ -331,11 +331,11 @@ export async function setBusinessPlanAction(businessId: string, planId: string):
   return { ok: true };
 }
 
-// ---------- Etapa 11: derechos de la clienta ----------
+// ---------- Etapa 11: derechos del cliente ----------
 
-/** Elimina los datos personales de una clienta (solo el propietario). Las visitas quedan anónimas. */
+/** Elimina los datos personales de un cliente (solo el propietario). Las visitas quedan anónimas. */
 export async function anonymizeCustomerAction(customerId: string): Promise<OpActionResult> {
-  if (!z.uuid().safeParse(customerId).success) return { ok: false, message: "Clienta no válida." };
+  if (!z.uuid().safeParse(customerId).success) return { ok: false, message: "Cliente no válida." };
   const supabase = await createClient();
   const { data: card } = await supabase.from("loyalty_cards").select("id").eq("customer_id", customerId).maybeSingle();
   const { error } = await supabase.rpc("anonymize_customer", { p_customer_id: customerId });
@@ -346,7 +346,7 @@ export async function anonymizeCustomerAction(customerId: string): Promise<OpAct
 }
 
 export async function revokeMarketingConsentAction(customerId: string): Promise<OpActionResult> {
-  if (!z.uuid().safeParse(customerId).success) return { ok: false, message: "Clienta no válida." };
+  if (!z.uuid().safeParse(customerId).success) return { ok: false, message: "Cliente no válida." };
   const supabase = await createClient();
   const { error } = await supabase.rpc("revoke_marketing_consent", { p_customer_id: customerId });
   if (error) return { ok: false, message: dbErrorMessage(error) };

@@ -154,7 +154,7 @@ export function NfcTapVista({
           <>
             <Nfc className="mx-auto mt-10 size-14 opacity-70" aria-hidden />
             <h1 className="mt-6 text-2xl font-semibold">Esta etiqueta no es válida</h1>
-            <p className="mt-2 text-base">Pídele al negocio que registre tu visita en caja.</p>
+            <p className="mt-2 text-base">Avísale al negocio para que revise la etiqueta.</p>
           </>
         )}
 
@@ -171,7 +171,7 @@ export function NfcTapUnavailable({ demo = false }: { demo?: boolean }) {
       <Nfc className="size-14 text-muted" aria-hidden />
       <h1 className="mt-6 text-2xl font-semibold">{demo ? "El toque NFC no está en la demostración" : "Este programa no está disponible"}</h1>
       <p className="mt-2 max-w-sm text-muted">
-        {demo ? "Funciona en la versión real: la clienta acerca el celular a la etiqueta del mostrador y suma su sello." : "Pídele al negocio que registre tu visita en caja."}
+        {demo ? "Funciona en la versión real: el cliente acerca el celular a la etiqueta del mostrador y suma su sello." : "Avísale al negocio para que revise la etiqueta."}
       </p>
     </main>
   );
