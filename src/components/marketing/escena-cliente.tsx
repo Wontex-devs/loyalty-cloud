@@ -7,6 +7,7 @@ const CONTORNO = "#0e1a52";
 const AZUL = "#1b3fd8";
 const SOL = "#ffc928";
 const CUERDA = "#c98a2b";
+const GRIS = "#9aa3b5";
 const POSTER = "var(--font-poster)";
 
 /** Nudo de perfil, mirando hacia la calle. El cuerpo y las manos se mueven por separado para que no suelte la cuerda. */
@@ -48,18 +49,34 @@ function Nudo() {
   );
 }
 
-function Local() {
+function Toldo({ x, n, a, b }: { x: number; n: number; a: string; b: string }) {
+  return (
+    <>
+      {Array.from({ length: n }, (_, i) => (
+        <path key={i} d={`M${x + 44 * i} 70h44v28a22 12 0 0 1-44 0Z`} fill={i % 2 ? b : a} />
+      ))}
+    </>
+  );
+}
+
+function Letrero({ x, ancho, color, texto, tamano }: { x: number; ancho: number; color: string; texto: string; tamano: number }) {
+  return (
+    <>
+      <rect x={x} y="24" width={ancho} height="46" rx="10" fill={color} />
+      <text x={x + ancho / 2} y="56" textAnchor="middle" fontFamily={POSTER} fontWeight="800" fontSize={tamano} fill="#fff" stroke="none">
+        {texto}
+      </text>
+    </>
+  );
+}
+
+function TuLocal() {
   return (
     <g stroke={CONTORNO} strokeWidth="3.5" strokeLinejoin="round">
       <rect x="16" y="92" width="288" height="188" fill="#fff" />
       <rect x="40" y="124" width="130" height="44" rx="4" fill="#cfdcff" />
-      <rect x="60" y="24" width="200" height="46" rx="10" fill={AZUL} />
-      <text x="160" y="56" textAnchor="middle" fontFamily={POSTER} fontWeight="800" fontSize="25" fill="#fff" stroke="none">
-        TU LOCAL
-      </text>
-      {Array.from({ length: 7 }, (_, i) => (
-        <path key={i} d={`M${6 + 44 * i} 70h44v28a22 12 0 0 1-44 0Z`} fill={i % 2 ? "#fff" : AZUL} />
-      ))}
+      <Letrero x={60} ancho={200} color={AZUL} texto="TU LOCAL" tamano={25} />
+      <Toldo x={6} n={7} a={AZUL} b="#fff" />
       <rect x="204" y="164" width="64" height="116" fill={CONTORNO} />
       <g className="escena-puerta">
         <rect x="207" y="167" width="58" height="113" fill={SOL} />
@@ -69,11 +86,48 @@ function Local() {
   );
 }
 
+function Competencia() {
+  return (
+    <g stroke={CONTORNO} strokeWidth="3.5" strokeLinejoin="round">
+      <rect x="1096" y="92" width="288" height="188" fill="#eceef3" />
+      <rect x="1230" y="124" width="130" height="44" rx="4" fill="#d5d9e2" />
+      <Letrero x={1130} ancho={220} color={GRIS} texto="LA COMPETENCIA" tamano={21} />
+      <Toldo x={1086} n={7} a={GRIS} b="#eceef3" />
+      <rect x="1116" y="164" width="64" height="116" fill={CONTORNO} />
+      <rect x="1119" y="167" width="58" height="113" fill="#c3c9d6" />
+      <circle cx="1167" cy="226" r="3.5" fill={CONTORNO} stroke="none" />
+    </g>
+  );
+}
+
+function Arbol({ x }: { x: number }) {
+  return (
+    <g stroke={CONTORNO} strokeWidth="3.5">
+      <rect x={x - 6} y="214" width="12" height="66" fill="#a9772f" />
+      <circle cx={x} cy="190" r="40" fill="#7fc8a0" />
+      <circle cx={x + 26} cy="208" r="24" fill="#7fc8a0" />
+    </g>
+  );
+}
+
+function Nube({ x, y, clase }: { x: number; y: number; clase: string }) {
+  return (
+    <g className={clase}>
+      <path d={`M${x} ${y}a20 20 0 0 1 36-12a26 26 0 0 1 48 8a16 16 0 0 1-4 30h-74a16 16 0 0 1-6-26Z`} fill="#fff" stroke={CONTORNO} strokeWidth="3" strokeLinejoin="round" />
+    </g>
+  );
+}
+
 function Cliente() {
   return (
     <g transform="translate(235 0)">
       <g className="escena-cliente">
         <g className="escena-cliente-ve">
+          <g className="escena-polvo" fill="#fff" stroke={CONTORNO} strokeWidth="2.5">
+            <circle cx="24" cy="274" r="6" />
+            <circle cx="38" cy="268" r="8" />
+            <circle cx="54" cy="275" r="5" />
+          </g>
           <g className="escena-cliente-tira" stroke={CONTORNO} strokeWidth="3.5" strokeLinejoin="round" strokeLinecap="round">
             <rect className="escena-pierna-a" x="-10" y="256" width="9" height="24" rx="4" fill={CONTORNO} />
             <rect className="escena-pierna-b" x="1" y="256" width="9" height="24" rx="4" fill={CONTORNO} />
@@ -94,41 +148,42 @@ function Cliente() {
   );
 }
 
-function Globo({ clase, x, ancho, texto }: { clase: string; x: number; ancho: number; texto: string }) {
-  return (
-    <g className={clase}>
-      <rect x={x} y="26" width={ancho} height="52" rx="16" fill="#fff" stroke={CONTORNO} strokeWidth="3" />
-      <text x={x + ancho / 2} y="60" textAnchor="middle" fontFamily={POSTER} fontWeight="800" fontSize="24" fill={CONTORNO}>
-        {texto}
-      </text>
-    </g>
-  );
-}
+const CORAZON = "M0 6C-7-3-14 3-9 9L0 18L9 9C14 3 7-3 0 6Z";
 
 /**
- * El cliente sale del local y se va; Nudo le lanza el lazo y lo trae de vuelta a tirones. Al entrar suma un sello.
- * Todo el movimiento está en globals.css (.escena-*), en una misma línea de tiempo de 9 s.
+ * Escena a todo el ancho: el cliente sale del local y va hacia la competencia; Nudo le lanza el lazo y lo trae de vuelta
+ * a tirones. Al entrar suma un sello. En pantallas angostas la cámara sigue al cliente.
+ * Todo el movimiento está en globals.css (.escena-*), en una misma línea de tiempo de 12 s.
  */
 export function EscenaCliente() {
   const [pausado, setPausado] = useState(false);
 
   return (
-    <div className="mt-12 max-w-4xl">
-      <div className="escena overflow-hidden rounded-2xl bg-[#eef1fd]" data-pausado={pausado || undefined}>
+    <div className="escena relative overflow-hidden bg-[#eef1fd]" data-pausado={pausado || undefined}>
+      <div className="escena-camara">
         <svg
-          viewBox="0 0 640 320"
-          className="block h-auto w-full"
+          viewBox="0 0 1400 320"
+          className="escena-svg block"
           role="img"
-          aria-label="Un cliente sale del local y se aleja. Nudo, la mascota de Lazo, le lanza un lazo y lo trae de vuelta, y el cliente suma un sello."
+          aria-label="Un cliente sale del local y camina hacia la competencia. Nudo, la mascota de Lazo, le lanza un lazo y lo trae de vuelta, y el cliente suma un sello."
         >
-          <rect y="280" width="640" height="40" fill="#dbe2fb" />
-          <path d="M0 280H640" stroke={CONTORNO} strokeWidth="3.5" />
-          <Local />
+          <Nube x={420} y={70} clase="escena-nube-a" />
+          <Nube x={860} y={50} clase="escena-nube-b" />
+          <rect y="280" width="1400" height="40" fill="#dbe2fb" />
+          <path d="M0 280H1400" stroke={CONTORNO} strokeWidth="3.5" />
+          <Arbol x={470} />
+          <Arbol x={850} />
+          <TuLocal />
+          <Competencia />
           <g className="escena-premio">
             <circle cx="236" cy="136" r="23" fill={SOL} stroke={CONTORNO} strokeWidth="3.5" />
             <text x="236" y="145" textAnchor="middle" fontFamily={POSTER} fontWeight="800" fontSize="24" fill={CONTORNO}>
               +1
             </text>
+          </g>
+          <g className="escena-corazon" fill="#ff7a66" stroke={CONTORNO} strokeWidth="2.5" strokeLinejoin="round">
+            <path transform="translate(276 128)" d={CORAZON} />
+            <path transform="translate(196 118) scale(0.75)" d={CORAZON} />
           </g>
           <g className="escena-cuerda">
             <rect x="100" y="238.5" width="100" height="7" fill={CONTORNO} />
@@ -137,23 +192,29 @@ export function EscenaCliente() {
           <Nudo />
           <Cliente />
           <g className="escena-punta">
-            <ellipse cx="0" cy="242" rx="21" ry="9" fill="none" stroke={CONTORNO} strokeWidth="7" />
-            <ellipse cx="0" cy="242" rx="21" ry="9" fill="none" stroke={CUERDA} strokeWidth="3" />
+            <g className="escena-punta-y">
+              <g className="escena-aro">
+                <ellipse cx="0" cy="242" rx="21" ry="9" fill="none" stroke={CONTORNO} strokeWidth="7" />
+                <ellipse cx="0" cy="242" rx="21" ry="9" fill="none" stroke={CUERDA} strokeWidth="3" />
+              </g>
+            </g>
           </g>
-          <Globo clase="escena-globo-se-va" x={408} ancho={212} texto="Tu cliente se va…" />
-          <Globo clase="escena-globo-trae" x={326} ancho={294} texto="¡Te traemos al cliente!" />
         </svg>
       </div>
-      <div className="mt-2 flex justify-end">
-        <button
-          type="button"
-          onClick={() => setPausado((p) => !p)}
-          className="marquee-boton inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg px-2.5 text-sm font-semibold text-cobalt transition-transform duration-150 hover:bg-cobalt/10 active:scale-[0.97]"
-        >
-          {pausado ? <Play className="size-4" aria-hidden /> : <Pause className="size-4" aria-hidden />}
-          {pausado ? "Reanudar" : "Pausar"}
-        </button>
+      <div className="escena-globo-se-va absolute top-3 left-1/2 -translate-x-1/2 rounded-2xl border-2 border-coal bg-white px-4 py-1.5 font-[family-name:var(--font-poster)] text-base font-extrabold whitespace-nowrap text-coal sm:top-5 sm:text-2xl">
+        Tu cliente se va…
       </div>
+      <div className="escena-globo-trae absolute top-3 left-1/2 -translate-x-1/2 rounded-2xl border-2 border-coal bg-white px-4 py-1.5 font-[family-name:var(--font-poster)] text-base font-extrabold whitespace-nowrap text-coal sm:top-5 sm:text-2xl">
+        ¡Te traemos al cliente!
+      </div>
+      <button
+        type="button"
+        onClick={() => setPausado((p) => !p)}
+        className="marquee-boton absolute right-3 bottom-1 inline-flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-sm font-semibold text-cobalt transition-transform duration-150 hover:bg-cobalt/10 active:scale-[0.97]"
+      >
+        {pausado ? <Play className="size-4" aria-hidden /> : <Pause className="size-4" aria-hidden />}
+        {pausado ? "Reanudar" : "Pausar"}
+      </button>
     </div>
   );
 }

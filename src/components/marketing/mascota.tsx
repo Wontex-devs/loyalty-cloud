@@ -69,7 +69,6 @@ export function Mascota() {
   const [bocadillo, setBocadillo] = useState(false);
   const [saltando, setSaltando] = useState(false);
   const [pulso, setPulso] = useState(0);
-  const [enCierre, setEnCierre] = useState(false);
 
   useEffect(() => {
     let oculto = false;
@@ -94,15 +93,6 @@ export function Mascota() {
     return () => clearTimeout(t);
   }, [montado, bocadillo, frase, pulso]);
 
-  // Al final de la página está el Nudo grande: el de la esquina se aparta para no repetirse ni tapar el pie.
-  useEffect(() => {
-    const cierre = document.querySelector("[data-nudo-cierre]");
-    if (!montado || !cierre) return;
-    const observador = new IntersectionObserver(([e]) => setEnCierre(e.isIntersecting), { threshold: 0.3 });
-    observador.observe(cierre);
-    return () => observador.disconnect();
-  }, [montado]);
-
   if (!montado) return null;
 
   const tocar = () => {
@@ -122,7 +112,7 @@ export function Mascota() {
   };
 
   return (
-    <div className={`nudo pointer-events-none fixed right-3 bottom-3 z-30 flex items-end gap-1 transition-[opacity,visibility] duration-200 sm:right-6 sm:bottom-6 ${enCierre ? "invisible opacity-0" : ""}`}>
+    <div className="nudo pointer-events-none fixed right-3 bottom-3 z-30 flex items-end gap-1 sm:right-6 sm:bottom-6">
       {bocadillo && frase >= 0 && (
         <p
           key={frase}

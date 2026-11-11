@@ -131,8 +131,8 @@ export default function Home() {
           <p className="mt-8 max-w-2xl text-xl leading-relaxed text-graphite">
             Vendes todos los días, pero al cerrar no sabes quién es tu cliente fiel ni quién se fue a la competencia. Eso es lo que resolvemos.
           </p>
-          <EscenaCliente />
         </section>
+        <EscenaCliente />
 
         {/* Cómo funciona */}
         <section id="como-funciona" className="scroll-mt-28 bg-sun lg:scroll-mt-20">
@@ -311,7 +311,7 @@ export default function Home() {
 
       {/* Cierre */}
       <Punch bg="#1b3fd8" hole="#ffffff" />
-      <section data-nudo-cierre className="on-cobalt relative overflow-hidden bg-cobalt text-white">
+      <section className="on-cobalt relative overflow-hidden bg-cobalt text-white">
         {/* Nudo como imagen del cierre */}
         <div aria-hidden className="pointer-events-none absolute right-2 -bottom-3 w-[210px] sm:right-8 sm:w-[240px] lg:right-[7%] lg:bottom-6 lg:w-[400px]">
           <NudoDibujo />
