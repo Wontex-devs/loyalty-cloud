@@ -15,7 +15,7 @@ export function WalletButtons({ token, google }: { token: string; google: boolea
     // Botón oficial de Google (guía de marca): no se puede alterar su forma ni su color.
     <a href={`/card/${token}/google-wallet`} className="mt-4 block">
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src="/google-wallet/anadir-a-google-wallet-es419.svg" alt="Añadir a Google Wallet" width={378} height={50} className="mx-auto h-auto w-full max-w-[378px]" />
+      <img src="/google-wallet/anadir-a-google-wallet-es419.svg" alt="Agregar a la Billetera de Google" width={378} height={50} className="mx-auto h-auto w-full max-w-[378px]" />
     </a>
   );
 }
