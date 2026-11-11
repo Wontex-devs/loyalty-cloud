@@ -80,8 +80,23 @@ export function Mascota() {
     if (!oculto) setMontado(true);
   }, []);
 
+  // En celular, Nudo no habla hasta que la persona baja de la portada: así su globo no tapa el texto principal.
+  const [hablar, setHablar] = useState(false);
   useEffect(() => {
     if (!montado) return;
+    if (window.matchMedia("(min-width: 640px)").matches || window.scrollY > 500) {
+      setHablar(true);
+      return;
+    }
+    const alBajar = () => {
+      if (window.scrollY > 500) setHablar(true);
+    };
+    window.addEventListener("scroll", alBajar, { passive: true });
+    return () => window.removeEventListener("scroll", alBajar);
+  }, [montado]);
+
+  useEffect(() => {
+    if (!montado || !hablar) return;
     const espera = bocadillo ? 6500 : frase < 0 ? 1600 : 9000;
     const t = setTimeout(() => {
       if (bocadillo) setBocadillo(false);
@@ -91,7 +106,7 @@ export function Mascota() {
       }
     }, espera);
     return () => clearTimeout(t);
-  }, [montado, bocadillo, frase, pulso]);
+  }, [montado, hablar, bocadillo, frase, pulso]);
 
   if (!montado) return null;
 
@@ -122,7 +137,7 @@ export function Mascota() {
           <span aria-hidden className="absolute -right-[7px] bottom-4 size-3 rotate-45 border-t-2 border-r-2 border-coal bg-white" />
         </p>
       )}
-      <div className="pointer-events-auto relative size-24 shrink-0 sm:size-28">
+      <div className="pointer-events-auto relative size-20 shrink-0 sm:size-28">
         <button
           type="button"
           onClick={tocar}
