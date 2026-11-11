@@ -44,13 +44,15 @@ const PLANS = [
 ];
 
 const FAQ = [
+  { q: "¿Qué es Lazo?", a: "Lazo es una plataforma colombiana de tarjetas de fidelización digitales para negocios locales. Cada negocio tiene su tarjeta de sellos con su marca, sus clientes la guardan en Google Wallet y suman sellos acercando el celular a una etiqueta NFC del mostrador. El dueño ve en un panel quién vuelve, quién dejó de venir y a quién avisarle." },
   { q: "¿Cómo funciona el primer mes gratis?", a: "Aplica al plan Starter. Te dejamos la tarjeta lista con tu marca y la usas un mes sin pagar. Si decides seguir, pagas $79.990 al mes." },
-  { q: "¿Mis clientes tienen que descargar algo?", a: "No. La tarjeta se abre en el navegador del celular y se puede añadir a la pantalla de inicio como si fuera una app." },
-  { q: "¿Necesito comprar algún equipo?", a: "Para marcar los sellos con NFC necesitas un lector en el mostrador. El QR solo se usa una vez, para que tu cliente cree su tarjeta; lo pones en un cartel en la caja." },
+  { q: "¿Mis clientes tienen que descargar algo?", a: "No. Tu cliente crea su tarjeta escaneando el QR de tu negocio, desde el navegador del celular. En Android la guarda en Google Wallet con un botón. En iPhone la abre desde su enlace en el navegador, sin instalar nada." },
+  { q: "¿Necesito comprar algún equipo?", a: "No necesitas lector ni datáfono. Basta una etiqueta NFC adhesiva (tipo NTAG213 o NTAG215), que se pega en el mostrador y se activa desde tu panel. El QR solo se usa una vez, para que tu cliente cree su tarjeta; lo pones en un cartel en la caja." },
   { q: "¿Qué pasa si mi cliente cambia de celular?", a: "Vuelve a escanear el QR de tu negocio con el mismo nombre y celular, y recupera su tarjeta con todos sus sellos." },
   { q: "¿Sirve para mi tipo de negocio?", a: "Sirve para cualquier negocio con clientes que repiten: barberías, salones, cafeterías, panaderías, spas, gimnasios, lavaderos, tiendas y más." },
-  { q: "¿Se pueden hacer trampas con los sellos?", a: "Solo tu equipo puede sellar, cada persona con su usuario. El sistema evita sellos repetidos por error y guarda quién registró cada visita." },
+  { q: "¿Se pueden hacer trampas con los sellos?", a: "Hay varios frenos. Entre dos sellos debe pasar un tiempo mínimo que tú eliges, y el sistema bloquea los toques repetidos. Cada sello queda registrado con fecha y hora, y puedes anularlo desde el historial. Si sospechas que alguien copió la etiqueta, la cambias desde tu panel y la anterior deja de funcionar." },
   { q: "¿Quién ve los datos de mis clientes?", a: "Solo tu negocio. Tus clientes aceptan la política de datos (Ley 1581) al inscribirse, pueden dejar de recibir mensajes desde su tarjeta y pedirte que borres sus datos." },
+  { q: "¿La tarjeta de lealtad queda en Google Wallet?", a: "Sí. En Android la tarjeta queda en Google Wallet con tu logo, tus colores y los sellos al día: cada sello nuevo se actualiza solo en la billetera del cliente. En iPhone, por ahora, la tarjeta se usa desde el navegador." },
   { q: "¿Funciona con varias sedes?", a: "Sí. Según el plan puedes tener varias sedes y comparar sus visitas." },
 ];
 
@@ -68,36 +70,76 @@ function WhatsAppButton({ className }: { className: string }) {
 
 /** Datos estructurados para Google: la empresa, el producto con sus precios y las preguntas frecuentes. */
 function datosEstructurados() {
-  const plan = (nombre: string, precio: number) => ({
+  const id = (parte: string) => `${SITE_URL}/#${parte}`;
+  const descripcion = FAQ[0].a;
+  const plan = (nombre: string, precio: number, detalle: string) => ({
     "@type": "Offer",
     name: `Plan ${nombre}`,
-    price: precio,
+    description: detalle,
+    url: `${SITE_URL}/#planes`,
+    price: `${precio}.00`,
     priceCurrency: "COP",
-    priceSpecification: { "@type": "UnitPriceSpecification", price: precio, priceCurrency: "COP", unitCode: "MON" },
+    availability: "https://schema.org/InStock",
+    seller: { "@id": id("organizacion") },
+    priceSpecification: {
+      "@type": "UnitPriceSpecification",
+      price: `${precio}.00`,
+      priceCurrency: "COP",
+      billingDuration: "P1M",
+      referenceQuantity: { "@type": "QuantitativeValue", value: 1, unitCode: "MON" },
+    },
   });
   return {
     "@context": "https://schema.org",
     "@graph": [
       {
         "@type": "Organization",
-        "@id": `${SITE_URL}/#organizacion`,
+        "@id": id("organizacion"),
         name: PLATFORM_NAME,
         url: `${SITE_URL}/`,
-        logo: `${SITE_URL}/icon.svg`,
+        description: descripcion,
+        logo: { "@type": "ImageObject", url: `${SITE_URL}/icon.svg` },
+        areaServed: { "@type": "Country", name: "Colombia" },
         contactPoint: { "@type": "ContactPoint", telephone: `+${SALES_WHATSAPP}`, contactType: "sales", areaServed: "CO", availableLanguage: "es" },
       },
       {
+        "@type": "WebSite",
+        "@id": id("sitio"),
+        url: `${SITE_URL}/`,
+        name: PLATFORM_NAME,
+        inLanguage: "es-CO",
+        publisher: { "@id": id("organizacion") },
+      },
+      {
+        "@type": "WebPage",
+        "@id": id("pagina"),
+        url: `${SITE_URL}/`,
+        name: `${PLATFORM_NAME} · Tarjeta de fidelización digital para tu negocio`,
+        inLanguage: "es-CO",
+        dateModified: "2026-11-11",
+        isPartOf: { "@id": id("sitio") },
+        about: { "@id": id("aplicacion") },
+        primaryImageOfPage: `${SITE_URL}/opengraph-image`,
+      },
+      {
         "@type": "SoftwareApplication",
+        "@id": id("aplicacion"),
         name: `${PLATFORM_NAME}: tarjeta de sellos digital`,
         applicationCategory: "BusinessApplication",
-        operatingSystem: "Web, Android",
+        operatingSystem: "Android, iOS (navegador web)",
         url: `${SITE_URL}/`,
-        description: "Tarjeta de fidelización digital con la marca de tu negocio, en Google Wallet y con sellos por NFC.",
-        publisher: { "@id": `${SITE_URL}/#organizacion` },
-        offers: [plan("Starter", 79990), plan("Pro", 139990)],
+        inLanguage: "es-CO",
+        image: `${SITE_URL}/opengraph-image`,
+        description: descripcion,
+        publisher: { "@id": id("organizacion") },
+        offers: [
+          plan("Starter", 79990, "Para un local que empieza: 100 clientes, 2 personas del equipo y 1 sede. Primer mes gratis."),
+          plan("Pro", 139990, "Para el negocio que ya tiene movimiento: 300 clientes, 10 personas del equipo y 3 sedes."),
+        ],
       },
       {
         "@type": "FAQPage",
+        "@id": id("preguntas"),
         mainEntity: FAQ.map((f) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })),
       },
     ],
@@ -144,16 +186,17 @@ export default function Home() {
         <section className="mx-auto grid max-w-7xl items-center gap-10 px-4 pb-14 pt-8 sm:px-8 lg:grid-cols-[1.1fr_0.9fr] lg:pb-16 lg:pt-6">
           <div>
             <h1 className={`${poster} text-[3.6rem] leading-[0.95] sm:text-8xl lg:text-[6.5rem]`}>
+              <span className="mb-5 block font-[family-name:var(--font-text)] text-lg font-semibold tracking-normal text-white/85 sm:text-xl">Tarjeta de sellos digital para tu negocio</span>
               Haz que tus clientes <span className="text-sun">vuelvan.</span>
             </h1>
             <p className="mt-8 max-w-xl text-xl leading-relaxed text-white/90">
-              La tarjeta de sellos de tu negocio, ahora en el celular de cada cliente. Y un panel que te dice quién volvió, quién dejó de venir y a quién avisarle hoy.
+              Lazo es la tarjeta de fidelización digital de tu negocio: con tu marca, en el celular de cada cliente. Y un panel que te dice quién volvió, quién dejó de venir y a quién avisarle hoy.
             </p>
             <div className="mt-9 flex flex-col gap-3 sm:flex-row">
               <WhatsAppButton className="bg-sun text-coal" />
               <a href="#como-funciona" className={`${btn} border-2 border-white/60 text-white`}>Ver cómo funciona</a>
             </div>
-            <p className="mt-5 text-[15px] text-white/80">Tu cliente se inscribe con un QR, guarda la tarjeta en su Wallet y suma sellos con NFC.</p>
+            <p className="mt-5 text-[15px] text-white/80">Tu cliente se inscribe con un QR, guarda la tarjeta en Google Wallet y suma sellos acercando el celular a una etiqueta NFC.</p>
           </div>
           <div className="relative isolate mx-auto">
             {/* Silueta de Nudo de fondo, detrás del celular */}
@@ -184,12 +227,12 @@ export default function Home() {
         {/* Cómo funciona */}
         <section id="como-funciona" className="scroll-mt-28 bg-sun lg:scroll-mt-20">
           <div className="mx-auto max-w-7xl px-4 py-20 sm:px-8 lg:py-24">
-            <h2 className={`${h2} reveal`}>Así funciona en tu mostrador</h2>
+            <h2 className={`${h2} reveal`}>Cómo funciona la tarjeta de sellos digital</h2>
             <ol className="mt-12 divide-y-2 divide-coal border-y-2 border-coal">
               {[
                 ["Escanea el QR una sola vez", "Lo pones en la caja. Tu cliente escribe su nombre y su celular y ya tiene su tarjeta. No descarga nada."],
-                ["La guarda en su Wallet", "La tarjeta queda en la billetera de su celular, siempre a la mano."],
-                ["Acerca el celular y se marca el sello", "Con NFC el sello queda guardado con fecha y hora. Al completar los sellos, el premio aparece solo en su tarjeta."],
+                ["La guarda en Google Wallet", "En Android queda en la billetera de su celular, siempre a la mano. En iPhone la abre desde su enlace, sin instalar nada."],
+                ["Acerca el celular a la etiqueta y se marca el sello", "Pegas una etiqueta NFC en el mostrador. El sello queda guardado con fecha y hora y, al completar los sellos, el premio aparece solo en su tarjeta."],
               ].map(([t, d], i) => (
                 <li key={t} className="reveal grid gap-2 py-7 md:grid-cols-[6rem_1fr_1.2fr] md:items-baseline md:gap-6">
                   <span className={`${poster} text-5xl`}>{i + 1}</span>
@@ -273,10 +316,10 @@ export default function Home() {
           <div className="reveal mx-auto grid max-w-7xl items-center gap-10 px-4 py-20 sm:px-8 lg:grid-cols-[1.2fr_0.8fr] lg:py-24">
             <div>
               <h2 className={`${h2} max-w-4xl`}>
-                Con NFC: <span className="text-sun">acerca el celular y listo.</span>
+                Sellos con NFC: <span className="text-sun">acerca el celular y listo.</span>
               </h2>
               <p className="mt-6 max-w-3xl text-xl leading-relaxed text-white/90">
-                Tu cliente acerca el celular al lector de tu mostrador y el sello se marca solo, como cuando paga con el teléfono.
+                Pegas una etiqueta NFC en tu mostrador y la activas desde tu panel. Tu cliente acerca el celular y el sello se marca solo, con fecha y hora. No necesitas lector ni datáfono.
               </p>
               <p className="mt-4 max-w-3xl text-lg text-white/85">El QR solo sirve la primera vez, para crear la tarjeta. Después, todo es acercar el celular.</p>
             </div>
@@ -286,8 +329,8 @@ export default function Home() {
 
         {/* Planes */}
         <section id="planes" className="reveal mx-auto max-w-7xl scroll-mt-28 px-4 py-20 sm:px-8 lg:scroll-mt-20 lg:py-28">
-          <h2 className={h2}>Planes</h2>
-          <p className="mt-4 text-xl text-graphite">Todos incluyen la tarjeta con tu marca, avisos al celular de tus clientes, promociones, premios y estadísticas.</p>
+          <h2 className={h2}>Planes y precios</h2>
+          <p className="mt-4 text-xl text-graphite">Precios en pesos colombianos. Todos incluyen la tarjeta con tu marca, avisos al celular de tus clientes, promociones, premios y estadísticas.</p>
           <div className="mt-10 grid gap-5 md:grid-cols-3 md:items-stretch">
             {PLANS.map((p) => (
               <div
@@ -340,7 +383,7 @@ export default function Home() {
         {/* Preguntas */}
         <section id="preguntas" className="scroll-mt-28 border-t-2 border-coal/10 lg:scroll-mt-20">
           <div className="mx-auto grid max-w-7xl gap-10 px-4 py-20 sm:px-8 lg:grid-cols-[0.8fr_1.2fr] lg:py-24">
-            <h2 className={h2}>Lo que siempre nos preguntan</h2>
+            <h2 className={h2}>Preguntas sobre la tarjeta de fidelización digital</h2>
             <div className="divide-y-2 divide-coal/10 border-y-2 border-coal/10">
               {FAQ.map((f) => (
                 <details key={f.q} className="faq group py-5">
@@ -375,7 +418,7 @@ export default function Home() {
 
       <footer className="bg-sun text-coal">
         <div className="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-7 text-[15px] sm:flex-row sm:justify-between sm:px-8">
-          <p>{PLATFORM_NAME} · Fidelización digital para negocios</p>
+          <p>{PLATFORM_NAME} · Tarjeta de fidelización digital para negocios en Colombia</p>
           <p>
             WhatsApp 313 893 9222 · <a href="https://wontex-devs.com" className="underline underline-offset-2">wontex-devs.com</a>
           </p>

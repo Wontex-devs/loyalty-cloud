@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { RUTAS_PRIVADAS } from "./src/lib/rutas-privadas";
 
 // Cabeceras de seguridad para todas las rutas. La cámara solo se permite en el propio
 // sitio (escáner de QR); el sitio no se puede incrustar en iframes de terceros.
@@ -17,9 +18,8 @@ const nextConfig: NextConfig = {
     const noIndexar = [{ key: "X-Robots-Tag", value: "noindex, nofollow" }];
     return [
       { source: "/:path*", headers: securityHeaders },
-      // Solo la página de venta ("/") y los archivos para buscadores quedan visibles para Google.
-      // Paneles, tarjetas (llevan un token privado) e inscripciones nunca se indexan.
-      { source: "/:ruta((?!sitemap\\.xml$|robots\\.txt$|opengraph-image).+)", headers: noIndexar },
+      // Paneles, tarjetas (llevan un token privado), inscripciones y API nunca se indexan.
+      { source: `/:seccion(${RUTAS_PRIVADAS.join("|")})/:resto*`, headers: noIndexar },
       // Las vistas previas de Vercel nunca se indexan.
       ...(process.env.VERCEL_ENV === "preview" ? [{ source: "/:path*", headers: noIndexar }] : []),
     ];
