@@ -7,11 +7,11 @@ import type { BusinessBranding, BusinessLegal } from "@/lib/domain/types";
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const DEFAULT_BRANDING: BusinessBranding = {
   logoText: "",
-  primary: "#111111",
-  primaryForeground: "#FFFFFF",
-  accent: "#D8A7A7",
-  cardBackground: "#EBCFCB",
-  cardForeground: "#1A1416",
+  primary: "#1b3fd8",
+  primaryForeground: "#ffc928",
+  accent: "#ffc928",
+  cardBackground: "#1b3fd8",
+  cardForeground: "#ffc928",
 };
 
 /** Tarjeta pública por token (RPC get_public_card: vista mínima, sin teléfono ni correo). */

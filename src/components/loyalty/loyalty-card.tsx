@@ -21,7 +21,7 @@ export interface LoyaltyCardViewProps {
   className?: string;
   /** Foto opcional del local: va de fondo en la parte de arriba y se funde con el color de la tarjeta. */
   coverUrl?: string;
-  /** Versión plana para la portada: color sólido y contorno, sin brillos ni transparencias. */
+  /** Contorno oscuro en lugar de sombra, para la portada. */
   plano?: boolean;
 }
 
@@ -53,6 +53,7 @@ export function LoyaltyCardView({
   const StampIcon = STAMP_ICON_COMPONENTS[b.stampIcon ?? "check"] ?? STAMP_ICON_COMPONENTS.check;
   const font = brandFont(b);
   const titleFont = brandFont(b, "tracking-[0.12em]");
+  const foto = coverUrl ?? (b.coverUrl || undefined);
 
   return (
     <div
@@ -60,27 +61,18 @@ export function LoyaltyCardView({
       style={{ background: b.cardBackground, color: b.cardForeground }}
     >
       {/* Foto del local de fondo: se ve arriba y se funde con el color de la tarjeta hacia abajo */}
-      {coverUrl && (
+      {foto && (
         <>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={coverUrl} alt="" className="pointer-events-none absolute inset-x-0 top-0 h-3/5 w-full object-cover" />
+          <img src={foto} alt="" className="pointer-events-none absolute inset-x-0 top-0 h-3/5 w-full object-cover" />
           <div
             aria-hidden
             className="pointer-events-none absolute inset-x-0 top-0 h-3/5"
-            style={{ background: `linear-gradient(to bottom, ${b.cardBackground}8c 0%, ${b.cardBackground}b3 45%, ${b.cardBackground} 100%)` }}
+            style={{ background: `linear-gradient(to bottom, ${b.cardBackground}73 0%, ${b.cardBackground}8c 35%, ${b.cardBackground}d9 70%, ${b.cardBackground}f7 90%, ${b.cardBackground} 100%)` }}
           />
         </>
       )}
-      {/* Textura sutil */}
-      {!plano && (
-        <div
-          className="pointer-events-none absolute inset-0 opacity-60"
-          style={{
-            background: `radial-gradient(120% 80% at 100% 0%, rgba(255,255,255,0.55) 0%, transparent 55%), radial-gradient(90% 60% at 0% 100%, ${b.cardForeground}14 0%, transparent 60%)`,
-          }}
-        />
-      )}
-      <div className={cn("relative", compact ? "p-5" : "p-6 sm:p-7")}>
+      <div className={cn("relative", compact ? "p-5" : "p-6 sm:p-7")} style={foto ? { textShadow: `0 0 3px ${b.cardBackground}, 0 1px 12px ${b.cardBackground}` } : undefined}>
         {/* Cabecera */}
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-3">
@@ -99,8 +91,9 @@ export function LoyaltyCardView({
           <span
             className="rounded-full px-2.5 py-1 text-[10px] font-semibold tracking-wider uppercase"
             style={{
-              background: status === "blocked" ? "#7f1d1d" : status === "reward_available" || plano ? b.cardForeground : "rgba(255,255,255,0.55)",
-              color: plano && status !== "blocked" ? b.cardBackground : status === "reward_available" || status === "blocked" ? "#fff" : b.cardForeground,
+              background: status === "blocked" ? "#7f1d1d" : b.cardForeground,
+              color: status === "blocked" ? "#fff" : b.cardBackground,
+              textShadow: "none",
             }}
           >
             {STATUS_LABEL[status]}
@@ -124,8 +117,8 @@ export function LoyaltyCardView({
                 key={i}
                 className="flex aspect-square items-center justify-center rounded-full"
                 style={{
-                  background: filled ? b.cardForeground : plano ? "transparent" : "rgba(255,255,255,0.45)",
-                  border: filled ? "none" : plano ? `2px dashed ${b.cardForeground}99` : `1.5px dashed ${b.cardForeground}40`,
+                  background: filled ? b.cardForeground : "transparent",
+                  border: filled ? "none" : `2px dashed ${b.cardForeground}99`,
                   color: b.cardBackground,
                 }}
               >
@@ -136,9 +129,9 @@ export function LoyaltyCardView({
                     fill={b.stampIcon && FILLED_STAMP_ICONS.has(b.stampIcon) ? "currentColor" : "none"}
                   />
                 ) : isLast ? (
-                  <Gift className="size-[42%]" style={{ color: b.cardForeground, opacity: plano ? 0.85 : 0.55 }} strokeWidth={1.75} />
+                  <Gift className="size-[42%]" style={{ color: b.cardForeground, opacity: 0.85 }} strokeWidth={1.75} />
                 ) : (
-                  <span className="text-[11px] font-medium" style={{ color: b.cardForeground, opacity: plano ? 0.75 : 0.4 }}>
+                  <span className="text-[11px] font-medium" style={{ color: b.cardForeground, opacity: 0.75 }}>
                     {i + 1}
                   </span>
                 )}

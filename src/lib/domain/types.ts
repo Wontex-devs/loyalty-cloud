@@ -43,6 +43,8 @@ export interface BusinessBranding {
   logoText: string; // monograma mientras no hay logo subido
   /** Imagen en Supabase Storage (brand-assets/<business_id>/…); en demo, un data URL. Vacío = sin logo. */
   logoUrl?: string;
+  /** Foto de fondo de la tarjeta, misma carpeta que el logo. Vacío = sin foto. */
+  coverUrl?: string;
   stampIcon?: StampIcon;
   font?: CardFont;
   primary: string; // color de marca

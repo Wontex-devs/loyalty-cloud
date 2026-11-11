@@ -67,9 +67,9 @@ export function BusinessShell({ slug, children }: { slug: string; children: Reac
       ? [
           { href: `${base}/staff`, label: "Empleados", icon: UserCog },
           { href: `${base}/analytics`, label: "Estadísticas", icon: BarChart3 },
-          { href: `${base}/settings`, label: "Configuración", icon: Settings },
         ]
       : []),
+    ...(can(m, "settings.edit") ? [{ href: `${base}/settings`, label: "Configuración", icon: Settings }] : []),
   ];
 
   const sections: NavSection[] = [

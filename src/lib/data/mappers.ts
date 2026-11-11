@@ -54,11 +54,11 @@ export const toBusiness = (r: Row): Business => ({
   createdAt: r.created_at,
   branding: {
     logoText: "",
-    primary: "#111111",
-    primaryForeground: "#FFFFFF",
-    accent: "#D8A7A7",
-    cardBackground: "#EBCFCB",
-    cardForeground: "#1A1416",
+    primary: "#1b3fd8",
+    primaryForeground: "#ffc928",
+    accent: "#ffc928",
+    cardBackground: "#1b3fd8",
+    cardForeground: "#ffc928",
     ...(r.branding ?? {}),
   },
 });

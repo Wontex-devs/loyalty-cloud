@@ -80,6 +80,7 @@ export function scheduleBusinessWalletSync(businessId: string) {
           background: b.branding.cardBackground,
           foreground: b.branding.cardForeground,
           logoUrl: `${origin()}/join/${b.slug}/icon/660`,
+          coverUrl: b.branding.coverUrl || undefined,
         },
         program: { name: b.program.name, stampsRequired: b.program.stampsRequired, rewardName: b.program.rewardName },
       });

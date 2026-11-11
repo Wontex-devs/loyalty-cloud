@@ -10,7 +10,7 @@ import { useRouter } from "next/navigation";
 import { X } from "lucide-react";
 import { DataContext, type DemoApi, type DemoState } from "@/lib/demo/store";
 import { createClient } from "@/lib/supabase/client";
-import { prepareLogo } from "@/lib/brand-image";
+import { prepareCover, prepareLogo } from "@/lib/brand-image";
 import {
   inviteStaffAction,
   setBusinessStatusAction,
@@ -66,6 +66,49 @@ export function LiveProvider({ snapshot, children }: { snapshot: DemoState; chil
       return res;
     };
 
+    // El navegador sube la imagen a Storage (las políticas limitan la carpeta al comercio)
+    // y la acción del servidor guarda la URL, que Postgres vuelve a validar.
+    const guardarImagen = async (
+      businessId: string,
+      file: File | null,
+      campo: "logoUrl" | "coverUrl",
+      nombre: string,
+      extension: string,
+      preparar: (f: File) => Promise<Blob>,
+      etiqueta: string,
+    ) => {
+      const supabase = createClient();
+      const bucket = supabase.storage.from("brand-assets");
+      const previous = state.businesses.find((b) => b.id === businessId)?.branding[campo] ?? "";
+      const prefix = bucket.getPublicUrl(`${businessId}/`).data.publicUrl;
+      let path: string | null = null;
+      let url = "";
+      if (file) {
+        let blob: Blob;
+        try {
+          blob = await preparar(file);
+        } catch (e) {
+          return { ok: false as const, message: e instanceof Error ? e.message : "No se pudo cargar la imagen." };
+        }
+        path = `${businessId}/${nombre}-${Date.now()}.${extension}`;
+        const up = await bucket.upload(path, blob, { contentType: blob.type, cacheControl: "31536000" });
+        if (up.error) return { ok: false as const, message: `No se pudo subir ${etiqueta}. Inténtalo de nuevo.` };
+        url = bucket.getPublicUrl(path).data.publicUrl;
+      }
+      const res = await updateBrandingAction(businessId, { [campo]: url });
+      if (!res.ok) {
+        if (path) await bucket.remove([path]);
+        return res;
+      }
+      if (previous.startsWith(prefix)) await bucket.remove([previous.slice(prefix.length - businessId.length - 1)]);
+      setState((s) => ({
+        ...s,
+        businesses: s.businesses.map((b) => (b.id === businessId ? { ...b, branding: { ...b.branding, [campo]: url } } : b)),
+      }));
+      startTransition(() => router.refresh());
+      return { ok: true as const };
+    };
+
     return {
       mode: "live",
       state,
@@ -119,40 +162,8 @@ export function LiveProvider({ snapshot, children }: { snapshot: DemoState; chil
         }, 700);
       },
 
-      // El navegador sube la imagen a Storage (las políticas limitan la carpeta al comercio)
-      // y la acción del servidor guarda la URL, que Postgres vuelve a validar.
-      setLogo: async (businessId, file) => {
-        const supabase = createClient();
-        const bucket = supabase.storage.from("brand-assets");
-        const previous = state.businesses.find((b) => b.id === businessId)?.branding.logoUrl ?? "";
-        const prefix = bucket.getPublicUrl(`${businessId}/`).data.publicUrl;
-        let path: string | null = null;
-        let logoUrl = "";
-        if (file) {
-          let blob: Blob;
-          try {
-            blob = await prepareLogo(file, 512);
-          } catch (e) {
-            return { ok: false, message: e instanceof Error ? e.message : "No se pudo cargar la imagen." };
-          }
-          path = `${businessId}/logo-${Date.now()}.png`;
-          const up = await bucket.upload(path, blob, { contentType: blob.type, cacheControl: "31536000" });
-          if (up.error) return { ok: false, message: "No se pudo subir el logotipo. Inténtalo de nuevo." };
-          logoUrl = bucket.getPublicUrl(path).data.publicUrl;
-        }
-        const res = await updateBrandingAction(businessId, { logoUrl });
-        if (!res.ok) {
-          if (path) await bucket.remove([path]);
-          return res;
-        }
-        if (previous.startsWith(prefix)) await bucket.remove([previous.slice(prefix.length - businessId.length - 1)]);
-        setState((s) => ({
-          ...s,
-          businesses: s.businesses.map((b) => (b.id === businessId ? { ...b, branding: { ...b.branding, logoUrl } } : b)),
-        }));
-        startTransition(() => router.refresh());
-        return { ok: true };
-      },
+      setLogo: (businessId, file) => guardarImagen(businessId, file, "logoUrl", "logo", "png", (f) => prepareLogo(f, 512), "el logotipo"),
+      setCover: (businessId, file) => guardarImagen(businessId, file, "coverUrl", "foto", "jpg", (f) => prepareCover(f), "la foto"),
 
       setBusinessStatus: (businessId, status) => {
         setState((s) => ({ ...s, businesses: s.businesses.map((b) => (b.id === businessId ? { ...b, status } : b)) }));

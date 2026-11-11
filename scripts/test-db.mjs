@@ -188,6 +188,12 @@ r = await as(U.ownerA, "select public.update_business_profile($1, null, null, nu
 check("logo con URL arbitraria es rechazado", expectError(r, "INVALID_BRANDING"), r);
 r = await as(U.ownerA, "select public.update_business_profile($1, null, null, null, null, $2::jsonb)", [A, JSON.stringify({ stampIcon: "skull" })]);
 check("icono de sello desconocido es rechazado", expectError(r, "INVALID_BRANDING"), r);
+r = await as(U.ownerA, "select public.update_business_profile($1, null, null, null, null, $2::jsonb)", [A, JSON.stringify({ coverUrl: logoA })]);
+check("la foto de fondo se acepta desde la carpeta del propio comercio", r.ok, r);
+r = await as(U.ownerA, "select public.update_business_profile($1, null, null, null, null, $2::jsonb)", [A, JSON.stringify({ coverUrl: logoB })]);
+check("la foto de fondo de otro comercio se rechaza", !r.ok && r.error.includes("INVALID_BRANDING"), r);
+r = await as(U.ownerA, "select public.update_business_profile($1, null, null, null, null, $2::jsonb)", [A, JSON.stringify({ coverUrl: "" })]);
+check("la foto de fondo se puede quitar", r.ok, r);
 r = await as(U.ownerA, "select public.update_business_profile($1, null, null, null, null, $2::jsonb)", [A, JSON.stringify({ logoUrl: "" })]);
 check("propietario puede quitar su logo", r.ok, r);
 r = await as(U.ownerA, "insert into storage.objects (bucket_id, name) values ('brand-assets', $1)", [`${A}/logo-2.webp`]);

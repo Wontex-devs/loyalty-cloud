@@ -22,7 +22,7 @@ import { businessSettingsSchema, normalizePhone, type BusinessSettingsInput, typ
 import { computeStats, isRewardUsable, type BusinessStats } from "@/lib/domain/stats";
 import { activePromotion, localDay } from "@/lib/domain/promotions";
 import { customersCsv } from "@/lib/domain/csv";
-import { blobToDataUrl, prepareLogo } from "@/lib/brand-image";
+import { blobToDataUrl, prepareCover, prepareLogo } from "@/lib/brand-image";
 import type {
   Business,
   BusinessBranding,
@@ -125,6 +125,7 @@ export interface DemoApi {
   updateBranding: (businessId: string, patch: Partial<BusinessBranding>) => void;
   /** Sube (o quita, con null) el logotipo del comercio. */
   setLogo: (businessId: string, file: File | null) => Promise<OpResult>;
+  setCover: (businessId: string, file: File | null) => Promise<OpResult>;
   setBusinessStatus: (businessId: string, status: BusinessStatus) => void;
   inviteStaff: (businessId: string, input: { fullName: string; email: string; role: BusinessRole; canRedeem: boolean }) => void;
   toggleMembership: (membershipId: string, patch: Partial<BusinessMembership>) => void;
@@ -541,6 +542,19 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
         })),
 
       // En demo el logo se guarda como data URL pequeño en el navegador.
+      setCover: async (businessId, file) => {
+        try {
+          const coverUrl = file ? await blobToDataUrl(await prepareCover(file, 700)) : "";
+          setState((s) => ({
+            ...s,
+            businesses: s.businesses.map((b) => (b.id === businessId ? { ...b, branding: { ...b.branding, coverUrl } } : b)),
+          }));
+          return { ok: true };
+        } catch (e) {
+          return { ok: false, message: e instanceof Error ? e.message : "No se pudo cargar la imagen." };
+        }
+      },
+
       setLogo: async (businessId, file) => {
         try {
           const logoUrl = file ? await blobToDataUrl(await prepareLogo(file, 256)) : "";
