@@ -102,7 +102,6 @@ export function WalletPhone() {
         </div>
 
         <WalletBadge name="Google Wallet" className="-right-8 top-[345px] lg:-right-14" stripes={["#4285F4", "#34A853", "#FBBC04", "#EA4335"]} pocket="#202124" />
-        <WalletBadge name="Apple Wallet" className="-left-8 top-[520px] lg:-left-14 lg:top-[455px]" stripes={["#3DB4F2", "#5CC46A", "#F7C63E", "#EE5B4F"]} pocket="#2c2c2e" />
       </div>
     </div>
   );

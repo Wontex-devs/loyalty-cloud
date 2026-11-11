@@ -38,7 +38,7 @@ const PLANS = [
 const FAQ = [
   { q: "¿Cómo funciona el primer mes gratis?", a: "Aplica al plan Starter. Te dejamos la tarjeta lista con tu marca y la usas un mes sin pagar. Si decides seguir, pagas $79.990 al mes." },
   { q: "¿Mis clientes tienen que descargar algo?", a: "No. La tarjeta se abre en el navegador del celular y se puede añadir a la pantalla de inicio como si fuera una app." },
-  { q: "¿Necesito comprar algún equipo?", a: "Para marcar los sellos con NFC necesitas un lector en el mostrador. El QR solo se usa una vez, para que tu cliente cree su tarjeta; lo pones en un cartel en la caja." },
+  { q: "¿Necesito comprar algún equipo?", a: "Para marcar los sellos con NFC solo necesitas una etiqueta NFC, una calcomanía económica que pegas en el mostrador. El QR solo se usa una vez, para que tu cliente cree su tarjeta; lo pones en un cartel en la caja." },
   { q: "¿Qué pasa si mi cliente cambia de celular?", a: "Vuelve a escanear el QR de tu negocio con el mismo nombre y celular, y recupera su tarjeta con todos sus sellos." },
   { q: "¿Sirve para mi tipo de negocio?", a: "Sirve para cualquier negocio con clientes que repiten: barberías, salones, cafeterías, panaderías, spas, gimnasios, lavaderos, tiendas y más." },
   { q: "¿Se pueden hacer trampas con los sellos?", a: "Solo tu equipo puede sellar, cada persona con su usuario. El sistema evita sellos repetidos por error y guarda quién registró cada visita." },
@@ -106,7 +106,7 @@ export default function Home() {
               <WhatsAppButton className="bg-sun text-coal" />
               <a href="#como-funciona" className={`${btn} border-2 border-white/60 text-white`}>Ver cómo funciona</a>
             </div>
-            <p className="mt-5 text-[15px] text-white/80">Tu cliente se inscribe con un QR, guarda la tarjeta en su Wallet y suma sellos con NFC.</p>
+            <p className="mt-5 text-[15px] text-white/80">Tu cliente se inscribe con un QR, guarda la tarjeta en su celular y suma sellos acercándolo a la etiqueta NFC de tu mostrador.</p>
           </div>
           <div className="relative isolate mx-auto">
             {/* Silueta de Nudo de fondo, detrás del celular */}
@@ -141,7 +141,7 @@ export default function Home() {
             <ol className="mt-12 divide-y-2 divide-coal border-y-2 border-coal">
               {[
                 ["Escanea el QR una sola vez", "Lo pones en la caja. Tu cliente escribe su nombre y su celular y ya tiene su tarjeta. No descarga nada."],
-                ["La guarda en su Wallet", "La tarjeta queda en la billetera de su celular, siempre a la mano."],
+                ["La guarda en su celular", "La tarjeta queda en su celular, siempre a la mano. Muy pronto también en Google Wallet."],
                 ["Acerca el celular y se marca el sello", "Con NFC el sello queda guardado con fecha y hora. Al completar los sellos, el premio aparece solo en su tarjeta."],
               ].map(([t, d], i) => (
                 <li key={t} className="reveal grid gap-2 py-7 md:grid-cols-[6rem_1fr_1.2fr] md:items-baseline md:gap-6">
@@ -161,7 +161,7 @@ export default function Home() {
             <div className="rounded-xl bg-sun p-7 sm:p-12 lg:col-span-4 lg:row-span-1">
               <h3 className={`${poster} text-3xl sm:text-5xl sm:leading-[1.02]`}>A quién avisarle, y el aviso ya listo</h3>
               <p className="mt-4 max-w-xl text-lg leading-relaxed">
-                Te mostramos a quién le falta poco para el premio, quién cumple años este mes y quién no viene hace tiempo. Con un botón, el aviso le llega al celular como una notificación, con su nombre. Solo a quienes aceptaron recibir mensajes.
+                Te mostramos a quién le falta poco para el premio, quién cumple años este mes y quién no viene hace tiempo. El aviso ya va escrito con su nombre: lo envías por WhatsApp o, si tiene la tarjeta en Google Wallet, le llega como notificación al celular. Solo a quienes aceptaron recibir mensajes.
               </p>
               <div className="mt-7 flex max-w-md items-start gap-3 rounded-2xl border-2 border-coal bg-white p-4">
                 <span aria-hidden className={`${poster} flex size-10 shrink-0 items-center justify-center rounded-xl bg-cobalt text-lg text-white`}>E</span>
@@ -229,7 +229,7 @@ export default function Home() {
                 Con NFC: <span className="text-sun">acerca el celular y listo.</span>
               </h2>
               <p className="mt-6 max-w-3xl text-xl leading-relaxed text-white/90">
-                Tu cliente acerca el celular al lector de tu mostrador y el sello se marca solo, como cuando paga con el teléfono.
+                Tu cliente acerca el celular a la etiqueta NFC de tu mostrador y el sello se marca solo. Tu equipo no tiene que hacer nada.
               </p>
               <p className="mt-4 max-w-3xl text-lg text-white/85">El QR solo sirve la primera vez, para crear la tarjeta. Después, todo es acercar el celular.</p>
             </div>
@@ -240,7 +240,7 @@ export default function Home() {
         {/* Planes */}
         <section id="planes" className="reveal mx-auto max-w-7xl scroll-mt-28 px-4 py-20 sm:px-8 lg:scroll-mt-20 lg:py-28">
           <h2 className={h2}>Planes</h2>
-          <p className="mt-4 text-xl text-graphite">Todos incluyen la tarjeta con tu marca, avisos al celular de tus clientes, promociones, premios y estadísticas.</p>
+          <p className="mt-4 text-xl text-graphite">Todos incluyen la tarjeta con tu marca, avisos a tus clientes, promociones, premios y estadísticas.</p>
           <div className="mt-10 grid gap-5 md:grid-cols-3 md:items-stretch">
             {PLANS.map((p) => (
               <div
