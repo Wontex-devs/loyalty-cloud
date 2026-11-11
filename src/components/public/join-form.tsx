@@ -6,7 +6,7 @@ import { Gift, Loader2, Stamp } from "lucide-react";
 import { useDemo } from "@/lib/demo/store";
 import { joinSchema } from "@/lib/domain/schemas";
 import { joinProgramAction } from "@/lib/data/loyalty-actions";
-import { PLATFORM_NAME } from "@/lib/config";
+import { LazoLogo } from "@/components/brand/lazo-logo";
 import { cn } from "@/lib/utils";
 import type { BusinessBranding } from "@/lib/domain/types";
 import { NotFoundScreen } from "./card-screen";
@@ -192,7 +192,7 @@ export function JoinForm({ slug, business, program, live }: JoinFormProps) {
           </button>
         </form>
 
-        <p className="mt-auto pt-8 text-center text-[11px] opacity-50">Tecnología de {PLATFORM_NAME}</p>
+        <p className="mt-auto flex items-baseline justify-center gap-1 pt-8 text-[11px] opacity-50">Tecnología de <LazoLogo className="text-[13px]" /></p>
       </div>
     </div>
   );

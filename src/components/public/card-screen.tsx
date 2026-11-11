@@ -6,7 +6,7 @@ import { Cake, Check, Copy, Gift, PartyPopper, Share2, Sparkles, Nfc } from "luc
 import { LoyaltyCardView } from "@/components/loyalty/loyalty-card";
 import { InstallCard } from "./install-card";
 import { WalletButtons } from "./wallet-buttons";
-import { PLATFORM_NAME } from "@/lib/config";
+import { LazoLogo } from "@/components/brand/lazo-logo";
 import { formatDate, formatRelative } from "@/lib/utils";
 import type { BusinessBranding, CardStatus } from "@/lib/domain/types";
 
@@ -245,7 +245,7 @@ export function CardScreen({
             )}
           </div>
         )}
-        <p className="mt-4 text-center text-[11px] text-subtle">Tecnología de {PLATFORM_NAME}</p>
+        <p className="mt-4 flex items-baseline justify-center gap-1 text-[11px] text-subtle">Tecnología de <LazoLogo className="text-[13px]" /></p>
       </div>
     </div>
   );

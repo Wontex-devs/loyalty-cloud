@@ -298,7 +298,7 @@ textarea {
   }
 }
 
-/* Marca Lazo: el nudo se dibuja una sola vez (solo si la persona no pidió menos movimiento). */
+/* Marca Lazo: el aro se dibuja una sola vez (solo si la persona no pidió menos movimiento). */
 .lazo-trazo {
   stroke-dasharray: 1;
 }

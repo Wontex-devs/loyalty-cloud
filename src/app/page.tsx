@@ -65,7 +65,7 @@ export default function Home() {
       <header className="on-cobalt sticky top-0 z-40 bg-cobalt text-white shadow-[0_10px_24px_-18px_rgb(6_10_36/0.8)]">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:h-20 sm:px-8">
           <Link href="/" aria-label={PLATFORM_NAME} className="whitespace-nowrap">
-            <LazoLogo animar markClassName="text-sun" />
+            <LazoLogo animar className="text-[32px]" markClassName="text-sun" />
           </Link>
           <nav className="flex items-center gap-4 text-[15px] font-medium sm:gap-5" aria-label="Principal">
             <a href="#como-funciona" className="hidden hover:underline lg:block">Cómo funciona</a>

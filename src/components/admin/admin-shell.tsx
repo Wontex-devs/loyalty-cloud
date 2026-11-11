@@ -1,9 +1,9 @@
 "use client";
 
-import { BarChart3, CreditCard, LayoutDashboard, Layers, Settings, Store, Users } from "lucide-react";
+import { BarChart3, LayoutDashboard, Layers, Settings, Store, Users } from "lucide-react";
 import { AppShell, ShellSkeleton, type NavSection } from "@/components/layout/app-shell";
 import { useDemo } from "@/lib/demo/store";
-import { PLATFORM_NAME } from "@/lib/config";
+import { LazoLogo } from "@/components/brand/lazo-logo";
 import { Avatar, Badge } from "@/components/ui";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 
@@ -27,14 +27,9 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
     <AppShell
       sections={sections}
       header={
-        <div className="flex items-center gap-2.5 px-1.5 py-1.5">
-          <div className="flex size-8 items-center justify-center rounded-lg bg-ink text-white">
-            <CreditCard className="size-4" />
-          </div>
-          <div>
-            <p className="text-sm font-semibold">{PLATFORM_NAME}</p>
-            <p className="text-xs text-muted">Plataforma</p>
-          </div>
+        <div className="flex items-baseline gap-2.5 px-1.5 py-1.5">
+          <LazoLogo className="text-[26px] text-coal" markClassName="text-cobalt" />
+          <p className="text-xs text-muted">Plataforma</p>
         </div>
       }
       footer={

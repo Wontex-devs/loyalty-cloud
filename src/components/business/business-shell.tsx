@@ -22,6 +22,7 @@ import {
 import { onboardingSteps } from "./onboarding";
 import { AppShell, ShellSkeleton, type NavSection } from "@/components/layout/app-shell";
 import { useBusiness, useDemo, type BusinessScope } from "@/lib/demo/store";
+import { LazoLogo } from "@/components/brand/lazo-logo";
 import { can } from "@/lib/domain/permissions";
 import { ROLE_LABELS } from "@/lib/domain/permissions";
 import { Avatar, Badge, ButtonLink, EmptyState } from "@/components/ui";
@@ -99,6 +100,8 @@ export function BusinessShell({ slug, children }: { slug: string; children: Reac
   const team = state.memberships.filter((x) => x.businessId === business.id && x.active);
 
   const header = (
+    <>
+      <LazoLogo className="mb-2 px-1.5 pt-1 text-[22px] text-coal" markClassName="text-cobalt" />
     <div className="flex items-center gap-2.5 rounded-lg px-1.5 py-1.5">
       <BrandMark
         branding={business.branding}
@@ -110,6 +113,7 @@ export function BusinessShell({ slug, children }: { slug: string; children: Reac
         <p className="truncate text-xs text-muted">{business.category}</p>
       </div>
     </div>
+    </>
   );
 
   const footer = (
