@@ -9,13 +9,20 @@ const securityHeaders = [
   { key: "Permissions-Policy", value: "camera=(self), microphone=(), geolocation=(), payment=()" },
   { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains" },
   { key: "Content-Security-Policy", value: "frame-ancestors 'none'; base-uri 'self'; object-src 'none'; form-action 'self'" },
-  { key: "X-Robots-Tag", value: "noindex, nofollow" },
 ];
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
   async headers() {
-    return [{ source: "/:path*", headers: securityHeaders }];
+    const noIndexar = [{ key: "X-Robots-Tag", value: "noindex, nofollow" }];
+    return [
+      { source: "/:path*", headers: securityHeaders },
+      // Solo la página de venta ("/") y los archivos para buscadores quedan visibles para Google.
+      // Paneles, tarjetas (llevan un token privado) e inscripciones nunca se indexan.
+      { source: "/:ruta((?!sitemap\\.xml$|robots\\.txt$|opengraph-image).+)", headers: noIndexar },
+      // Las vistas previas de Vercel nunca se indexan.
+      ...(process.env.VERCEL_ENV === "preview" ? [{ source: "/:path*", headers: noIndexar }] : []),
+    ];
   },
 };
 
