@@ -240,7 +240,6 @@ textarea {
 /* Carrusel continuo de «Con tu marca»: movimiento constante, por eso va en línea recta (linear). */
 .marquee {
   overflow-x: clip;
-  mask-image: linear-gradient(to right, transparent, #000 5%, #000 95%, transparent);
 }
 .marquee-pista {
   animation: marquee 50s linear infinite;
@@ -261,7 +260,6 @@ textarea {
 @media (prefers-reduced-motion: reduce) {
   .marquee {
     overflow-x: auto;
-    mask-image: none;
   }
   .marquee-pista {
     animation: none;

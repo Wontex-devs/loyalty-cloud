@@ -21,6 +21,8 @@ export interface LoyaltyCardViewProps {
   className?: string;
   /** Foto opcional del local: va de fondo en la parte de arriba y se funde con el color de la tarjeta. */
   coverUrl?: string;
+  /** Versión plana para la portada: color sólido y contorno, sin brillos ni transparencias. */
+  plano?: boolean;
 }
 
 const STATUS_LABEL: Record<CardStatus, string> = {
@@ -43,6 +45,7 @@ export function LoyaltyCardView({
   compact,
   className,
   coverUrl,
+  plano,
 }: LoyaltyCardViewProps) {
   const b = business.branding;
   const remaining = Math.max(program.stampsRequired - stamps, 0);
@@ -53,7 +56,7 @@ export function LoyaltyCardView({
 
   return (
     <div
-      className={cn("relative mx-auto w-full max-w-[440px] overflow-hidden rounded-[28px] shadow-pop", className)}
+      className={cn("relative mx-auto w-full max-w-[440px] overflow-hidden rounded-[28px]", plano ? "border-2 border-coal" : "shadow-pop", className)}
       style={{ background: b.cardBackground, color: b.cardForeground }}
     >
       {/* Foto del local de fondo: se ve arriba y se funde con el color de la tarjeta hacia abajo */}
@@ -69,12 +72,14 @@ export function LoyaltyCardView({
         </>
       )}
       {/* Textura sutil */}
-      <div
-        className="pointer-events-none absolute inset-0 opacity-60"
-        style={{
-          background: `radial-gradient(120% 80% at 100% 0%, rgba(255,255,255,0.55) 0%, transparent 55%), radial-gradient(90% 60% at 0% 100%, ${b.cardForeground}14 0%, transparent 60%)`,
-        }}
-      />
+      {!plano && (
+        <div
+          className="pointer-events-none absolute inset-0 opacity-60"
+          style={{
+            background: `radial-gradient(120% 80% at 100% 0%, rgba(255,255,255,0.55) 0%, transparent 55%), radial-gradient(90% 60% at 0% 100%, ${b.cardForeground}14 0%, transparent 60%)`,
+          }}
+        />
+      )}
       <div className={cn("relative", compact ? "p-5" : "p-6 sm:p-7")}>
         {/* Cabecera */}
         <div className="flex items-start justify-between gap-3">
@@ -94,8 +99,8 @@ export function LoyaltyCardView({
           <span
             className="rounded-full px-2.5 py-1 text-[10px] font-semibold tracking-wider uppercase"
             style={{
-              background: status === "blocked" ? "#7f1d1d" : status === "reward_available" ? b.cardForeground : "rgba(255,255,255,0.55)",
-              color: status === "reward_available" || status === "blocked" ? "#fff" : b.cardForeground,
+              background: status === "blocked" ? "#7f1d1d" : status === "reward_available" || plano ? b.cardForeground : "rgba(255,255,255,0.55)",
+              color: plano && status !== "blocked" ? b.cardBackground : status === "reward_available" || status === "blocked" ? "#fff" : b.cardForeground,
             }}
           >
             {STATUS_LABEL[status]}
@@ -119,8 +124,8 @@ export function LoyaltyCardView({
                 key={i}
                 className="flex aspect-square items-center justify-center rounded-full"
                 style={{
-                  background: filled ? b.cardForeground : "rgba(255,255,255,0.45)",
-                  border: filled ? "none" : `1.5px dashed ${b.cardForeground}40`,
+                  background: filled ? b.cardForeground : plano ? "transparent" : "rgba(255,255,255,0.45)",
+                  border: filled ? "none" : plano ? `2px dashed ${b.cardForeground}99` : `1.5px dashed ${b.cardForeground}40`,
                   color: b.cardBackground,
                 }}
               >
@@ -131,9 +136,9 @@ export function LoyaltyCardView({
                     fill={b.stampIcon && FILLED_STAMP_ICONS.has(b.stampIcon) ? "currentColor" : "none"}
                   />
                 ) : isLast ? (
-                  <Gift className="size-[42%]" style={{ color: b.cardForeground, opacity: 0.55 }} strokeWidth={1.75} />
+                  <Gift className="size-[42%]" style={{ color: b.cardForeground, opacity: plano ? 0.85 : 0.55 }} strokeWidth={1.75} />
                 ) : (
-                  <span className="text-[11px] font-medium" style={{ color: b.cardForeground, opacity: 0.4 }}>
+                  <span className="text-[11px] font-medium" style={{ color: b.cardForeground, opacity: plano ? 0.75 : 0.4 }}>
                     {i + 1}
                   </span>
                 )}

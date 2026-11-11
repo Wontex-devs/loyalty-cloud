@@ -163,9 +163,8 @@ export default function Home() {
               <p className="mt-4 max-w-xl text-lg leading-relaxed">
                 Te mostramos a quién le falta poco para el premio, quién cumple años este mes y quién no viene hace tiempo. Con un botón, el aviso le llega al celular como una notificación, con su nombre. Solo a quienes aceptaron recibir mensajes.
               </p>
-              <div className="mt-7 flex max-w-md items-start gap-3 rounded-2xl bg-white p-4 shadow-[0_14px_28px_-16px_rgb(14_26_82/0.5)]">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src="/logos/estudio-lila.svg" alt="" className="size-10 shrink-0 rounded-xl bg-white p-1 ring-1 ring-black/10" />
+              <div className="mt-7 flex max-w-md items-start gap-3 rounded-2xl border-2 border-coal bg-white p-4">
+                <span aria-hidden className={`${poster} flex size-10 shrink-0 items-center justify-center rounded-xl bg-cobalt text-lg text-white`}>E</span>
                 <div className="min-w-0 text-[15px] leading-snug">
                   <p className="flex justify-between gap-2 text-sm text-graphite">
                     <span>Estudio Lila</span>

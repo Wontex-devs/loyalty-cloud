@@ -30,11 +30,11 @@ const brand = (
 
 // Negocios y clientes FICTICIOS, solo para mostrar cómo se ve una tarjeta. No representan a ningún cliente real.
 const EXAMPLES = [
-  { name: "Café Brisa Norte", club: "Club Brisa", customer: "Camila Pérez", reward: "Bebida de la casa gratis", required: 8, stamps: 5, branding: brand("B", "#2F6F4E", "#FFF3C9", "star", "serif") },
-  { name: "Heladería Lunita", club: "Club Lunita", customer: "Andrés Molina", reward: "Helado gratis", required: 8, stamps: 4, branding: brand("L", "#FCE7EF", "#5A2A3C", "heart", "sans") },
-  { name: "Tostadores del Puerto", club: "Club Tostadores", customer: "Valentina Ríos", reward: "Café de especialidad gratis", required: 8, stamps: 6, branding: brand("T", "#EFE6D8", "#2B2B2B", "sparkles", "serif") },
-  { name: "Mar y Sal", club: "Club Mar y Sal", customer: "Mateo Gómez", reward: "Postre de la casa gratis", required: 8, stamps: 7, branding: brand("M", "#12355B", "#FFD166", "gem", "sans") },
-  { name: "Cocina de la Abuela", club: "Club Abuela", customer: "Sofía Vélez", reward: "Plato del día gratis", required: 8, stamps: 3, branding: brand("C", "#7A1F2B", "#FBE5C8", "crown", "serif") },
+  { name: "Café Brisa Norte", club: "Club Brisa", customer: "Camila Pérez", reward: "Bebida de la casa gratis", required: 8, stamps: 5, branding: brand("B", "#1b3fd8", "#ffc928", "star", "sans") },
+  { name: "Heladería Lunita", club: "Club Lunita", customer: "Andrés Molina", reward: "Helado gratis", required: 8, stamps: 4, branding: brand("L", "#ffffff", "#1b3fd8", "heart", "sans") },
+  { name: "Tostadores del Puerto", club: "Club Tostadores", customer: "Valentina Ríos", reward: "Café de especialidad gratis", required: 8, stamps: 6, branding: brand("T", "#ffc928", "#0e1a52", "sparkles", "serif") },
+  { name: "Mar y Sal", club: "Club Mar y Sal", customer: "Mateo Gómez", reward: "Postre de la casa gratis", required: 8, stamps: 7, branding: brand("M", "#0e1a52", "#ffffff", "gem", "sans") },
+  { name: "Cocina de la Abuela", club: "Club Abuela", customer: "Sofía Vélez", reward: "Plato del día gratis", required: 8, stamps: 3, branding: brand("C", "#ff7a66", "#0e1a52", "crown", "sans") },
 ];
 
 /** Un juego completo de tarjetas. El segundo se repite para que el carrusel no tenga corte; ese va oculto para lectores de pantalla. */
@@ -49,6 +49,7 @@ function Juego({ copia = false }: { copia?: boolean }) {
             customerName={e.customer}
             stamps={e.stamps}
             className="h-full"
+            plano
             status="active"
             rewardsAvailable={0}
           />
