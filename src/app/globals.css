@@ -312,57 +312,45 @@ textarea {
   to { stroke-dashoffset: 0; }
 }
 
-/* Nudo, la mascota de la portada */
-.nudo-brazo {
+/* Nudo jala la fila de tarjetas con su lazo (sección de marcas) */
+.nudo-jala {
   transform-box: view-box;
-  transform-origin: 86px 72px;
+  transform-origin: 60px 112px;
+  transform: rotate(-7deg);
 }
 .nudo-ojos {
   transform-box: fill-box;
   transform-origin: center;
-  animation: nudo-parpadea 4.6s linear infinite;
 }
-@keyframes nudo-parpadea {
-  0%, 94%, 100% { opacity: 1; }
-  97% { opacity: 0.15; }
-}
-.nudo > div { animation: nudo-aparece 300ms ease-out 500ms both; }
-@keyframes nudo-aparece {
-  from { opacity: 0; }
+.nudo-cuerda {
+  width: calc(100% + 24px);
+  background: repeating-linear-gradient(115deg, #c98a2b 0 5px, #e8bb6c 5px 10px);
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .nudo > div { animation: nudo-entra 500ms var(--ease-ui-out) 500ms both; }
-  @keyframes nudo-entra {
-    from { opacity: 0; transform: translateY(16px) scale(0.92); }
+  .nudo-jala { animation: nudo-jala 0.9s ease-in-out infinite alternate; }
+  @keyframes nudo-jala {
+    from { transform: rotate(-3deg); }
+    to { transform: rotate(-11deg); }
   }
-  .nudo-ojos { animation-name: nudo-pestanea; }
+  .nudo-ojos { animation: nudo-pestanea 4.6s linear infinite; }
   @keyframes nudo-pestanea {
     0%, 94%, 100% { transform: scaleY(1); }
     97% { transform: scaleY(0.1); }
   }
-  .nudo-flota { animation: nudo-flota 1.8s ease-in-out infinite alternate; }
-  @keyframes nudo-flota {
-    to { transform: translateY(-4px); }
+  /* La cuerda avanza a la misma velocidad que las tarjetas. */
+  .nudo-cuerda { animation: nudo-cuerda 0.3065s linear infinite; }
+  @keyframes nudo-cuerda {
+    to { transform: translateX(-11.03px); }
   }
-  .nudo-brazo { animation: nudo-brazo 0.9s ease-in-out infinite alternate; }
-  @keyframes nudo-brazo {
-    from { transform: rotate(-3deg); }
-    to { transform: rotate(4deg); }
+  .jalon[data-pausado] .nudo-jala,
+  .jalon[data-pausado] .nudo-cuerda {
+    animation-play-state: paused;
   }
-  .nudo-giro { animation: nudo-giro 0.9s linear infinite; }
-  @keyframes nudo-giro {
-    from { stroke-dashoffset: 100; }
-    to { stroke-dashoffset: 0; }
-  }
-  .nudo-salto[data-saltando] { animation: nudo-salta 520ms var(--ease-ui-out); }
-  @keyframes nudo-salta {
-    35% { transform: translateY(-22px) rotate(-5deg) scale(1.06); }
-    70% { transform: translateY(0) scale(1.05, 0.95); }
-  }
-  .nudo-boton { transition: transform 160ms var(--ease-ui-out); }
-  .nudo-boton:active { transform: scale(0.95); }
 }
 @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
-  .nudo-boton:hover { transform: scale(1.05); }
+  .jalon:has(.marquee:hover) .nudo-jala,
+  .jalon:has(.marquee:hover) .nudo-cuerda {
+    animation-play-state: paused;
+  }
 }

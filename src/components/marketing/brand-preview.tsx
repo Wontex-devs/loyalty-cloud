@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Pause, Play } from "lucide-react";
 import { LoyaltyCardView } from "@/components/loyalty/loyalty-card";
+import { NudoJalando } from "@/components/marketing/nudo-jalando";
 import { cn } from "@/lib/utils";
 import type { BusinessBranding, StampIcon } from "@/lib/domain/types";
 
@@ -42,7 +43,10 @@ function Juego({ copia = false }: { copia?: boolean }) {
   return (
     <div className={cn("flex gap-5 pr-5", copia && "marquee-copia")} aria-hidden={copia || undefined} inert={copia}>
       {EXAMPLES.map((e) => (
-        <div key={e.name} className="flex w-[300px] shrink-0 sm:w-[340px]">
+        <div key={e.name} className="relative flex w-[300px] shrink-0 sm:w-[340px]">
+          {/* Gancho que une la tarjeta a la cuerda de Nudo */}
+          <span aria-hidden className="absolute -top-10 left-1/2 h-10 w-[7px] -translate-x-1/2 border-x border-coal bg-[#c98a2b]" />
+          <span aria-hidden className="absolute -top-2 left-1/2 z-10 size-4 -translate-x-1/2 rounded-full border-2 border-coal bg-white" />
           <LoyaltyCardView
             business={{ name: e.name, branding: e.branding }}
             program={{ name: e.club, stampsRequired: e.required, rewardName: e.reward }}
@@ -67,11 +71,14 @@ export function BrandPreview() {
 
   return (
     <div>
-      <div className={cn("marquee py-8", pausado && "marquee-pausado")}>
+      <div className="jalon relative mt-8" data-pausado={pausado || undefined}>
+        <NudoJalando />
+      <div className={cn("marquee pt-[116px] pb-8 lg:pt-[150px]", pausado && "marquee-pausado")}>
         <div className="marquee-pista flex w-max">
           <Juego />
           <Juego copia />
         </div>
+      </div>
       </div>
       <div className="mx-auto mt-2 flex max-w-7xl items-center justify-between gap-3 px-4 sm:px-8">
         <p className="text-sm text-graphite">Ejemplos con negocios y clientes ficticios. Cada negocio diseña su propia tarjeta.</p>

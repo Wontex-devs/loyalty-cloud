@@ -4,7 +4,6 @@ import Link from "next/link";
 import { LogIn, MessageCircle } from "lucide-react";
 import { BrandPreview } from "@/components/marketing/brand-preview";
 import { LazoLogo } from "@/components/brand/lazo-logo";
-import { Mascota } from "@/components/marketing/mascota";
 import { NfcDemo } from "@/components/marketing/nfc-demo";
 import { WalletPhone } from "@/components/marketing/wallet-phone";
 import { PLATFORM_NAME, SALES_WHATSAPP } from "@/lib/config";
@@ -325,7 +324,6 @@ export default function Home() {
           </p>
         </div>
       </footer>
-      <Mascota />
     </div>
   );
 }
