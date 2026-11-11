@@ -6,7 +6,7 @@ import { Check, ChevronRight, Download, Loader2, Printer, UserPlus } from "lucid
 import { useScope, RequirePermission } from "@/components/business/business-shell";
 import { onboardingSteps, type StepId } from "@/components/business/onboarding";
 import { LoyaltyCardView } from "@/components/loyalty/loyalty-card";
-import { useDemo } from "@/lib/demo/store";
+import { useData } from "@/lib/data/store";
 import { can } from "@/lib/domain/permissions";
 import type { BusinessBranding } from "@/lib/domain/types";
 import { Button, ButtonLink, Card, Field, Input, PageHeader, Progress } from "@/components/ui";
@@ -24,7 +24,7 @@ const PRESETS: { name: string; colors: Partial<BusinessBranding> }[] = [
 export default function OnboardingPage() {
   const scope = useScope();
   const { business, program, membership } = scope;
-  const { updateBusinessSettings, updateProgram, updateBranding } = useDemo();
+  const { updateBusinessSettings, updateProgram, updateBranding } = useData();
   const { steps, done, total } = onboardingSteps(scope);
   const [open, setOpen] = useState<StepId>(() => steps.find((s) => !s.done)?.id ?? "launch");
   const [saving, setSaving] = useState(false);

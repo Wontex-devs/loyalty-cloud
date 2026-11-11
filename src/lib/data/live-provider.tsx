@@ -1,14 +1,13 @@
 "use client";
 
 /**
- * Proveedor de datos en modo live (Supabase). Expone la misma interfaz que el
- * store demo para que las pantallas no cambien. El estado llega del servidor
+ * Proveedor de datos (Supabase) para los paneles. El estado llega del servidor
  * (ya filtrado por RLS); las escrituras van a Server Actions y luego se refresca.
  */
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { X } from "lucide-react";
-import { DataContext, type DemoApi, type DemoState } from "@/lib/demo/store";
+import { DataContext, type DataApi, type DataState } from "@/lib/data/store";
 import { createClient } from "@/lib/supabase/client";
 import { prepareCover, prepareLogo } from "@/lib/brand-image";
 import {
@@ -39,7 +38,7 @@ import {
   type OpActionResult,
 } from "./loyalty-actions";
 
-export function LiveProvider({ snapshot, children }: { snapshot: DemoState; children: React.ReactNode }) {
+export function LiveProvider({ snapshot, children }: { snapshot: DataState; children: React.ReactNode }) {
   const router = useRouter();
   const [state, setState] = useState(snapshot);
   const [toast, setToast] = useState<string | null>(null);
@@ -50,7 +49,7 @@ export function LiveProvider({ snapshot, children }: { snapshot: DemoState; chil
   // Cada router.refresh() trae un snapshot nuevo del servidor.
   useEffect(() => setState(snapshot), [snapshot]);
 
-  const api = useMemo<DemoApi>(() => {
+  const api = useMemo<DataApi>(() => {
     const run = (p: Promise<ActionResult>) =>
       startTransition(async () => {
         const res = await p;
@@ -110,13 +109,8 @@ export function LiveProvider({ snapshot, children }: { snapshot: DemoState; chil
     };
 
     return {
-      mode: "live",
       state,
-      hydrated: true,
-      setActingProfile: () => {},
-      renameProfile: () => {},
       // La inscripción pública no pasa por aquí: /join usa joinProgramAction directamente.
-      joinProgram: async () => ({ ok: false, message: "No disponible desde el panel." }),
       registerVisit: async (cardId, idempotencyKey, locationId) => {
         const res = await registerVisitAction(cardId, idempotencyKey, locationId);
         if (res.ok) startTransition(() => router.refresh());
@@ -180,7 +174,6 @@ export function LiveProvider({ snapshot, children }: { snapshot: DemoState; chil
         run(updateMembershipAction(membershipId, patch));
       },
 
-      reset: () => router.refresh(),
     };
   }, [state, router]);
 

@@ -1,10 +1,10 @@
 "use client";
 
 import { BarChart3, LayoutDashboard, Layers, Settings, Store, Users } from "lucide-react";
-import { AppShell, ShellSkeleton, type NavSection } from "@/components/layout/app-shell";
-import { useDemo } from "@/lib/demo/store";
+import { AppShell, type NavSection } from "@/components/layout/app-shell";
+import { useData } from "@/lib/data/store";
 import { LazoLogo } from "@/components/brand/lazo-logo";
-import { Avatar, Badge } from "@/components/ui";
+import { Avatar } from "@/components/ui";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 
 const sections: NavSection[] = [
@@ -21,8 +21,8 @@ const sections: NavSection[] = [
 ];
 
 export function AdminShell({ children }: { children: React.ReactNode }) {
-  const { hydrated, state, mode } = useDemo();
-  const me = state.profiles.find((p) => p.id === state.actingProfileId) ?? state.profiles.find((p) => p.platformRole === "superadmin");
+  const { state } = useData();
+  const me = state.profiles.find((p) => p.id === state.actingProfileId);
   return (
     <AppShell
       sections={sections}
@@ -43,14 +43,12 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
       }
       topbar={
         <>
-          <span className="mr-auto hidden sm:block">
-            {mode === "demo" && <Badge tone="warning">Demostración · datos de ejemplo</Badge>}
-          </span>
+          <span className="mr-auto" />
           <SignOutButton />
         </>
       }
     >
-      {hydrated ? children : <ShellSkeleton />}
+      {children}
     </AppShell>
   );
 }

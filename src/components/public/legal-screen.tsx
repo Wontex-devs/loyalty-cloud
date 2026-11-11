@@ -1,9 +1,7 @@
 "use client";
 
-import { useDemo } from "@/lib/demo/store";
 import { PLATFORM_NAME } from "@/lib/config";
 import type { BusinessBranding, BusinessLegal } from "@/lib/domain/types";
-import { JoinUnavailable } from "./join-form";
 import { BrandMark } from "@/components/loyalty/brand-mark";
 
 export interface LegalData {
@@ -108,11 +106,3 @@ export function LegalScreen({ data }: { data: LegalData }) {
   );
 }
 
-export function DemoLegal({ slug }: { slug: string }) {
-  const { state, hydrated } = useDemo();
-  if (!hydrated) return <div className="min-h-dvh bg-[#f6f6f6]" />;
-  const business = state.businesses.find((b) => b.slug === slug);
-  const program = state.programs.find((p) => p.businessId === business?.id && p.active);
-  if (!business || !program) return <JoinUnavailable />;
-  return <LegalScreen data={{ slug, name: business.name, city: business.city, branding: business.branding, legal: business.legal ?? {}, program }} />;
-}

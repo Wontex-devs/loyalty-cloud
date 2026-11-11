@@ -28,17 +28,15 @@ export interface PublicCardData {
   marketingConsent?: boolean;
 }
 
-/** Página de la tarjeta del cliente. En modo live se refresca sola mientras está visible. */
+/** Página de la tarjeta del cliente. Se refresca sola mientras está visible. */
 export function CardScreen({
   data,
   isNew,
-  live,
   googleWallet = false,
   onUnsubscribe,
 }: {
   data: PublicCardData;
   isNew?: boolean;
-  live?: boolean;
   googleWallet?: boolean;
   /** Retira el consentimiento de marketing de esta tarjeta. */
   onUnsubscribe?: () => Promise<boolean>;
@@ -55,13 +53,13 @@ export function CardScreen({
 
   // Guarda el enlace de la tarjeta en este celular: la pantalla del toque NFC (/tap) lo usa para saber quién es.
   useEffect(() => {
-    if (!data.business.slug || !live) return;
+    if (!data.business.slug) return;
     try {
       localStorage.setItem(`lazo:tarjeta:${data.business.slug}`, data.token);
     } catch {
       /* sin almacenamiento: el toque pedirá abrir la tarjeta de nuevo */
     }
-  }, [data.business.slug, data.token, live]);
+  }, [data.business.slug, data.token]);
 
   // Animación cuando el empleado suma una visita.
   useEffect(() => {
@@ -74,9 +72,8 @@ export function CardScreen({
     lastVisits.current = data.totalVisits;
   }, [data.totalVisits]);
 
-  // Live: el cliente suele tener la tarjeta abierta en caja; se consulta de nuevo cada pocos segundos.
+  // El cliente suele tener la tarjeta abierta en caja; se consulta de nuevo cada pocos segundos.
   useEffect(() => {
-    if (!live) return;
     let last = 0;
     const tick = () => {
       // Como mucho una consulta cada 4 s, y solo con la pestaña visible.
@@ -90,7 +87,7 @@ export function CardScreen({
       clearInterval(id);
       document.removeEventListener("visibilitychange", tick);
     };
-  }, [live, router]);
+  }, [router]);
 
   const copy = () => {
     navigator.clipboard?.writeText(url);

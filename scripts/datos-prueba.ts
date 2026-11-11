@@ -1,8 +1,8 @@
 /**
- * Datos de demostración (Etapa 1). Se generan de forma determinista para que el
- * render de servidor y de cliente coincidan. Se sustituirán por Supabase en la Etapa 2.
+ * Datos de prueba (comercio ficticio Beauty Club) para las pruebas de base de datos y
+ * `npm run db:seed` en el proyecto de pruebas. La aplicación no los usa.
  */
-import { DEFAULT_WALLET_SETTINGS } from "../wallet/messages.ts";
+import { DEFAULT_WALLET_SETTINGS } from "../src/lib/wallet/messages.ts";
 import type {
   AuditLog,
   Business,

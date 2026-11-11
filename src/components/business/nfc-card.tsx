@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { Check, Copy, Loader2, Nfc, RefreshCw } from "lucide-react";
 import { getNfcSettingsAction, setNfcSettingsAction, type NfcSettings } from "@/lib/data/nfc-actions";
-import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { Button, Card, CardHeader, Field, Select, Switch } from "@/components/ui";
 
 const ESPERAS = [
@@ -24,12 +23,11 @@ const escritorNfc = () => {
 
 /**
  * Etiqueta NFC del mostrador: enciende el toque con el celular, muestra el enlace secreto y lo escribe en una etiqueta.
- * Solo en la versión real; en la demostración explica cómo funciona.
  */
 export function NfcCard({ businessId, slug }: { businessId: string; slug: string }) {
   const [ajustes, setAjustes] = useState<NfcSettings | null>(null);
   const [espera, setEspera] = useState(120);
-  const [cargando, setCargando] = useState(isSupabaseConfigured);
+  const [cargando, setCargando] = useState(true);
   const [guardando, setGuardando] = useState(false);
   const [aviso, setAviso] = useState<{ ok: boolean; texto: string } | null>(null);
   const [copiado, setCopiado] = useState(false);
@@ -39,7 +37,6 @@ export function NfcCard({ businessId, slug }: { businessId: string; slug: string
   useEffect(() => setOrigen(window.location.origin), []);
 
   useEffect(() => {
-    if (!isSupabaseConfigured) return;
     let vivo = true;
     void getNfcSettingsAction(businessId).then((r) => {
       if (!vivo) return;
@@ -102,9 +99,7 @@ export function NfcCard({ businessId, slug }: { businessId: string; slug: string
         description="Pega una etiqueta en el mostrador. Tu cliente acerca el celular y se registra su visita, sin pedirle nada al equipo."
       />
       <div className="space-y-5 p-5 text-sm">
-        {!isSupabaseConfigured ? (
-          <p className="text-muted">Esta opción funciona en la versión real, no en la demostración. Ahí enciendes el NFC y escribes el enlace en una etiqueta con tu celular.</p>
-        ) : cargando ? (
+        {cargando ? (
           <p className="flex items-center gap-2 text-muted">
             <Loader2 className="size-4 animate-spin" /> Cargando…
           </p>

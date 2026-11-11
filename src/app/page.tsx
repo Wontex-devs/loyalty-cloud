@@ -6,10 +6,9 @@ import { BrandPreview } from "@/components/marketing/brand-preview";
 import { LazoLogo } from "@/components/brand/lazo-logo";
 import { EscenaCliente } from "@/components/marketing/escena-cliente";
 import { Mascota, NudoDibujo } from "@/components/marketing/mascota";
-import { NfcDemo } from "@/components/marketing/nfc-demo";
+import { NfcAnimacion } from "@/components/marketing/nfc-animacion";
 import { WalletPhone } from "@/components/marketing/wallet-phone";
 import { PLATFORM_NAME, SALES_WHATSAPP } from "@/lib/config";
-import { isSupabaseConfigured } from "@/lib/supabase/config";
 
 const display = Bricolage_Grotesque({ subsets: ["latin"], weight: ["600", "800"], variable: "--font-poster" });
 const text = Onest({ subsets: ["latin"], variable: "--font-text" });
@@ -17,8 +16,8 @@ const text = Onest({ subsets: ["latin"], variable: "--font-text" });
 export const metadata: Metadata = {
   title: { absolute: `${PLATFORM_NAME} · Tarjeta de fidelización digital para tu negocio` },
   description: "Una tarjeta de sellos digital con tu marca y un panel que te dice quién vuelve y a quién escribirle. Plan Starter con primer mes gratis.",
-  // Solo el sitio real aparece en buscadores, con su dominio propio como dirección principal.
-  robots: { index: isSupabaseConfigured, follow: isSupabaseConfigured },
+  // Su dominio propio es la dirección principal en buscadores.
+  robots: { index: true, follow: true },
   alternates: process.env.NEXT_PUBLIC_APP_URL ? { canonical: process.env.NEXT_PUBLIC_APP_URL } : undefined,
 };
 
@@ -233,7 +232,7 @@ export default function Home() {
               </p>
               <p className="mt-4 max-w-3xl text-lg text-white/85">El QR solo sirve la primera vez, para crear la tarjeta. Después, todo es acercar el celular.</p>
             </div>
-            <NfcDemo />
+            <NfcAnimacion />
           </div>
         </section>
 

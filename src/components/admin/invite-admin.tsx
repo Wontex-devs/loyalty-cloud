@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { Loader2, UserPlus } from "lucide-react";
 import { inviteSuperadminAction } from "@/lib/data/actions";
-import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { Button, Card, CardHeader, Field, Input } from "@/components/ui";
 
 /** Botón y formulario para invitar a otro superadministrador de la plataforma. Solo en la versión real. */
@@ -14,13 +13,6 @@ export function InviteAdmin() {
   const [enviando, setEnviando] = useState(false);
   const [aviso, setAviso] = useState<{ ok: boolean; texto: string } | null>(null);
 
-  if (!isSupabaseConfigured) {
-    return (
-      <Button disabled title="Funciona en la versión real, no en la demostración">
-        <UserPlus className="size-4" /> Invitar administrador
-      </Button>
-    );
-  }
 
   const enviar = async (e: React.FormEvent) => {
     e.preventDefault();

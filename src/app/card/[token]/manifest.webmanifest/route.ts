@@ -1,4 +1,3 @@
-import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { getPublicCard } from "@/lib/data/public";
 import { PLATFORM_NAME } from "@/lib/config";
 
@@ -10,7 +9,7 @@ type Ctx = { params: Promise<{ token: string }> };
  */
 export async function GET(_req: Request, { params }: Ctx) {
   const { token } = await params;
-  const card = isSupabaseConfigured ? await getPublicCard(token) : null;
+  const card = await getPublicCard(token);
   const name = card?.business.name ?? PLATFORM_NAME;
   const b = card?.business.branding;
   const slug = card?.business.slug;

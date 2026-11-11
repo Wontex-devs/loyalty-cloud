@@ -8,6 +8,5 @@ export function publicOrigin() {
   return process.env.NEXT_PUBLIC_APP_URL || (typeof window !== "undefined" ? window.location.origin : "");
 }
 
-/** Demo pública que enlaza la página de venta. */
 /** WhatsApp de ventas: solo dígitos, con indicativo. */
 export const SALES_WHATSAPP = (process.env.NEXT_PUBLIC_SALES_WHATSAPP || "573138939222").replace(/\D/g, "");

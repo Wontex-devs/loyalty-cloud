@@ -18,8 +18,8 @@ import {
   Users,
 } from "lucide-react";
 import { onboardingSteps } from "./onboarding";
-import { AppShell, ShellSkeleton, type NavSection } from "@/components/layout/app-shell";
-import { useBusiness, useDemo, type BusinessScope } from "@/lib/demo/store";
+import { AppShell, type NavSection } from "@/components/layout/app-shell";
+import { useBusiness, type BusinessScope } from "@/lib/data/store";
 import { LazoLogo } from "@/components/brand/lazo-logo";
 import { can } from "@/lib/domain/permissions";
 import { ROLE_LABELS } from "@/lib/domain/permissions";
@@ -38,7 +38,6 @@ export function useScope() {
 }
 
 export function BusinessShell({ slug, children }: { slug: string; children: React.ReactNode }) {
-  const { hydrated, state } = useDemo();
   const scope = useBusiness(slug);
 
   if (!scope) {
@@ -143,9 +142,7 @@ export function BusinessShell({ slug, children }: { slug: string; children: Reac
 
   return (
     <AppShell header={header} sections={sections} footer={footer} topbar={topbar} style={brandVars}>
-      {!hydrated ? (
-        <ShellSkeleton />
-      ) : !membership ? (
+      {!membership ? (
         <EmptyState icon={Lock} title="Sin acceso a este comercio" description="Tu usuario no tiene una membresía activa en este establecimiento." />
       ) : (
         <ScopeCtx.Provider value={scope}>

@@ -1,9 +1,8 @@
 /**
  * Motor de fidelización: funciones puras sin dependencias de UI ni de base de datos.
  *
- * En el prototipo se ejecuta en el navegador sobre datos demo. En la Etapa 2/3 la
- * misma lógica se ejecutará en el servidor (Server Actions + función Postgres
- * transaccional), con las mismas reglas y los mismos códigos de error.
+ * Las reglas reales viven en Postgres (funciones transaccionales); este módulo las
+ * replica con los mismos códigos de error para calcular el progreso y probarlas.
  * Canales futuros (Apple/Google Wallet) solo consumen los `events` que emite.
  */
 import type {

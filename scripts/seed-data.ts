@@ -1,7 +1,7 @@
-// Convierte los datos de demostración de la Etapa 1 en filas para Postgres.
+// Convierte los datos de prueba (scripts/datos-prueba.ts) en filas para Postgres.
 // Lo usan scripts/seed.ts (Supabase real) y scripts/test-db.mjs (validación local).
 import { createHash } from "node:crypto";
-import * as demo from "../src/lib/demo/data.ts";
+import * as demo from "./datos-prueba.ts";
 
 /** UUID determinista a partir de un ID de demo (estable entre ejecuciones). */
 export function uuidFor(id: string): string {

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Loader2, Pencil, Plus, Tag } from "lucide-react";
 import { useScope, RequirePermission } from "@/components/business/business-shell";
-import { useDemo, type PromotionInput } from "@/lib/demo/store";
+import { useData, type PromotionInput } from "@/lib/data/store";
 import { can } from "@/lib/domain/permissions";
 import { promotionSchema } from "@/lib/domain/schemas";
 import { activePromotion, bonusLabel, localDay, WEEKDAY_LABELS } from "@/lib/domain/promotions";
@@ -20,7 +20,7 @@ function emptyForm(today: string): PromotionInput {
 
 export default function PromotionsPage() {
   const { business, membership, promotions, visits } = useScope();
-  const { savePromotion } = useDemo();
+  const { savePromotion } = useData();
   const today = localDay(new Date(), business.timezone).date;
   const [editing, setEditing] = useState<string | "new" | null>(null);
   const [form, setForm] = useState<PromotionInput>(() => emptyForm(today));

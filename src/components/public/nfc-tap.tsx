@@ -164,14 +164,14 @@ export function NfcTapVista({
   );
 }
 
-/** Se muestra cuando el negocio no existe o la app corre en modo demostración. */
-export function NfcTapUnavailable({ demo = false }: { demo?: boolean }) {
+/** Se muestra cuando el negocio no existe. */
+export function NfcTapUnavailable() {
   return (
     <main className="flex min-h-dvh flex-col items-center justify-center bg-canvas px-6 text-center">
       <Nfc className="size-14 text-muted" aria-hidden />
-      <h1 className="mt-6 text-2xl font-semibold">{demo ? "El toque NFC no está en la demostración" : "Este programa no está disponible"}</h1>
+      <h1 className="mt-6 text-2xl font-semibold">Este programa no está disponible</h1>
       <p className="mt-2 max-w-sm text-muted">
-        {demo ? "Funciona en la versión real: el cliente acerca el celular a la etiqueta del mostrador y suma su sello." : "Avísale al negocio para que revise la etiqueta."}
+        Avísale al negocio para que revise la etiqueta.
       </p>
     </main>
   );

@@ -3,10 +3,8 @@
 import { useEffect, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import { Printer } from "lucide-react";
-import { useDemo } from "@/lib/demo/store";
 import { PLATFORM_NAME } from "@/lib/config";
 import type { BusinessBranding } from "@/lib/domain/types";
-import { JoinUnavailable } from "./join-form";
 import { BrandMark, brandFont } from "@/components/loyalty/brand-mark";
 import { cn } from "@/lib/utils";
 
@@ -61,11 +59,3 @@ export function Poster({ slug, business, program }: PosterProps) {
   );
 }
 
-export function DemoPoster({ slug }: { slug: string }) {
-  const { state, hydrated } = useDemo();
-  if (!hydrated) return null;
-  const business = state.businesses.find((b) => b.slug === slug);
-  const program = state.programs.find((p) => p.businessId === business?.id && p.active);
-  if (!business || !program) return <JoinUnavailable />;
-  return <Poster slug={slug} business={business} program={program} />;
-}

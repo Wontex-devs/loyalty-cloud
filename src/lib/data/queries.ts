@@ -1,7 +1,7 @@
 import "server-only";
 import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
-import type { DemoState } from "@/lib/demo/store";
+import type { DataState } from "@/lib/data/store";
 import * as m from "./mappers";
 import { fetchAll } from "./fetch-all";
 
@@ -49,7 +49,7 @@ export function homePathFor(session: Session) {
 const MAX_ROWS = 10000;
 
 /** Todo lo que el panel del comercio necesita, filtrado por RLS. */
-export async function loadBusinessSnapshot(slug: string, session: Session): Promise<DemoState | null> {
+export async function loadBusinessSnapshot(slug: string, session: Session): Promise<DataState | null> {
   const supabase = await createClient();
   const { data: biz } = await supabase.from("businesses").select("*").eq("slug", slug).maybeSingle();
   if (!biz) return null;
@@ -97,7 +97,7 @@ export async function loadBusinessSnapshot(slug: string, session: Session): Prom
 }
 
 /** Datos de plataforma para el superadmin (sin datos personales de clientes). */
-export async function loadPlatformSnapshot(session: Session): Promise<DemoState> {
+export async function loadPlatformSnapshot(session: Session): Promise<DataState> {
   const supabase = await createClient();
   const [businesses, plans, profiles, memberships, audit, stats] = await Promise.all([
     supabase.from("businesses").select("*").order("created_at"),
@@ -108,7 +108,7 @@ export async function loadPlatformSnapshot(session: Session): Promise<DemoState>
     supabase.rpc("platform_business_stats"),
   ]);
 
-  const businessStats: DemoState["businessStats"] = {};
+  const businessStats: DataState["businessStats"] = {};
   for (const s of (stats.data ?? []) as { business_id: string; customers: number; visits_30d: number; redemptions_30d: number }[]) {
     businessStats[s.business_id] = { customers: Number(s.customers), visits30d: Number(s.visits_30d), rewards30d: Number(s.redemptions_30d) };
   }

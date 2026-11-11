@@ -3,7 +3,6 @@
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Gift, Loader2, Stamp } from "lucide-react";
-import { useDemo } from "@/lib/demo/store";
 import { joinSchema } from "@/lib/domain/schemas";
 import { joinProgramAction } from "@/lib/data/loyalty-actions";
 import { LazoLogo } from "@/components/brand/lazo-logo";
@@ -19,14 +18,11 @@ interface JoinFormProps {
   slug: string;
   business: { name: string; branding: BusinessBranding };
   program: { description: string; stampsRequired: number; rewardName: string; welcomeStamps?: number };
-  /** true con Supabase configurado; la página pública no tiene LiveProvider. */
-  live?: boolean;
 }
 
-/** Página de inscripción (QR general del comercio). En live llama a joinProgramAction. */
-export function JoinForm({ slug, business, program, live }: JoinFormProps) {
+/** Página de inscripción (QR general del comercio): llama a joinProgramAction. */
+export function JoinForm({ slug, business, program }: JoinFormProps) {
   const router = useRouter();
-  const { state, joinProgram } = useDemo();
 
   const [form, setForm] = useState({ fullName: "", phone: "", email: "", acceptTerms: false, marketingConsent: false });
   const [birth, setBirth] = useState({ day: "", month: "" });
@@ -35,7 +31,7 @@ export function JoinForm({ slug, business, program, live }: JoinFormProps) {
   const [notice, setNotice] = useState<string | null>(null);
   const [captcha, setCaptcha] = useState("");
   const captchaRef = useRef<TurnstileHandle>(null);
-  const needsCaptcha = live && !!TURNSTILE_SITE_KEY;
+  const needsCaptcha = !!TURNSTILE_SITE_KEY;
 
   const b = business.branding;
 
@@ -59,8 +55,7 @@ export function JoinForm({ slug, business, program, live }: JoinFormProps) {
       return;
     }
     setSubmitting(true);
-    const demoBusinessId = state.businesses.find((x) => x.slug === slug)?.id ?? "";
-    const res = live ? await joinProgramAction(slug, parsed.data, captcha || undefined) : await joinProgram(demoBusinessId, parsed.data);
+    const res = await joinProgramAction(slug, parsed.data, captcha || undefined);
     if (!res.ok) {
       setNotice(res.message);
       setSubmitting(false);
@@ -179,7 +174,7 @@ export function JoinForm({ slug, business, program, live }: JoinFormProps) {
             <span>Quiero recibir promociones y novedades (opcional).</span>
           </label>
 
-          {live && <Turnstile ref={captchaRef} onToken={setCaptcha} />}
+          <Turnstile ref={captchaRef} onToken={setCaptcha} />
           {notice && <p className="rounded-xl bg-white/80 px-3 py-2 text-sm">{notice}</p>}
 
           <button

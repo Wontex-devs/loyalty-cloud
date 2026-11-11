@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Gift, Loader2, ShieldCheck } from "lucide-react";
 import { useScope } from "@/components/business/business-shell";
 import { REWARD_STATUS } from "@/components/business/status";
-import { useDemo } from "@/lib/demo/store";
+import { useData } from "@/lib/data/store";
 import { can } from "@/lib/domain/permissions";
 import { Avatar, Badge, Button, Card, EmptyState, PageHeader, Segmented, StatCard, Table, Td, Th } from "@/components/ui";
 import { formatDate, formatDateTime } from "@/lib/utils";
@@ -14,7 +14,7 @@ type Tab = "available" | "redeemed" | "closed" | "all";
 
 export default function RewardsPage() {
   const { business, program, rewards, redemptions, customers, cards, membership, profiles } = useScope();
-  const { redeemReward } = useDemo();
+  const { redeemReward } = useData();
   const [tab, setTab] = useState<Tab>("available");
   const [flash, setFlash] = useState<{ ok: boolean; text: string } | null>(null);
   const [confirming, setConfirming] = useState<string | null>(null);

@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, Trash2 } from "lucide-react";
 import { deleteUserAction } from "@/lib/data/actions";
-import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { Button } from "@/components/ui";
 
 /** Elimina la cuenta de una persona del panel. Pide escribir su correo para confirmar. Solo en la versión real. */
@@ -13,13 +12,6 @@ export function DeleteUser({ profileId, nombre, correo }: { profileId: string; n
   const [trabajando, setTrabajando] = useState(false);
   const [aviso, setAviso] = useState<{ ok: boolean; texto: string } | null>(null);
 
-  if (!isSupabaseConfigured) {
-    return (
-      <Button variant="ghost" size="sm" disabled title="Funciona en la versión real, no en la demostración">
-        <Trash2 className="size-4" /> Eliminar
-      </Button>
-    );
-  }
 
   const eliminar = async () => {
     const escrito = window.prompt(

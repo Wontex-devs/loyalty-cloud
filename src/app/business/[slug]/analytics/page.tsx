@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useScope, RequirePermission } from "@/components/business/business-shell";
 import { BarChart, HBarList } from "@/components/business/charts";
-import { useDemo } from "@/lib/demo/store";
+import { useData } from "@/lib/data/store";
 import { can } from "@/lib/domain/permissions";
 import type { BusinessStats } from "@/lib/domain/stats";
 import { Card, CardHeader, EmptyState, PageHeader, Segmented, StatCard, Table, Td, Th } from "@/components/ui";
@@ -17,7 +17,7 @@ const pct = (a: number, b: number) => (b ? Math.round((a / b) * 100) : 0);
 
 export default function AnalyticsPage() {
   const { business, program, membership, visits, redemptions } = useScope();
-  const { getStats } = useDemo();
+  const { getStats } = useData();
   const [range, setRange] = useState<Range>("30");
   const [stats, setStats] = useState<BusinessStats | null>(null);
   const [error, setError] = useState<string | null>(null);

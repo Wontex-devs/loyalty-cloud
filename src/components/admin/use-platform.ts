@@ -1,11 +1,11 @@
 "use client";
 
 import { useMemo } from "react";
-import { useDemo } from "@/lib/demo/store";
+import { useData } from "@/lib/data/store";
 
-/** Métricas agregadas por comercio. Live: RPC platform_business_stats. Demo: calculadas o estáticas. */
+/** Métricas agregadas por comercio (RPC platform_business_stats). */
 export function usePlatform() {
-  const { state } = useDemo();
+  const { state } = useData();
   return useMemo(() => {
     const d30 = Date.now() - 30 * 86400000;
     const rows = state.businesses.map((b) => {

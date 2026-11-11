@@ -1,5 +1,4 @@
 import { ImageResponse } from "next/og";
-import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { getPublicBusiness } from "@/lib/data/public";
 
 type Ctx = { params: Promise<{ slug: string; size: string }> };
@@ -10,7 +9,7 @@ const SIZES = new Set([180, 192, 512, 660]);
 export async function GET(_req: Request, { params }: Ctx) {
   const { slug, size: raw } = await params;
   const size = SIZES.has(Number(raw)) ? Number(raw) : 192;
-  const business = isSupabaseConfigured && slug !== "_" ? await getPublicBusiness(slug) : null;
+  const business = slug !== "_" ? await getPublicBusiness(slug) : null;
   const bg = business?.branding.cardBackground ?? "#EBCFCB";
   const fg = business?.branding.cardForeground ?? "#1A1416";
   const text = (business?.branding.logoText || business?.name.slice(0, 2) || "LC").slice(0, 3);

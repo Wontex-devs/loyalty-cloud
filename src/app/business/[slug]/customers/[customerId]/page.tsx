@@ -7,7 +7,7 @@ import { ArrowLeft, Ban, BellOff, Cake, MessageCircle, CheckCircle2, Copy, Exter
 import { useScope } from "@/components/business/business-shell";
 import { LoyaltyCardView } from "@/components/loyalty/loyalty-card";
 import { CARD_STATUS } from "@/components/business/status";
-import { useDemo } from "@/lib/demo/store";
+import { useData } from "@/lib/data/store";
 import { can } from "@/lib/domain/permissions";
 import { getProgress } from "@/lib/domain/loyalty-engine";
 import { Avatar, Badge, Button, ButtonLink, buttonClass, Card, CardHeader, EmptyState, Input } from "@/components/ui";
@@ -26,7 +26,7 @@ function whatsappLink(phone: string, fullName: string, businessName: string, car
 export default function CustomerDetailPage() {
   const { customerId } = useParams<{ customerId: string }>();
   const scope = useScope();
-  const { reverseVisit, redeemReward, setCardBlocked, anonymizeCustomer, revokeMarketingConsent } = useDemo();
+  const { reverseVisit, redeemReward, setCardBlocked, anonymizeCustomer, revokeMarketingConsent } = useData();
   const { business, program, customers, cards, visits, rewards, redemptions, membership, profiles } = scope;
   const [reversing, setReversing] = useState<string | null>(null);
   const [reason, setReason] = useState("");
