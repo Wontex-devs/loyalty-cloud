@@ -8,7 +8,7 @@ import { EscenaCliente } from "@/components/marketing/escena-cliente";
 import { Mascota, NudoDibujo } from "@/components/marketing/mascota";
 import { NfcAnimacion } from "@/components/marketing/nfc-animacion";
 import { WalletPhone } from "@/components/marketing/wallet-phone";
-import { PLATFORM_NAME, SALES_WHATSAPP } from "@/lib/config";
+import { PLATFORM_NAME, SALES_WHATSAPP, SITE_URL } from "@/lib/config";
 
 const display = Bricolage_Grotesque({ subsets: ["latin"], weight: ["600", "800"], variable: "--font-poster" });
 const text = Onest({ subsets: ["latin"], variable: "--font-text" });
@@ -18,7 +18,16 @@ export const metadata: Metadata = {
   description: "Una tarjeta de sellos digital con tu marca y un panel que te dice quién vuelve y a quién escribirle. Plan Starter con primer mes gratis.",
   // Su dominio propio es la dirección principal en buscadores.
   robots: { index: true, follow: true },
-  alternates: process.env.NEXT_PUBLIC_APP_URL ? { canonical: process.env.NEXT_PUBLIC_APP_URL } : undefined,
+  alternates: { canonical: "/" },
+  openGraph: {
+    type: "website",
+    locale: "es_CO",
+    siteName: PLATFORM_NAME,
+    url: "/",
+    title: "Tarjeta de sellos digital para que tus clientes vuelvan",
+    description: "Tarjeta de fidelización con la marca de tu negocio: tus clientes la guardan en Google Wallet y suman sellos acercando el celular.",
+  },
+  twitter: { card: "summary_large_image" },
 };
 
 const whatsappLink = (text: string) => `https://wa.me/${SALES_WHATSAPP}?text=${encodeURIComponent(text)}`;
@@ -57,9 +66,48 @@ function WhatsAppButton({ className }: { className: string }) {
   );
 }
 
+/** Datos estructurados para Google: la empresa, el producto con sus precios y las preguntas frecuentes. */
+function datosEstructurados() {
+  const plan = (nombre: string, precio: number) => ({
+    "@type": "Offer",
+    name: `Plan ${nombre}`,
+    price: precio,
+    priceCurrency: "COP",
+    priceSpecification: { "@type": "UnitPriceSpecification", price: precio, priceCurrency: "COP", unitCode: "MON" },
+  });
+  return {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": `${SITE_URL}/#organizacion`,
+        name: PLATFORM_NAME,
+        url: `${SITE_URL}/`,
+        logo: `${SITE_URL}/icon.svg`,
+        contactPoint: { "@type": "ContactPoint", telephone: `+${SALES_WHATSAPP}`, contactType: "sales", areaServed: "CO", availableLanguage: "es" },
+      },
+      {
+        "@type": "SoftwareApplication",
+        name: `${PLATFORM_NAME}: tarjeta de sellos digital`,
+        applicationCategory: "BusinessApplication",
+        operatingSystem: "Web, Android",
+        url: `${SITE_URL}/`,
+        description: "Tarjeta de fidelización digital con la marca de tu negocio, en Google Wallet y con sellos por NFC.",
+        publisher: { "@id": `${SITE_URL}/#organizacion` },
+        offers: [plan("Starter", 79990), plan("Pro", 139990)],
+      },
+      {
+        "@type": "FAQPage",
+        mainEntity: FAQ.map((f) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })),
+      },
+    ],
+  };
+}
+
 export default function Home() {
   return (
     <div className={`${display.variable} ${text.variable} bg-white font-[family-name:var(--font-text)] text-coal [&_h1]:text-balance [&_p]:text-pretty`}>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(datosEstructurados()).replace(/</g, "\\u003c") }} />
       {/* Encabezado fijo: el acceso de los clientes siempre queda a la vista */}
       <header className="on-cobalt sticky top-0 z-40 bg-cobalt text-white shadow-[0_10px_24px_-18px_rgb(6_10_36/0.8)]">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:h-20 sm:px-8">
