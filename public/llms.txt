@@ -1,23 +1,35 @@
 # Lazo
 
-> Lazo es una plataforma colombiana de tarjetas de fidelización digitales para negocios locales (cafeterías, barberías, salones, panaderías, tiendas). Cada negocio tiene su tarjeta de sellos con su marca; sus clientes la guardan en Google Wallet y suman sellos acercando el celular a una etiqueta NFC del mostrador. El dueño ve en un panel quién vuelve, quién dejó de venir y a quién avisarle.
+> Lazo es una plataforma colombiana de tarjetas de fidelización digitales para negocios locales (cafeterías, barberías, salones de belleza, panaderías, tiendas). Cada negocio tiene su tarjeta de sellos con su marca; sus clientes la guardan en Google Wallet y suman sellos acercando el celular a una etiqueta NFC del mostrador. El dueño ve en un panel quién vuelve, quién dejó de venir y a quién avisarle. Lazo es un producto de Wontex, en Barranquilla, Colombia.
 
-## Cómo funciona
+Cómo funciona:
 
 - El cliente escanea una sola vez el QR del negocio, escribe su nombre y su celular, y recibe su tarjeta. No descarga ninguna app.
-- En Android guarda la tarjeta en Google Wallet; en iPhone la usa desde el navegador.
+- En Android guarda la tarjeta en Google Wallet y los sellos se actualizan solos; en iPhone, por ahora, la usa desde el navegador.
 - Cada visita suma un sello al acercar el celular a una etiqueta NFC adhesiva (NTAG213 o NTAG215) pegada en el mostrador. No hace falta lector ni datáfono.
 - Al completar los sellos, el premio aparece en la tarjeta y el negocio lo canjea desde su panel.
-- El negocio puede enviar avisos al celular de quienes aceptaron recibirlos, crear promociones (por ejemplo, doble sello un día de la semana) y ver estadísticas por empleado y por sede.
-- Los datos de los clientes son del negocio y se tratan según la Ley 1581 de 2012 (Habeas Data).
+- El negocio envía avisos al celular de quienes aceptaron recibirlos, crea promociones (por ejemplo, doble sello un día de la semana), ve estadísticas y le da a cada persona del equipo su propio usuario.
+- Los datos de los clientes son del negocio; Lazo los trata como encargado según la Ley 1581 de 2012 y no los vende.
 
-## Planes (pesos colombianos, al mes)
+Planes, en pesos colombianos, al mes, con IVA incluido, pago mensual y sin permanencia:
 
 - Starter: $79.990. Hasta 100 clientes, 2 personas del equipo y 1 sede. Primer mes gratis.
 - Pro: $139.990. Hasta 300 clientes, 10 personas del equipo y 3 sedes.
 - Business: a medida, para cadenas y varias sedes.
 
-## Enlaces
+## Páginas
 
 - [Página principal](https://lazo.wontex-devs.com/): qué es Lazo, cómo funciona, planes y preguntas frecuentes.
-- [Contacto de ventas por WhatsApp](https://wa.me/573138939222)
+- [Tarjeta de fidelización digital](https://lazo.wontex-devs.com/tarjeta-de-fidelizacion-digital): guía de qué es y cómo funciona.
+- [Tarjeta de sellos digital](https://lazo.wontex-devs.com/tarjeta-de-sellos-digital): cartón frente a digital, cuántos sellos poner y cómo montarla.
+- [Tarjeta de lealtad en Google Wallet](https://lazo.wontex-devs.com/tarjeta-de-lealtad-google-wallet): cómo la agrega y la usa el cliente.
+- [Para barberías](https://lazo.wontex-devs.com/barberias)
+- [Para cafeterías](https://lazo.wontex-devs.com/cafeterias)
+- [Para salones de belleza](https://lazo.wontex-devs.com/salones-de-belleza)
+- [Política de tratamiento de datos](https://lazo.wontex-devs.com/politica-de-datos)
+- [Términos del servicio](https://lazo.wontex-devs.com/terminos)
+
+## Contacto
+
+- [WhatsApp de ventas](https://wa.me/573138939222)
+- [Correo: info@wontex-devs.com](mailto:info@wontex-devs.com)

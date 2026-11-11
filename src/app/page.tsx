@@ -1,24 +1,22 @@
 import type { Metadata } from "next";
-import { Bricolage_Grotesque, Onest } from "next/font/google";
 import Link from "next/link";
-import { LogIn, MessageCircle } from "lucide-react";
+import { ArrowRight, MessageCircle } from "lucide-react";
 import { BrandPreview } from "@/components/marketing/brand-preview";
-import { LazoLogo } from "@/components/brand/lazo-logo";
 import { EscenaCliente } from "@/components/marketing/escena-cliente";
 import { Mascota, NudoDibujo } from "@/components/marketing/mascota";
 import { NfcAnimacion } from "@/components/marketing/nfc-animacion";
 import { WalletPhone } from "@/components/marketing/wallet-phone";
-import { PLATFORM_NAME, SALES_WHATSAPP, SITE_URL } from "@/lib/config";
-
-const display = Bricolage_Grotesque({ subsets: ["latin"], weight: ["600", "800"], variable: "--font-poster" });
-const text = Onest({ subsets: ["latin"], variable: "--font-text" });
+import { EncabezadoSitio, PieSitio } from "@/components/marketing/sitio";
+import { fuenteTexto, fuenteTitulos, poster } from "@/components/marketing/fuentes";
+import { EMPRESA, PLATFORM_NAME, SALES_WHATSAPP, SITE_URL } from "@/lib/config";
+import { PAGINAS } from "@/lib/contenido";
 
 export const metadata: Metadata = {
   title: { absolute: `${PLATFORM_NAME} · Tarjeta de fidelización digital para tu negocio` },
-  description: "Una tarjeta de sellos digital con tu marca y un panel que te dice quién vuelve y a quién escribirle. Plan Starter con primer mes gratis.",
+  description: "Tarjeta de sellos digital con tu marca, en Google Wallet y con sellos por NFC. Planes desde $79.990 al mes, IVA incluido y sin permanencia.",
   // Su dominio propio es la dirección principal en buscadores.
   robots: { index: true, follow: true },
-  alternates: { canonical: "/" },
+  alternates: { canonical: `${SITE_URL}/` },
   openGraph: {
     type: "website",
     locale: "es_CO",
@@ -33,7 +31,6 @@ export const metadata: Metadata = {
 const whatsappLink = (text: string) => `https://wa.me/${SALES_WHATSAPP}?text=${encodeURIComponent(text)}`;
 const whatsappHref = whatsappLink(`Hola, quiero mi primer mes gratis del plan Starter de ${PLATFORM_NAME}.`);
 
-const poster = "font-[family-name:var(--font-poster)] font-extrabold tracking-[-0.02em]";
 const h2 = `${poster} text-balance text-4xl leading-[1.02] sm:text-6xl`;
 const btn = "inline-flex h-14 items-center justify-center gap-2.5 rounded-lg px-6 text-base font-semibold transition-transform duration-150 ease-out hover:-translate-y-0.5 active:scale-[0.97]";
 
@@ -45,15 +42,16 @@ const PLANS = [
 
 const FAQ = [
   { q: "¿Qué es Lazo?", a: "Lazo es una plataforma colombiana de tarjetas de fidelización digitales para negocios locales. Cada negocio tiene su tarjeta de sellos con su marca, sus clientes la guardan en Google Wallet y suman sellos acercando el celular a una etiqueta NFC del mostrador. El dueño ve en un panel quién vuelve, quién dejó de venir y a quién avisarle." },
-  { q: "¿Cómo funciona el primer mes gratis?", a: "Aplica al plan Starter. Te dejamos la tarjeta lista con tu marca y la usas un mes sin pagar. Si decides seguir, pagas $79.990 al mes." },
+  { q: "¿Cómo funciona el primer mes gratis?", a: "Aplica al plan Starter. Te dejamos la tarjeta lista con tu marca y la usas un mes sin pagar. Si decides seguir, pagas $79.990 al mes, con IVA incluido." },
+  { q: "¿Los precios incluyen IVA? ¿Hay permanencia?", a: "Sí, los precios ya incluyen el IVA. Se paga mes a mes y no hay permanencia mínima: puedes cancelar cuando quieras escribiéndonos por WhatsApp o a info@wontex-devs.com, y no se cobra el mes siguiente." },
   { q: "¿Mis clientes tienen que descargar algo?", a: "No. Tu cliente crea su tarjeta escaneando el QR de tu negocio, desde el navegador del celular. En Android la guarda en Google Wallet con un botón. En iPhone la abre desde su enlace en el navegador, sin instalar nada." },
   { q: "¿Necesito comprar algún equipo?", a: "No necesitas lector ni datáfono. Basta una etiqueta NFC adhesiva (tipo NTAG213 o NTAG215), que se pega en el mostrador y se activa desde tu panel. El QR solo se usa una vez, para que tu cliente cree su tarjeta; lo pones en un cartel en la caja." },
   { q: "¿Qué pasa si mi cliente cambia de celular?", a: "Vuelve a escanear el QR de tu negocio con el mismo nombre y celular, y recupera su tarjeta con todos sus sellos." },
   { q: "¿Sirve para mi tipo de negocio?", a: "Sirve para cualquier negocio con clientes que repiten: barberías, salones, cafeterías, panaderías, spas, gimnasios, lavaderos, tiendas y más." },
   { q: "¿Se pueden hacer trampas con los sellos?", a: "Hay varios frenos. Entre dos sellos debe pasar un tiempo mínimo que tú eliges, y el sistema bloquea los toques repetidos. Cada sello queda registrado con fecha y hora, y puedes anularlo desde el historial. Si sospechas que alguien copió la etiqueta, la cambias desde tu panel y la anterior deja de funcionar." },
-  { q: "¿Quién ve los datos de mis clientes?", a: "Solo tu negocio. Tus clientes aceptan la política de datos (Ley 1581) al inscribirse, pueden dejar de recibir mensajes desde su tarjeta y pedirte que borres sus datos." },
+  { q: "¿Quién ve los datos de mis clientes?", a: "Los datos de tus clientes son de tu negocio. Lazo los guarda solo para operar tu tarjeta, como encargado según la Ley 1581 de 2012, y no los vende ni los comparte con otros negocios. Tus clientes aceptan la política de datos al inscribirse, pueden dejar de recibir avisos desde su tarjeta y pedirte que borres sus datos." },
   { q: "¿La tarjeta de lealtad queda en Google Wallet?", a: "Sí. En Android la tarjeta queda en Google Wallet con tu logo, tus colores y los sellos al día: cada sello nuevo se actualiza solo en la billetera del cliente. En iPhone, por ahora, la tarjeta se usa desde el navegador." },
-  { q: "¿Funciona con varias sedes?", a: "Sí. Según el plan puedes tener varias sedes y comparar sus visitas." },
+  { q: "¿Funciona con varias sedes?", a: "Sí. El plan Starter incluye una sede, el Pro hasta tres y el Business las que necesites. Cada persona de tu equipo tiene su propio usuario." },
 ];
 
 function Punch({ bg, hole }: { bg: string; hole: string }) {
@@ -98,7 +96,10 @@ function datosEstructurados() {
         name: PLATFORM_NAME,
         url: `${SITE_URL}/`,
         description: descripcion,
-        logo: { "@type": "ImageObject", url: `${SITE_URL}/icon.svg` },
+        email: EMPRESA.correo,
+        address: { "@type": "PostalAddress", addressLocality: EMPRESA.localidad, addressRegion: EMPRESA.region, addressCountry: "CO" },
+        parentOrganization: { "@type": "Organization", name: EMPRESA.nombre, url: EMPRESA.web },
+        logo: { "@type": "ImageObject", url: `${SITE_URL}/apple-icon`, width: 180, height: 180 },
         areaServed: { "@type": "Country", name: "Colombia" },
         contactPoint: { "@type": "ContactPoint", telephone: `+${SALES_WHATSAPP}`, contactType: "sales", areaServed: "CO", availableLanguage: "es" },
       },
@@ -148,37 +149,9 @@ function datosEstructurados() {
 
 export default function Home() {
   return (
-    <div className={`${display.variable} ${text.variable} bg-white font-[family-name:var(--font-text)] text-coal [&_h1]:text-balance [&_p]:text-pretty`}>
+    <div className={`${fuenteTitulos.variable} ${fuenteTexto.variable} bg-white font-[family-name:var(--font-text)] text-coal [&_h1]:text-balance [&_p]:text-pretty`}>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(datosEstructurados()).replace(/</g, "\\u003c") }} />
-      {/* Encabezado fijo: el acceso de los clientes siempre queda a la vista */}
-      <header className="on-cobalt sticky top-0 z-40 bg-cobalt text-white shadow-[0_10px_24px_-18px_rgb(6_10_36/0.8)]">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:h-20 sm:px-8">
-          <Link href="/" aria-label={PLATFORM_NAME} className="whitespace-nowrap">
-            <LazoLogo animar className="text-[32px]" markClassName="text-sun" />
-          </Link>
-          <nav className="flex items-center gap-4 text-[15px] font-medium sm:gap-5" aria-label="Principal">
-            <a href="#como-funciona" className="hidden hover:underline lg:block">Cómo funciona</a>
-            <a href="#planes" className="hidden hover:underline lg:block">Planes</a>
-            <a href="#preguntas" className="hidden hover:underline lg:block">Preguntas</a>
-            <Link
-              href="/login"
-              className="inline-flex h-11 items-center gap-2 rounded-lg bg-sun px-5 font-semibold text-coal shadow-[0_6px_16px_-8px_rgb(6_10_36/0.6)] transition-transform duration-150 ease-out hover:-translate-y-0.5 active:scale-[0.97]"
-            >
-              <LogIn className="size-4" aria-hidden />
-              <span className="hidden sm:inline">Portal de clientes · Entrar</span>
-              <span className="sm:hidden">Entrar</span>
-            </Link>
-          </nav>
-        </div>
-        {/* En celular y tableta los enlaces a cada sección van en una segunda fila */}
-        <nav aria-label="Secciones" className="border-t border-white/15 lg:hidden">
-          <div className="mx-auto flex max-w-7xl items-center gap-1 px-2 text-sm font-medium sm:px-6">
-            <a href="#como-funciona" className="flex h-11 items-center px-3 hover:underline">Cómo funciona</a>
-            <a href="#planes" className="flex h-11 items-center px-3 hover:underline">Planes</a>
-            <a href="#preguntas" className="flex h-11 items-center px-3 hover:underline">Preguntas</a>
-          </div>
-        </nav>
-      </header>
+      <EncabezadoSitio enPortada />
 
       {/* Portada */}
       <div className="on-cobalt overflow-x-clip bg-cobalt text-white">
@@ -295,7 +268,7 @@ export default function Home() {
                   </div>
                 ))}
               </dl>
-              <p className="mt-4 text-sm text-graphite">Ejemplo con datos ficticios. También ves las visitas por empleado y por sede.</p>
+              <p className="mt-4 text-sm text-graphite">Ejemplo con datos ficticios.</p>
             </div>
           </div>
         </section>
@@ -330,7 +303,7 @@ export default function Home() {
         {/* Planes */}
         <section id="planes" className="reveal mx-auto max-w-7xl scroll-mt-28 px-4 py-20 sm:px-8 lg:scroll-mt-20 lg:py-28">
           <h2 className={h2}>Planes y precios</h2>
-          <p className="mt-4 text-xl text-graphite">Precios en pesos colombianos. Todos incluyen la tarjeta con tu marca, avisos al celular de tus clientes, promociones, premios y estadísticas.</p>
+          <p className="mt-4 text-xl text-graphite">Precios en pesos colombianos, con IVA incluido. Pago mensual, sin permanencia. Todos incluyen la tarjeta con tu marca, avisos al celular de tus clientes, promociones, premios y estadísticas.</p>
           <div className="mt-10 grid gap-5 md:grid-cols-3 md:items-stretch">
             {PLANS.map((p) => (
               <div
@@ -397,6 +370,28 @@ export default function Home() {
             </div>
           </div>
         </section>
+        {/* Guías y páginas por tipo de negocio */}
+        <section className="border-t-2 border-coal/10 bg-[#eef1fd]">
+          <div className="mx-auto max-w-7xl px-4 py-20 sm:px-8 lg:py-24">
+            <h2 className={h2}>Aprende antes de decidir</h2>
+            <p className="mt-4 max-w-2xl text-xl text-graphite">Guías cortas sobre tarjetas de fidelización y ejemplos para tu tipo de negocio.</p>
+            <ul className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {PAGINAS.filter((p) => p.tipo !== "legal").map((p) => (
+                <li key={p.ruta}>
+                  <Link href={`/${p.ruta}`} className="group flex h-full flex-col justify-between gap-6 rounded-xl border-2 border-coal/10 bg-white p-6 transition-colors hover:border-cobalt">
+                    <span>
+                      <span className="block text-sm font-semibold text-cobalt">{p.antetitulo}</span>
+                      <span className={`${poster} mt-2 block text-2xl leading-[1.1]`}>{p.h1}</span>
+                    </span>
+                    <span className="inline-flex items-center gap-2 font-semibold">
+                      Leer <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" aria-hidden />
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
       </main>
 
       {/* Cierre */}
@@ -416,14 +411,7 @@ export default function Home() {
         </div>
       </section>
 
-      <footer className="bg-sun text-coal">
-        <div className="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-7 text-[15px] sm:flex-row sm:justify-between sm:px-8">
-          <p>{PLATFORM_NAME} · Tarjeta de fidelización digital para negocios en Colombia</p>
-          <p>
-            WhatsApp 313 893 9222 · <a href="https://wontex-devs.com" className="underline underline-offset-2">wontex-devs.com</a>
-          </p>
-        </div>
-      </footer>
+      <PieSitio />
       <Mascota />
     </div>
   );

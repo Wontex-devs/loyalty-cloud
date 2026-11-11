@@ -23,3 +23,7 @@
 
 - Completar razón social, NIT, dirección y correo de contacto del responsable (si no, el texto para clientes muestra un aviso de «datos pendientes»).
 - Revisar los términos del programa (sellos, recompensa, vencimiento).
+
+## Publicado en el sitio (11-nov-2026)
+
+Una versión resumida de la política y de los términos está publicada en `/politica-de-datos` y `/terminos` (texto en `src/lib/contenido/legal.ts`). Responsable: Wontex, Barranquilla, NIT en trámite. **Pendiente:** revisión del abogado, razón social y NIT definitivos (se cambian en `EMPRESA`, `src/lib/config.ts`).

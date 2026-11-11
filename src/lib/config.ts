@@ -11,5 +11,17 @@ export function publicOrigin() {
   return process.env.NEXT_PUBLIC_APP_URL || (typeof window !== "undefined" ? window.location.origin : "");
 }
 
+/** Quién está detrás de Lazo. Se muestra en el pie, en las páginas legales y en los datos para Google. */
+export const EMPRESA = {
+  nombre: "Wontex",
+  ciudad: "Barranquilla, Colombia",
+  localidad: "Barranquilla",
+  region: "Atlántico",
+  nit: "en trámite",
+  correo: "info@wontex-devs.com",
+  telefono: "+57 313 893 9222",
+  web: "https://wontex-devs.com",
+};
+
 /** WhatsApp de ventas: solo dígitos, con indicativo. */
 export const SALES_WHATSAPP = (process.env.NEXT_PUBLIC_SALES_WHATSAPP || "573138939222").replace(/\D/g, "");
