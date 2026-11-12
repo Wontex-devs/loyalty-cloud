@@ -26,6 +26,7 @@ Planes, en pesos colombianos, al mes, con IVA incluido, pago mensual y sin perma
 - [Para barberías](https://lazo.wontex-devs.com/barberias)
 - [Para cafeterías](https://lazo.wontex-devs.com/cafeterias)
 - [Para salones de belleza](https://lazo.wontex-devs.com/salones-de-belleza)
+- [Quiénes somos](https://lazo.wontex-devs.com/quienes-somos): quién hace Lazo (Wontex, Barranquilla), cómo trabaja y cómo contactarlo.
 - [Política de tratamiento de datos](https://lazo.wontex-devs.com/politica-de-datos)
 - [Términos del servicio](https://lazo.wontex-devs.com/terminos)
 

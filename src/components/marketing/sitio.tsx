@@ -53,11 +53,11 @@ export function EncabezadoSitio({ enPortada = false }: { enPortada?: boolean }) 
 
 /** Pie del sitio: quién está detrás de Lazo, enlaces a las guías y a los textos legales. */
 export function PieSitio() {
-  const grupo = (tipo: "guia" | "sector" | "legal") => PAGINAS.filter((p) => p.tipo === tipo);
+  const grupo = (...tipos: string[]) => PAGINAS.filter((p) => tipos.includes(p.tipo));
   const columnas: [string, ReturnType<typeof grupo>][] = [
     ["Guías", grupo("guia")],
     ["Por tipo de negocio", grupo("sector")],
-    ["Legal", grupo("legal")],
+    ["Empresa y legal", grupo("empresa", "legal")],
   ];
   return (
     <footer className="bg-sun text-coal">

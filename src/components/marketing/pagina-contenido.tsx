@@ -5,7 +5,7 @@ import { fuenteTexto, fuenteTitulos, poster } from "@/components/marketing/fuent
 import { EMPRESA, PLATFORM_NAME, SALES_WHATSAPP, SITE_URL } from "@/lib/config";
 import { buscarPagina, type Pagina } from "@/lib/contenido";
 
-const NOMBRE_TIPO = { guia: "Guías", sector: "Por tipo de negocio", legal: "Legal" } as const;
+const NOMBRE_TIPO = { guia: "Guías", sector: "Por tipo de negocio", empresa: "Empresa", legal: "Legal" } as const;
 
 function fechaLarga(iso: string) {
   return new Date(`${iso}T12:00:00`).toLocaleDateString("es-CO", { day: "numeric", month: "long", year: "numeric" });
@@ -21,6 +21,8 @@ function datosEstructurados(p: Pagina) {
     "@graph": [
       p.tipo === "legal"
         ? paginaSimple
+        : p.tipo === "empresa"
+        ? { ...paginaSimple, "@type": "AboutPage", about: organizacion, mainEntity: organizacion }
         : p.tipo === "sector"
         ? {
             ...paginaSimple,

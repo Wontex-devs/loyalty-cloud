@@ -99,7 +99,7 @@ function datosEstructurados() {
         email: EMPRESA.correo,
         address: { "@type": "PostalAddress", addressLocality: EMPRESA.localidad, addressRegion: EMPRESA.region, addressCountry: "CO" },
         parentOrganization: { "@type": "Organization", name: EMPRESA.nombre, url: EMPRESA.web },
-        logo: { "@type": "ImageObject", url: `${SITE_URL}/apple-icon`, width: 180, height: 180 },
+        logo: { "@type": "ImageObject", url: `${SITE_URL}/logo-lazo.png`, width: 512, height: 512 },
         areaServed: { "@type": "Country", name: "Colombia" },
         contactPoint: { "@type": "ContactPoint", telephone: `+${SALES_WHATSAPP}`, contactType: "sales", areaServed: "CO", availableLanguage: "es" },
       },
@@ -376,7 +376,7 @@ export default function Home() {
             <h2 className={h2}>Aprende antes de decidir</h2>
             <p className="mt-4 max-w-2xl text-xl text-graphite">Guías cortas sobre tarjetas de fidelización y ejemplos para tu tipo de negocio.</p>
             <ul className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {PAGINAS.filter((p) => p.tipo !== "legal").map((p) => (
+              {PAGINAS.filter((p) => p.tipo === "guia" || p.tipo === "sector").map((p) => (
                 <li key={p.ruta}>
                   <Link href={`/${p.ruta}`} className="group flex h-full flex-col justify-between gap-6 rounded-xl border-2 border-coal/10 bg-white p-6 transition-colors hover:border-cobalt">
                     <span>
