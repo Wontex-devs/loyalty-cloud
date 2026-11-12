@@ -80,7 +80,7 @@ export function Mascota() {
     if (!oculto) setMontado(true);
   }, []);
 
-  // En celular, Nudo no habla hasta que la persona baja de la portada: así su globo no tapa el texto principal.
+  // En celular, Nudo espera a que la persona baje de la portada.
   const [hablar, setHablar] = useState(false);
   useEffect(() => {
     if (!montado) return;
@@ -108,7 +108,8 @@ export function Mascota() {
     return () => clearTimeout(t);
   }, [montado, hablar, bocadillo, frase, pulso]);
 
-  if (!montado) return null;
+  // En celular, Nudo aparece cuando la persona baja de la portada: así no tapa el texto principal.
+  if (!montado || !hablar) return null;
 
   const tocar = () => {
     setFrase((f) => (f + 1) % FRASES.length);
@@ -154,7 +155,7 @@ export function Mascota() {
           type="button"
           onClick={cerrar}
           aria-label="Ocultar a Nudo"
-          className="absolute bottom-0 -left-1 flex size-6 items-center justify-center rounded-full border-2 border-coal bg-white text-coal"
+          className="absolute bottom-0 -left-1 flex size-6 items-center justify-center rounded-full border-2 border-coal bg-white text-coal after:absolute after:-inset-2.5 after:content-['']"
         >
           <X className="size-3.5" strokeWidth={3} aria-hidden />
         </button>
