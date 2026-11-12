@@ -34,7 +34,7 @@ export function WalletPhone() {
 
               {/* Aviso */}
               <div className="notice-slide absolute inset-x-2.5 top-11 z-10 flex items-center gap-2.5 rounded-[20px] bg-white/95 p-3 shadow-[0_8px_24px_rgba(0,0,0,0.18)]">
-                <img src="/logos/el-faro.svg" alt="" className="size-10 shrink-0 rounded-xl bg-white p-1 ring-1 ring-black/10" />
+                <img src="/logos/el-faro.svg" alt="Logo de Barbería El Faro, negocio de ejemplo" className="size-10 shrink-0 rounded-xl bg-white p-1 ring-1 ring-black/10" />
                 <div className="min-w-0 flex-1 leading-snug">
                   <p className="flex justify-between gap-2 text-xs text-[#5c5c60]">
                     <span>Wallet</span>
@@ -49,7 +49,7 @@ export function WalletPhone() {
               <div className="absolute inset-x-2.5 bottom-3 top-[124px] overflow-hidden rounded-[22px] bg-cobalt text-white">
                 <div className="px-4 pt-3.5">
                   <div className="flex items-center gap-2.5">
-                    <img src="/logos/el-faro.svg" alt="" className="size-9 rounded-full bg-white p-1" />
+                    <img src="/logos/el-faro.svg" alt="Logo de Barbería El Faro en su tarjeta de sellos" className="size-9 rounded-full bg-white p-1" />
                     <span className="text-sm font-medium">Barbería El Faro</span>
                   </div>
                   <p className="mt-2.5 text-[21px] font-semibold leading-none">Club del Faro</p>

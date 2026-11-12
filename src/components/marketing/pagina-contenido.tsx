@@ -11,15 +11,30 @@ function fechaLarga(iso: string) {
   return new Date(`${iso}T12:00:00`).toLocaleDateString("es-CO", { day: "numeric", month: "long", year: "numeric" });
 }
 
-/** Datos para Google: la página como artículo (o página legal) y su ruta de migas. */
+/** Datos para Google: guía = artículo; tipo de negocio = página del servicio; legal = página simple. Más su ruta de migas. */
 function datosEstructurados(p: Pagina) {
   const url = `${SITE_URL}/${p.ruta}`;
   const organizacion = { "@id": `${SITE_URL}/#organizacion` };
+  const paginaSimple = { "@type": "WebPage", "@id": `${url}#pagina`, url, name: p.h1, description: p.descripcion, inLanguage: "es-CO", dateModified: p.actualizado, publisher: organizacion, isPartOf: { "@id": `${SITE_URL}/#sitio` } };
   return {
     "@context": "https://schema.org",
     "@graph": [
       p.tipo === "legal"
-        ? { "@type": "WebPage", "@id": `${url}#pagina`, url, name: p.h1, description: p.descripcion, inLanguage: "es-CO", dateModified: p.actualizado, publisher: organizacion, isPartOf: { "@id": `${SITE_URL}/#sitio` } }
+        ? paginaSimple
+        : p.tipo === "sector"
+        ? {
+            ...paginaSimple,
+            mainEntity: {
+              "@type": "Service",
+              "@id": `${url}#servicio`,
+              name: p.h1,
+              description: p.descripcion,
+              serviceType: "Tarjeta de fidelización digital",
+              provider: organizacion,
+              areaServed: { "@type": "Country", name: "Colombia" },
+              offers: { "@type": "Offer", url: `${SITE_URL}/#planes`, price: "79990.00", priceCurrency: "COP", availability: "https://schema.org/InStock" },
+            },
+          }
         : {
             "@type": "Article",
             "@id": `${url}#articulo`,

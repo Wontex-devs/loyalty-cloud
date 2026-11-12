@@ -159,7 +159,7 @@ export default function Home() {
         <section className="mx-auto grid max-w-7xl items-center gap-10 px-4 pb-14 pt-8 sm:px-8 lg:grid-cols-[1.1fr_0.9fr] lg:pb-16 lg:pt-6">
           <div>
             <h1 className={`${poster} text-[3.6rem] leading-[0.95] sm:text-8xl lg:text-[6.5rem]`}>
-              <span className="mb-5 block font-[family-name:var(--font-text)] text-lg font-semibold tracking-normal text-white/85 sm:text-xl">Tarjeta de sellos digital para tu negocio</span>
+              <span className="mb-5 block font-[family-name:var(--font-text)] text-lg font-semibold tracking-normal text-white/85 sm:text-xl">Tarjeta de sellos digital para tu negocio</span>{" "}
               Haz que tus clientes <span className="text-sun">vuelvan.</span>
             </h1>
             <p className="mt-8 max-w-xl text-xl leading-relaxed text-white/90">
