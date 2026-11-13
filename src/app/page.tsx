@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, MessageCircle } from "lucide-react";
 import { BrandPreview } from "@/components/marketing/brand-preview";
-import { EscenaCliente } from "@/components/marketing/escena-cliente";
+import { HistoriaLazo } from "@/components/marketing/historia-lazo";
 import { Mascota, NudoDibujo } from "@/components/marketing/mascota";
 import { NfcAnimacion } from "@/components/marketing/nfc-animacion";
 import { WalletPhone } from "@/components/marketing/wallet-phone";
@@ -197,7 +197,7 @@ export default function Home() {
             Vendes todos los días, pero al cerrar no sabes quién es tu cliente fiel ni quién se fue a la competencia. Eso es lo que resolvemos.
           </p>
         </section>
-        <EscenaCliente />
+        <HistoriaLazo />
 
         {/* Cómo funciona */}
         <section id="como-funciona" className="scroll-mt-28 bg-sun lg:scroll-mt-20">
