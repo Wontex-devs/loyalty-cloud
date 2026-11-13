@@ -67,7 +67,15 @@ export async function POST(request: NextRequest) {
 
   const supabase = await createClient();
   const { error } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type });
-  if (!error) return NextResponse.redirect(new URL(next, origen), 303);
+  if (!error) {
+    // Registro de inicios de sesión del panel (fecha y método). Si falla, no impide entrar.
+    const metodo = type === "invite" ? "invite" : type === "recovery" ? "recovery" : type === "magiclink" || type === "email" ? "magic_link" : null;
+    if (metodo) {
+      const { error: errorRegistro } = await supabase.rpc("record_login", { p_method: metodo });
+      if (errorRegistro) console.error("[auth] no se pudo registrar el inicio de sesión", errorRegistro.message);
+    }
+    return NextResponse.redirect(new URL(next, origen), 303);
+  }
 
   const { data } = await supabase.auth.getUser();
   const recien = data.user?.last_sign_in_at ? Date.now() - new Date(data.user.last_sign_in_at).getTime() < MARGEN_REENVIO_MS : false;

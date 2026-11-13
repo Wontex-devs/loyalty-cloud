@@ -13,6 +13,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { brandingSchema, businessSchema, businessSettingsSchema, programSchema, staffInviteSchema, type BusinessSettingsInput } from "@/lib/domain/schemas";
 import { getSession, homePathFor } from "./queries";
+import { esSuperadmin } from "@/lib/domain/acceso";
 import { dbErrorMessage } from "./errors";
 import { scheduleBusinessWalletSync } from "@/lib/wallet/sync";
 import type { BusinessBranding, BusinessMembership, BusinessStatus, LoyaltyProgram } from "@/lib/domain/types";
@@ -41,6 +42,7 @@ export async function signInWithPassword(_: unknown, form: FormData): Promise<Ac
   const { error } = await supabase.auth.signInWithPassword(parsed.data);
   // Mensaje genérico: no revela si el correo existe.
   if (error) return { ok: false, message: "Correo o contraseña incorrectos." };
+  await registrarInicio(supabase, "password");
 
   const next = String(form.get("next") ?? "");
   redirect(next.startsWith("/") && !next.startsWith("//") ? next : "/start");
@@ -65,6 +67,12 @@ export async function sendPasswordReset(_: unknown, form: FormData): Promise<Act
   await supabase.auth.resetPasswordForEmail(email.data, { redirectTo: `${await origin()}/auth/callback?next=/account/password` });
   // Misma respuesta exista o no la cuenta.
   return { ok: true, message: "Si el correo tiene acceso, recibirás un enlace para cambiar tu contraseña." };
+}
+
+/** Deja constancia del inicio de sesión (fecha y método). Si falla, no impide entrar. */
+async function registrarInicio(supabase: Awaited<ReturnType<typeof createClient>>, metodo: "password" | "magic_link" | "invite" | "recovery") {
+  const { error } = await supabase.rpc("record_login", { p_method: metodo });
+  if (error) console.error("[auth] no se pudo registrar el inicio de sesión", error.message);
 }
 
 export async function signOut() {
@@ -170,7 +178,7 @@ async function inviteMember(
 
   const session = await getSession();
   if (!session) return fail({ message: "FORBIDDEN" });
-  const isSuper = session.profile?.platformRole === "superadmin";
+  const isSuper = esSuperadmin(session.profile);
   const mine = session.memberships.find((m) => m.businessId === businessId);
   if (!isSuper && !(mine && (mine.role === "owner" || mine.role === "admin"))) return fail({ message: "FORBIDDEN" });
 
@@ -256,96 +264,7 @@ export async function createBusinessAction(input: {
   return { ok: true, id: id as string, message: "Comercio creado." };
 }
 
-/* ---------- Administradores de la plataforma ---------- */
-
-const superadminInviteSchema = z.object({
-  fullName: z.string().trim().min(2, "Escribe el nombre.").max(80, "El nombre es muy largo."),
-  email: z.email("Correo no válido"),
-});
-
-/**
- * Invita a un superadministrador de la plataforma. Solo lo puede hacer otro superadministrador.
- * Si la persona no tiene cuenta, recibe un correo para crear su propia contraseña; la app nunca fija ni ve contraseñas.
- */
-export async function inviteSuperadminAction(input: { fullName: string; email: string }): Promise<ActionResult> {
-  const parsed = superadminInviteSchema.safeParse(input);
-  if (!parsed.success) return { ok: false, message: parsed.error.issues[0]?.message ?? "Datos no válidos." };
-
-  const session = await getSession();
-  if (session?.profile?.platformRole !== "superadmin") return fail({ message: "FORBIDDEN" });
-
-  const admin = createAdminClient();
-  const email = parsed.data.email.toLowerCase();
-  const { data: existing } = await admin.from("profiles").select("id, platform_role").eq("email", email).maybeSingle();
-  if (existing?.platform_role === "superadmin") return { ok: true, message: "Esa persona ya es superadministradora." };
-
-  let profileId = existing?.id as string | undefined;
-  if (!profileId) {
-    const { data, error } = await admin.auth.admin.inviteUserByEmail(email, {
-      data: { full_name: parsed.data.fullName },
-      redirectTo: `${await origin()}/auth/callback?next=/account/password`,
-    });
-    if (error || !data.user) {
-      return { ok: false, message: "No se pudo enviar la invitación. Si el correo no llega, puede haberse alcanzado el límite de envíos de Supabase: espera unos minutos." };
-    }
-    profileId = data.user.id;
-  }
-
-  // La service_role solo se usa aquí, después de comprobar que quien invita es superadministrador.
-  const { error: roleError } = await admin.from("profiles").update({ platform_role: "superadmin" }).eq("id", profileId);
-  if (roleError) return { ok: false, message: "Se envió la invitación, pero no se pudo dar el rol. Inténtalo de nuevo." };
-
-  const { error: auditError } = await admin.from("audit_logs").insert({
-    business_id: null,
-    actor_id: session.user.id,
-    action: "platform.superadmin_granted",
-    entity: "profile",
-    entity_id: profileId,
-    metadata: { invited: !existing },
-  });
-  if (auditError) console.error("[admin] no se pudo registrar la auditoría", auditError.message);
-
-  revalidatePath("/admin", "layout");
-  return {
-    ok: true,
-    message: existing
-      ? "Listo: esa persona ya tenía cuenta y ahora es superadministradora."
-      : "Invitación enviada. Al abrir el correo y crear su contraseña tendrá acceso de superadministrador.",
-  };
-}
-
-/**
- * Quita el rol de superadministrador a otra persona. No borra su cuenta ni sus datos: solo pierde el acceso a la plataforma.
- * No se puede quitar a uno mismo ni al último superadministrador.
- */
-export async function revokeSuperadminAction(profileId: string): Promise<ActionResult> {
-  if (!z.uuid().safeParse(profileId).success) return { ok: false, message: "Datos no válidos." };
-
-  const session = await getSession();
-  if (session?.profile?.platformRole !== "superadmin") return fail({ message: "FORBIDDEN" });
-  if (profileId === session.user.id) return { ok: false, message: "No puedes quitarte el acceso a ti mismo. Pídeselo a otro administrador." };
-
-  const admin = createAdminClient();
-  const { count } = await admin.from("profiles").select("id", { count: "exact", head: true }).eq("platform_role", "superadmin");
-  if ((count ?? 0) <= 1) return { ok: false, message: "Debe quedar al menos un administrador de la plataforma." };
-
-  const { data, error } = await admin.from("profiles").update({ platform_role: "user" }).eq("id", profileId).eq("platform_role", "superadmin").select("id");
-  if (error) return { ok: false, message: "No se pudo quitar el acceso. Inténtalo de nuevo." };
-  if (!data?.length) return { ok: true, message: "Esa persona ya no era administradora." };
-
-  const { error: auditError } = await admin.from("audit_logs").insert({
-    business_id: null,
-    actor_id: session.user.id,
-    action: "platform.superadmin_revoked",
-    entity: "profile",
-    entity_id: profileId,
-    metadata: {},
-  });
-  if (auditError) console.error("[admin] no se pudo registrar la auditoría", auditError.message);
-
-  revalidatePath("/admin", "layout");
-  return { ok: true, message: "Listo: esa persona ya no es administradora de la plataforma." };
-}
+/* ---------- Cuentas del panel (el resto de la gestión de usuarios está en admin-actions.ts) ---------- */
 
 /**
  * Elimina la cuenta de una persona del panel (dueño, empleado o administrador). Solo un superadministrador.
@@ -357,14 +276,14 @@ export async function deleteUserAction(profileId: string): Promise<ActionResult>
   if (!z.uuid().safeParse(profileId).success) return { ok: false, message: "Datos no válidos." };
 
   const session = await getSession();
-  if (session?.profile?.platformRole !== "superadmin") return fail({ message: "FORBIDDEN" });
+  if (!session || !esSuperadmin(session.profile)) return fail({ message: "FORBIDDEN" });
   if (profileId === session.user.id) return { ok: false, message: "No puedes eliminar tu propia cuenta." };
 
   const admin = createAdminClient();
   const { data: target } = await admin.from("profiles").select("id, platform_role").eq("id", profileId).maybeSingle();
   if (!target) return { ok: true, message: "Esa cuenta ya no existe." };
   if (target.platform_role === "superadmin") {
-    const { count } = await admin.from("profiles").select("id", { count: "exact", head: true }).eq("platform_role", "superadmin");
+    const { count } = await admin.from("profiles").select("id", { count: "exact", head: true }).eq("platform_role", "superadmin").is("suspended_at", null);
     if ((count ?? 0) <= 1) return { ok: false, message: "Debe quedar al menos un administrador de la plataforma." };
   }
 
@@ -407,7 +326,7 @@ export async function deleteBusinessAction(businessId: string, confirmSlug: stri
   if (!z.uuid().safeParse(businessId).success) return { ok: false, message: "Datos no válidos." };
 
   const session = await getSession();
-  if (session?.profile?.platformRole !== "superadmin") return fail({ message: "FORBIDDEN" });
+  if (!session || !esSuperadmin(session.profile)) return fail({ message: "FORBIDDEN" });
 
   // La función de la base comprueba de nuevo el rol y la confirmación, y deja la auditoría.
   const supabase = await createClient();

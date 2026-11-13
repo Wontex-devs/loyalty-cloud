@@ -9,10 +9,12 @@ import { Badge, ButtonLink, Card, Input, PageHeader, Segmented, Table, Td, Th } 
 import { formatDate, formatNumber } from "@/lib/utils";
 import type { BusinessStatus } from "@/lib/domain/types";
 import { BrandMark } from "@/components/loyalty/brand-mark";
+import { usePuedeEditar } from "@/components/admin/piezas";
 
 export default function BusinessesPage() {
   const router = useRouter();
   const { rows } = usePlatform();
+  const puedeEditar = usePuedeEditar();
   const [q, setQ] = useState("");
   const [status, setStatus] = useState<"all" | BusinessStatus>("all");
   const filtered = rows.filter(
@@ -27,9 +29,11 @@ export default function BusinessesPage() {
         title="Establecimientos"
         description="Todos los comercios de la plataforma. Cada uno tiene sus datos aislados."
         actions={
-          <ButtonLink href="/admin/businesses/new">
-            <Plus className="size-4" /> Nuevo establecimiento
-          </ButtonLink>
+          puedeEditar ? (
+            <ButtonLink href="/admin/businesses/new">
+              <Plus className="size-4" /> Nuevo establecimiento
+            </ButtonLink>
+          ) : undefined
         }
       />
       <Card>

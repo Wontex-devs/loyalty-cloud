@@ -6,7 +6,7 @@ Plataforma SaaS multiempresa de tarjetas de fidelización web.
 export PATH="$HOME/.local/node/bin:$PATH"
 npm run dev        # http://localhost:3000
 npm run typecheck
-npm run test:db    # migraciones + 63 pruebas de RLS y reglas de negocio (Postgres en memoria)
+npm run test:db    # migraciones + 259 pruebas de RLS y reglas de negocio (Postgres en memoria)
 npm run db:verify  # comprobaciones contra el proyecto Supabase real (--e2e: flujo inscripción + visita)
 npm run db:seed    # carga Beauty Club en tu proyecto Supabase
 ```

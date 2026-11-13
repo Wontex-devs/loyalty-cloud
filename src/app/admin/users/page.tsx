@@ -1,75 +1,37 @@
-"use client";
+import type { Metadata } from "next";
+import { AlertTriangle } from "lucide-react";
+import { cargarUsuarios } from "@/lib/data/admin-queries";
+import { getSession } from "@/lib/data/queries";
+import { esSuperadmin, estadoCuenta } from "@/lib/domain/acceso";
+import { InvitarUsuario } from "@/components/admin/invitar-usuario";
+import { UsuariosTabla } from "@/components/admin/usuarios-tabla";
+import { Card, PageHeader } from "@/components/ui";
 
-import { InviteAdmin } from "@/components/admin/invite-admin";
-import { RevokeAdmin } from "@/components/admin/revoke-admin";
-import { DeleteUser } from "@/components/admin/delete-user";
-import { useData } from "@/lib/data/store";
-import { ROLE_LABELS } from "@/lib/domain/permissions";
-import { Avatar, Badge, Card, PageHeader, Table, Td, Th } from "@/components/ui";
-import { formatDate } from "@/lib/utils";
+export const metadata: Metadata = { title: "Usuarios" };
 
-export default function UsersPage() {
-  const { state } = useData();
+export default async function UsersPage() {
+  const [{ usuarios, aviso }, session] = await Promise.all([cargarUsuarios(), getSession()]);
+  const cuenta = (e: string) => usuarios.filter((u) => estadoCuenta(u) === e).length;
+
   return (
     <>
       <PageHeader
         title="Usuarios"
-        description="Cuentas con acceso a paneles. Los clientes finales no tienen cuenta."
-        actions={<InviteAdmin />}
+        description={
+          aviso
+            ? "Cuentas con acceso a los paneles. Los clientes finales no tienen cuenta."
+            : `${usuarios.length} cuentas · ${cuenta("activa")} activas · ${cuenta("pendiente")} con invitación pendiente · ${cuenta("suspendida")} suspendidas`
+        }
+        actions={esSuperadmin(session?.profile) ? <InvitarUsuario /> : undefined}
       />
-      <Card>
-        <Table>
-          <thead>
-            <tr>
-              <Th>Usuario</Th>
-              <Th>Rol de plataforma</Th>
-              <Th>Comercios</Th>
-              <Th>Alta</Th>
-              <Th>Acciones</Th>
-            </tr>
-          </thead>
-          <tbody>
-            {state.profiles.map((p) => {
-              const ms = state.memberships.filter((m) => m.profileId === p.id);
-              return (
-                <tr key={p.id}>
-                  <Td>
-                    <div className="flex items-center gap-3">
-                      <Avatar name={p.fullName} />
-                      <div>
-                        <p className="font-medium">{p.fullName}</p>
-                        <p className="text-xs text-muted">{p.email}</p>
-                      </div>
-                    </div>
-                  </Td>
-                  <Td>{p.platformRole === "superadmin" ? <Badge tone="brand">Superadministrador</Badge> : <span className="text-muted">Usuario</span>}</Td>
-                  <Td>
-                    <div className="flex flex-wrap gap-1">
-                      {ms.length === 0 && <span className="text-muted">—</span>}
-                      {ms.map((m) => (
-                        <Badge key={m.id}>
-                          {state.businesses.find((b) => b.id === m.businessId)?.name} · {ROLE_LABELS[m.role]}
-                        </Badge>
-                      ))}
-                    </div>
-                  </Td>
-                  <Td className="text-muted">{formatDate(p.createdAt)}</Td>
-                  <Td>
-                    {p.id === state.actingProfileId ? (
-                      <span className="text-xs text-muted">Tu cuenta</span>
-                    ) : (
-                      <div className="flex flex-wrap items-start gap-1">
-                        {p.platformRole === "superadmin" && <RevokeAdmin profileId={p.id} nombre={p.fullName} />}
-                        <DeleteUser profileId={p.id} nombre={p.fullName} correo={p.email} />
-                      </div>
-                    )}
-                  </Td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </Table>
-      </Card>
+      {aviso ? (
+        <Card className="flex items-start gap-3 p-5 text-sm">
+          <AlertTriangle className="mt-0.5 size-5 shrink-0 text-warning" aria-hidden />
+          <p>{aviso}</p>
+        </Card>
+      ) : (
+        <UsuariosTabla usuarios={usuarios} />
+      )}
     </>
   );
 }

@@ -18,7 +18,7 @@ export default async function BusinessLayout({
   // RLS: si el usuario no es miembro, el comercio simplemente no aparece.
   const snapshot = await loadBusinessSnapshot(slug, session);
   const isMember = session.memberships.some((m) => m.business?.slug === slug);
-  if (!snapshot || !isMember) return <NoAccess />;
+  if (!snapshot || !isMember) return <NoAccess suspendida={!!session.profile?.suspendedAt} />;
 
   return (
     <LiveProvider snapshot={snapshot}>

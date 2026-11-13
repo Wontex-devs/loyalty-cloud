@@ -159,9 +159,15 @@ export function LiveProvider({ snapshot, children }: { snapshot: DataState; chil
       setLogo: (businessId, file) => guardarImagen(businessId, file, "logoUrl", "logo", "png", (f) => prepareLogo(f, 512), "el logotipo"),
       setCover: (businessId, file) => guardarImagen(businessId, file, "coverUrl", "foto", "jpg", (f) => prepareCover(f), "la foto"),
 
-      setBusinessStatus: (businessId, status) => {
-        setState((s) => ({ ...s, businesses: s.businesses.map((b) => (b.id === businessId ? { ...b, status } : b)) }));
-        run(setBusinessStatusAction(businessId, status));
+      setBusinessStatus: async (businessId, status) => {
+        // Se espera la respuesta: la pantalla muestra el error si la base de datos lo rechaza.
+        const res = await setBusinessStatusAction(businessId, status);
+        if (res.ok) {
+          setState((s) => ({ ...s, businesses: s.businesses.map((b) => (b.id === businessId ? { ...b, status } : b)) }));
+          startTransition(() => router.refresh());
+          return { ok: true };
+        }
+        return { ok: false, message: res.message };
       },
 
       inviteStaff: (businessId, input) => {

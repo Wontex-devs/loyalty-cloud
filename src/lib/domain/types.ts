@@ -6,7 +6,8 @@
 export type ID = string;
 export type ISODate = string;
 
-export type PlatformRole = "superadmin" | "user";
+/** superadmin: todo · support (Soporte): ve el panel de la plataforma sin cambiar nada · user: solo los comercios donde es miembro. */
+export type PlatformRole = "superadmin" | "support" | "user";
 export type BusinessRole = "owner" | "admin" | "staff";
 export type BusinessStatus = "active" | "suspended" | "trial";
 export type CardStatus = "active" | "reward_available" | "blocked";
@@ -112,6 +113,8 @@ export interface Profile {
   email: string;
   platformRole: PlatformRole;
   createdAt: ISODate;
+  /** Si tiene valor, la cuenta está suspendida y no tiene acceso a nada. */
+  suspendedAt?: ISODate | null;
 }
 
 export interface BusinessMembership {

@@ -69,6 +69,7 @@ export const toProfile = (r: Row): Profile => ({
   email: r.email,
   platformRole: r.platform_role,
   createdAt: r.created_at,
+  suspendedAt: r.suspended_at ?? null,
 });
 
 export const toMembership = (r: Row): BusinessMembership => ({
