@@ -28,14 +28,20 @@
   --color-coal: #0e1a52;
   --color-graphite: #3d4873;
 
-  /* Marca del tenant: se sobrescriben por negocio en el layout del panel. */
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.04), 0 1px 1px rgb(0 0 0 / 0.02);
+  --shadow-pop: 0 10px 30px -10px rgb(0 0 0 / 0.18), 0 2px 6px rgb(0 0 0 / 0.06);
+}
+
+/*
+ * Marca del tenant: cada panel define --brand, --brand-fg y --brand-accent en su contenedor.
+ * Va en «@theme inline» para que las clases usen la variable donde se aplican; con «@theme» normal
+ * el valor quedaba fijo en :root y los colores de cada comercio no se aplicaban (salía negro).
+ */
+@theme inline {
   --color-brand: var(--brand, #111111);
   --color-brand-fg: var(--brand-fg, #ffffff);
   --color-brand-accent: var(--brand-accent, #d8a7a7);
   --color-brand-soft: color-mix(in oklab, var(--brand-accent, #d8a7a7) 22%, white);
-
-  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.04), 0 1px 1px rgb(0 0 0 / 0.02);
-  --shadow-pop: 0 10px 30px -10px rgb(0 0 0 / 0.18), 0 2px 6px rgb(0 0 0 / 0.06);
 }
 
 /* Curvas de movimiento de la interfaz (nombres propios para no pisar `--ease-out` de Tailwind). */

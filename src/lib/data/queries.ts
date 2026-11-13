@@ -26,10 +26,12 @@ export const getSession = cache(async () => {
       .eq("active", true),
   ]);
 
+  const perfil = profile ? m.toProfile(profile) : null;
   return {
     user,
-    profile: profile ? m.toProfile(profile) : null,
-    memberships: (memberships ?? []).map((x) => ({
+    profile: perfil,
+    // Una cuenta suspendida no tiene acceso a ningún comercio (la base de datos también lo bloquea).
+    memberships: (perfil?.suspendedAt ? [] : memberships ?? []).map((x) => ({
       ...m.toMembership(x),
       business: x.businesses as { slug: string; name: string; status: string } | null,
     })),
@@ -40,7 +42,8 @@ export type Session = NonNullable<Awaited<ReturnType<typeof getSession>>>;
 
 /** Destino tras iniciar sesión según el rol. */
 export function homePathFor(session: Session) {
-  if (session.profile?.platformRole === "superadmin") return "/admin";
+  if (session.profile?.suspendedAt) return "/account/no-access?motivo=suspendida";
+  if (session.profile?.platformRole === "superadmin" || session.profile?.platformRole === "support") return "/admin";
   const first = session.memberships.find((x) => x.business);
   if (!first?.business) return "/account/no-access";
   return first.role === "staff" ? `/business/${first.business.slug}/customers` : `/business/${first.business.slug}`;

@@ -10,6 +10,11 @@ const cell = (v: string | number | undefined | null) => {
   return /[",;\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 };
 
+/** CSV genérico (UTF-8 con BOM, separado por comas, protegido contra fórmulas). */
+export function toCsv(header: string[], rows: (string | number | null | undefined)[][]) {
+  return "﻿" + [header, ...rows].map((r) => r.map(cell).join(",")).join("\r\n");
+}
+
 export function customersCsv(customers: Customer[], cards: LoyaltyCard[]) {
   const cardOf = new Map(cards.map((c) => [c.customerId, c]));
   const header = ["Nombre", "Teléfono", "Correo", "Sellos actuales", "Visitas totales", "Última visita", "Estado", "Alta", "Acepta marketing"];

@@ -2,7 +2,7 @@
 
 import { Check } from "lucide-react";
 import { usePlatform } from "@/components/admin/use-platform";
-import { Badge, Button, Card, PageHeader } from "@/components/ui";
+import { Badge, Card, PageHeader } from "@/components/ui";
 import { formatMoney, formatNumber } from "@/lib/utils";
 
 export default function PlansPage() {
@@ -10,7 +10,10 @@ export default function PlansPage() {
   const plans = state.plans;
   return (
     <>
-      <PageHeader title="Planes" description="Límites y precios que se aplican a cada establecimiento." actions={<Button disabled title="Próximamente">Nuevo plan</Button>} />
+      <PageHeader
+        title="Planes"
+        description="Límites y precios que se aplican a cada establecimiento. Los precios y límites se cambian con una migración de la base de datos, para que queden registrados."
+      />
       <div className="grid gap-4 md:grid-cols-3">
         {plans.map((p) => {
           const count = rows.filter((r) => r.plan.id === p.id).length;
@@ -45,9 +48,6 @@ export default function PlansPage() {
                   </li>
                 ))}
               </ul>
-              <Button variant="secondary" className="mt-6" disabled title="Próximamente">
-                Editar plan
-              </Button>
             </Card>
           );
         })}

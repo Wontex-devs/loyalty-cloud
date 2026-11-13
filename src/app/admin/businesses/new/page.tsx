@@ -2,14 +2,15 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Store } from "lucide-react";
 import { businessSchema } from "@/lib/domain/schemas";
 import { useData } from "@/lib/data/store";
 import { createBusinessAction } from "@/lib/data/actions";
 import { useRouter } from "next/navigation";
 import { PUBLIC_HOST_LABEL } from "@/lib/config";
-import { Button, Card, CardHeader, Field, Input, PageHeader, Select } from "@/components/ui";
+import { Button, Card, CardHeader, EmptyState, Field, Input, PageHeader, Select } from "@/components/ui";
 import { cn, formatMoney } from "@/lib/utils";
+import { usePuedeEditar } from "@/components/admin/piezas";
 
 const slugify = (s: string) =>
   s
@@ -28,6 +29,7 @@ export default function NewBusinessPage() {
   const { state } = useData();
   const plans = state.plans;
   const router = useRouter();
+  const puedeEditar = usePuedeEditar();
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,6 +46,10 @@ export default function NewBusinessPage() {
     router.push(res.id ? `/admin/businesses/${res.id}` : "/admin/businesses");
     router.refresh();
   };
+
+  if (!puedeEditar) {
+    return <EmptyState icon={Store} title="Solo un superadministrador puede crear establecimientos" description="Con el rol de Soporte puedes ver los comercios, pero no crearlos." />;
+  }
 
   return (
     <div className="mx-auto max-w-3xl">

@@ -38,6 +38,10 @@ const DB_ERRORS: Record<string, string> = {
   address_check: "Revisa la dirección.",
   ALREADY_ANONYMIZED: "Los datos de este cliente ya se eliminaron.",
   CUSTOMER_ANONYMIZED: "Los datos de este cliente se eliminaron: su tarjeta no se puede reactivar.",
+  CANNOT_CHANGE_SELF: "No puedes cambiar tu propia cuenta desde aquí. Pídeselo a otro superadministrador.",
+  LAST_SUPERADMIN: "Debe quedar al menos un superadministrador activo en la plataforma.",
+  PROFILE_NOT_FOUND: "No se encontró esa cuenta.",
+  INVALID_INPUT: "Revisa los datos e inténtalo de nuevo.",
   REWARD_ALREADY_REDEEMED: "No se puede revertir: la recompensa de esa visita ya se canjeó.",
 };
 // Los códigos más largos primero: "REWARD_ALREADY_REDEEMED" antes que "ALREADY_REDEEMED".

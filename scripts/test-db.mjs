@@ -745,6 +745,90 @@ console.log("\nEliminar comercios y usuarios");
   check("sus visitas siguen en el historial, sin su nombre", conStaff === 0 || sinNombre >= conStaff, { conStaff, sinNombre });
 }
 
+console.log("\nPanel de la plataforma: usuarios, roles y suspensión");
+{
+  const soporte = "00000000-0000-0000-0000-0000000000c1";
+  const super2 = "00000000-0000-0000-0000-0000000000c2";
+  await db.query("insert into auth.users (id, email, raw_user_meta_data) values ($1, 'soporte@test.local', '{}'), ($2, 'super2@test.local', '{}')", [soporte, super2]);
+  await db.query("update public.profiles set platform_role = 'support' where id = $1", [soporte]);
+
+  // Soporte: ve el panel, no cambia nada.
+  let r = await as(soporte, "select count(*)::int n from public.businesses");
+  check("Soporte ve todos los comercios", r.ok && r.rows[0].n >= 2, r);
+  r = await as(soporte, "select * from public.admin_list_users()");
+  check("Soporte ve el listado de usuarios", r.ok && r.rows.length >= 7, r);
+  r = await as(soporte, "select * from public.platform_business_stats()");
+  check("Soporte ve las estadísticas de la plataforma", r.ok, r);
+  r = await as(soporte, "select count(*)::int n from public.customers");
+  check("Soporte NO ve datos personales de clientes", r.ok && r.rows[0].n === 0, r);
+  r = await as(soporte, "select public.admin_set_user_suspension($1, true, 'prueba')", [U.ownerB]);
+  check("Soporte no puede suspender cuentas", expectError(r, "FORBIDDEN"), r);
+  r = await as(soporte, "select public.admin_set_platform_role($1, 'superadmin')", [soporte]);
+  check("Soporte no puede darse más permisos", expectError(r, "FORBIDDEN") || expectError(r, "CANNOT_CHANGE_SELF"), r);
+  r = await as(soporte, "select public.set_business_status($1, 'suspended', null)", [B]);
+  check("Soporte no puede suspender comercios", !r.ok, r);
+  r = await as(U.ownerA, "select * from public.admin_list_users()");
+  check("un propietario no ve el listado de usuarios de la plataforma", expectError(r, "FORBIDDEN"), r);
+
+  // Roles: protecciones.
+  r = await as(U.super, "select public.admin_set_platform_role($1, 'user')", [U.super]);
+  check("nadie se cambia su propio rol", expectError(r, "CANNOT_CHANGE_SELF"), r);
+  r = await as(U.super, "select public.admin_set_platform_role($1, 'superadmin')", [super2]);
+  check("el superadministrador nombra a otro", r.ok, r);
+  r = await as(super2, "select public.admin_set_platform_role($1, 'user')", [U.super]);
+  check("se puede quitar un superadministrador si queda otro", r.ok, r);
+  r = await as(super2, "select public.admin_set_user_suspension($1, true, null)", [super2]);
+  check("nadie se suspende a sí mismo", expectError(r, "CANNOT_CHANGE_SELF"), r);
+  await db.query("update public.profiles set platform_role = 'superadmin' where id = $1", [U.super]);
+  await db.query("update public.profiles set platform_role = 'user' where id = $1", [super2]);
+  const cambio = (await db.query("select metadata from public.audit_logs where action = 'platform.role_changed' and entity_id = $1 order by id desc limit 1", [super2])).rows[0];
+  check("el cambio de rol queda en la auditoría con antes y después", cambio?.metadata?.from === "user" && cambio?.metadata?.to === "superadmin", cambio);
+  r = await as(U.super, "select public.admin_set_platform_role($1, 'support')", [U.super]);
+  check("el último superadministrador no puede quedarse sin rol", expectError(r, "CANNOT_CHANGE_SELF") || expectError(r, "LAST_SUPERADMIN"), r);
+
+  // Suspensión: corta el acceso de inmediato y se puede revertir.
+  r = await as(U.ownerB, "select count(*)::int n from public.businesses");
+  const antes = r.rows?.[0]?.n;
+  r = await as(U.super, "select public.admin_set_user_suspension($1, true, 'Falta de pago')", [U.ownerB]);
+  check("el superadministrador suspende una cuenta", r.ok, r);
+  r = await as(U.ownerB, "select count(*)::int n from public.businesses");
+  check("la cuenta suspendida deja de ver su comercio", antes === 1 && r.ok && r.rows[0].n === 0, { antes, r });
+  r = await as(U.ownerB, "select * from public.register_visit((select id from public.loyalty_cards where business_id = $1 limit 1), 'susp-1')", [B]);
+  check("la cuenta suspendida no puede registrar visitas", !r.ok, r);
+  const susp = (await db.query("select suspended_reason, suspended_by from public.profiles where id = $1", [U.ownerB])).rows[0];
+  check("queda el motivo y quién suspendió", susp.suspended_reason === "Falta de pago" && susp.suspended_by === U.super, susp);
+  r = await as(U.super, "select public.admin_set_user_suspension($1, false, null)", [U.ownerB]);
+  r = await as(U.ownerB, "select count(*)::int n from public.businesses");
+  check("al reactivarla recupera el acceso", r.ok && r.rows[0].n === 1, r);
+  const evs = (await db.query("select action from public.audit_logs where entity_id = $1 and action like 'platform.user_%' order by id", [U.ownerB])).rows.map((x) => x.action);
+  check("suspensión y reactivación quedan en la auditoría", evs.join() === "platform.user_suspended,platform.user_reactivated", evs);
+
+  // Edición y acciones registradas.
+  r = await as(U.super, "select public.admin_update_profile($1, 'Dueña B')", [U.ownerB]);
+  const nombre = (await db.query("select full_name from public.profiles where id = $1", [U.ownerB])).rows[0].full_name;
+  check("el superadministrador corrige el nombre de una cuenta", r.ok && nombre === "Dueña B", r);
+  r = await as(U.super, "select public.admin_update_profile($1, 'x')", [U.ownerB]);
+  check("no acepta nombres de menos de 2 letras", expectError(r, "INVALID_INPUT"), r);
+  r = await as(U.super, "select public.admin_record_action('platform.users_exported', 'usuarios', '{\"filas\": 7}')");
+  check("la exportación queda registrada", r.ok, r);
+  r = await as(U.super, "select public.admin_record_action('visit.created', 'x', '{}')");
+  check("no se pueden registrar acciones inventadas", expectError(r, "INVALID_INPUT"), r);
+
+  // Inicios de sesión.
+  r = await as(U.ownerA, "select public.record_login('password')");
+  await as(U.ownerA, "select public.record_login('password')");
+  const logins = (await db.query("select count(*)::int n from public.login_events where profile_id = $1", [U.ownerA])).rows[0].n;
+  check("el inicio de sesión queda registrado una sola vez", r.ok && logins === 1, { r, logins });
+  r = await as(U.ownerB, "select count(*)::int n from public.login_events");
+  check("cada persona solo ve sus propios inicios de sesión", r.ok && r.rows[0].n === 0, r);
+  r = await as(soporte, "select count(*)::int n from public.login_events");
+  check("Soporte ve los inicios de sesión de todos", r.ok && r.rows[0].n === 1, r);
+  r = await as(U.ownerA, "insert into public.login_events (profile_id, method) values ($1, 'password')", [U.ownerB]);
+  check("nadie escribe inicios de sesión a nombre de otra persona", !r.ok, r);
+  r = await as(U.ownerA, "select public.record_login('hack')");
+  check("solo acepta métodos conocidos", expectError(r, "INVALID_INPUT"), r);
+}
+
 console.log("\nPlanes comerciales");
 {
   const p = (await db.query("select id, price_monthly::int price, max_customers from public.plans order by id")).rows;
