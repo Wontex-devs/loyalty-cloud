@@ -101,7 +101,9 @@ function datosEstructurados() {
         parentOrganization: { "@type": "Organization", name: EMPRESA.nombre, url: EMPRESA.web },
         logo: { "@type": "ImageObject", url: `${SITE_URL}/logo-lazo.png`, width: 512, height: 512 },
         areaServed: { "@type": "Country", name: "Colombia" },
-        contactPoint: { "@type": "ContactPoint", telephone: `+${SALES_WHATSAPP}`, contactType: "sales", areaServed: "CO", availableLanguage: "es" },
+        contactPoint: { "@type": "ContactPoint", telephone: `+${SALES_WHATSAPP}`, contactType: "sales", areaServed: "CO", availableLanguage: "es",
+          hoursAvailable: { "@type": "OpeningHoursSpecification", dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"], opens: "00:00", closes: "23:59" },
+        },
       },
       {
         "@type": "WebSite",

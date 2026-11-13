@@ -46,7 +46,7 @@ export const EMPRESA_PAGINAS: Pagina[] = [
           "Te dejamos la tarjeta lista con tu logo, tus colores y tu premio. No tienes que configurar nada técnico.",
           "Precios en pesos colombianos con IVA incluido, pago mensual y sin permanencia mínima.",
           "Los datos de tus clientes son de tu negocio. Lazo los guarda solo para operar tu tarjeta, como encargado según la Ley 1581 de 2012, y no los vende ni los comparte con otros negocios.",
-          "Te atendemos directamente por WhatsApp o correo, en español y en horario de Colombia.",
+          "Te atendemos directamente por WhatsApp o correo, en español. No tenemos horario fijo: puedes escribirnos a cualquier hora y cualquier día.",
         ],
       },
       {
@@ -59,7 +59,7 @@ export const EMPRESA_PAGINAS: Pagina[] = [
       {
         titulo: "¿Cómo nos contactas?",
         parrafos: [
-          `Escríbenos por WhatsApp al ${EMPRESA.telefono.replace("+57 ", "")} o a ${EMPRESA.correo}. Respondemos preguntas antes de contratar, damos soporte a los negocios y atendemos las solicitudes sobre datos personales según nuestra política de datos.`,
+          `Escríbenos por WhatsApp al ${EMPRESA.telefono.replace("+57 ", "")} o a ${EMPRESA.correo}, a cualquier hora. Respondemos preguntas antes de contratar, damos soporte a los negocios y atendemos las solicitudes sobre datos personales según nuestra política de datos.`,
         ],
       },
     ],
