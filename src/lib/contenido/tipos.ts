@@ -24,7 +24,7 @@ export interface Pregunta {
 export interface Pagina {
   /** Ruta sin barra inicial, en minúsculas y con guiones: "tarjeta-de-sellos-digital". */
   ruta: string;
-  tipo: "guia" | "sector" | "legal";
+  tipo: "guia" | "sector" | "empresa" | "legal";
   /** <title>: máximo 60 caracteres, con la palabra clave al inicio. Se le agrega « · Lazo» si cabe. */
   titulo: string;
   /** Meta description: entre 120 y 155 caracteres. */

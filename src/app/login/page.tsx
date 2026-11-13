@@ -1,5 +1,8 @@
+import type { Metadata } from "next";
 import { LazoLogo } from "@/components/brand/lazo-logo";
 import { LoginForm } from "@/components/auth/login-form";
+
+export const metadata: Metadata = { title: "Iniciar sesión", description: "Entra al panel de tu negocio en Lazo." };
 
 export default function LoginPage() {
   return (

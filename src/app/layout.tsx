@@ -12,7 +12,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   // Por defecto nada se indexa: cada página pública nueva debe pedir `robots: { index: true }` (como la portada).
   title: { default: PLATFORM_NAME, template: `%s · ${PLATFORM_NAME}` },
-  description: "Plataforma de fidelización digital de marca blanca.",
+  description: "Lazo: tarjeta de sellos digital con la marca de tu negocio, en Google Wallet y con sellos por NFC.",
   robots: { index: false },
 };
 

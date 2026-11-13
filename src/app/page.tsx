@@ -99,9 +99,11 @@ function datosEstructurados() {
         email: EMPRESA.correo,
         address: { "@type": "PostalAddress", addressLocality: EMPRESA.localidad, addressRegion: EMPRESA.region, addressCountry: "CO" },
         parentOrganization: { "@type": "Organization", name: EMPRESA.nombre, url: EMPRESA.web },
-        logo: { "@type": "ImageObject", url: `${SITE_URL}/apple-icon`, width: 180, height: 180 },
+        logo: { "@type": "ImageObject", url: `${SITE_URL}/logo-lazo.png`, width: 512, height: 512 },
         areaServed: { "@type": "Country", name: "Colombia" },
-        contactPoint: { "@type": "ContactPoint", telephone: `+${SALES_WHATSAPP}`, contactType: "sales", areaServed: "CO", availableLanguage: "es" },
+        contactPoint: { "@type": "ContactPoint", telephone: `+${SALES_WHATSAPP}`, contactType: "sales", areaServed: "CO", availableLanguage: "es",
+          hoursAvailable: { "@type": "OpeningHoursSpecification", dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"], opens: "00:00", closes: "23:59" },
+        },
       },
       {
         "@type": "WebSite",
@@ -159,7 +161,7 @@ export default function Home() {
         <section className="mx-auto grid max-w-7xl items-center gap-10 px-4 pb-14 pt-8 sm:px-8 lg:grid-cols-[1.1fr_0.9fr] lg:pb-16 lg:pt-6">
           <div>
             <h1 className={`${poster} text-[3.6rem] leading-[0.95] sm:text-8xl lg:text-[6.5rem]`}>
-              <span className="mb-5 block font-[family-name:var(--font-text)] text-lg font-semibold tracking-normal text-white/85 sm:text-xl">Tarjeta de sellos digital para tu negocio</span>
+              <span className="mb-5 block font-[family-name:var(--font-text)] text-lg font-semibold tracking-normal text-white/85 sm:text-xl">Tarjeta de sellos digital para tu negocio</span>{" "}
               Haz que tus clientes <span className="text-sun">vuelvan.</span>
             </h1>
             <p className="mt-8 max-w-xl text-xl leading-relaxed text-white/90">
@@ -376,7 +378,7 @@ export default function Home() {
             <h2 className={h2}>Aprende antes de decidir</h2>
             <p className="mt-4 max-w-2xl text-xl text-graphite">Guías cortas sobre tarjetas de fidelización y ejemplos para tu tipo de negocio.</p>
             <ul className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {PAGINAS.filter((p) => p.tipo !== "legal").map((p) => (
+              {PAGINAS.filter((p) => p.tipo === "guia" || p.tipo === "sector").map((p) => (
                 <li key={p.ruta}>
                   <Link href={`/${p.ruta}`} className="group flex h-full flex-col justify-between gap-6 rounded-xl border-2 border-coal/10 bg-white p-6 transition-colors hover:border-cobalt">
                     <span>
