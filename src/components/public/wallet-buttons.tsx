@@ -3,14 +3,29 @@
 import { useEffect, useState } from "react";
 
 /**
- * Botones de billetera. Hoy: Google Wallet (Android y escritorio).
- * Apple Wallet se añadirá aquí mismo con su propio botón para iPhone.
+ * Botones de billetera: Apple Wallet en iPhone y Google Wallet en Android y escritorio.
+ * Cada uno solo aparece si su billetera está configurada en el servidor.
  */
-export function WalletButtons({ token, google }: { token: string; google: boolean }) {
+export function WalletButtons({ token, google, apple = false }: { token: string; google: boolean; apple?: boolean }) {
   const [ios, setIos] = useState<boolean | null>(null);
   useEffect(() => setIos(/iphone|ipad|ipod/i.test(navigator.userAgent)), []);
-  if (!google || ios === null || ios) return null;
+  if (ios === null) return null;
 
+  if (ios) {
+    if (!apple) return null;
+    return (
+      // Provisional: antes de abrir al público va la insignia oficial «Añadir a Apple Wallet»
+      // (guía de marca de Apple; ver docs/ETAPA-15-APPLE-WALLET.md).
+      <a
+        href={`/card/${token}/apple-wallet`}
+        className="mx-auto mt-4 flex h-12 w-full max-w-[378px] items-center justify-center rounded-xl bg-black text-[15px] font-medium text-white"
+      >
+        Añadir a Apple Wallet
+      </a>
+    );
+  }
+
+  if (!google) return null;
   return (
     // Botón oficial de Google (guía de marca): no se puede alterar su forma ni su color.
     <a href={`/card/${token}/google-wallet`} className="mt-4 block">

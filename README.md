@@ -6,7 +6,7 @@ Plataforma SaaS multiempresa de tarjetas de fidelización web.
 export PATH="$HOME/.local/node/bin:$PATH"
 npm run dev        # http://localhost:3000
 npm run typecheck
-npm run test:db    # migraciones + 259 pruebas de RLS y reglas de negocio (Postgres en memoria)
+npm run test:db    # migraciones + 266 pruebas de RLS y reglas de negocio (Postgres en memoria)
 npm run db:verify  # comprobaciones contra el proyecto Supabase real (--e2e: flujo inscripción + visita)
 npm run db:seed    # carga Beauty Club en tu proyecto Supabase
 ```
@@ -16,6 +16,7 @@ npm run db:seed    # carga Beauty Club en tu proyecto Supabase
 - Inscripción, QR y visitas (Etapa 3): [docs/ETAPA-3.md](docs/ETAPA-3.md)
 - Recompensas, canjes, historial y estadísticas (Etapa 4): [docs/ETAPA-4.md](docs/ETAPA-4.md)
 - Google Wallet (Etapa 9): [docs/ETAPA-9-WALLET.md](docs/ETAPA-9-WALLET.md)
+- Apple Wallet (Etapa 15): [docs/ETAPA-15-APPLE-WALLET.md](docs/ETAPA-15-APPLE-WALLET.md)
 - Visita por toque NFC con etiqueta en el mostrador (Etapa 13): [docs/ETAPA-13-NFC.md](docs/ETAPA-13-NFC.md)
 - Borradores legales (contrato con el comercio y políticas de datos): [docs/legal/README.md](docs/legal/README.md)
 - Pruebas, despliegue y plan del piloto (Etapa 5): [docs/ETAPA-5.md](docs/ETAPA-5.md) · Guía para el equipo: [docs/GUIA-EQUIPO.md](docs/GUIA-EQUIPO.md)

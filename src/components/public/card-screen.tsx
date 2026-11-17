@@ -33,11 +33,13 @@ export function CardScreen({
   data,
   isNew,
   googleWallet = false,
+  appleWallet = false,
   onUnsubscribe,
 }: {
   data: PublicCardData;
   isNew?: boolean;
   googleWallet?: boolean;
+  appleWallet?: boolean;
   /** Retira el consentimiento de marketing de esta tarjeta. */
   onUnsubscribe?: () => Promise<boolean>;
 }) {
@@ -161,7 +163,7 @@ export function CardScreen({
           </button>
         </div>
 
-        {data.status !== "blocked" && <WalletButtons token={data.token} google={googleWallet} />}
+        {data.status !== "blocked" && <WalletButtons token={data.token} google={googleWallet} apple={appleWallet} />}
         <InstallCard color={b.cardForeground} />
 
         {data.rewards.length > 0 && (
