@@ -46,6 +46,17 @@ const AUDIT_LABELS: Record<string, string> = {
   "business.trial": "La plataforma pasó el comercio a prueba",
   "business.suspended": "La plataforma suspendió el comercio",
   "program.updated": "Cambió el programa",
+  "business.plan_changed": "La plataforma cambió el plan",
+  "nfc.settings": "Cambió los ajustes del NFC",
+  "customer.anonymized": "Eliminó los datos personales de un cliente",
+  "customer.marketing_revoked": "Un cliente dejó de recibir mensajes",
+  "wallet.campaign_queued": "Envió una campaña a la billetera",
+  "wallet.settings_updated": "Cambió los avisos de la billetera",
+  "locations.insert": "Creó una sede",
+  "locations.update": "Cambió una sede",
+  "locations.delete": "Eliminó una sede",
+  "promotions.delete": "Eliminó una promoción",
+  "loyalty_programs.delete": "Eliminó el programa",
 };
 
 const PAGE = 50;
@@ -79,7 +90,10 @@ export default function HistoryPage() {
         at: v.createdAt,
         customerId: customerOfCard.get(v.cardId)?.id,
         staffId: v.staffId,
-        detail: v.reason ? `Motivo: ${v.reason}` : v.bonusStamps ? `+${v.bonusStamps} por promoción` : undefined,
+        detail:
+          [v.source === "manual" ? "A mano" : v.source === "nfc" ? "Por NFC" : "", v.reason ? `Motivo: ${v.reason}` : v.bonusStamps ? `+${v.bonusStamps} por promoción` : ""]
+            .filter(Boolean)
+            .join(" · ") || undefined,
       })),
       ...rewards.map((r) => ({
         id: r.id,
