@@ -829,6 +829,25 @@ console.log("\nEtapa 23 · Sumar visita a mano");
   await db.query("update public.loyalty_programs set min_minutes_between_visits = $2 where business_id = $1", [A, minAntes]);
 }
 
+console.log("\nEtapa 24 · Nombre aparte para los avisos");
+{
+  let r = await joinProgram("negocio-a", "+573001150001", "María José Pérez");
+  const tok = r.rows?.[0]?.public_token;
+  const cus = (await db.query("select cu.id, cu.first_name from public.customers cu join public.loyalty_cards c on c.customer_id = cu.id where c.public_token = $1", [tok])).rows[0];
+  check("sin nombre aparte, toma la primera palabra", cus?.first_name === "María", cus);
+  await db.query("update public.customers set first_name = 'María José', marketing_consent = true, marketing_consent_at = now() where id = $1", [cus.id]);
+  r = await as(U.ownerA, "select body from public.queue_wallet_campaign($1, $2, 'Hola', 'Hola {nombre}, te esperamos')", [A, [cus.id]]);
+  check("la campaña saluda con el nombre aparte (compuesto) y sin apellido", r.ok && r.rows[0]?.body === "Hola María José, te esperamos", r);
+  await db.query("update public.customers set full_name = 'Laura Pérez' where id = $1", [cus.id]);
+  let fn = (await db.query("select first_name from public.customers where id = $1", [cus.id])).rows[0].first_name;
+  check("si corrigen el nombre completo, el nombre aparte se actualiza", fn === "Laura", fn);
+  r = await as(U.ownerA, "select public.anonymize_customer($1)", [cus.id]);
+  fn = (await db.query("select first_name from public.customers where id = $1", [cus.id])).rows[0].first_name;
+  check("al eliminar los datos personales también se borra el nombre", r.ok && fn === null, { r, fn });
+  r = await as(U.ownerA, "update public.customers set first_name = repeat('x', 80) where business_id = $1", [A]);
+  check("el nombre aparte tiene un largo máximo", !r.ok, r);
+}
+
 console.log("\nAdministradores de la plataforma");
 {
   let r = await as(U.ownerA, "update public.profiles set platform_role = 'superadmin' where id = $1", [U.ownerA]);

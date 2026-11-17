@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Gift, Loader2, Stamp } from "lucide-react";
-import { joinSchema } from "@/lib/domain/schemas";
+import { formatPersonName, joinSchema } from "@/lib/domain/schemas";
 import { joinProgramAction } from "@/lib/data/loyalty-actions";
 import { LazoLogo } from "@/components/brand/lazo-logo";
 import { cn } from "@/lib/utils";
@@ -24,7 +24,7 @@ interface JoinFormProps {
 export function JoinForm({ slug, business, program }: JoinFormProps) {
   const router = useRouter();
 
-  const [form, setForm] = useState({ fullName: "", phone: "", email: "", acceptTerms: false, marketingConsent: false });
+  const [form, setForm] = useState({ firstName: "", lastName: "", phone: "", email: "", acceptTerms: false, marketingConsent: false });
   const [birth, setBirth] = useState({ day: "", month: "" });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
@@ -101,11 +101,35 @@ export function JoinForm({ slug, business, program }: JoinFormProps) {
 
         <form onSubmit={submit} className="mt-6 space-y-3 rounded-3xl bg-white/95 p-5 text-[#111111] shadow-[0_10px_40px_-20px_rgba(0,0,0,0.25)] backdrop-blur" noValidate>
           <p className="text-base font-semibold">Crea tu tarjeta digital</p>
-          <p className="-mt-2 text-xs opacity-60">Sin descargar aplicaciones ni crear contraseñas. ¿Ya tienes tarjeta? Escribe el mismo nombre y celular y la recuperas.</p>
+          <p className="-mt-2 text-xs opacity-60">Sin descargar aplicaciones ni crear contraseñas. ¿Ya tienes tarjeta? Escribe el mismo nombre, apellido y celular y la recuperas.</p>
+
+          {/* Nombre y apellido por separado: los avisos saludan solo con el nombre. Al salir del campo se ve con mayúscula inicial. */}
+          <div className="grid grid-cols-2 gap-2">
+            {(
+              [
+                ["firstName", "Nombre", "given-name"],
+                ["lastName", "Apellido", "family-name"],
+              ] as const
+            ).map(([k, ph, ac]) => (
+              <div key={k} className="min-w-0">
+                <input
+                  type="text"
+                  autoComplete={ac}
+                  autoCapitalize="words"
+                  placeholder={ph}
+                  aria-label={ph}
+                  value={form[k]}
+                  onChange={(e) => setForm({ ...form, [k]: e.target.value })}
+                  onBlur={(e) => setForm((f) => ({ ...f, [k]: formatPersonName(e.target.value) }))}
+                  className={cn(input, errors[k] ? "border-red-400" : "border-black/10")}
+                />
+                {errors[k] && <p className="mt-1 pl-1 text-xs text-red-700">{errors[k]}</p>}
+              </div>
+            ))}
+          </div>
 
           {(
             [
-              ["fullName", "Nombre y apellido", "text", "name"],
               ["phone", "Número de celular", "tel", "tel"],
               ["email", "Correo electrónico (opcional)", "email", "email"],
             ] as const

@@ -127,11 +127,12 @@ export async function findCardForReaderAction(
   const supabase = await createClient();
   const { data } = await supabase
     .from("loyalty_cards")
-    .select("id, status, current_stamps, customers(full_name)")
+    .select("id, status, current_stamps, customers(full_name, first_name)")
     .eq("business_id", businessId)
     .eq("public_token", token)
     .maybeSingle();
   if (!data) return null;
-  const customer = data.customers as unknown as { full_name?: string } | null;
-  return { id: data.id, status: data.status, stamps: data.current_stamps, firstName: customer?.full_name?.split(" ")[0] ?? "Cliente" };
+  const customer = data.customers as unknown as { full_name?: string; first_name?: string | null } | null;
+  const firstName = customer?.first_name?.trim() || customer?.full_name?.split(" ")[0] || "Cliente";
+  return { id: data.id, status: data.status, stamps: data.current_stamps, firstName };
 }

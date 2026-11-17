@@ -9,6 +9,7 @@ import { findCardForReaderAction, prepareSmartTapAction } from "@/lib/data/nfc-a
 import { Card, PageHeader, Select } from "@/components/ui";
 import { cn } from "@/lib/utils";
 import { parseToken } from "@/lib/wallet/smart-tap";
+import { greetingName } from "@/lib/wallet/messages";
 
 type Estado =
   | { kind: "listo" }
@@ -63,7 +64,7 @@ export default function LectorPage() {
       // Las tarjetas de hoy pueden no estar aún en pantalla: se buscan en el servidor.
       const local = cards.find((c) => c.publicToken === token);
       const card = local
-        ? { id: local.id, status: local.status, stamps: local.currentStamps, firstName: customers.find((c) => c.id === local.customerId)?.fullName.split(" ")[0] ?? "Cliente" }
+        ? { id: local.id, status: local.status, stamps: local.currentStamps, firstName: (() => { const c = customers.find((x) => x.id === local.customerId); return c ? greetingName(c) : "Cliente"; })() }
         : await findCardForReaderAction(business.id, token);
       if (!card) return setEstado({ kind: "error", mensaje: "Esta tarjeta no es de este negocio." });
       if (card.status === "blocked") return setEstado({ kind: "error", mensaje: "Esta tarjeta está bloqueada." });

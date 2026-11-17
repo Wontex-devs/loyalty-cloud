@@ -103,6 +103,7 @@ export const toCustomer = (r: Row): Customer => ({
   id: r.id,
   businessId: r.business_id,
   fullName: r.full_name,
+  firstName: opt(r.first_name),
   phone: r.phone_e164 ?? "",
   email: opt(r.email),
   birthMonth: opt(r.birth_month),

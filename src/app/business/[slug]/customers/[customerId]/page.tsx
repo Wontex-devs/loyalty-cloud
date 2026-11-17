@@ -13,6 +13,7 @@ import { getProgress } from "@/lib/domain/loyalty-engine";
 import { Avatar, Badge, Button, ButtonLink, buttonClass, Card, CardHeader, EmptyState, Input, Select } from "@/components/ui";
 import { cn, formatDate, formatDateTime } from "@/lib/utils";
 import { publicOrigin } from "@/lib/config";
+import { greetingName } from "@/lib/wallet/messages";
 
 /** Motivos frecuentes para sumar una visita a mano (se pueden editar). */
 const MOTIVOS_MANUAL = ["El toque NFC no funcionó", "El cliente no tenía el celular", "El celular del cliente estaba sin batería"];
@@ -20,8 +21,7 @@ const MOTIVOS_MANUAL = ["El toque NFC no funcionó", "El cliente no tenía el ce
 const MONTHS = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
 
 /** Enlace de WhatsApp con la tarjeta: el empleado lo envía desde su propio WhatsApp, uno a uno. */
-function whatsappLink(phone: string, fullName: string, businessName: string, cardUrl: string) {
-  const first = fullName.trim().split(/\s+/)[0];
+function whatsappLink(phone: string, first: string, businessName: string, cardUrl: string) {
   const text = `Hola ${first}, esta es tu tarjeta de ${businessName}: ${cardUrl}\nGuárdala o añádela a tu pantalla de inicio para sumar sellos en cada visita.`;
   return `https://wa.me/${phone.replace(/\D/g, "")}?text=${encodeURIComponent(text)}`;
 }
@@ -142,7 +142,7 @@ export default function CustomerDetailPage() {
           >
             <Copy className="size-4" /> {copied ? "Copiado" : "Copiar enlace"}
           </Button>
-          <a href={whatsappLink(customer.phone, customer.fullName, business.name, cardUrl)} target="_blank" rel="noopener" className={buttonClass("secondary")}>
+          <a href={whatsappLink(customer.phone, greetingName(customer), business.name, cardUrl)} target="_blank" rel="noopener" className={buttonClass("secondary")}>
             <MessageCircle className="size-4" /> Enviar por WhatsApp
           </a>
           <ButtonLink href={`/card/${card.publicToken}`} target="_blank" variant="secondary">
