@@ -26,21 +26,26 @@ const origin = () => (process.env.NEXT_PUBLIC_APP_URL ?? "").replace(/\/$/, "");
 export function scheduleCardWalletSync(cardId: string, visit?: VisitNoticeInput, opts?: { service?: boolean }) {
   if (!googleWalletConfig() && !appleWalletConfig()) return;
   after(async () => {
-    // Apple: se avisa a los iPhone y cada uno descarga el pase nuevo; el aviso de la visita
-    // sale del propio pase (el campo de progreso cambia y muestra su mensaje).
-    const apple = appleWalletConfig();
-    if (apple) await notifyApplePasses(apple, { cardIds: [cardId] }).catch((e) => console.error("[wallet] no se pudo avisar a Apple Wallet", e));
-    if (!googleWalletConfig()) return;
     try {
+      // Apple: se avisa a los iPhone y cada uno descarga el pase nuevo; el aviso de la visita
+      // sale del propio pase (el campo de progreso cambia y muestra su mensaje).
+      const apple = appleWalletConfig();
+      const reachedApple = apple
+        ? (await notifyApplePasses(apple, { cardIds: [cardId] }).catch((e) => (console.error("[wallet] no se pudo avisar a Apple Wallet", e), new Set<string>()))).has(cardId)
+        : false;
+
       // El toque NFC no trae sesión de empleado: ahí se lee la tarjeta con la clave del servidor.
       const supabase = opts?.service ? createAdminClient() : await createClient();
       const { data } = await supabase.from("loyalty_cards").select("public_token, business_id").eq("id", cardId).maybeSingle();
       if (!data?.public_token) return;
       const card = await getPublicCard(data.public_token);
+      if (!card) return;
       const cfg = googleWalletConfig();
-      if (!card || !cfg) return;
-      const saved = await updateObject(cfg, passFromCard(card, origin()));
-      if (visit && saved) await notifyVisit(cardId, data.business_id, card, visit);
+      const saved = cfg ? await updateObject(cfg, passFromCard(card, origin())) : false;
+      // El aviso de la visita queda registrado si le llegó por alguna de las dos billeteras.
+      if (visit && (saved || reachedApple)) {
+        await notifyVisit(cardId, data.business_id, card, visit, reachedApple ? new Set([card.token]) : new Set());
+      }
     } catch (e) {
       console.error("[wallet] no se pudo actualizar el pase", e);
     }
@@ -52,6 +57,7 @@ async function notifyVisit(
   businessId: string,
   card: NonNullable<Awaited<ReturnType<typeof getPublicCard>>>,
   visit: VisitNoticeInput,
+  appleReached: Set<string>,
 ) {
   const { data: biz } = await createAdminClient().from("businesses").select("wallet_notifications").eq("id", businessId).maybeSingle();
   const rewards = card.rewards;
@@ -65,7 +71,7 @@ async function notifyVisit(
   });
   if (!notice) return;
   const queued = await queueNotices([{ businessId, cardId, token: card.token, ref: `visit:${visit.idempotencyKey}`, notice }]);
-  await deliverNotices(queued);
+  await deliverNotices(queued, { appleReached });
 }
 
 /** Actualiza el diseño común (nombre, logo, color) cuando el comercio cambia su marca o programa. */

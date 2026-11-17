@@ -35,9 +35,11 @@ export async function queueNotices(rows: { businessId: string; cardId: string; t
 
 /**
  * Entrega los avisos a las billeteras y guarda el resultado de cada uno.
- * Sin Google Wallet configurado quedan como "not_saved" (no hay a dónde enviarlos).
+ * «sent» si le llegó por Google Wallet o a algún iPhone con el pase de Apple Wallet;
+ * «not_saved» si el cliente no tiene la tarjeta en ninguna billetera.
+ * `appleReached`: tokens de tarjetas cuyo iPhone ya recibió el aviso (no se vuelve a enviar).
  */
-export async function deliverNotices(notices: QueuedNotice[]) {
+export async function deliverNotices(notices: QueuedNotice[], opts: { appleReached?: Set<string> } = {}) {
   const counts = { sent: 0, notSaved: 0, failed: 0 };
   if (!notices.length) return counts;
   const cfg = googleWalletConfig();
@@ -61,17 +63,22 @@ export async function deliverNotices(notices: QueuedNotice[]) {
   const admin = createAdminClient();
   // Apple Wallet: el mensaje va al reverso del pase; basta con avisar que cambió.
   const apple = appleWalletConfig();
+  const reached = new Set(opts.appleReached ?? []);
   const tokens = [...new Set(notices.map((n) => n.token).filter(Boolean))];
-  if (apple && tokens.length) {
+  if (apple && tokens.length && !opts.appleReached) {
     try {
       for (let i = 0; i < tokens.length; i += 200) {
-        const { data } = await admin.from("loyalty_cards").select("id").in("public_token", tokens.slice(i, i + 200));
-        await notifyApplePasses(apple, { cardIds: (data ?? []).map((c) => c.id as string) });
+        const { data } = await admin.from("loyalty_cards").select("id, public_token").in("public_token", tokens.slice(i, i + 200));
+        const tokenOf = new Map((data ?? []).map((c) => [c.id as string, c.public_token as string]));
+        const cards = await notifyApplePasses(apple, { cardIds: [...tokenOf.keys()] });
+        cards.forEach((id) => reached.add(tokenOf.get(id) ?? ""));
       }
     } catch (e) {
       console.error("[wallet] no se pudo avisar a Apple Wallet", e);
     }
   }
+  // Le llegó al iPhone aunque Google no lo tuviera guardado (o fallara): cuenta como enviado.
+  for (const n of notices) if (n.token && reached.has(n.token)) status.set(n.id, "sent");
   for (const s of ["sent", "not_saved", "failed"] as const) {
     const ids = notices.filter((n) => status.get(n.id) === s).map((n) => n.id);
     if (!ids.length) continue;

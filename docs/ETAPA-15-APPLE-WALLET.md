@@ -18,6 +18,7 @@ Sin las variables de Apple en Vercel no cambia nada: el botón no aparece y todo
   3. muestra una notificación como «Te faltan 2 visitas para Manicura gratis».
 
   Esto ocurre al sumar un sello, canjear o revertir, cuando el comercio cambia su marca o programa, y con las campañas y los avisos diarios.
+- **Conteos del panel.** Un aviso de campaña, de cumpleaños o de visita cuenta como «Enviado» si llegó por Google Wallet o a algún iPhone con el pase (APNs respondió 200); «Sin billetera» si no tiene la tarjeta en ninguna.
 - **Ajustes del comercio.** Se respetan los avisos que el comercio apagó en su panel: sello nuevo, te falta 1 y premio listo.
 
 ## Archivos
@@ -80,5 +81,4 @@ Con un iPhone, abrir una tarjeta, tocar el botón y añadir el pase. Registrar u
 
 ## Pendiente
 - **NFC en Apple Wallet:** el pase se lee tocando el lector con el iPhone. Requiere un certificado aparte que Apple concede a pocos (lectores certificados VAS). Va después.
-- **Conteos del panel:** el resultado de entrega ("enviado", "no guardado") sigue contando solo Google Wallet.
 - **Renovación anual:** el certificado vence al año. Al renovarlo, los pases ya guardados siguen funcionando, siempre que no se cambie `APPLE_WALLET_AUTH_SECRET`.

@@ -88,11 +88,12 @@ const APNS_HOST = "https://api.push.apple.com";
 /**
  * Avisa a los iPhone que el pase cambió (cuerpo vacío, tema = Pass Type ID): el iPhone
  * descarga el pase nuevo y muestra el changeMessage del campo que cambió.
- * Devuelve los tokens que Apple da por muertos (410) para borrarlos.
+ * Devuelve los tokens entregados (200) y los que Apple da por muertos (410), para borrarlos.
  */
 async function pushApns(cfg: AppleWalletConfig, tokens: string[]) {
   const dead: string[] = [];
-  if (!tokens.length) return dead;
+  const delivered: string[] = [];
+  if (!tokens.length) return { dead, delivered };
   const client = connect(APNS_HOST, { cert: cfg.certPem, key: cfg.keyPem, passphrase: cfg.keyPassphrase });
   client.on("error", (e) => console.error("[apple-wallet] conexión APNs", e));
   try {
@@ -104,7 +105,8 @@ async function pushApns(cfg: AppleWalletConfig, tokens: string[]) {
             req.setTimeout(10_000, () => req.close());
             req.on("response", (h) => {
               const status = Number(h[":status"]);
-              if (status === 410) dead.push(token);
+              if (status === 200) delivered.push(token);
+              else if (status === 410) dead.push(token);
               else if (status !== 200) console.error(`[apple-wallet] APNs respondió ${status}`);
             });
             req.on("error", (e) => console.error("[apple-wallet] aviso APNs", e));
@@ -117,20 +119,31 @@ async function pushApns(cfg: AppleWalletConfig, tokens: string[]) {
   } finally {
     client.close();
   }
-  return dead;
+  return { dead, delivered };
 }
 
-/** Marca como cambiados los pases de estas tarjetas (o de todo un comercio) y avisa a sus iPhone. */
-export async function notifyApplePasses(cfg: AppleWalletConfig, target: { cardIds: string[] } | { businessId: string }) {
-  if ("cardIds" in target && !target.cardIds.length) return;
+/**
+ * Marca como cambiados los pases de estas tarjetas (o de todo un comercio) y avisa a sus iPhone.
+ * Devuelve las tarjetas con al menos un iPhone que recibió el aviso.
+ */
+export async function notifyApplePasses(cfg: AppleWalletConfig, target: { cardIds: string[] } | { businessId: string }): Promise<Set<string>> {
+  const reached = new Set<string>();
+  if ("cardIds" in target && !target.cardIds.length) return reached;
   const admin = createAdminClient();
   let q = admin.from("apple_wallet_registrations").update({ pass_updated_at: new Date().toISOString() });
   q = "businessId" in target ? q.eq("business_id", target.businessId) : q.in("card_id", target.cardIds);
-  const { data, error } = await q.select("push_token");
+  const { data, error } = await q.select("card_id, push_token");
   if (error) throw new Error(`apple_wallet_registrations: ${error.message}`);
   const tokens = [...new Set((data ?? []).map((r) => r.push_token as string))];
   const dead: string[] = [];
+  const delivered = new Set<string>();
   // De a 500 por conexión: muy por debajo del límite de flujos simultáneos de APNs.
-  for (let i = 0; i < tokens.length; i += 500) dead.push(...(await pushApns(cfg, tokens.slice(i, i + 500))));
+  for (let i = 0; i < tokens.length; i += 500) {
+    const r = await pushApns(cfg, tokens.slice(i, i + 500));
+    dead.push(...r.dead);
+    r.delivered.forEach((t) => delivered.add(t));
+  }
   if (dead.length) await admin.from("apple_wallet_registrations").delete().in("push_token", dead);
+  for (const r of data ?? []) if (delivered.has(r.push_token as string)) reached.add(r.card_id as string);
+  return reached;
 }
