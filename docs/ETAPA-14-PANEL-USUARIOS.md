@@ -76,3 +76,12 @@ El código nuevo necesita la migración `supabase/migrations/20261101000019_pane
 - **Inicios de sesión anteriores:** el registro empieza con esta versión.
 - **Editar planes desde el panel:** hoy se cambian con una migración, para que quede registrado.
 - **Notificaciones por correo al administrador** (por ejemplo, por una suspensión): requieren un servicio de correo transaccional.
+
+## Ver como el comercio (modo soporte, migración 0021)
+Para dar soporte sin pedirle la clave a nadie: en **Establecimientos → (comercio) → Ver como el comercio**.
+
+- **Quién:** superadministradores y Soporte.
+- **Cómo:** se escribe el motivo y la duración (de 15 minutos a 2 horas). Se abre el panel del comercio tal como lo ve su dueño, con un aviso amarillo de **solo lectura** y el botón «Salir del modo soporte».
+- **Qué se puede:** solo leer. Las políticas de la base de datos amplían únicamente la lectura (`private.has_support_access`); todo cambio sigue exigiendo ser miembro del comercio, así que se rechaza. La excepción son las acciones que el superadministrador ya podía hacer desde la plataforma, como invitar personas.
+- **Transparencia:** cada entrada y salida queda en la auditoría **del comercio**, con el nombre de quien entró y el motivo. Su dueño y sus administradores la ven en *Historial → Auditoría*.
+- **Datos personales (Ley 1581):** fuera de una sesión abierta, la plataforma sigue sin ver los clientes. La sesión vence sola, y también deja de valer si la cuenta se suspende.

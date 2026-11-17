@@ -3,13 +3,13 @@
 import { useCallback, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Loader2, Pause, Play } from "lucide-react";
+import { ArrowLeft, Eye, Loader2, Pause, Play } from "lucide-react";
 import { usePlatform } from "@/components/admin/use-platform";
 import { BUSINESS_STATUS } from "@/components/business/status";
 import { useData } from "@/lib/data/store";
 import { ROLE_LABELS } from "@/lib/domain/permissions";
 import { PUBLIC_HOST_LABEL } from "@/lib/config";
-import { Avatar, Badge, Button, Card, CardHeader, EmptyState, Field, Input, Select, StatCard } from "@/components/ui";
+import { Avatar, Badge, Button, ButtonLink, Card, CardHeader, EmptyState, Field, Input, Select, StatCard } from "@/components/ui";
 import { formatDate, formatMoney, formatNumber } from "@/lib/utils";
 import { Store } from "lucide-react";
 import { BrandMark } from "@/components/loyalty/brand-mark";
@@ -54,6 +54,10 @@ export default function AdminBusinessDetail() {
             {b.category} · {b.city} · desde {formatDate(b.createdAt)}
           </p>
         </div>
+        {/* Superadmin y Soporte: entran con motivo, solo para leer (queda en la auditoría del comercio). */}
+        <ButtonLink href={`/business/${b.slug}`} variant="secondary">
+          <Eye className="size-4" /> Ver como el comercio
+        </ButtonLink>
         {puedeEditar && (
           <div className="flex gap-2">
             <Button

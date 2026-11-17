@@ -21,6 +21,8 @@ const KINDS: Record<Kind, { label: string; icon: LucideIcon; tone: string }> = {
 };
 
 const AUDIT_LABELS: Record<string, string> = {
+  "support.view_started": "Soporte de Lazo entró a ver el panel (solo lectura)",
+  "support.view_ended": "Soporte de Lazo salió del panel",
   "visit.created": "Registró una visita",
   "visit.reversed": "Revirtió una visita",
   "reward.earned": "Se emitió una recompensa",
@@ -234,7 +236,7 @@ export default function HistoryPage() {
                     <div className="min-w-0">
                       <p className="font-medium">{AUDIT_LABELS[a.action] ?? a.action}</p>
                       <p className="text-xs text-muted">
-                        {profileName(a.actorId)}
+                        {typeof a.metadata?.by === "string" && a.action.startsWith("support.") ? a.metadata.by : profileName(a.actorId)}
                         {reason && ` · Motivo: ${reason}`}
                         {rows !== null && ` · ${rows} clientes`}
                       </p>

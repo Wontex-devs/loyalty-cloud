@@ -80,6 +80,8 @@ const ACCIONES: Record<string, string> = {
   "platform.superadmin_revoked": "Quitó el rol de superadministrador",
   "platform.user_deleted": "Eliminó una cuenta",
   "platform.business_deleted": "Eliminó un comercio",
+  "support.view_started": "Entró a ver un comercio (solo lectura)",
+  "support.view_ended": "Salió del modo soporte de un comercio",
   "business.created": "Creó un comercio",
   "business.active": "Activó un comercio",
   "business.suspended": "Suspendió un comercio",
@@ -102,6 +104,7 @@ export function describirDetalle(a: AuditLog): string | null {
   if (a.action === "platform.role_changed") return `De ${rol(m.from)} a ${rol(m.to)}`;
   if (a.action === "platform.profile_updated") return `Nombre: «${m.from}» → «${m.to}»`;
   if (a.action === "platform.user_suspended") return m.reason ? `Motivo: ${m.reason}` : null;
+  if (a.action === "support.view_started") return `Motivo: ${m.reason}${typeof m.minutes === "number" ? ` · ${m.minutes} min` : ""}`;
   if (a.action === "platform.user_invited") {
     const r = m.rol as string;
     return m.tipo === "plataforma" ? `Como ${rol(r)}` : `Como ${ROLES_COMERCIO[r as BusinessRole]?.nombre ?? r}`;
@@ -115,7 +118,7 @@ export function describirDetalle(a: AuditLog): string | null {
 /** Filtros del registro de auditoría: grupos de acciones. */
 export const GRUPOS_AUDITORIA = {
   usuarios: { nombre: "Usuarios y roles", prefijos: ["platform.role_", "platform.user_", "platform.profile_", "platform.superadmin_", "platform.password_", "platform.access_"] },
-  comercios: { nombre: "Comercios", prefijos: ["business.", "platform.business_"] },
+  comercios: { nombre: "Comercios", prefijos: ["business.", "platform.business_", "support."] },
   equipos: { nombre: "Equipos de los comercios", prefijos: ["business_memberships."] },
   exportaciones: { nombre: "Exportaciones", prefijos: ["platform.users_exported", "platform.audit_exported"] },
 } as const;
@@ -129,7 +132,8 @@ export const PERMISOS_PLATAFORMA: { permiso: string; superadmin: boolean; suppor
   { permiso: "Crear comercios, cambiar su plan o su estado y eliminarlos", superadmin: true, support: false, user: false },
   { permiso: "Invitar personas, cambiar roles, suspender y eliminar cuentas", superadmin: true, support: false, user: false },
   { permiso: "Exportar usuarios y auditoría", superadmin: true, support: false, user: false },
-  { permiso: "Ver datos personales de los clientes de un comercio", superadmin: false, support: false, user: false },
+  { permiso: "Ver el panel de un comercio en modo soporte: solo lectura, con motivo, máximo 2 horas y visible en su historial", superadmin: true, support: true, user: false },
+  { permiso: "Ver datos personales de los clientes fuera de una sesión de soporte", superadmin: false, support: false, user: false },
 ];
 
 /** Permisos dentro de un comercio, en palabras (la matriz está en permissions.ts y la aplica RLS). */

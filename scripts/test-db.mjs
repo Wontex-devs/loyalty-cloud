@@ -725,6 +725,61 @@ console.log("\nEtapa 20 · Apple Wallet (iPhone registrados)");
   check("el servidor marca el pase como cambiado y obtiene el token de aviso", r.ok && r.rows.length === 1 && r.rows[0].push_token === "abc123def4567890", r);
 }
 
+console.log("\nEtapa 21 · Ver como el comercio (soporte, solo lectura)");
+{
+  let r = await joinProgram("negocio-a", "+573001130001", "Clienta Soporte");
+  const tok = r.rows?.[0]?.public_token;
+  const cardS = (await db.query("select id from public.loyalty_cards where public_token = $1", [tok])).rows[0]?.id;
+  const soporte = "00000000-0000-0000-0000-0000000005e5";
+  await db.query("insert into auth.users (id, email, raw_user_meta_data) values ($1, 'soporte-comercio@test.local', '{}')", [soporte]);
+  await db.query("update public.profiles set platform_role = 'support' where id = $1", [soporte]);
+
+  r = await as(U.super, "select count(*)::int n from public.customers where business_id = $1", [A]);
+  check("sin sesión de soporte, la plataforma no ve los clientes", r.ok && r.rows[0].n === 0, r);
+  r = await as(U.super, "select public.start_support_session($1, 'hola')", [A]);
+  check("abrir la sesión exige un motivo", expectError(r, "REASON_REQUIRED"), r);
+  r = await as(U.ownerB, "select public.start_support_session($1, 'Quiero ver sus clientes')", [A]);
+  check("un comercio no puede abrir sesión de soporte en otro (FORBIDDEN)", expectError(r, "FORBIDDEN"), r);
+  r = await as(U.ownerA, "insert into public.support_sessions (profile_id, business_id, reason, expires_at) values ($1, $2, 'por mi cuenta', now() + interval '1 hour')", [U.ownerA, A]);
+  check("nadie crea sesiones directamente desde la API", expectError(r, "permission denied"), r);
+
+  r = await as(soporte, "select public.start_support_session($1, 'El comercio no ve sus visitas', 500) as hasta", [A]);
+  const hasta = r.rows?.[0]?.hasta;
+  check("Soporte abre una sesión con motivo, de máximo 2 horas", r.ok && new Date(hasta).getTime() - Date.now() <= 2 * 3600_000 + 5000, r);
+  r = await as(soporte, "select count(*)::int n from public.customers where business_id = $1", [A]);
+  check("durante la sesión ve los clientes del comercio", r.ok && r.rows[0].n > 0, r);
+  r = await as(soporte, "select count(*)::int n from public.wallet_notifications where business_id = $1", [A]);
+  check("y los avisos y contactos que ve el dueño", r.ok, r);
+  r = await as(soporte, "select count(*)::int n from public.customers where business_id = $1", [B]);
+  check("pero no los de otro comercio", r.ok && r.rows[0].n === 0, r);
+
+  r = await as(soporte, "update public.customers set full_name = 'Cambiado' where business_id = $1", [A]);
+  check("no puede cambiar clientes (solo lectura)", (r.ok && r.affected === 0) || expectError(r, "permission denied"), r);
+  r = await as(soporte, "select public.register_visit($1, 'soporte-visita-001')", [cardS]);
+  check("no puede registrar visitas (FORBIDDEN)", expectError(r, "FORBIDDEN"), r);
+
+  r = await as(U.ownerA, "select action, metadata->>'reason' motivo from public.audit_logs where business_id = $1 and action = 'support.view_started' and actor_id = $2", [A, soporte]);
+  check("el dueño ve en su auditoría quién entró y por qué", r.ok && r.rows.length === 1 && r.rows[0].motivo === "El comercio no ve sus visitas", r);
+  r = await as(U.staffA, "select count(*)::int n from public.support_sessions");
+  check("un empleado no ve las sesiones de soporte", r.ok && r.rows[0].n === 0, r);
+
+  r = await as(soporte, "select public.end_support_session($1)", [A]);
+  check("Soporte cierra la sesión", r.ok, r);
+  r = await as(soporte, "select count(*)::int n from public.customers where business_id = $1", [A]);
+  check("al cerrarla deja de ver los clientes", r.ok && r.rows[0].n === 0, r);
+  r = await as(U.ownerA, "select count(*)::int n from public.audit_logs where business_id = $1 and action = 'support.view_ended'", [A]);
+  check("el cierre también queda en la auditoría", r.ok && r.rows[0].n === 1, r);
+
+  await db.query("insert into public.support_sessions (profile_id, business_id, reason, started_at, expires_at) values ($1, $2, 'sesión vieja', now() - interval '2 hours', now() - interval '1 hour')", [U.super, A]);
+  r = await as(U.super, "select count(*)::int n from public.customers where business_id = $1", [A]);
+  check("una sesión vencida ya no da acceso", r.ok && r.rows[0].n === 0, r);
+
+  await db.query("update public.profiles set suspended_at = now() where id = $1", [soporte]);
+  await db.query("insert into public.support_sessions (profile_id, business_id, reason, expires_at) values ($1, $2, 'sesión abierta', now() + interval '1 hour')", [soporte, A]);
+  r = await as(soporte, "select count(*)::int n from public.customers where business_id = $1", [A]);
+  check("una cuenta suspendida pierde el acceso aunque tenga sesión abierta", r.ok && r.rows[0].n === 0, r);
+}
+
 console.log("\nAdministradores de la plataforma");
 {
   let r = await as(U.ownerA, "update public.profiles set platform_role = 'superadmin' where id = $1", [U.ownerA]);
