@@ -119,6 +119,41 @@ export async function registerVisitAction(cardId: string, idempotencyKey: string
   };
 }
 
+/** Visita sumada a mano desde la ficha del cliente (respaldo si el NFC falla): exige motivo y queda en la auditoría. */
+export async function registerManualVisitAction(cardId: string, idempotencyKey: string, reason: string, locationId?: string): Promise<VisitActionResult> {
+  const motivo = reason.trim();
+  if (motivo.length < 5 || motivo.length > 200) return { ok: false, message: "Escribe el motivo (entre 5 y 200 caracteres)." };
+  const parsed = visitInput.safeParse({ cardId, idempotencyKey });
+  if (locationId && !z.uuid().safeParse(locationId).success) return { ok: false, message: "Sede no válida." };
+  if (!parsed.success) return { ok: false, message: "Tarjeta no válida." };
+
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("register_manual_visit", {
+    p_card_id: parsed.data.cardId,
+    p_idempotency_key: parsed.data.idempotencyKey,
+    p_reason: motivo,
+    p_location_id: locationId ?? null,
+  });
+  if (error) return { ok: false, message: dbErrorMessage(error) };
+
+  const res = data as { reward_id: string | null; current_stamps: number; bonus_stamps?: number; birthday_reward_id?: string | null };
+  revalidatePath("/business", "layout");
+  scheduleCardWalletSync(parsed.data.cardId, {
+    idempotencyKey: parsed.data.idempotencyKey,
+    rewardEarned: !!res.reward_id,
+    birthdayReward: !!res.birthday_reward_id,
+  });
+  return {
+    ok: true,
+    data: {
+      reward: res.reward_id ?? undefined,
+      currentStamps: res.current_stamps,
+      bonusStamps: res.bonus_stamps ?? 0,
+      birthdayReward: res.birthday_reward_id ? "Regalo de cumpleaños" : null,
+    },
+  };
+}
+
 // ---------- Etapa 4: canjes, correcciones, bloqueo, estadísticas y exportación ----------
 
 export type OpActionResult = { ok: true } | { ok: false; message: string };

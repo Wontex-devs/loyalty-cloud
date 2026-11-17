@@ -24,6 +24,7 @@ import {
   getBusinessStatsAction,
   redeemRewardAction,
   registerVisitAction,
+  registerManualVisitAction,
   reverseVisitAction,
   setCardBlockedAction,
   anonymizeCustomerAction,
@@ -113,6 +114,11 @@ export function LiveProvider({ snapshot, children }: { snapshot: DataState; chil
       // La inscripción pública no pasa por aquí: /join usa joinProgramAction directamente.
       registerVisit: async (cardId, idempotencyKey, locationId) => {
         const res = await registerVisitAction(cardId, idempotencyKey, locationId);
+        if (res.ok) startTransition(() => router.refresh());
+        return res;
+      },
+      registerManualVisit: async (cardId, idempotencyKey, reason, locationId) => {
+        const res = await registerManualVisitAction(cardId, idempotencyKey, reason, locationId);
         if (res.ok) startTransition(() => router.refresh());
         return res;
       },

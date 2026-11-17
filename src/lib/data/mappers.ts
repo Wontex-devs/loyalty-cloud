@@ -140,6 +140,7 @@ export const toVisit = (r: Row): Visit => ({
   bonusStamps: r.bonus_stamps ?? 0,
   promotionId: opt(r.promotion_id),
   locationId: opt(r.location_id),
+  source: opt(r.source),
   createdAt: r.created_at,
 });
 

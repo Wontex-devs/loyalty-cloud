@@ -199,6 +199,8 @@ export interface Visit {
   promotionId?: ID;
   /** Sede donde se registró la visita (si el comercio usa sedes). */
   locationId?: ID;
+  /** Cómo se registró: lector o caja («staff»), etiqueta NFC («nfc») o a mano con motivo («manual»). */
+  source?: "staff" | "nfc" | "manual";
   createdAt: ISODate;
 }
 

@@ -44,6 +44,7 @@ Una página para dejar el programa listo antes del primer cliente: unos 30 minut
 ## El primer día
 - Frase para el cliente: *«¿Ya tienes tu tarjeta de sellos? Escanea aquí, te toma un minuto, y cada visita suma. Con X visitas te llevas un Y gratis.»*
 - Cuando vuelva, solo acerca el celular a la etiqueta. El equipo no tiene que hacer nada.
+- Si el toque falla, el equipo suma la visita desde *Clientes → el cliente → Sumar visita*, con el motivo.
 - Para entregar un premio: *Recompensas → buscar al cliente → Canjear*.
 
 ## Lo que viene

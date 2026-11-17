@@ -59,6 +59,7 @@ export type PromotionInput = Pick<Promotion, "name" | "bonusStamps" | "startsOn"
 export interface DataApi {
   state: DataState;
   registerVisit: (cardId: string, idempotencyKey: string, locationId?: string) => Promise<OpResult>;
+  registerManualVisit: (cardId: string, idempotencyKey: string, reason: string, locationId?: string) => Promise<OpResult>;
   reverseVisit: (visitId: string, reason: string) => Promise<OpResult>;
   redeemReward: (rewardId: string) => Promise<OpResult>;
   setCardBlocked: (cardId: string, blocked: boolean) => Promise<OpResult>;
