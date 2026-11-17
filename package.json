@@ -14,7 +14,8 @@
     "test": "npm run -s typecheck && npm run -s test:unit && npm run -s test:db",
     "db:bundle": "node scripts/bundle-migrations.mjs",
     "admin:bootstrap": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/bootstrap-admin.ts",
-    "smoke": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/smoke.ts"
+    "smoke": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/smoke.ts",
+    "smart-tap:keys": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/smart-tap-keys.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",

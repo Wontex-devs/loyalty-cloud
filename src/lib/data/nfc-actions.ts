@@ -8,7 +8,8 @@ import { headers } from "next/headers";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { scheduleCardWalletSync } from "@/lib/wallet/sync";
+import { googleWalletConfig } from "@/lib/wallet/config";
+import { scheduleBusinessWalletSync, scheduleCardWalletSync } from "@/lib/wallet/sync";
 import { dbErrorMessage } from "./errors";
 import { getPublicCard } from "./public";
 import { rateLimit } from "./rate-limit";
@@ -103,4 +104,34 @@ export async function setNfcSettingsAction(businessId: string, enabled: boolean,
   });
   if (error) return { ok: false, message: dbErrorMessage(error) };
   return { ok: true, settings: toSettings(data as never) };
+}
+
+// ---------- Panel: lector NFC del mostrador (Smart Tap de Google Wallet) ----------
+
+/**
+ * Al abrir «Lector NFC»: dice si Smart Tap está encendido en el servidor y, si lo está,
+ * actualiza la clase del comercio en Google para que sus pases respondan al lector.
+ */
+export async function prepareSmartTapAction(businessId: string): Promise<{ enabled: boolean }> {
+  if (!z.uuid().safeParse(businessId).success || !googleWalletConfig()?.smartTap) return { enabled: false };
+  scheduleBusinessWalletSync(businessId);
+  return { enabled: true };
+}
+
+/** Tarjeta leída por el lector que aún no está en la pantalla (p. ej. alguien que se inscribió hoy). RLS limita al comercio del usuario. */
+export async function findCardForReaderAction(
+  businessId: string,
+  token: string,
+): Promise<{ id: string; status: string; stamps: number; firstName: string } | null> {
+  if (!z.uuid().safeParse(businessId).success || !/^[A-Za-z0-9_-]{16,64}$/.test(token)) return null;
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("loyalty_cards")
+    .select("id, status, current_stamps, customers(full_name)")
+    .eq("business_id", businessId)
+    .eq("public_token", token)
+    .maybeSingle();
+  if (!data) return null;
+  const customer = data.customers as unknown as { full_name?: string } | null;
+  return { id: data.id, status: data.status, stamps: data.current_stamps, firstName: customer?.full_name?.split(" ")[0] ?? "Cliente" };
 }

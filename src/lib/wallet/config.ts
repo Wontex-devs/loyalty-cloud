@@ -7,6 +7,7 @@ import { APPLE_WWDR_G4 } from "./apple-wwdr";
  * Credenciales de Google Wallet (solo servidor). Sin ellas el botón no aparece.
  * - GOOGLE_WALLET_ISSUER_ID: ID de emisor de Google Pay & Wallet Console.
  * - GOOGLE_WALLET_SERVICE_ACCOUNT: JSON de la cuenta de servicio (tal cual o en base64).
+ * - GOOGLE_WALLET_SMART_TAP=1: activa el toque con lector NFC (después de subir la clave en la consola).
  */
 export function googleWalletConfig(): GoogleWalletConfig | null {
   const issuerId = process.env.GOOGLE_WALLET_ISSUER_ID?.trim();
@@ -15,7 +16,8 @@ export function googleWalletConfig(): GoogleWalletConfig | null {
   try {
     const json = JSON.parse(raw.startsWith("{") ? raw : Buffer.from(raw, "base64").toString("utf8")) as { client_email?: string; private_key?: string };
     if (!json.client_email || !json.private_key) return null;
-    return { issuerId, clientEmail: json.client_email, privateKey: json.private_key };
+    const smartTap = process.env.GOOGLE_WALLET_SMART_TAP?.trim() === "1";
+    return { issuerId, clientEmail: json.client_email, privateKey: json.private_key, smartTap };
   } catch {
     return null;
   }
