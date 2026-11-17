@@ -41,6 +41,8 @@ export interface DataState extends LedgerState {
   walletNotices: WalletNotice[];
   /** Usuario con sesión iniciada. */
   actingProfileId: string;
+  /** La plataforma ve este comercio en modo soporte (solo lectura) hasta esta fecha. */
+  supportView?: { expiresAt: string } | null;
 }
 
 
@@ -100,9 +102,12 @@ export function useBusiness(slug: string) {
     const business = state.businesses.find((b) => b.slug === slug);
     if (!business) return null;
     const id = business.id;
-    const membership = state.memberships.find(
-      (m) => m.businessId === id && m.profileId === state.actingProfileId,
-    );
+    // En modo soporte se navega como el dueño para ver todo; la base de datos rechaza cualquier cambio.
+    const membership =
+      state.memberships.find((m) => m.businessId === id && m.profileId === state.actingProfileId) ??
+      (state.supportView
+        ? { id: "soporte", businessId: id, profileId: state.actingProfileId, role: "owner" as const, canRedeem: false, active: true, createdAt: state.supportView.expiresAt }
+        : undefined);
     return {
       business,
       membership,

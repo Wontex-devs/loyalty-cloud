@@ -19,12 +19,13 @@ import {
 } from "lucide-react";
 import { onboardingSteps } from "./onboarding";
 import { AppShell, type NavSection } from "@/components/layout/app-shell";
-import { useBusiness, type BusinessScope } from "@/lib/data/store";
+import { useBusiness, useData, type BusinessScope } from "@/lib/data/store";
+import { endSupportSessionAction } from "@/lib/data/support-actions";
 import { LazoLogo } from "@/components/brand/lazo-logo";
 import { can } from "@/lib/domain/permissions";
 import { ROLE_LABELS } from "@/lib/domain/permissions";
 import { Avatar, ButtonLink, EmptyState } from "@/components/ui";
-import { AlertTriangle, Lock, Nfc } from "lucide-react";
+import { AlertTriangle, Eye, Lock, Nfc } from "lucide-react";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 import { BrandMark } from "@/components/loyalty/brand-mark";
 
@@ -39,6 +40,7 @@ export function useScope() {
 
 export function BusinessShell({ slug, children }: { slug: string; children: React.ReactNode }) {
   const scope = useBusiness(slug);
+  const supportView = useData().state.supportView;
 
   if (!scope) {
     return (
@@ -117,7 +119,7 @@ export function BusinessShell({ slug, children }: { slug: string; children: Reac
       <div className="min-w-0 flex-1">
         <p className="truncate text-[13px] font-medium">{scope.actingProfile?.fullName}</p>
         <p className="truncate text-xs text-muted">
-          {membership ? ROLE_LABELS[membership.role] : "Sin acceso"}
+          {supportView ? "Soporte · solo lectura" : membership ? ROLE_LABELS[membership.role] : "Sin acceso"}
           {membership?.role === "staff" && (membership.canRedeem ? " · puede canjear" : " · sin canjes")}
         </p>
       </div>
@@ -147,6 +149,18 @@ export function BusinessShell({ slug, children }: { slug: string; children: Reac
         <EmptyState icon={Lock} title="Sin acceso a este comercio" description="Tu usuario no tiene una membresía activa en este establecimiento." />
       ) : (
         <ScopeCtx.Provider value={scope}>
+          {supportView && (
+            <div className="mb-6 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-lg border border-warning/30 bg-warning-bg px-4 py-3 text-sm text-warning">
+              <Eye className="size-4 shrink-0" />
+              <span className="flex-1">
+                <strong>Modo soporte: solo lectura.</strong> Ves el panel como {business.name}; no se puede cambiar nada. Vence a las{" "}
+                {new Date(supportView.expiresAt).toLocaleTimeString("es-CO", { hour: "numeric", minute: "2-digit" })}.
+              </span>
+              <form action={endSupportSessionAction.bind(null, business.id)}>
+                <button className="rounded-md border border-warning/40 px-2.5 py-1 text-xs font-medium hover:bg-warning/10">Salir del modo soporte</button>
+              </form>
+            </div>
+          )}
           {business.status === "suspended" && (
             <div className="mb-6 flex items-center gap-2 rounded-lg border border-danger/20 bg-danger-bg px-4 py-3 text-sm text-danger">
               <AlertTriangle className="size-4" /> Este establecimiento está suspendido. Las tarjetas no aceptan nuevas visitas.
