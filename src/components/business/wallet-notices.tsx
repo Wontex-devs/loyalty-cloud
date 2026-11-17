@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { BellRing, Check, Send, Wallet } from "lucide-react";
+import { BellRing, Check, MapPin, Send, Wallet } from "lucide-react";
 import { useScope } from "@/components/business/business-shell";
 import { useData } from "@/lib/data/store";
-import { WALLET_NOTICE_LABELS, walletSettings } from "@/lib/wallet/messages";
+import { DEFAULT_WALLET_SETTINGS, NEARBY_TEXT_MAX, NEARBY_TEXT_MIN, WALLET_NOTICE_LABELS, nearbyMessage, walletSettings } from "@/lib/wallet/messages";
 import type { WalletSettings } from "@/lib/domain/types";
 import { Badge, Button, Card, CardHeader, Field, Input, Switch, Textarea } from "@/components/ui";
 import { formatRelative } from "@/lib/utils";
@@ -75,7 +75,7 @@ export function WalletCampaignCard({
   );
 }
 
-const AUTO: { key: keyof Omit<WalletSettings, "winbackDays">; label: string; hint: string }[] = [
+const AUTO: { key: keyof Omit<WalletSettings, "winbackDays" | "nearbyText">; label: string; hint: string }[] = [
   { key: "stamp", label: "Sello nuevo", hint: "Al registrar cada visita: «Vas 6 de 8»." },
   { key: "near", label: "Te falta 1", hint: "Cuando queda un sello para el premio." },
   { key: "reward", label: "Premio listo", hint: "Al completar la tarjeta o recibir el regalo de cumpleaños." },
@@ -93,6 +93,7 @@ export function WalletSettingsCard() {
   const [busy, setBusy] = useState(false);
 
   const save = async (next: WalletSettings) => {
+    setMsg(null);
     setDraft(next);
     setBusy(true);
     const res = await updateWalletSettings(business.id, next);
@@ -133,8 +134,82 @@ export function WalletSettingsCard() {
             }}
           />
         </li>
+        <NearbyMessage value={draft.nearbyText} busy={busy} onSave={(nearbyText) => save({ ...draft, nearbyText })} />
       </ul>
     </Card>
+  );
+}
+
+const VARIABLES = [
+  { token: "{nombre}", hint: "nombre del cliente" },
+  { token: "{comercio}", hint: "nombre del comercio" },
+  { token: "{progreso}", hint: "cuánto le falta o su premio listo" },
+];
+
+/** Mensaje que el iPhone muestra en la pantalla bloqueada cerca de una sede con ubicación. */
+function NearbyMessage({ value, busy, onSave }: { value: string; busy: boolean; onSave: (text: string) => Promise<void> }) {
+  const { business, program, locations } = useScope();
+  const [text, setText] = useState(value);
+  useEffect(() => setText(value), [value]);
+  const located = locations.filter((l) => l.active && l.latitude != null).length;
+  const len = text.trim().length;
+  const valid = len >= NEARBY_TEXT_MIN && len <= NEARBY_TEXT_MAX;
+  const changed = text.trim() !== value;
+  const left = Math.max((program?.stampsRequired ?? 8) - 2, 1);
+  const preview = nearbyMessage(valid ? text : value, {
+    nombre: "María",
+    comercio: business.name,
+    progreso: `Te faltan ${left} visitas para ${program?.rewardName ?? "tu premio"}`,
+  });
+
+  return (
+    <li className="px-5 py-4">
+      <div className="flex items-start gap-3">
+        <MapPin className="mt-0.5 size-4 shrink-0 text-muted" />
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-medium">Cerca del local</p>
+          <p className="text-xs text-muted">
+            {located
+              ? `Activo en ${located === 1 ? "1 sede" : `${located} sedes`}. En iPhone, la tarjeta aparece en la pantalla bloqueada con este mensaje.`
+              : "Sin sedes con ubicación: agrégala en Ajustes → Sedes para activarlo."}
+          </p>
+        </div>
+      </div>
+      <Field label="Mensaje (iPhone)" className="mt-3" hint={`${len}/${NEARBY_TEXT_MAX}`}>
+        <Textarea value={text} maxLength={NEARBY_TEXT_MAX} className="min-h-20" onChange={(e) => setText(e.target.value)} />
+      </Field>
+      <div className="mt-2 flex flex-wrap gap-1.5">
+        {VARIABLES.map((v) => (
+          <button
+            key={v.token}
+            type="button"
+            title={v.hint}
+            className="rounded-full border border-line px-2 py-0.5 text-xs text-muted hover:bg-black/5"
+            onClick={() => setText((t) => (t.length + v.token.length <= NEARBY_TEXT_MAX ? `${t.trimEnd()} ${v.token}` : t))}
+          >
+            + {v.token}
+          </button>
+        ))}
+      </div>
+      <div className="mt-3 rounded-2xl bg-[#1c1c1e] p-3 text-white" aria-label="Vista previa en la pantalla bloqueada del iPhone">
+        <p className="text-[11px] tracking-wide text-white/60 uppercase">{business.name} · Así se verá</p>
+        <p className="mt-1 text-sm leading-snug">{preview}</p>
+      </div>
+      {!valid && len > 0 && <p className="mt-2 text-xs text-danger">Escribe entre {NEARBY_TEXT_MIN} y {NEARBY_TEXT_MAX} caracteres.</p>}
+      <div className="mt-3 flex flex-wrap items-center justify-end gap-2">
+        {text.trim() !== DEFAULT_WALLET_SETTINGS.nearbyText && (
+          <Button type="button" size="sm" variant="ghost" disabled={busy} onClick={() => setText(DEFAULT_WALLET_SETTINGS.nearbyText)}>
+            Usar el texto sugerido
+          </Button>
+        )}
+        <Button type="button" size="sm" disabled={busy || !valid || !changed} onClick={() => onSave(text.trim())}>
+          Guardar mensaje
+        </Button>
+      </div>
+      <p className="mt-2 text-xs text-muted">
+        En Android, Google Wallet muestra su propio aviso de cercanía (con el nombre del comercio); ese texto no se puede cambiar.
+      </p>
+    </li>
   );
 }
 

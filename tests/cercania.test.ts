@@ -5,6 +5,7 @@ import { parseCoordinates, placesFrom } from "../src/lib/wallet/geo.ts";
 import { nearbyText, passJson } from "../src/lib/wallet/apple.ts";
 import { loyaltyClass } from "../src/lib/wallet/google.ts";
 import { passFromCard } from "../src/lib/wallet/pass.ts";
+import { DEFAULT_WALLET_SETTINGS, nearbyMessage, walletSettings } from "../src/lib/wallet/messages.ts";
 import type { PublicCardData } from "../src/components/public/card-screen.tsx";
 
 const card: PublicCardData = {
@@ -67,7 +68,7 @@ test("Apple: el pase lleva las sedes y el texto de cercanía con el progreso", (
   const json = passJson(apple, p, origin) as { locations?: { latitude: number; longitude: number; relevantText: string }[] };
   assert.equal(json.locations?.length, 1);
   assert.equal(json.locations?.[0].latitude, sede.latitude);
-  assert.equal(json.locations?.[0].relevantText, "Estás cerca de Beauty Club. Te faltan 3 visitas para Manicura gratis");
+  assert.equal(json.locations?.[0].relevantText, "¡Hola Sofía! Estás cerca de Beauty Club. Te faltan 3 visitas para Manicura gratis");
   assert.equal(nearbyText(p), json.locations?.[0].relevantText);
 });
 
@@ -83,4 +84,27 @@ test("Google: el programa lleva las sedes; lista vacía las borra y sin consulta
   const empty = loyaltyClass(google, passFromCard(card, origin, [])) as { merchantLocations?: unknown[] };
   assert.deepEqual(empty.merchantLocations, []);
   assert.equal("merchantLocations" in loyaltyClass(google, passFromCard(card, origin)), false);
+});
+
+test("Apple: usa el mensaje del comercio y el nombre aparte del cliente", () => {
+  const p = passFromCard(card, origin, [sede]);
+  const extras = { settings: { stamp: true, near: true, reward: true, nearbyText: "{nombre}, pasa por {comercio}: {progreso} 💅" }, firstName: "María José" };
+  const json = passJson(apple, p, origin, extras) as { locations?: { relevantText: string }[] };
+  assert.equal(json.locations?.[0].relevantText, "María José, pasa por Beauty Club: Te faltan 3 visitas para Manicura gratis 💅");
+});
+
+test("mensaje de cercanía: variables, premio listo y sin nombre", () => {
+  const v = { nombre: "Ana", comercio: "Prueba Salon", progreso: "Premio listo: Manicura gratis" };
+  assert.equal(nearbyMessage(DEFAULT_WALLET_SETTINGS.nearbyText, v), "¡Hola Ana! Estás cerca de Prueba Salon. Premio listo: Manicura gratis");
+  assert.equal(nearbyMessage(DEFAULT_WALLET_SETTINGS.nearbyText, { ...v, nombre: "" }), "¡Hola! Estás cerca de Prueba Salon. Premio listo: Manicura gratis");
+  assert.equal(nearbyMessage("Hola {nombre}, te esperamos", { ...v, nombre: " " }), "Hola, te esperamos");
+  assert.equal(nearbyMessage("Sin variables", v), "Sin variables");
+});
+
+test("ajustes: el mensaje de cercanía se valida y si no sirve vuelve al sugerido", () => {
+  assert.equal(walletSettings(null).nearbyText, DEFAULT_WALLET_SETTINGS.nearbyText);
+  assert.equal(walletSettings({ nearbyText: "  ¡Ven {nombre}!  " }).nearbyText, "¡Ven {nombre}!");
+  assert.equal(walletSettings({ nearbyText: "hey" }).nearbyText, DEFAULT_WALLET_SETTINGS.nearbyText);
+  assert.equal(walletSettings({ nearbyText: "x".repeat(121) }).nearbyText, DEFAULT_WALLET_SETTINGS.nearbyText);
+  assert.equal(walletSettings({ nearbyText: 42 }).nearbyText, DEFAULT_WALLET_SETTINGS.nearbyText);
 });

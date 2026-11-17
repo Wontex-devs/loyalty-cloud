@@ -5,6 +5,7 @@
  */
 import { createHash, createHmac, createSign, timingSafeEqual, X509Certificate } from "node:crypto";
 import { progressText, type WalletPass } from "./pass.ts";
+import { DEFAULT_WALLET_SETTINGS, nearbyMessage } from "./messages.ts";
 import type { WalletSettings } from "../domain/types.ts";
 
 export interface AppleWalletConfig {
@@ -32,7 +33,9 @@ export interface PassMessage {
 export interface PassExtras {
   message?: PassMessage | null;
   /** Avisos que el comercio dejó encendidos; sin ellos, todos. */
-  settings?: Pick<WalletSettings, "stamp" | "near" | "reward"> | null;
+  settings?: (Pick<WalletSettings, "stamp" | "near" | "reward"> & Partial<Pick<WalletSettings, "nearbyText">>) | null;
+  /** Nombre para saludar en el mensaje de cercanía (sin apellido). */
+  firstName?: string | null;
 }
 
 // ---------- Contenido del pase ----------
@@ -75,9 +78,10 @@ export function statusNotifies(p: WalletPass, settings?: PassExtras["settings"])
   return (left === 1 && settings.near) || settings.stamp;
 }
 
-/** Texto que el iPhone muestra en la pantalla bloqueada al estar cerca de una sede. */
-export function nearbyText(p: WalletPass) {
-  return `Estás cerca de ${p.business.name}. ${statusText(p)}`;
+/** Texto que el iPhone muestra en la pantalla bloqueada al estar cerca de una sede (el que escribió el comercio). */
+export function nearbyText(p: WalletPass, extras: Pick<PassExtras, "settings" | "firstName"> = {}) {
+  const nombre = extras.firstName?.trim() || p.customerName.trim().split(/\s+/)[0] || "";
+  return nearbyMessage(extras.settings?.nearbyText || DEFAULT_WALLET_SETTINGS.nearbyText, { nombre, comercio: p.business.name, progreso: statusText(p) });
 }
 
 export function passJson(cfg: Pick<AppleWalletConfig, "passTypeId" | "teamId" | "authSecret">, p: WalletPass, origin: string, extras: PassExtras = {}) {
@@ -114,7 +118,7 @@ export function passJson(cfg: Pick<AppleWalletConfig, "passTypeId" | "teamId" | 
     ...updates,
     // Hasta 10 sedes: cerca de una, la tarjeta aparece en la pantalla bloqueada.
     ...(p.places?.length && p.active
-      ? { locations: p.places.map((l) => ({ latitude: l.latitude, longitude: l.longitude, relevantText: nearbyText(p) })) }
+      ? { locations: p.places.map((l) => ({ latitude: l.latitude, longitude: l.longitude, relevantText: nearbyText(p, extras) })) }
       : {}),
     storeCard: {
       headerFields: [{ key: "stamps", label: "SELLOS", value: `${p.stamps}/${p.program.stampsRequired}` }],

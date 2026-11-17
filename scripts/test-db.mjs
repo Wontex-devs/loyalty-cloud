@@ -869,6 +869,25 @@ console.log("\nEtapa 25 · Ubicación de cada sede");
   await db.query("delete from public.locations where id = $1", [loc]);
 }
 
+console.log("\nEtapa 26 · Mensaje de cercanía editable");
+{
+  const base = { stamp: true, near: true, reward: true, birthday: true, winback: true, winbackDays: 45 };
+  let r = await as(U.ownerA, "select public.update_wallet_settings($1, $2)", [A, JSON.stringify(base)]);
+  check("los ajustes sin mensaje de cercanía siguen siendo válidos", r.ok, r);
+  r = await as(U.ownerA, "select public.update_wallet_settings($1, $2)", [A, JSON.stringify({ ...base, nearbyText: "¡Hola {nombre}! Pasa por {comercio}" })]);
+  const saved = (await db.query("select wallet_notifications ->> 'nearbyText' as t from public.businesses where id = $1", [A])).rows[0].t;
+  check("el dueño guarda su mensaje de cercanía", r.ok && saved === "¡Hola {nombre}! Pasa por {comercio}", { r, saved });
+  r = await as(U.ownerA, "select public.update_wallet_settings($1, $2)", [A, JSON.stringify({ ...base, nearbyText: "hey" })]);
+  check("un mensaje demasiado corto se rechaza", expectError(r, "INVALID_WALLET_SETTINGS"), r);
+  r = await as(U.ownerA, "select public.update_wallet_settings($1, $2)", [A, JSON.stringify({ ...base, nearbyText: "x".repeat(121) })]);
+  check("un mensaje demasiado largo se rechaza", expectError(r, "INVALID_WALLET_SETTINGS"), r);
+  r = await as(U.ownerA, "select public.update_wallet_settings($1, $2)", [A, JSON.stringify({ ...base, nearbyText: 7 })]);
+  check("el mensaje debe ser texto", expectError(r, "INVALID_WALLET_SETTINGS"), r);
+  r = await as(U.staffA2, "select public.update_wallet_settings($1, $2)", [A, JSON.stringify({ ...base, nearbyText: "Mensaje del empleado" })]);
+  check("un empleado no cambia el mensaje", !r.ok, r);
+  await db.query("update public.businesses set wallet_notifications = $2 where id = $1", [A, JSON.stringify(base)]);
+}
+
 console.log("\nAdministradores de la plataforma");
 {
   let r = await as(U.ownerA, "update public.profiles set platform_role = 'superadmin' where id = $1", [U.ownerA]);

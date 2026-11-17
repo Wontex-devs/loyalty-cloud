@@ -11,7 +11,11 @@ export const DEFAULT_WALLET_SETTINGS: WalletSettings = {
   birthday: true,
   winback: true,
   winbackDays: 45,
+  nearbyText: "¡Hola {nombre}! Estás cerca de {comercio}. {progreso}",
 };
+
+export const NEARBY_TEXT_MIN = 5;
+export const NEARBY_TEXT_MAX = 120;
 
 export const WALLET_NOTICE_LABELS: Record<WalletNoticeKind, string> = {
   stamp: "Sello nuevo",
@@ -40,7 +44,25 @@ export function walletSettings(raw: unknown): WalletSettings {
     birthday: bool(s.birthday, true),
     winback: bool(s.winback, true),
     winbackDays: Number.isInteger(days) && days >= 14 && days <= 180 ? days : 45,
+    nearbyText:
+      typeof s.nearbyText === "string" && s.nearbyText.trim().length >= NEARBY_TEXT_MIN && s.nearbyText.trim().length <= NEARBY_TEXT_MAX
+        ? s.nearbyText.trim()
+        : DEFAULT_WALLET_SETTINGS.nearbyText,
   };
+}
+
+/**
+ * Mensaje de cercanía ya armado. Sin nombre, «¡Hola {nombre}!» queda «¡Hola!».
+ * {progreso} es el estado de la tarjeta («Te faltan 3 visitas para …» o el premio listo).
+ */
+export function nearbyMessage(template: string, v: { nombre: string; comercio: string; progreso: string }) {
+  return template
+    .replaceAll("{nombre}", v.nombre.trim())
+    .replaceAll("{comercio}", v.comercio.trim())
+    .replaceAll("{progreso}", v.progreso.trim())
+    .replace(/[ \t]+([!?.,;:])/g, "$1") // sin espacio antes de los signos que cierran
+    .replace(/[ \t]{2,}/g, " ")
+    .trim();
 }
 
 const visits = (n: number) => (n === 1 ? "1 visita" : `${n} visitas`);
