@@ -16,6 +16,8 @@ Una página para dejar el programa listo antes del primer cliente: unos 30 minut
 ## 3. Tu marca — *Tarjeta, QR y NFC*
 - Sube tu **logo** y elige tus **colores**. Si quieres, agrega una foto de fondo.
 - La tarjeta del cliente, su ícono en el celular y el pase de Google Wallet usan esta marca.
+- **Logo:** cuadrado de al menos 512 × 512 px, en PNG con fondo transparente. Se ve dentro de un círculo: un símbolo o iniciales funcionan mejor que un texto largo.
+- **Foto de fondo:** horizontal, de al menos 1200 × 800 px (3:2). Lo importante al centro y sin texto: los bordes se recortan.
 
 ## 4. Equipo (opcional) — *Más opciones → Empleados*
 - Invita a quien atiende en caja.
