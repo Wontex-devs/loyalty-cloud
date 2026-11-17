@@ -235,7 +235,7 @@ export default function CustomerDetailPage() {
             stamps={progress.stamps}
             status={card.status}
             rewardsAvailable={progress.rewardsAvailable}
-            qrValue={anonymized ? undefined : cardUrl}
+            memberSince={anonymized ? undefined : formatDate(card.createdAt)}
           />
           <Card className="p-5 text-sm">
             <p className="mb-3 font-semibold">Consentimientos</p>

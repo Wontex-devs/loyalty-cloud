@@ -10,7 +10,7 @@ import { useData } from "@/lib/data/store";
 import { can } from "@/lib/domain/permissions";
 import { PUBLIC_HOST_LABEL } from "@/lib/config";
 import { CARD_FONTS, STAMP_ICONS, type BusinessBranding, type CardStatus } from "@/lib/domain/types";
-import { cn } from "@/lib/utils";
+import { cn, formatDate } from "@/lib/utils";
 import { NfcCard } from "@/components/business/nfc-card";
 import { Button, buttonClass, Card, CardHeader, Field, Input, PageHeader, Segmented } from "@/components/ui";
 
@@ -359,7 +359,7 @@ export default function CardDesignPage() {
               stamps={previewState === "active" ? 6 : 0}
               status={previewState}
               rewardsAvailable={previewState === "active" ? 0 : 1}
-              memberSince="jul. 2026"
+              memberSince={formatDate(new Date().toISOString())}
             />
           </div>
         </div>

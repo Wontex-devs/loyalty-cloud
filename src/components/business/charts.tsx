@@ -27,7 +27,9 @@ export function dailySeries(dates: string[], days: number, now = new Date()): Se
 /** Gráfico de barras minimalista de una sola serie (color de marca). */
 export function BarChart({ data, height = 180, className }: { data: SeriesPoint[]; height?: number; className?: string }) {
   const max = Math.max(1, ...data.map((d) => d.value));
-  const ticks = [max, Math.round(max / 2), 0];
+  const empty = data.every((d) => d.value === 0);
+  // La línea del medio está al 50 %: solo lleva número si es exacto (con 1 o 3 visitas quedaría «1, 1, 0»).
+  const ticks = empty ? ["", "", "0"] : [String(max), max % 2 === 0 ? String(max / 2) : "", "0"];
   return (
     <div className={cn("flex gap-3", className)}>
       <div className="tabular flex flex-col justify-between pb-5 text-right text-[11px] text-subtle" style={{ height }}>
@@ -37,6 +39,7 @@ export function BarChart({ data, height = 180, className }: { data: SeriesPoint[
       </div>
       <div className="min-w-0 flex-1">
         <div className="relative flex items-end gap-[3px] border-b border-line" style={{ height: height - 20 }}>
+          {empty && <p className="absolute inset-0 flex items-center justify-center text-sm text-muted">Aún no hay visitas en este periodo.</p>}
           {[0.5, 1].map((f) => (
             <div key={f} className="pointer-events-none absolute inset-x-0 border-t border-dashed border-line" style={{ bottom: `${f * 100}%` }} />
           ))}
