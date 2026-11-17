@@ -128,13 +128,13 @@ export default function CampaignsPage() {
     <RequirePermission allowed={!!membership && can(membership, "program.edit")}>
       <PageHeader
         title="Campañas"
-        description="Envía un aviso a la billetera de todo un grupo con un botón, o escríbeles por WhatsApp una por una. Solo aparecen las que aceptaron recibir mensajes."
+        description="Envía una notificación a la tarjeta en Wallet (Google y Apple) de todo un grupo con un botón. Solo les llega a quienes aceptaron recibir mensajes."
       />
 
       <div className="mb-4 flex items-start gap-2 rounded-lg border border-line bg-surface px-4 py-3 text-sm text-muted">
         <ShieldCheck className="mt-0.5 size-4 shrink-0" />
         <p>
-          Los avisos a la billetera llegan como notificación al celular y respetan un máximo de una campaña por cliente a la semana. Los de WhatsApp los abres y envías tú, uno por uno. Todo queda registrado.
+          El aviso llega como notificación al celular y queda guardado en la tarjeta. Máximo una campaña por cliente a la semana. Si prefieres escribirle a alguien en particular, también puedes hacerlo por WhatsApp, uno por uno. Todo queda registrado.
         </p>
       </div>
 
@@ -142,64 +142,71 @@ export default function CampaignsPage() {
         <Segmented<Segment> value={segment} onChange={setSegment} options={SEGMENTS.map(({ value, label }) => ({ value, label }))} />
       </div>
 
+      {/* Lo principal (la notificación a la billetera) va primero; WhatsApp queda como opción aparte. */}
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_380px]">
-        <Card>
-          <div className="border-b border-line px-5 py-3 text-sm">
-            <p className="font-medium">
-              {allowed.length} {allowed.length === 1 ? "cliente" : "clientes"} · {current.hint}
-            </p>
-            {withoutConsent > 0 && <p className="text-xs text-muted">{withoutConsent} más en este grupo no aceptaron mensajes y no aparecen.</p>}
-          </div>
-          {allowed.length === 0 ? (
-            <EmptyState icon={Users} title="Nadie en este grupo por ahora" />
-          ) : (
-            <ul className="divide-y divide-line">
-              {allowed.map(({ customer, card }) => {
-                const last = lastContact.get(customer.id);
-                const done = sent.has(customer.id);
-                return (
-                  <li key={customer.id} className="flex items-center gap-3 px-5 py-3 text-sm">
-                    <Avatar name={customer.fullName} />
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate font-medium">{customer.fullName}</p>
-                      <p className="text-xs text-muted">
-                        {card!.currentStamps}/{required} sellos
-                        {last ? ` · último mensaje ${formatRelative(last)}` : " · sin mensajes todavía"}
-                      </p>
-                    </div>
-                    <a
-                      href={message(customer.id)}
-                      target="_blank"
-                      rel="noopener"
-                      onClick={() => {
-                        setSent((s) => new Set(s).add(customer.id));
-                        void logContact(customer.id, segment);
-                      }}
-                      className={
-                        done
-                          ? "flex h-8 items-center gap-1.5 rounded-lg border border-line px-3 text-[13px] text-muted"
-                          : "flex h-8 items-center gap-1.5 rounded-lg bg-[#25D366] px-3 text-[13px] font-medium text-white"
-                      }
-                    >
-                      {done ? <Check className="size-3.5" /> : <MessageCircle className="size-3.5" />} {done ? "Enviado" : "WhatsApp"}
-                    </a>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-        </Card>
+        <div className="flex min-w-0 flex-col gap-4">
+          <WalletCampaignCard
+            segmentKey={segment}
+            segmentLabel={current.label}
+            customerIds={allowed.map(({ customer }) => customer.id)}
+            defaultTitle={current.wallet.title}
+            defaultBody={current.wallet.body}
+          />
+          <Card>
+            <div className="border-b border-line px-5 py-3 text-sm">
+              <p className="font-medium">
+                Quiénes lo reciben: {allowed.length} {allowed.length === 1 ? "cliente" : "clientes"} · {current.hint}
+              </p>
+              {withoutConsent > 0 && <p className="text-xs text-muted">{withoutConsent} más en este grupo no aceptaron mensajes y no aparecen.</p>}
+            </div>
+            {allowed.length === 0 ? (
+              <EmptyState icon={Users} title="Nadie en este grupo por ahora" />
+            ) : (
+              <ul className="divide-y divide-line">
+                {allowed.map(({ customer, card }) => {
+                  const last = lastContact.get(customer.id);
+                  const done = sent.has(customer.id);
+                  return (
+                    <li key={customer.id} className="flex items-center gap-3 px-5 py-3 text-sm">
+                      <Avatar name={customer.fullName} />
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate font-medium">{customer.fullName}</p>
+                        <p className="text-xs text-muted">
+                          {card!.currentStamps}/{required} sellos
+                          {last ? ` · último mensaje ${formatRelative(last)}` : " · sin mensajes todavía"}
+                        </p>
+                      </div>
+                      <a
+                        href={message(customer.id)}
+                        target="_blank"
+                        rel="noopener"
+                        onClick={() => {
+                          setSent((s) => new Set(s).add(customer.id));
+                          void logContact(customer.id, segment);
+                        }}
+                        title="Escribirle por WhatsApp (opcional)"
+                        className="flex h-8 items-center gap-1.5 rounded-lg border border-line px-2.5 text-[12px] text-muted hover:border-line-strong hover:text-ink"
+                      >
+                        {done ? <Check className="size-3.5" /> : <MessageCircle className="size-3.5 text-[#25D366]" />} {done ? "Escrito" : "WhatsApp"}
+                      </a>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </Card>
+        </div>
 
-        <div className="flex flex-col gap-4">
-        <WalletCampaignCard
-          segmentKey={segment}
-          segmentLabel={current.label}
-          customerIds={allowed.map(({ customer }) => customer.id)}
-          defaultTitle={current.wallet.title}
-          defaultBody={current.wallet.body}
-        />
-        <Card className="h-fit p-5">
-          <p className="text-sm font-semibold">Mensaje de WhatsApp</p>
+        <details className="group h-fit rounded-2xl border border-line bg-surface p-5">
+          <summary className="cursor-pointer list-none text-sm font-semibold">
+            <span className="flex items-center gap-2">
+              <MessageCircle className="size-4 text-[#25D366]" /> Escribir por WhatsApp (opcional)
+              <span className="ml-auto text-xs font-normal text-muted group-open:hidden">Ver</span>
+            </span>
+          </summary>
+          <p className="mt-2 text-xs text-muted">
+            Para escribirle a alguien en particular desde tu WhatsApp, con el botón «WhatsApp» de cada cliente. Este es el texto que se abre:
+          </p>
           <p className="mt-1 text-xs text-muted">
             Variables: {"{nombre}"} {"{negocio}"} {"{recompensa}"} {"{sellos}"} {"{faltan}"} {"{enlace}"}
           </p>
@@ -209,8 +216,7 @@ export default function CampaignsPage() {
             onChange={(e) => setTemplates((t) => ({ ...t, [segment]: e.target.value }))}
           />
           {promo && <p className="mt-2 text-xs text-muted">Se añadirá al final: la promoción de hoy ({promo.name}).</p>}
-        </Card>
-        </div>
+        </details>
       </div>
 
       <div className="mt-4 grid gap-4 lg:grid-cols-2">
