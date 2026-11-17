@@ -59,6 +59,15 @@ export function LiveProvider({ snapshot, children }: { snapshot: DataState; chil
         router.refresh();
       });
 
+    // La tarjeta muestra el sello nuevo al instante; el historial completo llega con el refresco.
+    const applyVisit = (cardId: string, currentStamps: number) =>
+      setState((s) => ({
+        ...s,
+        cards: s.cards.map((c) =>
+          c.id === cardId ? { ...c, currentStamps, totalVisits: c.totalVisits + 1, lastVisitAt: new Date().toISOString() } : c,
+        ),
+      }));
+
     // Operaciones cuyo resultado muestra la propia pantalla: se espera la respuesta y luego se refresca.
     const refreshAfter = async (p: Promise<OpActionResult>) => {
       const res = await p;
@@ -114,12 +123,18 @@ export function LiveProvider({ snapshot, children }: { snapshot: DataState; chil
       // La inscripción pública no pasa por aquí: /join usa joinProgramAction directamente.
       registerVisit: async (cardId, idempotencyKey, locationId) => {
         const res = await registerVisitAction(cardId, idempotencyKey, locationId);
-        if (res.ok) startTransition(() => router.refresh());
+        if (res.ok) {
+          applyVisit(cardId, res.data.currentStamps);
+          startTransition(() => router.refresh());
+        }
         return res;
       },
       registerManualVisit: async (cardId, idempotencyKey, reason, locationId) => {
         const res = await registerManualVisitAction(cardId, idempotencyKey, reason, locationId);
-        if (res.ok) startTransition(() => router.refresh());
+        if (res.ok) {
+          applyVisit(cardId, res.data.currentStamps);
+          startTransition(() => router.refresh());
+        }
         return res;
       },
       reverseVisit: (visitId, reason) => refreshAfter(reverseVisitAction(visitId, reason)),
