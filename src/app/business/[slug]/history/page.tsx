@@ -23,6 +23,7 @@ const KINDS: Record<Kind, { label: string; icon: LucideIcon; tone: string }> = {
 const AUDIT_LABELS: Record<string, string> = {
   "support.view_started": "Soporte de Lazo entró a ver el panel (solo lectura)",
   "support.view_ended": "Soporte de Lazo salió del panel",
+  "visit.manual": "Sumó una visita a mano",
   "visit.created": "Registró una visita",
   "visit.reversed": "Revirtió una visita",
   "reward.earned": "Se emitió una recompensa",

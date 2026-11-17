@@ -3,16 +3,19 @@
 import { useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Ban, BellOff, Cake, MessageCircle, CheckCircle2, Copy, ExternalLink, Gift, Loader2, Mail, Phone, RotateCcw, ShieldCheck, Stamp, Trash2, Undo2, UserX } from "lucide-react";
+import { ArrowLeft, Ban, BellOff, Cake, MessageCircle, CheckCircle2, Copy, ExternalLink, Gift, Loader2, Mail, Phone, Plus, RotateCcw, ShieldCheck, Stamp, Trash2, Undo2, UserX } from "lucide-react";
 import { useScope } from "@/components/business/business-shell";
 import { LoyaltyCardView } from "@/components/loyalty/loyalty-card";
 import { CARD_STATUS } from "@/components/business/status";
 import { useData } from "@/lib/data/store";
 import { can } from "@/lib/domain/permissions";
 import { getProgress } from "@/lib/domain/loyalty-engine";
-import { Avatar, Badge, Button, ButtonLink, buttonClass, Card, CardHeader, EmptyState, Input } from "@/components/ui";
+import { Avatar, Badge, Button, ButtonLink, buttonClass, Card, CardHeader, EmptyState, Input, Select } from "@/components/ui";
 import { cn, formatDate, formatDateTime } from "@/lib/utils";
 import { publicOrigin } from "@/lib/config";
+
+/** Motivos frecuentes para sumar una visita a mano (se pueden editar). */
+const MOTIVOS_MANUAL = ["El toque NFC no funcionó", "El cliente no tenía el celular", "El celular del cliente estaba sin batería"];
 
 const MONTHS = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
 
@@ -26,14 +29,18 @@ function whatsappLink(phone: string, fullName: string, businessName: string, car
 export default function CustomerDetailPage() {
   const { customerId } = useParams<{ customerId: string }>();
   const scope = useScope();
-  const { reverseVisit, redeemReward, setCardBlocked, anonymizeCustomer, revokeMarketingConsent } = useData();
-  const { business, program, customers, cards, visits, rewards, redemptions, membership, profiles } = scope;
+  const { reverseVisit, redeemReward, setCardBlocked, anonymizeCustomer, revokeMarketingConsent, registerManualVisit } = useData();
+  const { business, program, customers, cards, visits, rewards, redemptions, membership, profiles, locations } = scope;
   const [reversing, setReversing] = useState<string | null>(null);
   const [reason, setReason] = useState("");
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState("");
+  const [manualOpen, setManualOpen] = useState(false);
+  const [manualReason, setManualReason] = useState("");
+  const activeLocations = locations.filter((l) => l.active);
+  const [manualLocation, setManualLocation] = useState("");
 
   const customer = customers.find((c) => c.id === customerId);
   const card = cards.find((c) => c.customerId === customerId);
@@ -51,6 +58,8 @@ export default function CustomerDetailPage() {
   const canManageConsent = !!membership && membership.role !== "staff";
   const isOwner = membership?.role === "owner";
   const available = rewards.filter((r) => r.cardId === card.id && r.status === "available");
+  const canAddVisit = !!membership && can(membership, "visits.create") && !anonymized && card.status !== "blocked";
+  const locationForVisit = manualLocation || (activeLocations.length === 1 ? activeLocations[0].id : "");
 
   const run = async (key: string, op: () => Promise<{ ok: boolean; message?: string }>, okText: string) => {
     setBusy(key);
@@ -65,6 +74,20 @@ export default function CustomerDetailPage() {
     ...rewards.filter((r) => r.cardId === card.id).map((r) => ({ type: "reward" as const, at: r.earnedAt, reward: r })),
     ...redemptions.filter((r) => r.cardId === card.id).map((r) => ({ type: "redemption" as const, at: r.createdAt, redemption: r })),
   ].sort((a, b) => b.at.localeCompare(a.at));
+
+  const submitManual = async () => {
+    const motivo = manualReason.trim();
+    if (motivo.length < 5) return;
+    if (activeLocations.length > 1 && !locationForVisit) return setMsg({ ok: false, text: "Elige la sede donde está el cliente." });
+    setBusy("manual");
+    const res = await registerManualVisit(card.id, crypto.randomUUID(), motivo, locationForVisit || undefined);
+    setBusy(null);
+    if (!res.ok) return setMsg({ ok: false, text: res.message });
+    const premio = res.data?.reward ? ` ¡Completó la tarjeta y ganó: ${program.rewardName}!` : "";
+    setMsg({ ok: true, text: `Visita sumada a mano. Quedó registrada con el motivo en el historial y la auditoría.${premio}` });
+    setManualOpen(false);
+    setManualReason("");
+  };
 
   const submitReverse = async () => {
     if (!reversing || reason.trim().length < 5) return;
@@ -104,6 +127,11 @@ export default function CustomerDetailPage() {
           </div>
         </div>
         {!anonymized && <div className="flex flex-wrap gap-2">
+          {canAddVisit && (
+            <Button variant="brand" onClick={() => setManualOpen((v) => !v)}>
+              <Plus className="size-4" /> Sumar visita
+            </Button>
+          )}
           <Button
             variant="secondary"
             onClick={() => {
@@ -122,6 +150,48 @@ export default function CustomerDetailPage() {
           </ButtonLink>
         </div>}
       </div>
+
+      {manualOpen && canAddVisit && (
+        <Card className="mb-4 space-y-3 p-4">
+          <div>
+            <p className="text-sm font-semibold">Sumar visita a mano</p>
+            <p className="text-xs text-muted">
+              Úsalo solo si el sello no se pudo sumar con el toque. Se aplican las mismas reglas de siempre y queda registrado con tu nombre y el motivo.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {MOTIVOS_MANUAL.map((m) => (
+              <button
+                key={m}
+                type="button"
+                onClick={() => setManualReason(m)}
+                className={cn("rounded-full border px-2.5 py-1 text-xs", manualReason === m ? "border-ink bg-ink text-white" : "border-line text-ink-2 hover:border-line-strong")}
+              >
+                {m}
+              </button>
+            ))}
+          </div>
+          <Input value={manualReason} onChange={(e) => setManualReason(e.target.value)} maxLength={200} placeholder="Motivo (obligatorio)" aria-label="Motivo de la visita a mano" />
+          {activeLocations.length > 1 && (
+            <Select value={manualLocation} onChange={(e) => setManualLocation(e.target.value)} aria-label="Sede">
+              <option value="">Elige la sede donde está el cliente</option>
+              {activeLocations.map((l) => (
+                <option key={l.id} value={l.id}>
+                  {l.name}
+                </option>
+              ))}
+            </Select>
+          )}
+          <div className="flex gap-2">
+            <Button variant="brand" onClick={submitManual} disabled={manualReason.trim().length < 5 || busy === "manual"}>
+              {busy === "manual" ? <Loader2 className="size-4 animate-spin" /> : <Stamp className="size-4" />} Sumar 1 visita
+            </Button>
+            <Button variant="ghost" onClick={() => setManualOpen(false)}>
+              Cancelar
+            </Button>
+          </div>
+        </Card>
+      )}
 
       {msg && (
         <div className={cn("mb-4 rounded-lg border px-4 py-3 text-sm", msg.ok ? "border-success/20 bg-success-bg text-success" : "border-danger/20 bg-danger-bg text-danger")}>{msg.text}</div>
@@ -187,7 +257,8 @@ export default function CustomerDetailPage() {
                     </div>
                     <div className="min-w-0 flex-1 text-sm">
                       <p className={cn("font-medium", reverted && "text-muted line-through")}>
-                        {t.type === "visit" && `Visita registrada (+${1 + (t.visit!.bonusStamps ?? 0)})${t.visit!.bonusStamps ? " · promoción" : ""}`}
+                        {t.type === "visit" &&
+                          `Visita registrada (+${1 + (t.visit!.bonusStamps ?? 0)})${t.visit!.bonusStamps ? " · promoción" : ""}${t.visit!.source === "manual" ? " · a mano" : t.visit!.source === "nfc" ? " · por NFC" : ""}`}
                         {t.type === "reversal" && "Visita revertida (−1)"}
                         {t.type === "reward" && (t.reward!.kind === "birthday" ? `🎂 Regalo de cumpleaños: ${t.reward!.name}` : `Recompensa obtenida: ${t.reward!.name}`)}
                         {t.type === "redemption" && "Recompensa canjeada"}

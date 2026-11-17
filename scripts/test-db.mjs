@@ -799,6 +799,36 @@ console.log("\nEtapa 21 · Ver como el comercio (soporte, solo lectura)");
   check("una cuenta suspendida pierde el acceso aunque tenga sesión abierta", r.ok && r.rows[0].n === 0, r);
 }
 
+console.log("\nEtapa 23 · Sumar visita a mano");
+{
+  let r = await joinProgram("negocio-a", "+573001140001", "Cliente Manual");
+  const tok = r.rows?.[0]?.public_token;
+  const cardM = (await db.query("select id from public.loyalty_cards where public_token = $1", [tok])).rows[0]?.id;
+  const antes = (await db.query("select current_stamps from public.loyalty_cards where id = $1", [cardM])).rows[0]?.current_stamps;
+  const minAntes = (await db.query("select min_minutes_between_visits m from public.loyalty_programs where business_id = $1", [A])).rows[0]?.m;
+  await db.query("update public.loyalty_programs set min_minutes_between_visits = 120 where business_id = $1", [A]);
+
+  r = await as(U.staffA2, "select public.register_manual_visit($1, 'manual-0001', 'no')", [cardM]);
+  check("sin motivo no se suma (REASON_REQUIRED)", expectError(r, "REASON_REQUIRED"), r);
+  r = await as(U.ownerB, "select public.register_manual_visit($1, 'manual-0002', 'El NFC no funcionó')", [cardM]);
+  check("otro comercio no puede sumar visitas a mano (FORBIDDEN)", expectError(r, "FORBIDDEN"), r);
+  r = await as(null, "select public.register_manual_visit($1, 'manual-0003', 'El NFC no funcionó')", [cardM]);
+  check("el público tampoco", !r.ok, r);
+
+  r = await as(U.staffA2, "select public.register_manual_visit($1, 'manual-0004', 'El NFC no le funcionó al cliente') as res", [cardM]);
+  check("un empleado suma la visita a mano con motivo", r.ok && r.rows[0].res?.current_stamps === antes + 1, { r, antes });
+  r = await asService("select source, staff_id from public.visits where card_id = $1", [cardM]);
+  check("la visita queda con origen «manual» y el empleado que la sumó", r.ok && r.rows.length === 1 && r.rows[0].source === "manual" && r.rows[0].staff_id === U.staffA2, r);
+  r = await as(U.ownerA, "select metadata->>'reason' motivo, actor_id from public.audit_logs where business_id = $1 and action = 'visit.manual' and entity_id = $2", [A, cardM]);
+  check("el dueño ve en la auditoría el motivo y quién la sumó", r.ok && r.rows.length === 1 && r.rows[0].motivo === "El NFC no le funcionó al cliente" && r.rows[0].actor_id === U.staffA2, r);
+
+  r = await as(U.staffA2, "select public.register_manual_visit($1, 'manual-0005', 'Otra vez el NFC')", [cardM]);
+  check("respeta el tiempo mínimo entre visitas", !r.ok && !r.error.includes("REASON_REQUIRED"), r);
+  r = await as(U.staffA2, "select public.register_manual_visit($1, 'manual-0004', 'Doble clic en el botón')", [cardM]);
+  check("un doble clic no suma dos veces", !r.ok, r);
+  await db.query("update public.loyalty_programs set min_minutes_between_visits = $2 where business_id = $1", [A, minAntes]);
+}
+
 console.log("\nAdministradores de la plataforma");
 {
   let r = await as(U.ownerA, "update public.profiles set platform_role = 'superadmin' where id = $1", [U.ownerA]);
