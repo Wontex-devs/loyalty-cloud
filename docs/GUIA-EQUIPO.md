@@ -35,7 +35,9 @@ No intentes arreglarlo sumando o quitando visitas. Avisa a la encargada: ella **
 - No tomes fotos de la lista de clientas.
 - Si una clienta pide borrar o corregir sus datos, avísale a la encargada.
 
-## Si el comercio usa la etiqueta NFC
-- La clienta acerca su celular a la etiqueta del mostrador y ve «¡Sello registrado!». **Tú no haces nada.**
-- Si dice que no le funcionó (por ejemplo, el celular le pide crear su tarjeta), súmale la visita con el escáner de QR como siempre.
-- Si te equivocas o ves un sello que no corresponde, avisa a la encargada: lo **revierte** indicando el motivo, igual que cualquier visita.
+## Si el toque NFC no funciona
+- Revisa que el cliente tenga el **celular desbloqueado** y el **NFC encendido** (en Android, en los ajustes rápidos). Debe acercar la parte de arriba del celular a la etiqueta.
+- Si le pide crear su tarjeta, es porque en ese celular no está guardada: que escanee el cartel con el QR y escriba **el mismo nombre y celular** con los que se inscribió. Así recupera su tarjeta y luego vuelve a tocar la etiqueta.
+- Si el comercio tiene **lector en caja**, abre *Más opciones → Lector NFC* y pide al cliente que acerque el celular al lector.
+- Si nada funciona, anota el nombre del cliente y la hora, y avísale a la encargada.
+- Si ves un sello que no corresponde, avisa a la encargada: ella lo **revierte** indicando el motivo, igual que cualquier visita.

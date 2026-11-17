@@ -20,7 +20,7 @@ npm run db:seed    # carga Beauty Club en tu proyecto Supabase
 - Visita por toque NFC con etiqueta en el mostrador (Etapa 13): [docs/ETAPA-13-NFC.md](docs/ETAPA-13-NFC.md)
 - Lector NFC en el mostrador con Smart Tap de Google Wallet (Etapa 16): [docs/ETAPA-16-SMART-TAP.md](docs/ETAPA-16-SMART-TAP.md)
 - Borradores legales (contrato con el comercio y políticas de datos): [docs/legal/README.md](docs/legal/README.md)
-- Pruebas, despliegue y plan del piloto (Etapa 5): [docs/ETAPA-5.md](docs/ETAPA-5.md) · Guía para el equipo: [docs/GUIA-EQUIPO.md](docs/GUIA-EQUIPO.md)
+- Pruebas, despliegue y plan del piloto (Etapa 5): [docs/ETAPA-5.md](docs/ETAPA-5.md) · Guía para el equipo: [docs/GUIA-EQUIPO.md](docs/GUIA-EQUIPO.md) · Puesta en marcha del comercio: [docs/GUIA-PUESTA-EN-MARCHA.md](docs/GUIA-PUESTA-EN-MARCHA.md)
 - Comercio de ejemplo: **Beauty Club** (`/business/beautyclub`, `/join/beautyclub`)
 
 ## Cómo colaborar desde GitHub
