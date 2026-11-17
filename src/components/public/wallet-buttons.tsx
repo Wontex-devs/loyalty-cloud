@@ -14,13 +14,10 @@ export function WalletButtons({ token, google, apple = false }: { token: string;
   if (ios) {
     if (!apple) return null;
     return (
-      // Provisional: antes de abrir al público va la insignia oficial «Añadir a Apple Wallet»
-      // (guía de marca de Apple; ver docs/ETAPA-15-APPLE-WALLET.md).
-      <a
-        href={`/card/${token}/apple-wallet`}
-        className="mx-auto mt-4 flex h-12 w-full max-w-[378px] items-center justify-center rounded-xl bg-black text-[15px] font-medium text-white"
-      >
-        Añadir a Apple Wallet
+      // Insignia oficial de Apple (guía de marca, versión es-MX): no se puede alterar su forma ni su color.
+      <a href={`/card/${token}/apple-wallet`} className="mt-4 block">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/apple-wallet/agregar-a-apple-wallet-es-mx.svg" alt="Agregar a Apple Wallet" width={158} height={50} className="mx-auto h-[50px] w-auto" />
       </a>
     );
   }

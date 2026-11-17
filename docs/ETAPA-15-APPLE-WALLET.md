@@ -73,7 +73,7 @@ Después: **Redeploy** del último despliegue.
 Aplicar la migración `20261101000020_apple_wallet.sql` en el proyecto de producción (SQL editor de Supabase), antes de configurar Vercel.
 
 ### 6. Botón oficial
-Apple exige su insignia **"Añadir a Apple Wallet"**. Se descarga en https://developer.apple.com/wallet/add-to-apple-wallet-guidelines/ (hay que aceptar sus términos). La versión en español va en `public/apple-wallet/` y reemplaza el botón provisional de `wallet-buttons.tsx`.
+Ya está puesta: la insignia oficial de Apple en español de Latinoamérica (`public/apple-wallet/agregar-a-apple-wallet-es-mx.svg`, del paquete ESMX descargado el 17-nov-2026 aceptando el Apple Wallet Marketing Artwork License Agreement). No se puede alterar su forma ni su color. Se descarga en https://developer.apple.com/wallet/add-to-apple-wallet-guidelines/.
 
 ### 7. Probar
 Con un iPhone, abrir una tarjeta, tocar el botón y añadir el pase. Registrar una visita: en menos de un minuto el pase debe mostrar el sello nuevo y una notificación.
