@@ -70,7 +70,10 @@ export function JoinForm({ slug, business, program }: JoinFormProps) {
     }
   };
 
-  const input = "h-12 w-full rounded-xl border bg-white/80 px-4 text-[15px] outline-none transition placeholder:opacity-50 focus:bg-white";
+  const input = "h-12 w-full rounded-xl border bg-white px-4 text-[15px] text-[#111111] outline-none transition placeholder:text-black/45";
+  // Sobre los recuadros blancos el texto va siempre en negro (cualquier color de marca se lee).
+  // El botón y las casillas usan el más oscuro de los dos colores de la tarjeta, para que se vean sobre blanco.
+  const [oscuro, claro] = luminance(b.cardBackground) <= luminance(b.cardForeground) ? [b.cardBackground, b.cardForeground] : [b.cardForeground, b.cardBackground];
 
   return (
     <div className="min-h-dvh" style={{ background: b.cardBackground, color: b.cardForeground }}>
@@ -82,21 +85,21 @@ export function JoinForm({ slug, business, program }: JoinFormProps) {
         </header>
 
         <div className="mt-6 grid grid-cols-2 gap-2 text-sm">
-          <div className="rounded-2xl bg-white/50 p-3.5">
+          <div className="rounded-2xl bg-white/90 p-3.5 text-[#111111]">
             <Stamp className="size-4 opacity-70" />
             <p className="mt-2 font-semibold">{program.stampsRequired} visitas</p>
             <p className="text-xs opacity-65">
               {program.welcomeStamps ? `¡${program.welcomeStamps} ${program.welcomeStamps === 1 ? "sello" : "sellos"} de regalo al inscribirte!` : "1 sello por visita"}
             </p>
           </div>
-          <div className="rounded-2xl bg-white/50 p-3.5">
+          <div className="rounded-2xl bg-white/90 p-3.5 text-[#111111]">
             <Gift className="size-4 opacity-70" />
             <p className="mt-2 font-semibold">{program.rewardName}</p>
             <p className="text-xs opacity-65">al completar tu tarjeta</p>
           </div>
         </div>
 
-        <form onSubmit={submit} className="mt-6 space-y-3 rounded-3xl bg-white/60 p-5 shadow-[0_10px_40px_-20px_rgba(0,0,0,0.25)] backdrop-blur" noValidate>
+        <form onSubmit={submit} className="mt-6 space-y-3 rounded-3xl bg-white/95 p-5 text-[#111111] shadow-[0_10px_40px_-20px_rgba(0,0,0,0.25)] backdrop-blur" noValidate>
           <p className="text-base font-semibold">Crea tu tarjeta digital</p>
           <p className="-mt-2 text-xs opacity-60">Sin descargar aplicaciones ni crear contraseñas. ¿Ya tienes tarjeta? Escribe el mismo nombre y celular y la recuperas.</p>
 
@@ -116,7 +119,6 @@ export function JoinForm({ slug, business, program }: JoinFormProps) {
                 value={form[k]}
                 onChange={(e) => setForm({ ...form, [k]: e.target.value })}
                 className={cn(input, errors[k] ? "border-red-400" : "border-black/10")}
-                style={{ color: b.cardForeground }}
               />
               {errors[k] && <p className="mt-1 pl-1 text-xs text-red-700">{errors[k]}</p>}
             </div>
@@ -130,7 +132,6 @@ export function JoinForm({ slug, business, program }: JoinFormProps) {
                 value={birth.day}
                 onChange={(e) => setBirth({ ...birth, day: e.target.value })}
                 className={cn(input, "border-black/10")}
-                style={{ color: b.cardForeground }}
               >
                 <option value="">Día</option>
                 {Array.from({ length: 31 }, (_, i) => (
@@ -144,7 +145,6 @@ export function JoinForm({ slug, business, program }: JoinFormProps) {
                 value={birth.month}
                 onChange={(e) => setBirth({ ...birth, month: e.target.value })}
                 className={cn(input, "border-black/10")}
-                style={{ color: b.cardForeground }}
               >
                 <option value="">Mes</option>
                 {MONTHS.map((m, i) => (
@@ -158,7 +158,7 @@ export function JoinForm({ slug, business, program }: JoinFormProps) {
           </div>
 
           <label className="flex items-start gap-3 pt-1 text-[13px] leading-snug">
-            <input type="checkbox" checked={form.acceptTerms} onChange={(e) => setForm({ ...form, acceptTerms: e.target.checked })} className="mt-0.5 size-4 shrink-0" style={{ accentColor: b.cardForeground }} />
+            <input type="checkbox" checked={form.acceptTerms} onChange={(e) => setForm({ ...form, acceptTerms: e.target.checked })} className="mt-0.5 size-4 shrink-0" style={{ accentColor: oscuro }} />
             <span>
               Acepto los{" "}
               <a href={`/join/${slug}/terminos`} target="_blank" rel="noopener" className="underline">
@@ -170,7 +170,7 @@ export function JoinForm({ slug, business, program }: JoinFormProps) {
           {errors.acceptTerms && <p className="-mt-1 pl-7 text-xs text-red-700">{errors.acceptTerms}</p>}
 
           <label className="flex items-start gap-3 text-[13px] leading-snug opacity-85">
-            <input type="checkbox" checked={form.marketingConsent} onChange={(e) => setForm({ ...form, marketingConsent: e.target.checked })} className="mt-0.5 size-4 shrink-0" style={{ accentColor: b.cardForeground }} />
+            <input type="checkbox" checked={form.marketingConsent} onChange={(e) => setForm({ ...form, marketingConsent: e.target.checked })} className="mt-0.5 size-4 shrink-0" style={{ accentColor: oscuro }} />
             <span>Quiero recibir promociones y novedades (opcional).</span>
           </label>
 
@@ -181,7 +181,7 @@ export function JoinForm({ slug, business, program }: JoinFormProps) {
             type="submit"
             disabled={submitting}
             className="mt-2 flex h-12 w-full items-center justify-center gap-2 rounded-xl text-[15px] font-semibold transition hover:opacity-90 disabled:opacity-60"
-            style={{ background: b.cardForeground, color: b.cardBackground }}
+            style={{ background: oscuro, color: claro }}
           >
             {submitting && <Loader2 className="size-4 animate-spin" />} Obtener mi tarjeta
           </button>
@@ -191,6 +191,17 @@ export function JoinForm({ slug, business, program }: JoinFormProps) {
       </div>
     </div>
   );
+}
+
+/** Luminancia relativa de un color #RRGGBB (0 = negro, 1 = blanco). */
+function luminance(hex: string) {
+  const m = /^#([0-9a-f]{6})$/i.exec(hex);
+  if (!m) return 0;
+  const [r, g, b] = [0, 2, 4].map((i) => {
+    const c = parseInt(m[1].slice(i, i + 2), 16) / 255;
+    return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  });
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
 }
 
 export function JoinUnavailable() {
