@@ -114,7 +114,7 @@ export function CardScreen({
               <p className="font-semibold">¡Te damos la bienvenida a {data.program.name}!</p>
               <p className="text-muted">
                 {data.stamps > 0 && data.totalVisits === 0 ? `Ya tienes ${data.stamps} ${data.stamps === 1 ? "sello" : "sellos"} de regalo. ` : ""}
-                Guarda este enlace o añádelo a tu pantalla de inicio.
+                {googleWallet || appleWallet ? "Guárdala en la billetera de tu celular con el botón de abajo." : "Guarda este enlace o añádelo a tu pantalla de inicio."}
               </p>
             </div>
           </div>
@@ -145,6 +145,20 @@ export function CardScreen({
           highlightLastStamp={bump}
         />
 
+        {data.status !== "blocked" ? (
+          <WalletButtons
+            token={data.token}
+            google={googleWallet}
+            apple={appleWallet}
+            businessName={data.business.name}
+            color={b.cardForeground}
+            emphasize={isNew}
+            fallback={<InstallCard color={b.cardForeground} />}
+          />
+        ) : (
+          <InstallCard color={b.cardForeground} />
+        )}
+
         {data.status !== "blocked" && (
           <div className="mt-4 flex items-center gap-3 rounded-2xl bg-white p-4 text-sm shadow-card">
             <Nfc className="size-6 shrink-0" style={{ color: b.cardForeground }} aria-hidden />
@@ -163,8 +177,6 @@ export function CardScreen({
           </button>
         </div>
 
-        {data.status !== "blocked" && <WalletButtons token={data.token} google={googleWallet} apple={appleWallet} />}
-        <InstallCard color={b.cardForeground} />
 
         {data.rewards.length > 0 && (
           <section className="mt-6">
