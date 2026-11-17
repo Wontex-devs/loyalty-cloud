@@ -89,6 +89,10 @@ export default function CardDesignPage() {
                 <Field label="Iniciales" hint={b.logoUrl ? "Se mostrarán si quitas el logotipo." : "Se muestran mientras no subas un logotipo."}>
                   <Input maxLength={3} value={b.logoText} onChange={(e) => updateBranding(business.id, { logoText: e.target.value.toUpperCase() })} className="w-24" />
                 </Field>
+                <p className="text-xs text-muted">
+                  <strong className="font-medium text-ink-2">Tamaño recomendado:</strong> cuadrado de al menos 512 × 512 px, en PNG con fondo transparente.
+                  Se muestra dentro de un círculo: un símbolo o iniciales se ven mejor que un texto largo. Los bordes vacíos los recortamos solos.
+                </p>
                 {logoError && <p className="text-sm text-danger">{logoError}</p>}
               </div>
               <div className="flex flex-wrap gap-2">
@@ -128,6 +132,10 @@ export default function CardDesignPage() {
               </div>
               <div className="flex-1">
                 <p className="text-sm text-muted">JPG o PNG de hasta 8 MB. La ajustamos sola para que cargue rápido.</p>
+                <p className="mt-1 text-xs text-muted">
+                  <strong className="font-medium text-ink-2">Tamaño recomendado:</strong> horizontal, de al menos 1200 × 800 px (proporción 3:2).
+                  Deja lo importante en el centro: los bordes se recortan y en Google Wallet se ve como una franja más ancha. Evita fotos con texto.
+                </p>
                 {coverError && <p className="mt-1 text-sm text-danger">{coverError}</p>}
               </div>
               <div className="flex flex-wrap gap-2">
