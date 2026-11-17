@@ -848,6 +848,27 @@ console.log("\nEtapa 24 · Nombre aparte para los avisos");
   check("el nombre aparte tiene un largo máximo", !r.ok, r);
 }
 
+console.log("\nEtapa 25 · Ubicación de cada sede");
+{
+  const loc = (await db.query("insert into public.locations (business_id, name) values ($1, 'Sede Ubicada') returning id", [A])).rows[0].id;
+  let r = await as(U.ownerA, "update public.locations set latitude = 4.698712, longitude = -74.041234 where id = $1 returning latitude, longitude", [loc]);
+  check("el propietario guarda la ubicación de su sede", r.ok && r.rows[0]?.latitude === 4.698712 && r.rows[0]?.longitude === -74.041234, r);
+  r = await as(U.ownerA, "update public.locations set latitude = null where id = $1", [loc]);
+  check("no se puede guardar solo una de las dos coordenadas", !r.ok, r);
+  r = await as(U.ownerA, "update public.locations set latitude = 95, longitude = 10 where id = $1", [loc]);
+  check("latitud fuera de rango se rechaza", !r.ok, r);
+  r = await as(U.ownerA, "update public.locations set latitude = 4, longitude = -190 where id = $1", [loc]);
+  check("longitud fuera de rango se rechaza", !r.ok, r);
+  r = await as(U.staffA2, "update public.locations set latitude = 1, longitude = 1 where id = $1", [loc]);
+  const after = (await db.query("select latitude from public.locations where id = $1", [loc])).rows[0].latitude;
+  check("un empleado no cambia la ubicación", (!r.ok || r.affected === 0) && after === 4.698712, { r, after });
+  r = await as(U.ownerB, "update public.locations set latitude = 1, longitude = 1 where id = $1", [loc]);
+  check("otro comercio no cambia la ubicación", (!r.ok || r.affected === 0), r);
+  r = await as(U.ownerA, "update public.locations set latitude = null, longitude = null where id = $1 returning latitude", [loc]);
+  check("se puede quitar la ubicación (sin aviso de cercanía)", r.ok && r.rows[0]?.latitude === null, r);
+  await db.query("delete from public.locations where id = $1", [loc]);
+}
+
 console.log("\nAdministradores de la plataforma");
 {
   let r = await as(U.ownerA, "update public.profiles set platform_role = 'superadmin' where id = $1", [U.ownerA]);

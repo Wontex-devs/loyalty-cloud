@@ -17,6 +17,7 @@ import type {
   Customer,
   CustomerContact,
   Location,
+  LocationInput,
   LoyaltyProgram,
   Plan,
   Profile,
@@ -74,7 +75,7 @@ export interface DataApi {
   updateWalletSettings: (businessId: string, settings: WalletSettings) => Promise<OpResult>;
   /** Aviso a la billetera para todo un grupo (solo quienes aceptaron mensajes; máx. una campaña por semana). */
   sendWalletCampaign: (businessId: string, customerIds: string[], title: string, body: string) => Promise<WalletCampaignResult>;
-  saveLocation: (businessId: string, input: { name: string; address?: string; active: boolean }, id?: string) => Promise<OpResult>;
+  saveLocation: (businessId: string, input: LocationInput, id?: string) => Promise<OpResult>;
   setBusinessPlan: (businessId: string, planId: string) => Promise<OpResult>;
   getStats: (businessId: string, days: number) => Promise<{ ok: true; stats: BusinessStats } | { ok: false; message: string }>;
   exportCustomers: (businessId: string) => Promise<{ ok: true; csv: string } | { ok: false; message: string }>;

@@ -6,6 +6,7 @@ import { businessIcon } from "@/components/brand/business-icon";
 import { buildPkpass, type AppleWalletConfig, type PassMessage } from "./apple";
 import { walletSettings } from "./messages";
 import { passFromCard } from "./pass";
+import { businessPlaces } from "./places-server";
 
 /** Mensajes del comercio que se muestran al reverso del pase (no los de cada visita). */
 const MESSAGE_KINDS = ["campaign", "birthday", "winback"];
@@ -62,12 +63,13 @@ export async function pkpassFor(cfg: AppleWalletConfig, token: string, origin: s
   const card = await getPublicCard(token);
   if (!card) return null;
   const ids = await cardBySerial(token);
-  const [images, message, settings] = await Promise.all([
+  const [images, message, settings, places] = await Promise.all([
     passImages(card.business),
     ids ? latestMessage(ids.cardId) : null,
     ids ? businessSettings(ids.businessId) : null,
+    ids ? businessPlaces({ businessId: ids.businessId }) : undefined,
   ]);
-  return buildPkpass(cfg, passFromCard(card, origin), origin, images, { message, settings });
+  return buildPkpass(cfg, passFromCard(card, origin, places), origin, images, { message, settings });
 }
 
 export function pkpassResponse(pass: Buffer, token: string) {

@@ -32,8 +32,19 @@ export interface Location {
   businessId: ID;
   name: string;
   address?: string;
+  /** Ubicación de la sede: con ella las billeteras avisan al cliente cuando está cerca. */
+  latitude?: number;
+  longitude?: number;
   active: boolean;
   createdAt: ISODate;
+}
+
+/** Datos para crear o editar una sede. coordinates: null = quitar la ubicación; ausente = no cambiarla. */
+export interface LocationInput {
+  name: string;
+  address?: string;
+  active: boolean;
+  coordinates?: { latitude: number; longitude: number } | null;
 }
 
 export const STAMP_ICONS = ["check", "heart", "star", "sparkles", "flower", "gem", "crown", "scissors"] as const;

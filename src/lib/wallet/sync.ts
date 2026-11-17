@@ -9,6 +9,7 @@ import { updateClass, updateObject } from "./google";
 import { visitNotice, walletSettings } from "./messages";
 import { deliverNotices, queueNotices } from "./notify";
 import { passFromCard } from "./pass";
+import { businessPlaces } from "./places-server";
 
 /** Datos de una visita recién registrada, para su aviso (sello nuevo, te falta 1 o premio listo). */
 export interface VisitNoticeInput {
@@ -82,9 +83,9 @@ export function scheduleBusinessWalletSync(businessId: string) {
     if (apple) await notifyApplePasses(apple, { businessId }).catch((e) => console.error("[wallet] no se pudo avisar a Apple Wallet", e));
     if (!googleWalletConfig()) return;
     try {
-      const supabase = await createClient();
-      const { data } = await supabase.from("businesses").select("slug").eq("id", businessId).maybeSingle();
-      const b = data?.slug ? await getPublicBusiness(data.slug) : null;
+      // Sin sesión (p. ej. desde el lector NFC) se lee con la clave del servidor.
+      const { data } = await createAdminClient().from("businesses").select("slug").eq("id", businessId).maybeSingle();
+      const [b, places] = data?.slug ? await Promise.all([getPublicBusiness(data.slug), businessPlaces({ businessId })]) : [null, undefined];
       const cfg = googleWalletConfig();
       if (!b || !cfg) return;
       await updateClass(cfg, {
@@ -98,6 +99,7 @@ export function scheduleBusinessWalletSync(businessId: string) {
           coverUrl: b.branding.coverUrl || undefined,
         },
         program: { name: b.program.name, stampsRequired: b.program.stampsRequired, rewardName: b.program.rewardName },
+        places,
       });
     } catch (e) {
       console.error("[wallet] no se pudo actualizar el diseño del pase", e);
