@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Check, Copy, Loader2, Nfc, RefreshCw } from "lucide-react";
 import { getNfcSettingsAction, setNfcSettingsAction, type NfcSettings } from "@/lib/data/nfc-actions";
 import { Button, Card, CardHeader, Field, Select, Switch } from "@/components/ui";
+import { cn } from "@/lib/utils";
 
 const ESPERAS = [
   { value: 0, label: "Solo el tiempo del programa" },
@@ -111,7 +112,9 @@ export function NfcCard({ businessId, slug }: { businessId: string; slug: string
             <div className="flex items-center justify-between gap-4">
               <div>
                 <p className="font-medium">Permitir sellar con el toque</p>
-                <p className="text-xs text-muted">Apagado, la etiqueta no registra nada.</p>
+                <p className={cn("text-xs", ajustes.enabled ? "text-success" : "text-muted")}>
+                  {ajustes.enabled ? "Encendido: cada toque en la etiqueta suma un sello." : "Apagado, la etiqueta no registra nada."}
+                </p>
               </div>
               <Switch checked={ajustes.enabled} onChange={(v) => void guardar(v)} label="Permitir sellar con el toque del celular" />
             </div>
