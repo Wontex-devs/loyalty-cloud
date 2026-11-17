@@ -81,4 +81,8 @@ Con un iPhone, abrir una tarjeta, tocar el botón y añadir el pase. Registrar u
 
 ## Pendiente
 - **NFC en Apple Wallet:** el pase se lee tocando el lector con el iPhone. Requiere un certificado aparte que Apple concede a pocos (lectores certificados VAS). Va después.
-- **Renovación anual:** el certificado vence al año. Al renovarlo, los pases ya guardados siguen funcionando, siempre que no se cambie `APPLE_WALLET_AUTH_SECRET`.
+- **Renovación del certificado** (vence el 17-dic-2027; el panel de la plataforma avisa 60 días antes):
+  1. En developer.apple.com → Certificates → **+** → Pass Type ID Certificate → `pass.com.wontexdevs.lazo`.
+  2. Sube la misma solicitud `~/lazo-apple/lazo-pass.csr` (la clave no cambia) y descarga el `pass.cer` nuevo.
+  3. `openssl x509 -inform DER -in pass.cer -out ~/lazo-apple/lazo-pass.pem` y pega `base64 -i ~/lazo-apple/lazo-pass.pem | pbcopy` en `APPLE_WALLET_CERT` (Vercel, Production). Redeploy.
+  4. **No cambies** `APPLE_WALLET_KEY` ni `APPLE_WALLET_AUTH_SECRET`: los pases ya guardados siguen recibiendo actualizaciones.
