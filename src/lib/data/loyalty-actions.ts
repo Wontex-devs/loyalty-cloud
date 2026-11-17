@@ -15,11 +15,11 @@ import { joinSchema, normalizePhone, type JoinInput } from "@/lib/domain/schemas
 import { customersCsv } from "@/lib/domain/csv";
 import { statsFromRow, type BusinessStats } from "@/lib/domain/stats";
 import { promotionSchema } from "@/lib/domain/schemas";
-import type { Promotion, WalletSettings } from "@/lib/domain/types";
+import type { LocationInput, Promotion, WalletSettings } from "@/lib/domain/types";
 import { dbErrorMessage } from "./errors";
 import { fetchAll } from "./fetch-all";
 import { toCard, toCustomer } from "./mappers";
-import { scheduleCardWalletSync } from "@/lib/wallet/sync";
+import { scheduleBusinessWalletSync, scheduleCardWalletSync } from "@/lib/wallet/sync";
 import { deliverNotices } from "@/lib/wallet/notify";
 import { rateLimit } from "./rate-limit";
 
@@ -340,24 +340,33 @@ const locationInput = z.object({
   name: z.string().trim().min(2, "Escribe el nombre de la sede").max(60),
   address: z.string().trim().max(200).optional(),
   active: z.boolean(),
+  // null = sin ubicación (sin aviso de cercanía); ausente = no se cambia.
+  coordinates: z
+    .object({ latitude: z.number().min(-90).max(90), longitude: z.number().min(-180).max(180) })
+    .nullable()
+    .optional(),
 });
 
 /** Crea o actualiza una sede. RLS: propietario y administrador; el plan limita las activas. */
-export async function saveLocationAction(
-  businessId: string,
-  input: { name: string; address?: string; active: boolean },
-  id?: string,
-): Promise<OpActionResult> {
+export async function saveLocationAction(businessId: string, input: LocationInput, id?: string): Promise<OpActionResult> {
   const parsed = locationInput.safeParse(input);
   if (!parsed.success) return { ok: false, message: parsed.error.issues[0]?.message ?? "Revisa los datos." };
   if (!z.uuid().safeParse(businessId).success || (id && !z.uuid().safeParse(id).success)) return { ok: false, message: "Datos no válidos." };
-  const row = { name: parsed.data.name, address: parsed.data.address || null, active: parsed.data.active };
+  const { coordinates } = parsed.data;
+  const row = {
+    name: parsed.data.name,
+    address: parsed.data.address || null,
+    active: parsed.data.active,
+    ...(coordinates !== undefined ? { latitude: coordinates?.latitude ?? null, longitude: coordinates?.longitude ?? null } : {}),
+  };
   const supabase = await createClient();
   const { data, error } = id
     ? await supabase.from("locations").update(row).eq("id", id).eq("business_id", businessId).select("id")
     : await supabase.from("locations").insert({ ...row, business_id: businessId }).select("id");
   if (error) return { ok: false, message: dbErrorMessage(error, "No se pudo guardar la sede.") };
   if (!data?.length) return { ok: false, message: dbErrorMessage({ message: "FORBIDDEN" }) };
+  // Los pases llevan la ubicación de las sedes activas: se actualizan en las billeteras.
+  scheduleBusinessWalletSync(businessId);
   revalidatePath("/business", "layout");
   return { ok: true };
 }

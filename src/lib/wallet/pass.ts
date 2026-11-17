@@ -3,6 +3,7 @@
  * Apple Wallet (PKPASS) usará el mismo contenido: solo cambia cómo se empaqueta.
  */
 import type { PublicCardData } from "@/components/public/card-screen";
+import type { Place } from "./geo.ts";
 
 export interface WalletPass {
   /** Token público de la tarjeta: identifica el pase sin exponer IDs internos. */
@@ -15,9 +16,11 @@ export interface WalletPass {
   stamps: number;
   rewardsAvailable: { name: string; birthday: boolean }[];
   promotion: { name: string; bonusStamps: number } | null;
+  /** Sedes con ubicación: el celular avisa al estar cerca. undefined = no se consultaron. */
+  places?: Place[];
 }
 
-export function passFromCard(card: PublicCardData, origin: string): WalletPass {
+export function passFromCard(card: PublicCardData, origin: string, places?: Place[]): WalletPass {
   const slug = card.business.slug ?? "";
   const b = card.business.branding;
   return {
@@ -38,6 +41,7 @@ export function passFromCard(card: PublicCardData, origin: string): WalletPass {
     stamps: Math.min(card.stamps, card.program.stampsRequired),
     rewardsAvailable: card.rewards.map((r) => ({ name: r.name, birthday: r.kind === "birthday" })),
     promotion: card.promotion ?? null,
+    ...(places ? { places } : {}),
   };
 }
 

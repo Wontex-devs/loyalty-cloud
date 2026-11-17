@@ -184,6 +184,8 @@ export const toLocation = (r: Row): Location => ({
   businessId: r.business_id,
   name: r.name,
   address: opt(r.address),
+  latitude: r.latitude ?? undefined,
+  longitude: r.longitude ?? undefined,
   active: r.active,
   createdAt: r.created_at,
 });

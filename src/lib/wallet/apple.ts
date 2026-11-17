@@ -75,6 +75,11 @@ export function statusNotifies(p: WalletPass, settings?: PassExtras["settings"])
   return (left === 1 && settings.near) || settings.stamp;
 }
 
+/** Texto que el iPhone muestra en la pantalla bloqueada al estar cerca de una sede. */
+export function nearbyText(p: WalletPass) {
+  return `Estás cerca de ${p.business.name}. ${statusText(p)}`;
+}
+
 export function passJson(cfg: Pick<AppleWalletConfig, "passTypeId" | "teamId" | "authSecret">, p: WalletPass, origin: string, extras: PassExtras = {}) {
   const { message } = extras;
   const back: Record<string, unknown>[] = [{ key: "progress", label: "Tu progreso", value: progressText(p) }];
@@ -107,6 +112,10 @@ export function passJson(cfg: Pick<AppleWalletConfig, "passTypeId" | "teamId" | 
     sharingProhibited: true,
     ...(p.active ? {} : { voided: true }),
     ...updates,
+    // Hasta 10 sedes: cerca de una, la tarjeta aparece en la pantalla bloqueada.
+    ...(p.places?.length && p.active
+      ? { locations: p.places.map((l) => ({ latitude: l.latitude, longitude: l.longitude, relevantText: nearbyText(p) })) }
+      : {}),
     storeCard: {
       headerFields: [{ key: "stamps", label: "SELLOS", value: `${p.stamps}/${p.program.stampsRequired}` }],
       primaryFields: p.rewardsAvailable.length

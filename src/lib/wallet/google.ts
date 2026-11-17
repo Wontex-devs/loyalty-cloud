@@ -24,7 +24,7 @@ export const objectId = (cfg: Pick<GoogleWalletConfig, "issuerId">, token: strin
 const text = (value: string) => ({ defaultValue: { language: "es", value } });
 
 /** Clase = diseño común del comercio (nombre, logo, color). */
-export function loyaltyClass(cfg: Pick<GoogleWalletConfig, "issuerId" | "smartTap">, p: Pick<WalletPass, "business" | "program">) {
+export function loyaltyClass(cfg: Pick<GoogleWalletConfig, "issuerId" | "smartTap">, p: Pick<WalletPass, "business" | "program" | "places">) {
   return {
     id: classId(cfg, p.business.slug),
     issuerName: p.business.name,
@@ -36,6 +36,9 @@ export function loyaltyClass(cfg: Pick<GoogleWalletConfig, "issuerId" | "smartTa
     reviewStatus: "UNDER_REVIEW",
     // El mismo emisor canjea: un solo Collector ID para todos los comercios.
     ...(cfg.smartTap ? { enableSmartTap: true, redemptionIssuers: [cfg.issuerId] } : {}),
+    // Sedes (máximo 10): Google avisa al cliente cuando entra al radio que Google define.
+    // Una lista vacía borra las que hubiera; sin consultar las sedes no se tocan.
+    ...(p.places ? { merchantLocations: p.places.map((l) => ({ latitude: l.latitude, longitude: l.longitude })) } : {}),
   };
 }
 
@@ -142,4 +145,4 @@ export async function addMessage(cfg: GoogleWalletConfig, token: string, m: { id
 }
 
 export const updateObject =(cfg: GoogleWalletConfig, p: WalletPass) => patch(cfg, "loyaltyObject", objectId(cfg, p.token), loyaltyObject(cfg, p));
-export const updateClass = (cfg: GoogleWalletConfig, p: Pick<WalletPass, "business" | "program">) => patch(cfg, "loyaltyClass", classId(cfg, p.business.slug), loyaltyClass(cfg, p));
+export const updateClass = (cfg: GoogleWalletConfig, p: Pick<WalletPass, "business" | "program" | "places">) => patch(cfg, "loyaltyClass", classId(cfg, p.business.slug), loyaltyClass(cfg, p));
