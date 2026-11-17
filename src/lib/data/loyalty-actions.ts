@@ -21,6 +21,7 @@ import { fetchAll } from "./fetch-all";
 import { toCard, toCustomer } from "./mappers";
 import { scheduleBusinessWalletSync, scheduleCardWalletSync } from "@/lib/wallet/sync";
 import { deliverNotices } from "@/lib/wallet/notify";
+import { NEARBY_TEXT_MAX, NEARBY_TEXT_MIN } from "@/lib/wallet/messages";
 import { rateLimit } from "./rate-limit";
 
 export type JoinActionResult = { ok: true; token: string; existing: boolean } | { ok: false; message: string };
@@ -284,6 +285,11 @@ const walletSettingsInput = z.object({
   birthday: z.boolean(),
   winback: z.boolean(),
   winbackDays: z.number().int().min(14, "Mínimo 14 días.").max(180, "Máximo 180 días."),
+  nearbyText: z
+    .string()
+    .trim()
+    .min(NEARBY_TEXT_MIN, `El mensaje de cercanía necesita al menos ${NEARBY_TEXT_MIN} caracteres.`)
+    .max(NEARBY_TEXT_MAX, `El mensaje de cercanía admite máximo ${NEARBY_TEXT_MAX} caracteres.`),
 });
 
 export async function updateWalletSettingsAction(businessId: string, settings: WalletSettings): Promise<OpActionResult> {
@@ -293,6 +299,8 @@ export async function updateWalletSettingsAction(businessId: string, settings: W
   const supabase = await createClient();
   const { error } = await supabase.rpc("update_wallet_settings", { p_business_id: businessId, p_settings: parsed.data });
   if (error) return { ok: false, message: dbErrorMessage(error) };
+  // El mensaje de cercanía va dentro del pase de Apple: se actualizan los pases guardados.
+  scheduleBusinessWalletSync(businessId);
   revalidatePath("/business", "layout");
   return { ok: true };
 }

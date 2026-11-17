@@ -17,8 +17,8 @@ export const appOrigin = (req?: Request) => (process.env.NEXT_PUBLIC_APP_URL ?? 
 /** Tarjeta (id interno y comercio) a partir del número de serie del pase, que es su token público. */
 export async function cardBySerial(serial: string) {
   if (!/^[A-Za-z0-9_-]{8,64}$/.test(serial)) return null;
-  const { data } = await createAdminClient().from("loyalty_cards").select("id, business_id").eq("public_token", serial).maybeSingle();
-  return data ? { cardId: data.id as string, businessId: data.business_id as string } : null;
+  const { data } = await createAdminClient().from("loyalty_cards").select("id, business_id, customer_id").eq("public_token", serial).maybeSingle();
+  return data ? { cardId: data.id as string, businessId: data.business_id as string, customerId: data.customer_id as string } : null;
 }
 
 async function png(res: Response) {
@@ -53,6 +53,11 @@ async function latestMessage(cardId: string): Promise<PassMessage | null> {
   return data ?? null;
 }
 
+async function firstNameOf(customerId: string) {
+  const { data } = await createAdminClient().from("customers").select("first_name").eq("id", customerId).maybeSingle();
+  return (data?.first_name as string | null | undefined) ?? null;
+}
+
 async function businessSettings(businessId: string) {
   const { data } = await createAdminClient().from("businesses").select("wallet_notifications").eq("id", businessId).maybeSingle();
   return walletSettings(data?.wallet_notifications);
@@ -63,13 +68,14 @@ export async function pkpassFor(cfg: AppleWalletConfig, token: string, origin: s
   const card = await getPublicCard(token);
   if (!card) return null;
   const ids = await cardBySerial(token);
-  const [images, message, settings, places] = await Promise.all([
+  const [images, message, settings, places, firstName] = await Promise.all([
     passImages(card.business),
     ids ? latestMessage(ids.cardId) : null,
     ids ? businessSettings(ids.businessId) : null,
     ids ? businessPlaces({ businessId: ids.businessId }) : undefined,
+    ids ? firstNameOf(ids.customerId) : null,
   ]);
-  return buildPkpass(cfg, passFromCard(card, origin, places), origin, images, { message, settings });
+  return buildPkpass(cfg, passFromCard(card, origin, places), origin, images, { message, settings, firstName });
 }
 
 export function pkpassResponse(pass: Buffer, token: string) {

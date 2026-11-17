@@ -94,6 +94,8 @@ export interface WalletSettings {
   winback: boolean;
   /** Días sin venir para enviar "te extrañamos" (14–180). */
   winbackDays: number;
+  /** Texto en la pantalla bloqueada del iPhone cerca de una sede: {nombre}, {comercio}, {progreso}. */
+  nearbyText: string;
 }
 
 export type WalletNoticeKind = "stamp" | "near" | "reward" | "birthday" | "winback" | "campaign";
