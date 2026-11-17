@@ -1,7 +1,7 @@
-# Etapa 9: Google Wallet (Apple Wallet después)
+# Etapa 9: Google Wallet
 
 ## Qué hace
-- La tarjeta de la clienta muestra **"Añadir a Google Wallet"** en Android y en computador. En iPhone no aparece: ahí irá Apple Wallet.
+- La tarjeta de la clienta muestra **"Añadir a Google Wallet"** en Android y en computador. En iPhone aparece Apple Wallet (Etapa 15).
 - El pase muestra:
   - el logo y los colores del comercio;
   - el nombre de la clienta y los sellos (por ejemplo **6/9**);
@@ -40,10 +40,5 @@
 
 **Botón:** la tarjeta usa el botón oficial *Add to Google Wallet* de la guía de marca de Google (`public/google-wallet/`, versión es-419).
 
-## Apple Wallet (siguiente etapa)
-- **Lo que necesita:**
-  - membresía de **Apple Developer** (USD 99 al año);
-  - un **Pass Type ID** con su certificado (.p12);
-  - un servicio web para registrar dispositivos y avisar por push (APNs) cuando cambian los sellos.
-- **Lo que ya está listo:** el contenido del pase (`pass.ts`), los puntos donde se dispara la actualización (`sync.ts`) y el lugar del botón (`wallet-buttons.tsx`).
-- **Lo que falta construir:** generar el `.pkpass` firmado y el servicio web de actualizaciones.
+## Apple Wallet
+Ya está construido: ver [ETAPA-15-APPLE-WALLET.md](ETAPA-15-APPLE-WALLET.md).

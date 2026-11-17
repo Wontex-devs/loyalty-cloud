@@ -1,5 +1,7 @@
 import "server-only";
 import type { GoogleWalletConfig } from "./google";
+import type { AppleWalletConfig } from "./apple";
+import { APPLE_WWDR_G4 } from "./apple-wwdr";
 
 /**
  * Credenciales de Google Wallet (solo servidor). Sin ellas el botón no aparece.
@@ -20,3 +22,30 @@ export function googleWalletConfig(): GoogleWalletConfig | null {
 }
 
 export const isGoogleWalletEnabled = () => googleWalletConfig() !== null;
+
+/**
+ * Credenciales de Apple Wallet (solo servidor). Sin ellas el botón de iPhone no aparece.
+ * - APPLE_WALLET_PASS_TYPE_ID y APPLE_WALLET_TEAM_ID: de Apple Developer.
+ * - APPLE_WALLET_CERT y APPLE_WALLET_KEY: certificado del Pass Type ID y su clave (PEM tal cual o en base64).
+ * - APPLE_WALLET_KEY_PASSPHRASE: solo si la clave tiene contraseña.
+ * - APPLE_WALLET_AUTH_SECRET: secreto aleatorio (32+ caracteres) para el servicio de actualizaciones.
+ */
+export function appleWalletConfig(): AppleWalletConfig | null {
+  const passTypeId = process.env.APPLE_WALLET_PASS_TYPE_ID?.trim();
+  const teamId = process.env.APPLE_WALLET_TEAM_ID?.trim();
+  const certPem = pem(process.env.APPLE_WALLET_CERT);
+  const keyPem = pem(process.env.APPLE_WALLET_KEY);
+  const authSecret = process.env.APPLE_WALLET_AUTH_SECRET?.trim();
+  if (!passTypeId || !teamId || !certPem || !keyPem || !authSecret || authSecret.length < 32) return null;
+  return { passTypeId, teamId, certPem, keyPem, keyPassphrase: process.env.APPLE_WALLET_KEY_PASSPHRASE || undefined, wwdrPem: APPLE_WWDR_G4, authSecret };
+}
+
+/** Acepta el PEM tal cual, con "\n" escapados o en base64 (más cómodo en Vercel). */
+function pem(raw: string | undefined) {
+  const v = raw?.trim();
+  if (!v) return null;
+  const text = v.startsWith("-----") ? v.replaceAll("\\n", "\n") : Buffer.from(v, "base64").toString("utf8");
+  return text.includes("-----BEGIN") ? text : null;
+}
+
+export const isAppleWalletEnabled = () => appleWalletConfig() !== null;

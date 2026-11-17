@@ -1,6 +1,7 @@
 import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { googleWalletConfig } from "./config";
+import { appleWalletConfig, googleWalletConfig } from "./config";
+import { notifyApplePasses } from "./apple-server";
 import { addMessage } from "./google";
 import type { Notice } from "./messages";
 
@@ -58,6 +59,19 @@ export async function deliverNotices(notices: QueuedNotice[]) {
   }
 
   const admin = createAdminClient();
+  // Apple Wallet: el mensaje va al reverso del pase; basta con avisar que cambió.
+  const apple = appleWalletConfig();
+  const tokens = [...new Set(notices.map((n) => n.token).filter(Boolean))];
+  if (apple && tokens.length) {
+    try {
+      for (let i = 0; i < tokens.length; i += 200) {
+        const { data } = await admin.from("loyalty_cards").select("id").in("public_token", tokens.slice(i, i + 200));
+        await notifyApplePasses(apple, { cardIds: (data ?? []).map((c) => c.id as string) });
+      }
+    } catch (e) {
+      console.error("[wallet] no se pudo avisar a Apple Wallet", e);
+    }
+  }
   for (const s of ["sent", "not_saved", "failed"] as const) {
     const ids = notices.filter((n) => status.get(n.id) === s).map((n) => n.id);
     if (!ids.length) continue;

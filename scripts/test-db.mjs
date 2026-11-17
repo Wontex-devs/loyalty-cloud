@@ -701,6 +701,30 @@ console.log("\nEtapa 13 · Visita por toque NFC");
   await db.query("update public.businesses set status = 'active' where id = $1", [A]);
 }
 
+console.log("\nEtapa 20 · Apple Wallet (iPhone registrados)");
+{
+  let r = await joinProgram("negocio-a", "+573001120001", "Ana iPhone");
+  const tok = r.rows?.[0]?.public_token;
+  const card = (await db.query("select id, business_id from public.loyalty_cards where public_token = $1", [tok])).rows[0];
+
+  r = await asService("insert into public.apple_wallet_registrations (device_library_id, card_id, business_id, push_token) values ('iphone-1', $1, $2, 'abc123def4567890')", [card.id, card.business_id]);
+  check("el servidor registra el iPhone que guardó el pase", r.ok, r);
+  r = await asService("insert into public.apple_wallet_registrations (device_library_id, card_id, business_id, push_token) values ('iphone-1', $1, $2, 'abc123def4567890')", [card.id, card.business_id]);
+  check("el mismo iPhone no se registra dos veces para la misma tarjeta", !r.ok, r);
+  r = await asService("insert into public.apple_wallet_registrations (device_library_id, card_id, business_id, push_token) values ('iphone-2', $1, $2, 'abc123def4567890')", [card.id, B]);
+  check("no se puede asociar la tarjeta a otro comercio", !r.ok, r);
+
+  r = await as(U.ownerA, "select * from public.apple_wallet_registrations");
+  check("el dueño del comercio no ve los dispositivos (solo el servidor)", expectError(r, "permission denied"), r);
+  r = await as(null, "select * from public.apple_wallet_registrations");
+  check("el público tampoco", expectError(r, "permission denied"), r);
+  r = await as(U.ownerA, "insert into public.apple_wallet_registrations (device_library_id, card_id, business_id, push_token) values ('x', $1, $2, 'y')", [card.id, card.business_id]);
+  check("nadie registra dispositivos desde la API", expectError(r, "permission denied"), r);
+
+  r = await asService("update public.apple_wallet_registrations set pass_updated_at = now() where card_id = $1 returning push_token", [card.id]);
+  check("el servidor marca el pase como cambiado y obtiene el token de aviso", r.ok && r.rows.length === 1 && r.rows[0].push_token === "abc123def4567890", r);
+}
+
 console.log("\nAdministradores de la plataforma");
 {
   let r = await as(U.ownerA, "update public.profiles set platform_role = 'superadmin' where id = $1", [U.ownerA]);

@@ -3,7 +3,8 @@ import { after } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getPublicBusiness, getPublicCard } from "@/lib/data/public";
-import { googleWalletConfig } from "./config";
+import { appleWalletConfig, googleWalletConfig } from "./config";
+import { notifyApplePasses } from "./apple-server";
 import { updateClass, updateObject } from "./google";
 import { visitNotice, walletSettings } from "./messages";
 import { deliverNotices, queueNotices } from "./notify";
@@ -23,8 +24,13 @@ const origin = () => (process.env.NEXT_PUBLIC_APP_URL ?? "").replace(/\/$/, "");
  * y, tras una visita, le envía su aviso. Si el cliente no guardó el pase, Google responde 404.
  */
 export function scheduleCardWalletSync(cardId: string, visit?: VisitNoticeInput, opts?: { service?: boolean }) {
-  if (!googleWalletConfig()) return;
+  if (!googleWalletConfig() && !appleWalletConfig()) return;
   after(async () => {
+    // Apple: se avisa a los iPhone y cada uno descarga el pase nuevo; el aviso de la visita
+    // sale del propio pase (el campo de progreso cambia y muestra su mensaje).
+    const apple = appleWalletConfig();
+    if (apple) await notifyApplePasses(apple, { cardIds: [cardId] }).catch((e) => console.error("[wallet] no se pudo avisar a Apple Wallet", e));
+    if (!googleWalletConfig()) return;
     try {
       // El toque NFC no trae sesión de empleado: ahí se lee la tarjeta con la clave del servidor.
       const supabase = opts?.service ? createAdminClient() : await createClient();
@@ -64,8 +70,11 @@ async function notifyVisit(
 
 /** Actualiza el diseño común (nombre, logo, color) cuando el comercio cambia su marca o programa. */
 export function scheduleBusinessWalletSync(businessId: string) {
-  if (!googleWalletConfig()) return;
+  if (!googleWalletConfig() && !appleWalletConfig()) return;
   after(async () => {
+    const apple = appleWalletConfig();
+    if (apple) await notifyApplePasses(apple, { businessId }).catch((e) => console.error("[wallet] no se pudo avisar a Apple Wallet", e));
+    if (!googleWalletConfig()) return;
     try {
       const supabase = await createClient();
       const { data } = await supabase.from("businesses").select("slug").eq("id", businessId).maybeSingle();

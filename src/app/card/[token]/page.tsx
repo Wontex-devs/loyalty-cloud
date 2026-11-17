@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { getPublicCard } from "@/lib/data/public";
 import { CardScreen, NotFoundScreen } from "@/components/public/card-screen";
-import { isGoogleWalletEnabled } from "@/lib/wallet/config";
+import { isAppleWalletEnabled, isGoogleWalletEnabled } from "@/lib/wallet/config";
 import { unsubscribeMarketingAction } from "@/lib/data/loyalty-actions";
 
 type Props = { params: Promise<{ token: string }>; searchParams: Promise<{ new?: string }> };
@@ -34,5 +34,5 @@ export default async function CardPage({ params, searchParams }: Props) {
   const isNew = sp.new === "1";
   const data = await getPublicCard(token);
   if (!data) return <NotFoundScreen title="Tarjeta no encontrada" text="Revisa el enlace o pide ayuda en el establecimiento." />;
-  return <CardScreen data={data} isNew={isNew} googleWallet={isGoogleWalletEnabled()} onUnsubscribe={unsubscribeMarketingAction.bind(null, token)} />;
+  return <CardScreen data={data} isNew={isNew} googleWallet={isGoogleWalletEnabled()} appleWallet={isAppleWalletEnabled()} onUnsubscribe={unsubscribeMarketingAction.bind(null, token)} />;
 }
