@@ -5,6 +5,7 @@ import { AppShell, type NavSection } from "@/components/layout/app-shell";
 import { useData } from "@/lib/data/store";
 import { LazoLogo } from "@/components/brand/lazo-logo";
 import { Avatar } from "@/components/ui";
+import { cn, formatDate } from "@/lib/utils";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 import { ProveedorRol } from "@/components/admin/piezas";
 import { ROLES_PLATAFORMA } from "@/lib/domain/acceso";
@@ -33,7 +34,15 @@ const sections: NavSection[] = [
 /** Colores de Lazo para los componentes que usan el color de marca (gráficos, etiquetas). Antes salían en negro y rosado. */
 const MARCA_LAZO = { "--brand": "#1b3fd8", "--brand-fg": "#ffffff", "--brand-accent": "#1b3fd8" } as React.CSSProperties;
 
-export function AdminShell({ rol, children }: { rol: PlatformRole; children: React.ReactNode }) {
+export function AdminShell({
+  rol,
+  certAviso,
+  children,
+}: {
+  rol: PlatformRole;
+  certAviso?: { expiresAt: string; daysLeft: number; alert: "expired" | "soon" | null } | null;
+  children: React.ReactNode;
+}) {
   const { state } = useData();
   const me = state.profiles.find((p) => p.id === state.actingProfileId);
   return (
@@ -65,7 +74,28 @@ export function AdminShell({ rol, children }: { rol: PlatformRole; children: Rea
         </>
       }
     >
-      <ProveedorRol rol={rol}>{children}</ProveedorRol>
+      <ProveedorRol rol={rol}>
+        {certAviso?.alert && (
+          <div
+            role="alert"
+            className={cn(
+              "mb-6 rounded-lg border px-4 py-3 text-sm",
+              certAviso.alert === "expired" ? "border-danger/30 bg-danger-bg text-danger" : "border-warning/30 bg-warning-bg text-warning",
+            )}
+          >
+            <p className="font-semibold">
+              {certAviso.alert === "expired"
+                ? "El certificado de Apple Wallet venció: los clientes con iPhone no pueden agregar ni actualizar su tarjeta."
+                : `El certificado de Apple Wallet vence en ${certAviso.daysLeft} ${certAviso.daysLeft === 1 ? "día" : "días"} (${formatDate(certAviso.expiresAt)}).`}
+            </p>
+            <p className="mt-1">
+              Renuévalo en developer.apple.com (Certificates → Pass Type ID «pass.com.wontexdevs.lazo») con la misma clave de
+              ~/lazo-apple, y reemplaza APPLE_WALLET_CERT en Vercel. No cambies APPLE_WALLET_AUTH_SECRET. Pasos en docs/ETAPA-15-APPLE-WALLET.md.
+            </p>
+          </div>
+        )}
+        {children}
+      </ProveedorRol>
     </AppShell>
   );
 }

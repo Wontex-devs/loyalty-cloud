@@ -143,3 +143,21 @@ test("el .pkpass trae manifest con SHA-1 y una firma PKCS#7 válida", { skip: !o
   writeFileSync(join(dir, "manifest.json"), files["manifest.json"].toString().replace("}", ',"x":"1"}'));
   assert.throws(() => run("smime", "-verify", "-binary", "-inform", "DER", "-in", "signature", "-content", "manifest.json", "-CAfile", "ca.pem", "-purpose", "any"));
 });
+
+// ---------- Vencimiento del certificado ----------
+import { certStatus, CERT_ALERT_DAYS } from "../src/lib/wallet/cert-expiry.ts";
+
+test("la plataforma avisa 60 días antes de que venza el certificado de Apple", { skip: !openssl && "sin OpenSSL" }, () => {
+  const dir = mkdtempSync(join(tmpdir(), "cert-"));
+  execFileSync("openssl", ["req", "-x509", "-newkey", "rsa:2048", "-nodes", "-keyout", "k.pem", "-out", "c.pem", "-days", "90", "-subj", "/CN=Pase"], { cwd: dir, stdio: "ignore" });
+  const pem = readFileSync(join(dir, "c.pem"), "utf8");
+  const hoy = new Date();
+  assert.equal(CERT_ALERT_DAYS, 60);
+  assert.equal(certStatus(pem, hoy)?.alert, null, "a 90 días no avisa");
+  const en40 = new Date(hoy.getTime() + 50 * 86_400_000);
+  const s = certStatus(pem, en40);
+  assert.equal(s?.alert, "soon");
+  assert.ok(s!.daysLeft >= 38 && s!.daysLeft <= 40, String(s?.daysLeft));
+  assert.equal(certStatus(pem, new Date(hoy.getTime() + 91 * 86_400_000))?.alert, "expired");
+  assert.equal(certStatus("no es un certificado"), null);
+});
