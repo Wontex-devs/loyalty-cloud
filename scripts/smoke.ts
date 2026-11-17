@@ -38,8 +38,15 @@ check("el cartel imprimible carga", poster.status === 200, poster.status);
 
 const bad = await get("/card/token-que-no-existe-12345");
 check("una tarjeta inexistente no revela nada", bad.status === 200 && (await bad.text()).includes("no encontrada"), bad.status);
+// Lo público se puede rastrear; las secciones privadas no (robots.txt) y además llevan noindex.
 const robots = await (await get("/robots.txt")).text();
-check("robots.txt bloquea la indexación", /Disallow: \/\s*$/m.test(robots), robots);
+const privadas = ["/card", "/join", "/business", "/admin", "/api"];
+check("robots.txt deja rastrear la parte pública", /^Allow: \/\s*$/m.test(robots) && !/^Disallow: \/\s*$/m.test(robots), robots);
+check("robots.txt bloquea las secciones privadas", privadas.every((p) => new RegExp(`^Disallow: ${p}\\s*$`, "m").test(robots)), robots);
+check("robots.txt enlaza el sitemap", /^Sitemap: https?:\/\/\S+\/sitemap\.xml/m.test(robots), robots);
+check("las tarjetas llevan noindex", (bad.headers.get("x-robots-tag") ?? "").includes("noindex"), bad.headers.get("x-robots-tag"));
+const sitemap = await get("/sitemap.xml");
+check("el sitemap responde", sitemap.status === 200, sitemap.status);
 
 console.log(`\n${passed} correctas, ${failed} fallidas\n`);
 process.exit(failed ? 1 : 0);
