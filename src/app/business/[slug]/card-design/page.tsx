@@ -5,11 +5,11 @@ import { Download, ImageUp, Loader2, Printer, Trash2 } from "lucide-react";
 import { QRCodeCanvas, QRCodeSVG } from "qrcode.react";
 import { useScope, RequirePermission } from "@/components/business/business-shell";
 import { LoyaltyCardView } from "@/components/loyalty/loyalty-card";
-import { BrandMark, FILLED_STAMP_ICONS, STAMP_ICON_COMPONENTS, STAMP_ICON_LABELS } from "@/components/loyalty/brand-mark";
+import { BrandMark, brandCase, brandFont, CARD_FONT_STYLES, FILLED_STAMP_ICONS, STAMP_ICON_COMPONENTS, STAMP_ICON_LABELS, StampMark } from "@/components/loyalty/brand-mark";
 import { useData } from "@/lib/data/store";
 import { can } from "@/lib/domain/permissions";
 import { PUBLIC_HOST_LABEL } from "@/lib/config";
-import { STAMP_ICONS, type BusinessBranding, type CardStatus } from "@/lib/domain/types";
+import { CARD_FONTS, STAMP_ICONS, type BusinessBranding, type CardStatus } from "@/lib/domain/types";
 import { cn } from "@/lib/utils";
 import { NfcCard } from "@/components/business/nfc-card";
 import { Button, buttonClass, Card, CardHeader, Field, Input, PageHeader, Segmented } from "@/components/ui";
@@ -38,9 +38,12 @@ const COLOR_FIELDS: { key: keyof BusinessBranding; label: string }[] = [
 
 export default function CardDesignPage() {
   const { business, program, membership } = useScope();
-  const { updateBranding, setLogo, setCover } = useData();
+  const { updateBranding, setLogo, setCover, setStamp } = useData();
   const fileRef = useRef<HTMLInputElement>(null);
   const coverRef = useRef<HTMLInputElement>(null);
+  const stampRef = useRef<HTMLInputElement>(null);
+  const [stampBusy, setStampBusy] = useState(false);
+  const [stampError, setStampError] = useState<string | null>(null);
   const [coverBusy, setCoverBusy] = useState(false);
   const [coverError, setCoverError] = useState<string | null>(null);
   const [logoBusy, setLogoBusy] = useState(false);
@@ -58,6 +61,13 @@ export default function CardDesignPage() {
     const res = await setCover(business.id, file);
     setCoverBusy(false);
     if (!res.ok) setCoverError(res.message);
+  };
+  const changeStamp = async (file: File | null) => {
+    setStampBusy(true);
+    setStampError(null);
+    const res = await setStamp(business.id, file);
+    setStampBusy(false);
+    if (!res.ok) setStampError(res.message);
   };
   const [previewState, setPreviewState] = useState<CardStatus>("active");
   const b = business.branding;
@@ -187,11 +197,47 @@ export default function CardDesignPage() {
           <Card>
             <CardHeader title="Sellos y tipografía" />
             <div className="space-y-5 p-5">
-              <Field label="Icono del sello">
-                <div className="grid grid-cols-4 gap-2 sm:grid-cols-8">
+              <div className="space-y-2">
+                <p className="text-[13px] font-medium text-ink">Sello</p>
+                <div className="flex flex-col gap-3 rounded-xl border border-line p-3 sm:flex-row sm:items-center">
+                  <span className="flex size-12 shrink-0 items-center justify-center rounded-full" style={{ background: b.cardForeground, color: b.cardBackground }}>
+                    <StampMark branding={b} className={b.stampUrl ? "size-[88%]" : "size-5"} />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium">{b.stampUrl ? "Tu sello propio" : "Sube tu propio sello"}</p>
+                    <p className="text-xs text-muted">
+                      <strong className="font-medium text-ink-2">Tamaño recomendado:</strong> cuadrado de al menos 256 × 256 px, PNG con fondo transparente. Se ve
+                      pequeño dentro de cada círculo: un dibujo simple funciona mejor que uno con detalles o texto.
+                    </p>
+                    {stampError && <p className="mt-1 text-sm text-danger">{stampError}</p>}
+                  </div>
+                  <div className="flex gap-2">
+                    <input
+                      ref={stampRef}
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                      className="hidden"
+                      onChange={(e) => {
+                        const f = e.target.files?.[0];
+                        e.target.value = "";
+                        if (f) changeStamp(f);
+                      }}
+                    />
+                    <Button variant="secondary" size="sm" onClick={() => stampRef.current?.click()} disabled={stampBusy}>
+                      {stampBusy ? <Loader2 className="size-4 animate-spin" /> : <ImageUp className="size-4" />} {b.stampUrl ? "Cambiar sello" : "Subir mi sello"}
+                    </Button>
+                    {b.stampUrl && (
+                      <Button variant="ghost" size="sm" onClick={() => changeStamp(null)} disabled={stampBusy} aria-label="Quitar mi sello y usar un icono">
+                        <Trash2 className="size-4" />
+                      </Button>
+                    )}
+                  </div>
+                </div>
+                <p className="text-xs text-muted">{b.stampUrl ? "Para volver a un icono, quita tu sello." : "O elige uno de estos:"}</p>
+                <div className={cn("grid grid-cols-4 gap-2 sm:grid-cols-8", b.stampUrl && "pointer-events-none opacity-40")}>
                   {STAMP_ICONS.map((key) => {
                     const Icon = STAMP_ICON_COMPONENTS[key];
-                    const selected = (b.stampIcon ?? "check") === key;
+                    const selected = !b.stampUrl && (b.stampIcon ?? "check") === key;
                     return (
                       <button
                         key={key}
@@ -212,17 +258,33 @@ export default function CardDesignPage() {
                     );
                   })}
                 </div>
-              </Field>
-              <Field label="Tipografía del nombre">
-                <Segmented<"serif" | "sans">
-                  value={b.font ?? "serif"}
-                  onChange={(font) => updateBranding(business.id, { font })}
-                  options={[
-                    { value: "serif", label: "Clásica" },
-                    { value: "sans", label: "Moderna" },
-                  ]}
-                />
-              </Field>
+              </div>
+              <div className="space-y-2">
+                <p className="text-[13px] font-medium text-ink">Tipografía del nombre</p>
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                  {CARD_FONTS.map((key) => {
+                    const f = CARD_FONT_STYLES[key];
+                    const selected = (b.font ?? "serif") === key;
+                    return (
+                      <button
+                        key={key}
+                        type="button"
+                        onClick={() => updateBranding(business.id, { font: key })}
+                        aria-pressed={selected}
+                        className={cn(
+                          "flex min-w-0 flex-col items-start gap-1 rounded-xl border px-3 py-2.5 text-left transition",
+                          selected ? "border-ink shadow-card" : "border-line hover:border-line-strong",
+                        )}
+                      >
+                        <span className={cn("w-full truncate text-lg leading-tight", brandCase({ font: key }), brandFont({ font: key }, "tracking-[0.08em]"))}>
+                          {business.name}
+                        </span>
+                        <span className="text-[11px] text-muted">{f.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
           </Card>
 

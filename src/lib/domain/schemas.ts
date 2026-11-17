@@ -3,7 +3,7 @@
  * El servidor siempre vuelve a validar: la validación del cliente es solo UX.
  */
 import { z } from "zod";
-import { STAMP_ICONS } from "./types.ts";
+import { CARD_FONTS, STAMP_ICONS } from "./types.ts";
 
 /** Normaliza teléfonos a formato E.164 simple. País por defecto: Colombia (+57). */
 export function normalizePhone(raw: string, defaultCountryCode = "57"): string {
@@ -54,8 +54,9 @@ export const brandingSchema = z.object({
   // La base de datos además exige que sea de la carpeta del propio comercio en Storage.
   logoUrl: z.union([z.literal(""), z.url({ protocol: /^https$/ })]),
   coverUrl: z.union([z.literal(""), z.url({ protocol: /^https$/ })]),
+  stampUrl: z.union([z.literal(""), z.url({ protocol: /^https$/ })]),
   stampIcon: z.enum(STAMP_ICONS),
-  font: z.enum(["serif", "sans"]),
+  font: z.enum(CARD_FONTS),
   primary: hex,
   primaryForeground: hex,
   accent: hex,
