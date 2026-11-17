@@ -82,6 +82,7 @@ export interface DataApi {
   /** Sube (o quita, con null) el logotipo del comercio. */
   setLogo: (businessId: string, file: File | null) => Promise<OpResult>;
   setCover: (businessId: string, file: File | null) => Promise<OpResult>;
+  setStamp: (businessId: string, file: File | null) => Promise<OpResult>;
   setBusinessStatus: (businessId: string, status: BusinessStatus) => Promise<OpResult>;
   inviteStaff: (businessId: string, input: { fullName: string; email: string; role: BusinessRole; canRedeem: boolean }) => void;
   toggleMembership: (membershipId: string, patch: Partial<BusinessMembership>) => void;

@@ -38,7 +38,8 @@ export interface Location {
 
 export const STAMP_ICONS = ["check", "heart", "star", "sparkles", "flower", "gem", "crown", "scissors"] as const;
 export type StampIcon = (typeof STAMP_ICONS)[number];
-export type CardFont = "serif" | "sans";
+export const CARD_FONTS = ["serif", "sans", "elegante", "manuscrita", "redondeada", "impacto", "geometrica"] as const;
+export type CardFont = (typeof CARD_FONTS)[number];
 
 export interface BusinessBranding {
   logoText: string; // monograma mientras no hay logo subido
@@ -47,6 +48,8 @@ export interface BusinessBranding {
   /** Foto de fondo de la tarjeta, misma carpeta que el logo. Vacío = sin foto. */
   coverUrl?: string;
   stampIcon?: StampIcon;
+  /** Sello propio (imagen en la misma carpeta que el logo). Si existe, reemplaza al icono. */
+  stampUrl?: string;
   font?: CardFont;
   primary: string; // color de marca
   primaryForeground: string;

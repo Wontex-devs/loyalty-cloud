@@ -194,6 +194,25 @@ r = await as(U.ownerA, "select public.update_business_profile($1, null, null, nu
 check("la foto de fondo de otro comercio se rechaza", !r.ok && r.error.includes("INVALID_BRANDING"), r);
 r = await as(U.ownerA, "select public.update_business_profile($1, null, null, null, null, $2::jsonb)", [A, JSON.stringify({ coverUrl: "" })]);
 check("la foto de fondo se puede quitar", r.ok, r);
+// Etapa 22: sello propio y más tipografías.
+r = await as(U.ownerA, "select public.update_business_profile($1, null, null, null, null, $2::jsonb)", [A, JSON.stringify({ stampUrl: logoA.replace("logo-1", "sello-1") })]);
+check("el sello propio se acepta desde la carpeta del propio comercio", r.ok, r);
+r = await as(U.ownerA, "select public.update_business_profile($1, null, null, null, null, $2::jsonb)", [A, JSON.stringify({ stampUrl: logoB })]);
+check("el sello de otro comercio se rechaza", expectError(r, "INVALID_BRANDING"), r);
+r = await as(U.ownerA, "select public.update_business_profile($1, null, null, null, null, $2::jsonb)", [A, JSON.stringify({ stampUrl: "https://evil.example/sello.png" })]);
+check("un sello de otro sitio se rechaza", expectError(r, "INVALID_BRANDING"), r);
+r = await as(U.ownerA, "select public.update_business_profile($1, null, null, null, null, $2::jsonb)", [A, JSON.stringify({ stampUrl: "" })]);
+check("el sello propio se puede quitar", r.ok, r);
+for (const font of ["elegante", "manuscrita", "redondeada", "impacto", "geometrica"]) {
+  r = await as(U.ownerA, "select public.update_business_profile($1, null, null, null, null, $2::jsonb)", [A, JSON.stringify({ font })]);
+  if (!r.ok) break;
+}
+check("se aceptan las cinco tipografías nuevas", r.ok, r);
+r = await as(U.ownerA, "select public.update_business_profile($1, null, null, null, null, $2::jsonb)", [A, JSON.stringify({ font: "comic-sans" })]);
+check("una tipografía desconocida se rechaza", expectError(r, "INVALID_BRANDING"), r);
+r = await as(U.staffA, "select public.update_business_profile($1, null, null, null, null, $2::jsonb)", [A, JSON.stringify({ font: "impacto" })]);
+check("un empleado no puede cambiar la tipografía", expectError(r, "FORBIDDEN"), r);
+await db.query("update public.businesses set branding = branding || '{\"font\":\"sans\"}'::jsonb where id = $1", [A]);
 r = await as(U.ownerA, "select public.update_business_profile($1, null, null, null, null, $2::jsonb)", [A, JSON.stringify({ logoUrl: "" })]);
 check("propietario puede quitar su logo", r.ok, r);
 r = await as(U.ownerA, "insert into storage.objects (bucket_id, name) values ('brand-assets', $1)", [`${A}/logo-2.webp`]);

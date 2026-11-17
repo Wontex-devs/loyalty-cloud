@@ -2,7 +2,7 @@
 
 import { QRCodeSVG } from "qrcode.react";
 import { Gift, Sparkles } from "lucide-react";
-import { BrandMark, brandFont, FILLED_STAMP_ICONS, STAMP_ICON_COMPONENTS } from "./brand-mark";
+import { BrandMark, brandCase, brandFont, StampMark } from "./brand-mark";
 import { cn } from "@/lib/utils";
 import type { Business, CardStatus, LoyaltyProgram } from "@/lib/domain/types";
 
@@ -50,7 +50,6 @@ export function LoyaltyCardView({
   const b = business.branding;
   const remaining = Math.max(program.stampsRequired - stamps, 0);
   const cols = program.stampsRequired <= 10 ? Math.min(5, Math.ceil(program.stampsRequired / 2)) : 6;
-  const StampIcon = STAMP_ICON_COMPONENTS[b.stampIcon ?? "check"] ?? STAMP_ICON_COMPONENTS.check;
   const font = brandFont(b);
   const titleFont = brandFont(b, "tracking-[0.12em]");
   const foto = coverUrl ?? (b.coverUrl || undefined);
@@ -82,7 +81,7 @@ export function LoyaltyCardView({
               style={{ background: b.cardForeground, color: b.cardBackground }}
             />
             <div>
-              <p className={cn("text-xl leading-none uppercase", titleFont)}>{business.name}</p>
+              <p className={cn("text-xl leading-none", brandCase(b), titleFont)}>{business.name}</p>
               <p className="mt-1 text-[10px] font-medium tracking-[0.16em] whitespace-nowrap uppercase opacity-60">
                 {program.name.trim().toLowerCase() === business.name.trim().toLowerCase() ? "Tarjeta de fidelidad" : program.name}
               </p>
@@ -123,11 +122,7 @@ export function LoyaltyCardView({
                 }}
               >
                 {filled ? (
-                  <StampIcon
-                    className={cn("size-[45%]", justAdded && "animate-stamp")}
-                    strokeWidth={b.stampIcon && b.stampIcon !== "check" ? 2 : 2.5}
-                    fill={b.stampIcon && FILLED_STAMP_ICONS.has(b.stampIcon) ? "currentColor" : "none"}
-                  />
+                  <StampMark branding={b} className={cn(b.stampUrl ? "size-[88%]" : "size-[45%]", justAdded && "animate-stamp")} />
                 ) : isLast ? (
                   <Gift className="size-[42%]" style={{ color: b.cardForeground, opacity: 0.85 }} strokeWidth={1.75} />
                 ) : (

@@ -5,7 +5,7 @@ import { QRCodeSVG } from "qrcode.react";
 import { Printer } from "lucide-react";
 import { PLATFORM_NAME } from "@/lib/config";
 import type { BusinessBranding } from "@/lib/domain/types";
-import { BrandMark, brandFont } from "@/components/loyalty/brand-mark";
+import { BrandMark, brandCase, brandFont } from "@/components/loyalty/brand-mark";
 import { cn } from "@/lib/utils";
 
 interface PosterProps {
@@ -34,7 +34,7 @@ export function Poster({ slug, business, program }: PosterProps) {
       >
         <div>
           <BrandMark branding={b} className={`mx-auto size-[22mm] rounded-full text-[9mm] ${brandFont(b)}`} style={{ background: b.cardForeground, color: b.cardBackground }} />
-          <p className={cn("mt-[6mm] text-[13mm] leading-none uppercase", brandFont(b, "tracking-[0.12em]"))}>{business.name}</p>
+          <p className={cn("mt-[6mm] text-[13mm] leading-none", brandCase(b), brandFont(b, "tracking-[0.12em]"))}>{business.name}</p>
           {program.name.trim().toLowerCase() !== business.name.trim().toLowerCase() && (
             <p className="mt-[3mm] text-[4.2mm] tracking-[0.3em] uppercase opacity-60">{program.name}</p>
           )}

@@ -70,7 +70,7 @@ export function LiveProvider({ snapshot, children }: { snapshot: DataState; chil
     const guardarImagen = async (
       businessId: string,
       file: File | null,
-      campo: "logoUrl" | "coverUrl",
+      campo: "logoUrl" | "coverUrl" | "stampUrl",
       nombre: string,
       extension: string,
       preparar: (f: File) => Promise<Blob>,
@@ -158,6 +158,8 @@ export function LiveProvider({ snapshot, children }: { snapshot: DataState; chil
 
       setLogo: (businessId, file) => guardarImagen(businessId, file, "logoUrl", "logo", "png", (f) => prepareLogo(f, 512), "el logotipo"),
       setCover: (businessId, file) => guardarImagen(businessId, file, "coverUrl", "foto", "jpg", (f) => prepareCover(f), "la foto"),
+      // El sello se ve pequeño (un círculo de la tarjeta): 256 px bastan y carga rápido.
+      setStamp: (businessId, file) => guardarImagen(businessId, file, "stampUrl", "sello", "png", (f) => prepareLogo(f, 256), "el sello"),
 
       setBusinessStatus: async (businessId, status) => {
         // Se espera la respuesta: la pantalla muestra el error si la base de datos lo rechaza.

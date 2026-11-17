@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 import type { BusinessBranding } from "@/lib/domain/types";
 import { NotFoundScreen } from "./card-screen";
 import { Turnstile, TURNSTILE_SITE_KEY, type TurnstileHandle } from "./turnstile";
-import { BrandMark, brandFont } from "@/components/loyalty/brand-mark";
+import { BrandMark, brandCase, brandFont } from "@/components/loyalty/brand-mark";
 
 const MONTHS = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
 
@@ -77,7 +77,7 @@ export function JoinForm({ slug, business, program }: JoinFormProps) {
       <div className="mx-auto flex min-h-dvh max-w-md flex-col px-5 pt-10 pb-8">
         <header className="text-center">
           <BrandMark branding={b} className={`mx-auto size-16 rounded-full text-2xl ${brandFont(b)}`} style={{ background: b.cardForeground, color: b.cardBackground }} />
-          <p className={cn("mt-4 text-3xl uppercase", brandFont(b, "tracking-[0.14em]"))}>{business.name}</p>
+          <p className={cn("mt-4 text-3xl", brandCase(b), brandFont(b, "tracking-[0.14em]"))}>{business.name}</p>
           <p className="mt-2 text-sm opacity-70">{program.description}</p>
         </header>
 
