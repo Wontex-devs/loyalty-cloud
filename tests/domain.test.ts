@@ -116,7 +116,7 @@ test("normalización de teléfonos colombianos", () => {
 });
 
 test("inscripción: términos obligatorios y marketing aparte", () => {
-  const base = { fullName: "Ana", phone: "3001234567", email: "", marketingConsent: false };
+  const base = { firstName: "Ana", lastName: "Gómez", phone: "3001234567", email: "", marketingConsent: false };
   assert.equal(joinSchema.safeParse({ ...base, acceptTerms: false }).success, false);
   assert.equal(joinSchema.safeParse({ ...base, acceptTerms: true }).success, true);
   assert.equal(joinSchema.safeParse({ ...base, acceptTerms: true, email: "no-es-correo" }).success, false);

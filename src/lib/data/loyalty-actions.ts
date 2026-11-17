@@ -66,7 +66,7 @@ export async function joinProgramAction(slug: string, input: JoinInput, captchaT
   const { data, error } = await supabase.rpc("join_program_limited", {
     p_client_key: clientKey,
     p_slug: slug,
-    p_full_name: parsed.data.fullName,
+    p_full_name: `${parsed.data.firstName} ${parsed.data.lastName}`,
     p_phone_e164: phone,
     p_email: parsed.data.email || null,
     p_accept_terms: parsed.data.acceptTerms,
@@ -78,6 +78,13 @@ export async function joinProgramAction(slug: string, input: JoinInput, captchaT
 
   const row = (Array.isArray(data) ? data[0] : data) as { public_token: string; existing: boolean } | undefined;
   if (!row?.public_token) return { ok: false, message: "No pudimos crear tu tarjeta. Inténtalo de nuevo." };
+
+  // El nombre aparte es el que usan los avisos ({nombre}): «María José», no solo «María».
+  const { data: card } = await supabase.from("loyalty_cards").select("customer_id").eq("public_token", row.public_token).maybeSingle();
+  if (card?.customer_id) {
+    const { error: nameError } = await supabase.from("customers").update({ first_name: parsed.data.firstName }).eq("id", card.customer_id);
+    if (nameError) console.error("[join] no se pudo guardar el nombre aparte", nameError.message);
+  }
   revalidatePath("/business", "layout");
   return { ok: true, token: row.public_token, existing: row.existing };
 }

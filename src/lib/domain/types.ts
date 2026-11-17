@@ -154,6 +154,8 @@ export interface Customer {
   id: ID;
   businessId: ID;
   fullName: string;
+  /** Nombre sin apellido, el que usan los avisos ({nombre}). */
+  firstName?: string;
   phone: string; // normalizado E.164; único por negocio
   email?: string;
   /** Cumpleaños opcional (sin año). */

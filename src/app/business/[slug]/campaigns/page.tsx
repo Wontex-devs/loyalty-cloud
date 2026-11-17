@@ -10,6 +10,7 @@ import { isRewardUsable } from "@/lib/domain/stats";
 import { publicOrigin } from "@/lib/config";
 import { Avatar, Card, EmptyState, PageHeader, Segmented, Textarea } from "@/components/ui";
 import { RecentWalletNotices, WalletCampaignCard, WalletSettingsCard } from "@/components/business/wallet-notices";
+import { greetingName } from "@/lib/wallet/messages";
 import { formatRelative } from "@/lib/utils";
 
 type Segment = "near" | "reward" | "inactive" | "birthday" | "new" | "all";
@@ -114,7 +115,7 @@ export default function CampaignsPage() {
     const reward = rewards.find((r) => r.cardId === card!.id && isRewardUsable(r))?.name ?? program?.rewardName ?? "";
     const left = Math.max(required - card!.currentStamps, 1);
     let text = templates[segment]
-      .replaceAll("{nombre}", customer.fullName.trim().split(/\s+/)[0])
+      .replaceAll("{nombre}", greetingName(customer))
       .replaceAll("{negocio}", business.name)
       .replaceAll("{recompensa}", reward)
       .replaceAll("{sellos}", String(card!.currentStamps))

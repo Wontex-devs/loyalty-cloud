@@ -85,4 +85,7 @@ export function dailyNotice(
 }
 
 /** Reemplaza {nombre} por el primer nombre (igual que la base de datos en las campañas). */
-export const personalize = (body: string, fullName: string) => body.replaceAll("{nombre}", fullName.trim().split(/\s+/)[0] ?? "");
+/** Nombre para saludar: el nombre aparte si existe; si no, la primera palabra del nombre completo. */
+export const greetingName = (c: { fullName: string; firstName?: string | null }) => c.firstName?.trim() || c.fullName.trim().split(/\s+/)[0] || "";
+
+export const personalize = (body: string, fullName: string, firstName?: string | null) => body.replaceAll("{nombre}", greetingName({ fullName, firstName }));

@@ -17,8 +17,33 @@ export function normalizePhone(raw: string, defaultCountryCode = "57"): string {
   return `+${defaultCountryCode}${digits}`;
 }
 
+/**
+ * Nombre propio con mayúscula inicial y el resto en minúscula, escriba como escriba la persona:
+ * «mARÍA  josé» → «María José», «ana-maría» → «Ana-María», «o'neil» → «O'Neil».
+ */
+export function formatPersonName(raw: string) {
+  return raw
+    .trim()
+    .replace(/\s+/g, " ")
+    .toLocaleLowerCase("es")
+    .replace(/(^|[\s'’-])(\p{L})/gu, (_, sep: string, letter: string) => sep + letter.toLocaleUpperCase("es"));
+}
+
+const personName = (label: string) =>
+  z
+    .string()
+    .transform(formatPersonName)
+    .pipe(
+      z
+        .string()
+        .min(2, `Escribe tu ${label}`)
+        .max(40, `Tu ${label} es muy largo`)
+        .regex(/^[\p{L}][\p{L}\s'’.-]*$/u, `Escribe tu ${label} solo con letras`),
+    );
+
 export const joinSchema = z.object({
-  fullName: z.string().trim().min(2, "Escribe tu nombre").max(80),
+  firstName: personName("nombre"),
+  lastName: personName("apellido"),
   phone: z
     .string()
     .trim()
