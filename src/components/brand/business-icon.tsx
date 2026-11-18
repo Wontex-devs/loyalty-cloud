@@ -31,6 +31,7 @@ export function businessIcon(business: IconBusiness | null, size: number, opts: 
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
+            overflow: "hidden",
             fontSize: circle * 0.39,
             fontFamily: "serif",
             letterSpacing: circle * 0.016,
@@ -38,7 +39,8 @@ export function businessIcon(business: IconBusiness | null, size: number, opts: 
         >
           {logo ? (
             // eslint-disable-next-line @next/next/no-img-element, jsx-a11y/alt-text
-            <img src={logo} width={circle * 0.71} height={circle * 0.71} style={{ objectFit: "contain" }} />
+            // La imagen llena el círculo; las esquinas se recortan.
+            <img src={logo} width={circle} height={circle} style={{ objectFit: "cover", borderRadius: "50%" }} />
           ) : (
             text
           )}
@@ -83,12 +85,13 @@ export function businessWordmark(
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
+            overflow: "hidden",
             fontSize: d * 0.38,
           }}
         >
           {logo ? (
             // eslint-disable-next-line @next/next/no-img-element, jsx-a11y/alt-text
-            <img src={logo} width={d * 0.74} height={d * 0.74} style={{ objectFit: "contain" }} />
+            <img src={logo} width={d} height={d} style={{ objectFit: "cover", borderRadius: d }} />
           ) : (
             (business.branding.logoText || name.slice(0, 2)).slice(0, 3)
           )}

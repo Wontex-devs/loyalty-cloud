@@ -81,9 +81,8 @@ export function BrandMark({
     return (
       <span className={cn("flex shrink-0 items-center justify-center overflow-hidden bg-white ring-1 ring-black/5", className)}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        {/* 15 % de margen: así un logo cuadrado cabe completo aunque el contenedor sea un círculo
-            (el cuadrado más grande que entra en un círculo mide el 70,7 % del diámetro). */}
-        <img src={branding.logoUrl} alt="" className="size-full object-contain p-[15%]" />
+        {/* La imagen llena el círculo (o el cuadro redondeado): lo que sobra en las esquinas se recorta. */}
+        <img src={branding.logoUrl} alt="" className="size-full object-cover" />
       </span>
     );
   }
