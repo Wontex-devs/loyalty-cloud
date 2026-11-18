@@ -61,9 +61,18 @@ function load(family: string, weight: number) {
 /** Letra del nombre del comercio ("Marca") y letra de títulos ("Titulo") para la imagen. */
 export async function walletFonts(font: CardFont | undefined): Promise<ImageFont[]> {
   const brand = FAMILIES[font ?? "serif"] ?? FAMILIES.serif;
-  const [b, t] = await Promise.all([load(brand.family, brand.weight), load(TITLE.family, TITLE.weight)]);
-  // La primera es la letra por defecto de la imagen: la de títulos, no la del nombre.
+  const [b, t, r, m, sb] = await Promise.all([
+    load(brand.family, brand.weight),
+    load(TITLE.family, TITLE.weight),
+    load("Inter", 400),
+    load("Inter", 500),
+    load("Inter", 600),
+  ]);
+  // La primera es la letra por defecto de la imagen: la de textos, no la del nombre.
   const out: ImageFont[] = [];
+  if (r) out.push({ name: "Texto", data: r, weight: 400, style: "normal" });
+  if (m) out.push({ name: "Texto", data: m, weight: 500, style: "normal" });
+  if (sb) out.push({ name: "Texto", data: sb, weight: 600, style: "normal" });
   if (t) out.push({ name: "Titulo", data: t, weight: TITLE.weight as ImageFont["weight"], style: "normal" });
   if (b) out.push({ name: "Marca", data: b, weight: brand.weight as ImageFont["weight"], style: "normal" });
   return out;

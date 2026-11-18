@@ -5,7 +5,8 @@ import { Download, ImageUp, Loader2, Printer, Trash2 } from "lucide-react";
 import { QRCodeCanvas, QRCodeSVG } from "qrcode.react";
 import { useScope, RequirePermission } from "@/components/business/business-shell";
 import { LoyaltyCardView } from "@/components/loyalty/loyalty-card";
-import { CARD_STYLE_INFO, CARD_STYLES, cardTheme } from "@/lib/domain/card-palette";
+import { CARD_STYLE_INFO, CARD_STYLES, cardTheme, contrast, readableOn } from "@/lib/domain/card-palette";
+import { ColorPicker } from "@/components/ui/color-picker";
 import { BrandMark, brandCase, brandFont, CARD_FONT_STYLES, FILLED_STAMP_ICONS, STAMP_ICON_COMPONENTS, STAMP_ICON_LABELS, StampMark } from "@/components/loyalty/brand-mark";
 import { useData } from "@/lib/data/store";
 import { can } from "@/lib/domain/permissions";
@@ -30,12 +31,16 @@ const PRESETS: { name: string; colors: Partial<BusinessBranding> }[] = [
   { name: "Cielo", colors: { cardBackground: "#cfe3ff", cardForeground: "#0e1a52", primary: "#0e1a52", primaryForeground: "#cfe3ff", accent: "#0e1a52" } },
 ];
 
-const COLOR_FIELDS: { key: keyof BusinessBranding; label: string }[] = [
-  { key: "cardBackground", label: "Fondo de la tarjeta" },
-  { key: "cardForeground", label: "Texto y sellos" },
-  { key: "primary", label: "Color principal (botones)" },
-  { key: "accent", label: "Acento" },
-];
+/** Con los dos colores del comercio se completan los demás (botones de la página pública). */
+function twoColors(color1: string, color2: string): Partial<BusinessBranding> {
+  return {
+    cardBackground: color1,
+    cardForeground: color2,
+    primary: color1,
+    primaryForeground: contrast(color2, color1) >= 3 ? color2 : readableOn(color1),
+    accent: color2,
+  };
+}
 
 export default function CardDesignPage() {
   const { business, program, membership } = useScope();
@@ -328,21 +333,13 @@ export default function CardDesignPage() {
           </Card>
 
           <Card>
-            <CardHeader title="Colores" />
+            <CardHeader
+              title="Colores"
+              description="Dos colores y listo: el 1 es el fondo de la tarjeta y del pase en Wallet; el 2, los sellos y los detalles. El texto se pone solo en blanco o negro para que siempre se lea."
+            />
             <div className="grid gap-4 p-5 sm:grid-cols-2">
-              {COLOR_FIELDS.map(({ key, label }) => (
-                <Field key={key} label={label}>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="color"
-                      value={b[key] as string}
-                      onChange={(e) => updateBranding(business.id, { [key]: e.target.value })}
-                      className="size-10 cursor-pointer rounded-lg border border-line-strong bg-surface p-1"
-                    />
-                    <Input value={b[key] as string} onChange={(e) => /^#[0-9a-fA-F]{0,6}$/.test(e.target.value) && updateBranding(business.id, { [key]: e.target.value })} className="font-mono uppercase" />
-                  </div>
-                </Field>
-              ))}
+              <ColorPicker label="Color 1 · Fondo" value={b.cardBackground} onChange={(c) => updateBranding(business.id, twoColors(c, b.cardForeground))} />
+              <ColorPicker label="Color 2 · Sellos y detalles" value={b.cardForeground} onChange={(c) => updateBranding(business.id, twoColors(b.cardBackground, c))} />
             </div>
           </Card>
 

@@ -174,13 +174,14 @@ test("estilos premium: noche y oro, cristal y negro mate", async () => {
   assert.equal(cristal.glass, true);
 });
 
-test("pases: el estilo cambia los colores y la imagen de sellos", () => {
-  const premium = { ...card, business: { ...card.business, branding: { ...card.business.branding, cardStyle: "noche" as const } } };
-  const p = passFromCard(premium, origin);
-  const j = passJson(apple, p, origin) as { backgroundColor: string; foregroundColor: string; labelColor: string };
+test("pases: usan exactamente los dos colores del comercio, sin importar el estilo de la web", () => {
+  const conEstilo = { ...card, business: { ...card.business, branding: { ...card.business.branding, cardBackground: "#1B3FD8", cardForeground: "#FFC928", cardStyle: "marfil" as const } } };
+  const p = passFromCard(conEstilo, origin);
+  const j = passJson(apple, p, origin) as { backgroundColor: string; foregroundColor: string; labelColor: string; logoText?: string };
+  assert.equal(j.backgroundColor, "rgb(27, 63, 216)");
   assert.equal(j.foregroundColor, "rgb(255, 255, 255)");
-  assert.equal(j.labelColor, "rgb(232, 200, 115)");
-  assert.notEqual(j.backgroundColor, "rgb(235, 207, 203)");
+  assert.equal(j.labelColor, "rgb(255, 201, 40)");
+  assert.equal("logoText" in j, false); // el nombre va dentro del logo, con la letra de la marca
   assert.notEqual(stripVersion(p), stripVersion(passFromCard(card, origin)));
   assert.equal((loyaltyClass(google, p) as { hexBackgroundColor: string }).hexBackgroundColor, cardTheme_bg(p));
 });
@@ -193,9 +194,4 @@ test("Marfil y oro: fondo claro, texto oscuro y etiquetas doradas legibles", asy
   assert.equal(m.bg, "#F2EDE3");
   assert.ok(contrast(m.text, m.bg) >= 7);
   assert.ok(contrast(m.passLabel, m.bg) >= 3);
-  const p = passFromCard({ ...card, business: { ...card.business, branding: { ...card.business.branding, cardStyle: "marfil" as const } } }, origin);
-  const j = passJson(apple, p, origin) as { backgroundColor: string; labelColor: string; logoText?: string };
-  assert.equal(j.backgroundColor, "rgb(242, 237, 227)");
-  assert.equal(j.labelColor, "rgb(169, 130, 63)");
-  assert.equal("logoText" in j, false); // el nombre va dentro del logo, con la letra de la marca
 });

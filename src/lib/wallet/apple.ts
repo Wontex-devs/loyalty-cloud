@@ -124,15 +124,10 @@ export function passJson(cfg: Pick<AppleWalletConfig, "passTypeId" | "teamId" | 
       ? { locations: p.places.map((l) => ({ latitude: l.latitude, longitude: l.longitude, relevantText: nearbyText(p, extras) })) }
       : {}),
     storeCard: {
-      headerFields: [{ key: "stamps", label: "SELLOS", value: `${p.stamps}/${p.program.stampsRequired}` }],
-      // La franja (strip.png) muestra los sellos dibujados; sin campo principal encima para que se vean limpios.
+      // La franja (strip.png) ya muestra las visitas, los sellos y la recompensa: arriba no va nada más.
+      headerFields: [],
       primaryFields: [],
-      secondaryFields: [
-        { key: "customer", label: "CLIENTE", value: p.customerName },
-        p.rewardsAvailable.length
-          ? { key: "reward", label: "PREMIO LISTO", value: p.rewardsAvailable[0].name, textAlignment: "PKTextAlignmentRight" }
-          : { key: "reward", label: "PREMIO", value: p.program.rewardName, textAlignment: "PKTextAlignmentRight" },
-      ],
+      secondaryFields: [{ key: "customer", label: "CLIENTE", value: p.customerName }],
       // El único campo con changeMessage del frente: una notificación por visita, no varias.
       auxiliaryFields: [
         { key: "status", label: p.program.name.toUpperCase(), value: statusText(p), ...(statusNotifies(p, extras.settings) ? { changeMessage: "%@" } : {}) },

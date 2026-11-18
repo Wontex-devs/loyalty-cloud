@@ -62,8 +62,8 @@ export function progressText(p: WalletPass) {
 }
 
 /** Versión de la imagen de sellos: cambia con cada sello y con el diseño de la tarjeta. */
-export function stripVersion(p: Pick<WalletPass, "stamps" | "program" | "business">) {
-  const design = [p.business.background, p.business.foreground, p.business.stampIcon ?? "", p.business.stampUrl ?? "", p.business.style ?? "", p.business.style === "negro" ? "" : (p.business.coverUrl ?? ""), p.program.name, p.business.font ?? ""].join("|");
+export function stripVersion(p: Pick<WalletPass, "stamps" | "program" | "business" | "rewardsAvailable">) {
+  const design = ["minimal-1", p.business.background, p.business.foreground, p.program.rewardName, p.rewardsAvailable.length ? "ready" : ""].join("|");
   let h = 0;
   for (const ch of design) h = (Math.imul(h, 31) + ch.charCodeAt(0)) | 0;
   return `${p.stamps}-${p.program.stampsRequired}-${(h >>> 0).toString(36)}`;
@@ -72,6 +72,6 @@ export function stripVersion(p: Pick<WalletPass, "stamps" | "program" | "busines
 /** URL pública de la imagen de sellos (Google Wallet la descarga y la guarda). */
 export const stripUrl = (p: WalletPass) => `${p.cardUrl}/sellos/${stripVersion(p)}`;
 
-/** Colores del pase en la billetera según el estilo de la tarjeta. */
+/** Colores del pase en la billetera: exactamente el color 1 (fondo) y el color 2 (acento) del comercio. */
 export const passTheme = (p: Pick<WalletPass, "business">) =>
-  cardTheme({ cardBackground: p.business.background, cardForeground: p.business.foreground, cardStyle: p.business.style });
+  cardTheme({ cardBackground: p.business.background, cardForeground: p.business.foreground });
