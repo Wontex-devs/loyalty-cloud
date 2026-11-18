@@ -146,3 +146,34 @@ export async function addMessage(cfg: GoogleWalletConfig, token: string, m: { id
 
 export const updateObject =(cfg: GoogleWalletConfig, p: WalletPass) => patch(cfg, "loyaltyObject", objectId(cfg, p.token), loyaltyObject(cfg, p));
 export const updateClass = (cfg: GoogleWalletConfig, p: Pick<WalletPass, "business" | "program" | "places">) => patch(cfg, "loyaltyClass", classId(cfg, p.business.slug), loyaltyClass(cfg, p));
+
+export interface GoogleObjectSummary {
+  id: string;
+  hasUsers?: boolean;
+}
+
+/**
+ * Todas las tarjetas de un comercio que existen en Google Wallet (páginas de 100).
+ * El objeto se crea cuando el cliente guarda el pase; hasUsers indica si aún lo tiene.
+ */
+export async function listObjects(cfg: GoogleWalletConfig, slug: string, maxPages = 50): Promise<GoogleObjectSummary[]> {
+  const out: GoogleObjectSummary[] = [];
+  let token: string | undefined;
+  for (let i = 0; i < maxPages; i++) {
+    const qs = new URLSearchParams({ classId: classId(cfg, slug), maxResults: "100", ...(token ? { token } : {}) });
+    const res = await fetch(`${API}/loyaltyObject?${qs}`, { headers: { Authorization: `Bearer ${await accessToken(cfg)}` } });
+    if (res.status === 404) return out; // aún nadie guardó un pase de este comercio
+    if (!res.ok) throw new Error(`Google Wallet list ${res.status}: ${(await res.text()).slice(0, 200)}`);
+    const data = (await res.json()) as { resources?: GoogleObjectSummary[]; pagination?: { nextPageToken?: string } };
+    out.push(...(data.resources ?? []).map((r) => ({ id: r.id, hasUsers: r.hasUsers })));
+    token = data.pagination?.nextPageToken;
+    if (!token) break;
+  }
+  return out;
+}
+
+/** Tokens de las tarjetas que algún cliente tiene guardadas hoy en Google Wallet. */
+export function savedTokens(cfg: Pick<GoogleWalletConfig, "issuerId">, objects: GoogleObjectSummary[]) {
+  const prefix = objectId(cfg, "");
+  return new Set(objects.filter((o) => o.hasUsers === true && o.id.startsWith(prefix)).map((o) => o.id.slice(prefix.length)));
+}

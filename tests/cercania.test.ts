@@ -108,3 +108,25 @@ test("ajustes: el mensaje de cercanía se valida y si no sirve vuelve al sugerid
   assert.equal(walletSettings({ nearbyText: "x".repeat(121) }).nearbyText, DEFAULT_WALLET_SETTINGS.nearbyText);
   assert.equal(walletSettings({ nearbyText: 42 }).nearbyText, DEFAULT_WALLET_SETTINGS.nearbyText);
 });
+
+// ---------- Estado de billetera e invitación ----------
+import { savedTokens } from "../src/lib/wallet/google.ts";
+import { cardMessage, whatsappUrl } from "../src/lib/wallet/invite.ts";
+
+test("Google: solo cuentan las tarjetas que el cliente aún tiene guardadas", () => {
+  const objs = [
+    { id: `${google.issuerId}.card-AAA`, hasUsers: true },
+    { id: `${google.issuerId}.card-BBB`, hasUsers: false },
+    { id: `${google.issuerId}.card-CCC` },
+    { id: `999.card-DDD`, hasUsers: true },
+  ];
+  assert.deepEqual([...savedTokens(google, objs)], ["AAA"]);
+});
+
+test("WhatsApp: invita a guardar la tarjeta solo si no está en la billetera", () => {
+  const url = "https://lazo.ejemplo.com/card/x";
+  assert.match(cardMessage("Ana", "Prueba Salon", url, false), /^Hola Ana, esta es tu tarjeta de Prueba Salon: .+\nÁbrela y toca «Agregar a Apple Wallet»/);
+  assert.equal(cardMessage("Ana", "Prueba Salon", url, true), `Hola Ana, esta es tu tarjeta de Prueba Salon: ${url}`);
+  assert.equal(cardMessage("", "Prueba Salon", url, true), `Hola, esta es tu tarjeta de Prueba Salon: ${url}`);
+  assert.equal(whatsappUrl("+57 300 123 4567", "Hola Ana"), "https://wa.me/573001234567?text=Hola%20Ana");
+});

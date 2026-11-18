@@ -2,15 +2,19 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Download, Loader2, Search, Users } from "lucide-react";
+import { Download, Loader2, MessageCircle, Search, Users } from "lucide-react";
 import { useData } from "@/lib/data/store";
 import { useScope } from "@/components/business/business-shell";
 import { Avatar, Badge, Button, Card, EmptyState, Input, PageHeader, Progress, Segmented, Table, Td, Th } from "@/components/ui";
 import { can } from "@/lib/domain/permissions";
 import { formatDate, formatRelative } from "@/lib/utils";
 import { CARD_STATUS as STATUS_BADGE } from "@/components/business/status";
+import { useWalletStatus, WalletBadge, walletsOf } from "@/components/business/wallet-status";
+import { cardMessage, whatsappUrl } from "@/lib/wallet/invite";
+import { greetingName } from "@/lib/wallet/messages";
+import { publicOrigin } from "@/lib/config";
 
-type Filter = "all" | "reward" | "inactive";
+type Filter = "all" | "reward" | "inactive" | "nowallet";
 
 
 export default function CustomersPage() {
@@ -22,6 +26,7 @@ export default function CustomersPage() {
   const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState<string | null>(null);
   const required = program?.stampsRequired ?? 1;
+  const wallet = useWalletStatus(business.id);
 
   const rows = useMemo(() => {
     const now = Date.now();
@@ -33,10 +38,32 @@ export default function CustomersPage() {
         if (term && !customer.fullName.toLowerCase().includes(term) && !customer.phone.includes(term) && !(customer.email ?? "").includes(term)) return false;
         if (filter === "reward") return card.status === "reward_available";
         if (filter === "inactive") return !card.lastVisitAt || now - new Date(card.lastVisitAt).getTime() > 45 * 86400000;
+        if (filter === "nowallet") return walletsOf(wallet, card.id)?.length === 0 && !customer.anonymizedAt;
         return true;
       })
       .sort((a, b) => (b.card.lastVisitAt ?? "").localeCompare(a.card.lastVisitAt ?? ""));
-  }, [customers, cards, q, filter]);
+  }, [customers, cards, q, filter, wallet]);
+
+  const withCard = customers.filter((c) => !c.anonymizedAt && cards.some((k) => k.customerId === c.id));
+  const saved = withCard.filter((c) => (walletsOf(wallet, cards.find((k) => k.customerId === c.id)!.id) ?? []).length > 0).length;
+  /** WhatsApp con la invitación a guardar la tarjeta (solo si no la tiene en la billetera). */
+  const invite = (customer: (typeof customers)[number], card: (typeof cards)[number]) => {
+    const w = walletsOf(wallet, card.id);
+    if (!w || w.length || !customer.phone || customer.anonymizedAt || card.status === "blocked") return null;
+    const url = whatsappUrl(customer.phone, cardMessage(greetingName(customer), business.name, `${publicOrigin()}/card/${card.publicToken}`, false));
+    return (
+      <a
+        href={url}
+        target="_blank"
+        rel="noopener"
+        onClick={(e) => e.stopPropagation()}
+        title="Abre WhatsApp con un mensaje que lo invita a guardar la tarjeta en su billetera"
+        className="inline-flex items-center gap-1 rounded-md border border-line-strong px-2 py-1 text-xs font-medium text-ink-2 hover:bg-canvas"
+      >
+        <MessageCircle className="size-3.5" /> Invitar
+      </a>
+    );
+  };
 
   const download = async () => {
     setExporting(true);
@@ -66,6 +93,21 @@ export default function CustomersPage() {
         }
       />
 
+      {!wallet.loading && wallet.ok && withCard.length > 0 && (
+        <div className="mb-4 flex flex-col gap-2 rounded-lg border border-line bg-surface px-4 py-3 text-sm sm:flex-row sm:items-center sm:justify-between">
+          <p>
+            <span className="font-semibold">{saved} de {withCard.length}</span> clientes tienen la tarjeta guardada en la billetera del celular.
+            <span className="text-muted"> Solo a ellos les llegan los avisos de sellos, premios, promociones y cercanía.</span>
+            {!wallet.googleChecked && <span className="text-muted"> (Por ahora solo se cuenta Apple Wallet.)</span>}
+          </p>
+          {saved < withCard.length && filter !== "nowallet" && (
+            <button onClick={() => setFilter("nowallet")} className="shrink-0 text-left font-medium text-cobalt hover:underline">
+              Ver quién no la tiene
+            </button>
+          )}
+        </div>
+      )}
+
       {exportError && <div className="mb-4 rounded-lg border border-danger/20 bg-danger-bg px-4 py-3 text-sm text-danger">{exportError}</div>}
 
       <Card>
@@ -81,6 +123,7 @@ export default function CustomersPage() {
               { value: "all", label: "Todos" },
               { value: "reward", label: "Con recompensa" },
               { value: "inactive", label: "Inactivos +45d" },
+              { value: "nowallet", label: "Sin billetera" },
             ]}
           />
         </div>
@@ -98,6 +141,7 @@ export default function CustomersPage() {
                   <Th>Visitas</Th>
                   <Th>Última visita</Th>
                   <Th>Estado</Th>
+                  <Th>Billetera</Th>
                   <Th>Marketing</Th>
                   <Th>Alta</Th>
                 </tr>
@@ -129,6 +173,12 @@ export default function CustomersPage() {
                         {STATUS_BADGE[card.status].label}
                       </Badge>
                     </Td>
+                    <Td>
+                      <div className="flex items-center gap-2">
+                        <WalletBadge wallets={customer.anonymizedAt ? [] : walletsOf(wallet, card.id)} />
+                        {invite(customer, card)}
+                      </div>
+                    </Td>
                     <Td className="text-muted">{customer.marketingConsent ? "Sí" : "No"}</Td>
                     <Td className="text-muted">{formatDate(customer.createdAt)}</Td>
                   </tr>
@@ -139,7 +189,7 @@ export default function CustomersPage() {
             {/* Lista móvil */}
             <ul className="divide-y divide-line md:hidden">
               {rows.map(({ customer, card }) => (
-                <li key={customer.id}>
+                <li key={customer.id} className="relative">
                   <button onClick={() => router.push(`/business/${business.slug}/customers/${customer.id}`)} className="flex w-full items-center gap-3 px-4 py-3 text-left">
                     <Avatar name={customer.fullName} />
                     <div className="min-w-0 flex-1">
@@ -151,8 +201,10 @@ export default function CustomersPage() {
                       </div>
                       <Progress value={(card.currentStamps / required) * 100} className="mt-1.5" />
                       <p className="mt-1 text-xs text-muted">Última visita {formatRelative(card.lastVisitAt)}</p>
+                      <WalletBadge wallets={customer.anonymizedAt ? [] : walletsOf(wallet, card.id)} className="mt-1.5" />
                     </div>
                   </button>
+                  {invite(customer, card) && <div className="absolute right-4 bottom-3">{invite(customer, card)}</div>}
                 </li>
               ))}
             </ul>
