@@ -22,7 +22,7 @@ async function letraDeMarca(texto: string, peso: number) {
 }
 
 const TITULO = "Tarjeta de sellos digital para que tus clientes vuelvan";
-const LINEA = "Con tu marca · En Google Wallet · Sellos con NFC";
+const LINEA = "Con tu marca · Apple y Google Wallet · Sellos con NFC";
 
 export default async function OpengraphImage() {
   const [gruesa, media] = await Promise.all([letraDeMarca(`Laz${TITULO}`, 800), letraDeMarca(LINEA, 600)]);

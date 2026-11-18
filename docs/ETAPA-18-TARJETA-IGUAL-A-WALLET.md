@@ -2,12 +2,9 @@
 
 Fecha: 18 de noviembre de 2026.
 
-## Antes de publicar: aplicar la migración 0030
+## Migración 0030 (ya aplicada, hoy sin uso)
 
-`supabase/migrations/20261101000030_qr_tarjeta.sql` en `loyalty-cloud-prod` (SQL Editor → pegar → Run).
-
-- Solo cambia la validación de `update_business_profile` para aceptar `passQr` (verdadero o falso). No toca datos.
-- Si el código llega antes que la migración, todo funciona menos el interruptor «Mostrar el código QR», que daría error al guardar.
+`20261101000030_qr_tarjeta.sql` permite guardar `passQr` (verdadero o falso) en la marca del comercio. Se aplicó en producción el 18 de noviembre de 2026. El código QR se quitó después, así que **nada la usa hoy**; se deja porque no toca datos y sus pruebas siguen pasando. Si el QR vuelve, la validación ya está.
 
 ## Qué cambia
 
@@ -16,38 +13,37 @@ Fecha: 18 de noviembre de 2026.
 1. **Fila superior:** logo, nombre del comercio y «SELLOS 3 / 8». Es lo único que se ve cuando las tarjetas están apiladas en Wallet.
 2. **Franja «el hilo»:** el premio como protagonista, en la letra de la marca, y un hilo fino que enhebra los sellos hasta cerrar en un aro alrededor del premio. De fondo, la inicial del comercio casi transparente.
 3. **Datos:** «MIEMBRO», «DESDE» (mes y año de inscripción) y «TU PROGRESO», que es la misma frase que llega como notificación en cada visita.
-4. **Código QR** con el número de miembro. Abre la tarjeta del cliente; en caja sirve para confirmar de quién es. El comercio lo puede quitar.
+4. **Sin código QR.** Se probó con un QR al final y se quitó el mismo día: no se veía bien y los sellos se suman con la tarjeta NFC del mostrador.
 
 ## Qué puede personalizar el comercio
 
-Dos colores (fondo, y sellos y etiquetas), logo o iniciales, letra de la marca (nombre y premio), sello (icono o imagen propia), cantidad de sellos, premio y código QR.
+Dos colores (fondo, y sellos y etiquetas), logo o iniciales, letra de la marca (nombre y premio), sello (icono o imagen propia), cantidad de sellos y premio.
 
 ## Límites de Apple Wallet que se respetan
 
 - El pase solo admite tres colores planos (fondo, texto, etiquetas): sin degradados, marcos ni efecto cristal.
 - La letra de la marca solo va dentro de las imágenes (logo y franja); los datos usan la letra del iPhone.
-- El orden de las piezas es fijo y el QR va siempre sobre un recuadro blanco.
+- El orden de las piezas es fijo.
 - La franja mide 375 × 144 puntos.
 
 ## Cómo está hecho
 
 | Pieza | Archivo |
 |---|---|
-| Geometría compartida (posición de sellos, hilo, tamaño del premio, número de miembro) | `src/lib/domain/hilo.ts` |
+| Geometría compartida (posición de sellos, hilo y tamaño del premio) | `src/lib/domain/hilo.ts` |
 | Imagen de la franja (Apple Wallet y Google Wallet) | `src/components/brand/pass-strip.tsx` |
 | Franja de la tarjeta web | `src/components/loyalty/hilo-strip.tsx` |
 | Tarjeta web | `src/components/loyalty/loyalty-card.tsx` |
-| Campos y QR del pase de Apple | `src/lib/wallet/apple.ts` |
-| Interruptor del QR en el panel | `src/app/business/[slug]/card-design/page.tsx` |
+| Campos del pase de Apple | `src/lib/wallet/apple.ts` |
+| El mismo pase en la portada (iPhone e historia) | `src/components/marketing/pase-hilo.tsx` |
 
 - De 2 a 12 sellos van en una fila; de 13 a 30, en dos.
 - Un premio de nombre largo pasa a dos líneas más pequeñas; nunca se sale ni tapa los sellos.
-- El número de miembro se deriva del token con un resumen, así no deja ver parte del enlace secreto.
 
 ## Pruebas
 
 - `tests/hilo.test.ts`: para 2 a 30 sellos, todos caben en la franja sin tocarse ni tapar el premio.
-- `tests/apple-wallet.test.ts`: campos nuevos, QR y su retiro.
+- `tests/apple-wallet.test.ts`: campos nuevos y que el pase no lleva código de barras.
 - `npm run test:db`: 5 pruebas nuevas de `passQr` (349 en total).
 - Revisión visual con seis comercios ficticios: tarjeta web e imagen del pase lado a lado, en computador y en celular.
 

@@ -1,6 +1,7 @@
 "use client";
 
-import { ArrowLeft, Gift, Nfc, Scissors, Wallet } from "lucide-react";
+import { ArrowLeft, Wallet } from "lucide-react";
+import { PaseHilo } from "./pase-hilo";
 
 /** Icono genérico de billetera: tarjetas de colores saliendo de un bolsillo. */
 function WalletBadge({ name, className }: { name: string; className: string }) {
@@ -18,7 +19,7 @@ function WalletBadge({ name, className }: { name: string; className: string }) {
 /** iPhone flotando: la tarjeta de un negocio de ejemplo y el aviso que le llega al sumar un sello. */
 export function WalletPhone() {
   return (
-    <div className="phone-frame" role="img" aria-label="iPhone con la tarjeta de sellos de Barbería El Faro: llega un aviso de sello registrado y se marca el quinto sello">
+    <div className="phone-frame" role="img" aria-label="iPhone con la tarjeta de sellos de Barbería El Faro en Wallet: llega un aviso de sello registrado y se marca el quinto sello">
       <div className="phone-scene">
         <div aria-hidden className="phone-shadow" />
 
@@ -45,50 +46,23 @@ export function WalletPhone() {
                 </div>
               </div>
 
-              {/* Pase */}
-              <div className="absolute inset-x-2.5 bottom-3 top-[124px] overflow-hidden rounded-[22px] bg-cobalt text-white">
-                <div className="px-4 pt-3.5">
-                  <div className="flex items-center gap-2.5">
-                    <img src="/logos/el-faro.svg" alt="Logo de Barbería El Faro en su tarjeta de sellos" className="size-9 rounded-full bg-white p-1" />
-                    <span className="text-sm font-medium">Barbería El Faro</span>
-                  </div>
-                  <p className="mt-2.5 text-[21px] font-semibold leading-none">Club del Faro</p>
-                  <div className="mt-2.5 flex items-end justify-between leading-tight">
-                    <div>
-                      <p className="text-xs text-white/90">Cortes</p>
-                      <p className="relative h-6 w-10 text-[19px] font-medium">
-                        <span className="count-old absolute left-0">4/6</span>
-                        <span className="count-new absolute left-0">5/6</span>
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-xs text-white/90">Próximo premio</p>
-                      <p className="text-[15px] font-medium">Corte gratis</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-2.5 grid grid-cols-6 gap-1.5 bg-[#142fa8] px-4 py-3">
-                  {[0, 1, 2, 3, 4].map((i) => (
-                    <span key={i} className={`flex aspect-square items-center justify-center rounded-full bg-sun text-coal ${i === 4 ? "stamp-pop" : ""}`}>
-                      <Scissors className="size-3.5" />
-                    </span>
-                  ))}
-                  <span className="flex aspect-square items-center justify-center rounded-full border-[1.5px] border-dashed border-white/80 text-white"><Gift className="size-3.5" aria-hidden /></span>
-                </div>
-
-                <div className="mx-auto mt-3 flex size-[120px] items-center justify-center rounded-xl bg-white text-coal">
-                  <Nfc className="size-16" strokeWidth={1.5} />
-                </div>
-                <p className="mt-2 flex items-center justify-center gap-1.5 px-2 text-xs leading-tight text-white">
-                  <Nfc className="size-3.5" /> Acerca tu celular a la etiqueta
-                </p>
-              </div>
+              {/* Pase: el mismo diseño que el pase real de Wallet */}
+              <PaseHilo
+                className="absolute inset-x-2.5 top-[124px] rounded-[22px]"
+                contador={
+                  <span className="relative block h-5 w-11">
+                    <span className="count-old absolute right-0">4 / 6</span>
+                    <span className="count-new absolute right-0">5 / 6</span>
+                  </span>
+                }
+                sello={(i) => (i < 4 ? {} : i === 4 ? { className: "stamp-pop" } : { style: { opacity: 0 } })}
+              />
             </div>
           </div>
         </div>
 
-        <WalletBadge name="Google Wallet" className="-right-8 top-[345px] lg:-right-14" />
+        <WalletBadge name="Apple Wallet" className="-left-6 top-[470px] lg:-left-12" />
+        <WalletBadge name="Google Wallet" className="-right-8 top-[400px] lg:-right-14" />
       </div>
     </div>
   );

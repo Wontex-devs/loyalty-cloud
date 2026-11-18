@@ -15,7 +15,7 @@ import { PUBLIC_HOST_LABEL } from "@/lib/config";
 import { CARD_FONTS, STAMP_ICONS, type BusinessBranding, type CardStatus } from "@/lib/domain/types";
 import { cn } from "@/lib/utils";
 import { NfcCard } from "@/components/business/nfc-card";
-import { Button, buttonClass, Card, CardHeader, Field, Input, PageHeader, Segmented, Switch } from "@/components/ui";
+import { Button, buttonClass, Card, CardHeader, Field, Input, PageHeader, Segmented } from "@/components/ui";
 
 const PRESETS: { name: string; colors: Partial<BusinessBranding> }[] = [
   { name: "Azul Lazo", colors: { cardBackground: "#1b3fd8", cardForeground: "#ffc928", primary: "#1b3fd8", primaryForeground: "#ffc928", accent: "#ffc928" } },
@@ -263,20 +263,6 @@ export default function CardDesignPage() {
             </div>
           </Card>
 
-          <Card>
-            <CardHeader
-              title="Código QR"
-              description="Va al final de la tarjeta y del pase de Wallet, con el número de miembro. En caja lo leen con cualquier cámara para confirmar de quién es la tarjeta."
-            />
-            <div className="flex items-center justify-between gap-4 p-5 text-sm">
-              <div>
-                <p className="font-medium">Mostrar el código QR</p>
-                <p className="text-xs text-muted">{b.passQr !== false ? "Encendido: aparece en la tarjeta y en el pase." : "Apagado: la tarjeta queda más limpia, sin código."}</p>
-              </div>
-              <Switch checked={b.passQr !== false} onChange={(v) => updateBranding(business.id, { passQr: v })} label="Mostrar el código QR en la tarjeta" />
-            </div>
-          </Card>
-
           <PassInfoCard business={business} />
 
           <Card>
@@ -332,7 +318,6 @@ export default function CardDesignPage() {
               status={previewState}
               rewardsAvailable={previewState === "active" ? 0 : 1}
               memberSince={hoy}
-              qrValue={`https://${PUBLIC_HOST_LABEL}/card/ejemplo-vista-previa`}
             />
           </div>
         </div>

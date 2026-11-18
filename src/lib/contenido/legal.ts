@@ -71,7 +71,7 @@ export const LEGAL: Pagina[] = [
       {
         titulo: "¿Qué proveedores usamos?",
         parrafos: [
-          "Usamos proveedores de tecnología para la base de datos y el acceso (Supabase), el alojamiento de la página (Vercel), la tarjeta en el celular cuando el cliente la agrega (Google Wallet) y el envío de correos. Algunos guardan datos fuera de Colombia. Los usamos solo para operar Lazo y con medidas de seguridad adecuadas.",
+          "Usamos proveedores de tecnología para la base de datos y el acceso (Supabase), el alojamiento de la página (Vercel), la tarjeta en el celular cuando el cliente la agrega (Google Wallet y Apple Wallet) y el envío de correos. Algunos guardan datos fuera de Colombia. Los usamos solo para operar Lazo y con medidas de seguridad adecuadas.",
         ],
       },
       {
@@ -114,7 +114,7 @@ export const LEGAL: Pagina[] = [
           "Sellos por toque NFC con una etiqueta en el mostrador.",
           "Premios, promociones y avisos al celular de los clientes que los aceptaron.",
           "Estadísticas del negocio y cuentas propias para cada persona del equipo.",
-          "La tarjeta en Google Wallet para los clientes con Android.",
+          "La tarjeta en Apple Wallet para los clientes con iPhone y en Google Wallet para los clientes con Android.",
         ],
       },
       {
@@ -167,7 +167,7 @@ export const LEGAL: Pagina[] = [
       {
         titulo: "¿Hasta dónde responde Lazo?",
         parrafos: [
-          "Lazo responde por los daños que cause por su culpa, hasta el valor pagado por el negocio en los 3 meses anteriores al hecho, salvo lo que la ley no permita limitar. No responde por fallas de servicios de terceros que no controla (internet, el celular del cliente, Google Wallet o los proveedores de nube), ni por el mal uso de la plataforma. Los controles del toque NFC reducen los abusos, pero no son infalibles.",
+          "Lazo responde por los daños que cause por su culpa, hasta el valor pagado por el negocio en los 3 meses anteriores al hecho, salvo lo que la ley no permita limitar. No responde por fallas de servicios de terceros que no controla (internet, el celular del cliente, Google Wallet, Apple Wallet o los proveedores de nube), ni por el mal uso de la plataforma. Los controles del toque NFC reducen los abusos, pero no son infalibles.",
         ],
       },
       {

@@ -142,7 +142,6 @@ export function CardScreen({
           status={data.status}
           rewardsAvailable={data.rewards.length}
           memberSince={data.memberSince}
-          qrValue={url || undefined}
           highlightLastStamp={bump}
         />
 

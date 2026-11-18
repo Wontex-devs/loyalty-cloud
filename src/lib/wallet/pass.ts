@@ -16,8 +16,6 @@ export interface WalletPass {
   customerName: string;
   /** Mes y año de inscripción, p. ej. «Nov 2026». Vacío = no se muestra. */
   memberSince?: string;
-  /** El pase lleva código QR (lo decide el comercio). */
-  qr?: boolean;
   business: { name: string; slug: string; logoText: string; background: string; foreground: string; logoUrl: string; coverUrl?: string; stampIcon?: StampIcon; stampUrl?: string; style?: CardStyle; font?: CardFont };
   program: { name: string; stampsRequired: number; rewardName: string; terms?: string };
   stamps: number;
@@ -38,7 +36,6 @@ export function passFromCard(card: PublicCardData, origin: string, places?: Plac
     active: card.status !== "blocked",
     customerName: card.customerName,
     memberSince: memberSinceText(card.memberSince),
-    qr: b.passQr !== false,
     business: {
       name: card.business.name,
       slug,

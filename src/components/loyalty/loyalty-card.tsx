@@ -1,11 +1,9 @@
 "use client";
 
-import { QRCodeSVG } from "qrcode.react";
 import { BrandMark, brandCase, brandFont } from "./brand-mark";
 import { HiloStrip } from "./hilo-strip";
 import { cn } from "@/lib/utils";
 import { cardTheme } from "@/lib/domain/card-palette";
-import { numeroMiembro } from "@/lib/domain/hilo";
 import { memberSinceText } from "@/lib/wallet/pass";
 import type { Business, CardStatus, LoyaltyProgram } from "@/lib/domain/types";
 
@@ -16,8 +14,6 @@ export interface LoyaltyCardViewProps {
   stamps: number;
   status: CardStatus;
   rewardsAvailable: number;
-  /** Enlace de la tarjeta para el código QR (solo el token público, nunca IDs internos). Sin él no hay QR. */
-  qrValue?: string;
   /** Fecha de inscripción (ISO). Se muestra como «Nov 2026». */
   memberSince?: string;
   highlightLastStamp?: boolean;
@@ -29,7 +25,7 @@ export interface LoyaltyCardViewProps {
 
 /**
  * La tarjeta de fidelización, con la misma forma que el pase de Apple Wallet: logo y conteo
- * arriba, la franja con el premio y el hilo de sellos, los datos del miembro y el código QR.
+ * arriba, la franja con el premio y el hilo de sellos y los datos del miembro. Sin código QR.
  * Lo que se ve aquí es lo que el cliente guarda en su billetera: solo usa lo que Wallet permite
  * (dos colores planos, la letra de la marca dentro de la franja y el orden fijo de las piezas).
  * Se usa en la tarjeta pública, la vista previa del panel y la portada.
@@ -41,7 +37,6 @@ export function LoyaltyCardView({
   stamps,
   status,
   rewardsAvailable,
-  qrValue,
   memberSince,
   highlightLastStamp,
   compact,
@@ -56,7 +51,6 @@ export function LoyaltyCardView({
   const remaining = Math.max(required - sellos, 0);
   const ready = rewardsAvailable > 0 || status === "reward_available";
   const desde = memberSinceText(memberSince);
-  const qr = qrValue && b.passQr !== false ? qrValue : null;
   // Mismo texto que el pase muestra y envía como notificación.
   const progreso =
     status === "blocked"
@@ -118,22 +112,13 @@ export function LoyaltyCardView({
           </div>
         )}
       </div>
-      <div className={cn("pt-2.5", pad, !qr && (compact ? "pb-5" : "pb-7"))}>
+      <div className={cn("pt-2.5", pad, compact ? "pb-5" : "pb-7")}>
         <p className={label} style={{ color: c.passLabel }}>
           Tu progreso
         </p>
         <p className="text-[15px] leading-snug">{progreso}</p>
       </div>
 
-      {/* Código QR sobre blanco, como lo pone Wallet */}
-      {qr && (
-        <div className={cn("flex justify-center", compact ? "py-4" : "pt-6 pb-6")}>
-          <div className="rounded-lg bg-white px-3 pt-3 pb-2 text-center">
-            <QRCodeSVG value={qr} size={compact ? 92 : 116} level="M" fgColor="#111111" />
-            <p className="mt-1.5 text-[11px] tracking-wide text-[#333333]">Miembro N.º {numeroMiembro(qr.split("/").pop() ?? qr)}</p>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
