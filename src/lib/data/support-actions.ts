@@ -6,6 +6,7 @@
  * - «edit»: el superadministrador entra con permisos de propietario.
  * La base de datos comprueba de nuevo el rol, limita la duración y deja la entrada en la auditoría del comercio.
  */
+import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
@@ -49,6 +50,8 @@ export async function startSupportSessionAction(_prev: SupportState, form: FormD
     if (error.message.includes("NOT_FOUND")) return { error: "No se encontró el comercio." };
     return { error: "No tienes permiso para entrar a este comercio." };
   }
+  // Sin esto el panel no se vuelve a pedir al servidor y se queda en la pantalla de entrada.
+  revalidatePath(`/business/${parsed.data.slug}`, "layout");
   redirect(`/business/${parsed.data.slug}`);
 }
 
@@ -57,5 +60,6 @@ export async function endSupportSessionAction(businessId: string) {
   if (!z.uuid().safeParse(businessId).success) return;
   const supabase = await createClient();
   await supabase.rpc("end_support_session", { p_business_id: businessId });
+  revalidatePath("/business", "layout");
   redirect(`/admin/businesses/${businessId}`);
 }
