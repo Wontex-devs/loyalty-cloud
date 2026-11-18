@@ -99,7 +99,14 @@ export function stripGrid(required: number) {
  */
 export function stampStrip({ branding, stamps, required }: StripInput, width: number, height: number, headers?: Record<string, string>) {
   const c = cardTheme(branding);
-  const photo = c.photo === "full" && branding.coverUrl?.startsWith("https://") ? branding.coverUrl : null;
+  // La foto del local va detrás de los sellos (menos en Negro mate), con un velo del color de la tarjeta.
+  const photo = c.photo !== "none" && branding.coverUrl?.startsWith("https://") ? branding.coverUrl : null;
+  const veil =
+    c.photo === "full"
+      ? c.veil
+      : c.photo === "tint"
+        ? `linear-gradient(180deg, ${alpha(c.bg, 0.62)} 0%, ${alpha(c.bg, 0.92)} 100%)`
+        : `linear-gradient(180deg, ${alpha(c.bg, 0.5)} 0%, ${alpha(c.bg, 0.86)} 100%)`;
   const { rows, cols } = stripGrid(required);
   const padX = width * 0.06;
   const padY = height * 0.12;
@@ -114,7 +121,7 @@ export function stampStrip({ branding, stamps, required }: StripInput, width: nu
     const base = { width: size, height: size, borderRadius: size, display: "flex", alignItems: "center", justifyContent: "center", marginLeft: i % cols ? gap : 0 } as const;
     if (filled)
       return (
-        <div key={i} style={{ ...base, ...(c.accentCss.startsWith("linear") ? { backgroundImage: c.accentCss } : {}), backgroundColor: c.accent, boxShadow: "0 3px 8px rgba(0,0,0,0.25)" }}>
+        <div key={i} style={{ ...base, ...(c.accentCss.startsWith("linear") ? { backgroundImage: c.accentCss } : {}), backgroundColor: c.accent, boxShadow: `0 0 0 ${Math.round(size * 0.07)}px ${alpha(c.accent, 0.22)}, 0 ${Math.round(size * 0.06)}px ${Math.round(size * 0.16)}px rgba(0,0,0,0.4)` }}>
           {stampUrl ? (
             // eslint-disable-next-line @next/next/no-img-element, jsx-a11y/alt-text
             <img src={stampUrl} width={size * 0.88} height={size * 0.88} style={{ borderRadius: size, background: "#ffffff", objectFit: "contain", padding: size * 0.1 }} />
@@ -129,7 +136,12 @@ export function stampStrip({ branding, stamps, required }: StripInput, width: nu
           <Icon name="gift" size={size * 0.46} color={c.accent} />
         </div>
       );
-    return <div key={i} style={{ ...base, background: c.slot === "transparent" ? "transparent" : c.slot, border: `${Math.max(1, size * 0.018)}px solid ${c.slotBorder}` }} />;
+    return (
+      <div
+        key={i}
+        style={{ ...base, background: c.slot === "transparent" ? "transparent" : photo ? alpha("#FFFFFF", 0.12) : c.slot, border: `${Math.max(1, size * 0.02)}px solid ${photo ? alpha("#FFFFFF", 0.35) : c.slotBorder}` }}
+      />
+    );
   };
 
   return new ImageResponse(
@@ -151,7 +163,8 @@ export function stampStrip({ branding, stamps, required }: StripInput, width: nu
           // eslint-disable-next-line @next/next/no-img-element, jsx-a11y/alt-text
           <img src={photo} width={width} height={height} style={{ position: "absolute", top: 0, left: 0, width, height, objectFit: "cover" }} />
         )}
-        {photo && <div style={{ position: "absolute", top: 0, left: 0, width, height, backgroundImage: c.veil }} />}
+        {photo && <div style={{ position: "absolute", top: 0, left: 0, width, height, backgroundImage: veil }} />}
+        {c.frame && <div style={{ position: "absolute", left: 0, bottom: 0, width, height: Math.max(2, Math.round(height / 144)), backgroundImage: c.frame }} />}
         {Array.from({ length: rows }, (_, r) => (
           <div key={r} style={{ display: "flex", marginTop: r ? gap : 0 }}>
             {Array.from({ length: cols }, (_, k) => r * cols + k)

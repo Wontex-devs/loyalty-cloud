@@ -5,7 +5,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getPublicBusiness, getPublicCard } from "@/lib/data/public";
 import { appleWalletConfig, googleWalletConfig } from "./config";
 import { notifyApplePasses } from "./apple-server";
-import { updateClass, updateObject } from "./google";
+import { listObjects, savedTokens, updateClass, updateObject } from "./google";
 import { visitNotice, walletSettings } from "./messages";
 import { deliverNotices, queueNotices } from "./notify";
 import { passFromCard } from "./pass";
@@ -97,10 +97,21 @@ export function scheduleBusinessWalletSync(businessId: string) {
           foreground: b.branding.cardForeground,
           logoUrl: `${origin()}/join/${b.slug}/icon/660`,
           coverUrl: b.branding.coverUrl || undefined,
+          style: b.branding.cardStyle,
         },
         program: { name: b.program.name, stampsRequired: b.program.stampsRequired, rewardName: b.program.rewardName },
         places,
       });
+      // Cada pase guardado lleva su imagen de sellos y su color: se actualizan todos.
+      const tokens = [...savedTokens(cfg, await listObjects(cfg, b.slug))];
+      for (let i = 0; i < tokens.length; i += 5) {
+        await Promise.all(
+          tokens.slice(i, i + 5).map(async (token) => {
+            const card = await getPublicCard(token);
+            if (card) await updateObject(cfg, passFromCard(card, origin(), places)).catch((e) => console.error("[wallet] pase de Google", e));
+          }),
+        );
+      }
     } catch (e) {
       console.error("[wallet] no se pudo actualizar el diseño del pase", e);
     }
