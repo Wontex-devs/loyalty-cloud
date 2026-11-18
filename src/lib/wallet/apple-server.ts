@@ -3,6 +3,7 @@ import { connect } from "node:http2";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getPublicCard } from "@/lib/data/public";
 import { businessIcon } from "@/components/brand/business-icon";
+import { stampStrip, type StripInput } from "@/components/brand/stamp-strip";
 import { buildPkpass, type AppleWalletConfig, type PassMessage } from "./apple";
 import { walletSettings } from "./messages";
 import { passFromCard } from "./pass";
@@ -25,17 +26,18 @@ async function png(res: Response) {
   return Buffer.from(await res.arrayBuffer());
 }
 
-/** Imágenes del pase en 1x, 2x y 3x: icono (notificaciones y pantalla de bloqueo) y logo. */
-async function passImages(business: Parameters<typeof businessIcon>[0]) {
+/** Imágenes del pase en 1x, 2x y 3x: icono (notificaciones y pantalla de bloqueo), logo y la franja con los sellos. */
+async function passImages(business: Parameters<typeof businessIcon>[0], strip: StripInput) {
   const sizes = { icon: 29, logo: 50 };
-  const entries = await Promise.all(
-    Object.entries(sizes).flatMap(([name, pt]) =>
-      [1, 2, 3].map(async (scale) => {
-        const file = `${name}${scale === 1 ? "" : `@${scale}x`}.png`;
-        return [file, await png(businessIcon(business, pt * scale, { transparent: name === "logo" }))] as const;
-      }),
+  const scales = [1, 2, 3];
+  const file = (name: string, scale: number) => `${name}${scale === 1 ? "" : `@${scale}x`}.png`;
+  const entries = await Promise.all([
+    ...Object.entries(sizes).flatMap(([name, pt]) =>
+      scales.map(async (scale) => [file(name, scale), await png(businessIcon(business, pt * scale, { transparent: name === "logo" }))] as const),
     ),
-  );
+    // Franja de la tarjeta de tienda: 375 × 144 puntos.
+    ...scales.map(async (scale) => [file("strip", scale), await png(stampStrip(strip, 375 * scale, 144 * scale))] as const),
+  ]);
   return Object.fromEntries(entries);
 }
 
@@ -69,7 +71,11 @@ export async function pkpassFor(cfg: AppleWalletConfig, token: string, origin: s
   if (!card) return null;
   const ids = await cardBySerial(token);
   const [images, message, settings, places, firstName] = await Promise.all([
-    passImages(card.business),
+    passImages(card.business, {
+      branding: card.business.branding,
+      stamps: Math.min(card.stamps, card.program.stampsRequired),
+      required: card.program.stampsRequired,
+    }),
     ids ? latestMessage(ids.cardId) : null,
     ids ? businessSettings(ids.businessId) : null,
     ids ? businessPlaces({ businessId: ids.businessId }) : undefined,
