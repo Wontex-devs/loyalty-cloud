@@ -22,7 +22,7 @@ export const GUIAS: Pagina[] = [
       {
         titulo: "¿Cómo funciona una tarjeta de fidelización digital con Lazo?",
         parrafos: [
-          "Tu cliente se inscribe una sola vez escaneando un QR que pones en la caja. Escribe su nombre y su celular, y listo: no descarga ninguna app. En Android guarda la tarjeta en Google Wallet; en iPhone, por ahora, la usa desde el navegador.",
+          "Tu cliente se inscribe una sola vez escaneando un QR que pones en la caja. Escribe su nombre y su celular, y listo: no descarga ninguna app. Después guarda la tarjeta en la billetera de su celular: Apple Wallet en iPhone o Google Wallet en Android.",
           "Para sumar sellos, el cliente acerca el celular a una etiqueta NFC adhesiva pegada en tu mostrador. No necesitas lector ni datáfono. Tú activas la etiqueta desde tu panel, y cada sello nuevo aparece solo en la tarjeta.",
         ],
         pasos: [
@@ -124,7 +124,7 @@ export const GUIAS: Pagina[] = [
     tipo: "guia",
     titulo: "Tarjeta de sellos digital: cómo montarla en tu negocio",
     descripcion:
-      "Cartón vs. tarjeta de sellos digital, cuántos sellos poner, ideas de premios y cómo montarla paso a paso con QR, Google Wallet y etiqueta NFC.",
+      "Cartón vs. tarjeta de sellos digital, cuántos sellos poner, ideas de premios y cómo montarla paso a paso con QR, Apple Wallet o Google Wallet y etiqueta NFC.",
     antetitulo: "Guía",
     h1: "Tarjeta de sellos digital: cómo montarla paso a paso",
     resumen:
@@ -134,7 +134,7 @@ export const GUIAS: Pagina[] = [
         titulo: "¿Qué es una tarjeta de sellos digital?",
         parrafos: [
           "Es la versión en el celular de la tarjeta de cartón que se sella en cada compra. Tiene la marca de tu negocio, una cantidad de sellos que tú defines y un premio al completarla. Los sellos se suman solos cuando el cliente acerca el celular a una etiqueta NFC en tu mostrador.",
-          "No hace falta timbre, tinta ni lector. Tampoco que el cliente descargue una app: se inscribe escaneando un QR y, en Android, guarda la tarjeta en Google Wallet.",
+          "No hace falta timbre, tinta ni lector. Tampoco que el cliente descargue una app: se inscribe escaneando un QR y guarda la tarjeta en Apple Wallet (iPhone) o Google Wallet (Android).",
         ],
       },
       {
@@ -167,12 +167,12 @@ export const GUIAS: Pagina[] = [
       {
         titulo: "¿Cómo se monta una tarjeta de sellos digital con Lazo?",
         parrafos: [
-          "Se monta en tres piezas: el QR para inscribir clientes, Google Wallet donde la guardan y la etiqueta NFC donde suman sellos. Tú configuras la marca y las reglas desde el panel.",
+          "Se monta en tres piezas: el QR para inscribir clientes, la billetera del celular donde la guardan (Apple Wallet o Google Wallet) y la etiqueta NFC donde suman sellos. Tú configuras la marca y las reglas desde el panel.",
         ],
         pasos: [
           "Define tu tarjeta: logo, colores, sello, nombre del club, cantidad de sellos y premio.",
           "Pon el QR en la caja. Cada cliente lo escanea una sola vez y escribe su nombre y su celular.",
-          "En Android, el cliente guarda la tarjeta en Google Wallet con el botón «Agregar a la Billetera de Google». En iPhone, por ahora, la usa desde el navegador.",
+          "En Android, el cliente guarda la tarjeta en Google Wallet con el botón «Agregar a la Billetera de Google». En iPhone, la guarda en Apple Wallet con el botón «Agregar a Apple Wallet».",
           "Pega una etiqueta NFC adhesiva (NTAG213 o NTAG215) en el mostrador y actívala desde tu panel.",
           "Elige el tiempo mínimo entre sellos para que nadie se lleve dos en la misma visita.",
           "Cuando el cliente completa los sellos, el premio aparece en su tarjeta y tú lo canjeas desde el panel.",
@@ -235,11 +235,11 @@ export const GUIAS: Pagina[] = [
     tipo: "guia",
     titulo: "Tarjeta de lealtad Google Wallet para tu negocio",
     descripcion:
-      "Cómo funciona una tarjeta de lealtad en Google Wallet: qué ve tu cliente, cómo la agrega, cómo se actualizan los sellos y qué pasa en iPhone.",
+      "Cómo funciona una tarjeta de lealtad en Google Wallet: qué ve tu cliente, cómo la agrega, cómo se actualizan los sellos y cómo funciona en iPhone con Apple Wallet.",
     antetitulo: "Guía",
     h1: "Tarjeta de lealtad en Google Wallet: cómo funciona para tu negocio",
     resumen:
-      "La tarjeta de lealtad de Lazo se guarda en Google Wallet, la billetera del celular Android, con el logo y los colores de tu negocio. Los sellos se actualizan solos y el cliente no descarga ninguna app. Aquí ves qué ve tu cliente, cómo la agrega y qué pasa en iPhone.",
+      "La tarjeta de lealtad de Lazo se guarda en Google Wallet, la billetera del celular Android, con el logo y los colores de tu negocio. Los sellos se actualizan solos y el cliente no descarga ninguna app. Aquí ves qué ve tu cliente, cómo la agrega y cómo funciona en iPhone, donde se guarda en Apple Wallet.",
     secciones: [
       {
         titulo: "¿Qué es una tarjeta de lealtad en Google Wallet?",
@@ -277,8 +277,8 @@ export const GUIAS: Pagina[] = [
       {
         titulo: "¿Qué pasa con los clientes que tienen iPhone?",
         parrafos: [
-          "Por ahora, en iPhone la tarjeta se usa desde el navegador, sin instalar nada. El cliente abre su enlace personal y ve su tarjeta con sus sellos. Apple Wallet todavía no está disponible.",
-          "Esto significa que tus clientes con iPhone también participan en el programa; solo cambia el lugar donde ven la tarjeta. Pídeles que la abran siempre desde el mismo navegador (Safari), porque así el toque NFC reconoce su tarjeta.",
+          "En iPhone la tarjeta se guarda en Apple Wallet con el botón «Agregar a Apple Wallet». Queda con el logo y los colores de tu negocio, y se actualiza sola con cada sello, igual que en Google Wallet.",
+          "Así, tus clientes con iPhone y con Android tienen la misma tarjeta; solo cambia la billetera donde la guardan. Para sumar sellos, pídeles que usen siempre el mismo navegador (Safari en iPhone), porque así el toque NFC reconoce su tarjeta.",
         ],
       },
       {
@@ -298,7 +298,7 @@ export const GUIAS: Pagina[] = [
       {
         titulo: "¿Por qué no hace falta una app?",
         parrafos: [
-          "Porque la tarjeta vive en Google Wallet, que ya está en el celular, o en el navegador. Una app propia hay que desarrollarla y mantenerla, y a muchos clientes no les provoca instalar una más por un solo negocio.",
+          "Porque la tarjeta vive en la billetera que ya trae el celular (Apple Wallet o Google Wallet), o en el navegador. Una app propia hay que desarrollarla y mantenerla, y a muchos clientes no les provoca instalar una más por un solo negocio.",
           "Con Lazo, el cliente se inscribe una sola vez escaneando un QR y tú arrancas desde $79.990 al mes con el IVA incluido, sin permanencia.",
         ],
       },
@@ -306,7 +306,7 @@ export const GUIAS: Pagina[] = [
     preguntas: [
       {
         q: "¿Mis clientes tienen que descargar una app?",
-        a: "No. Se inscriben escaneando el QR de tu negocio y escriben nombre y celular. En Android guardan la tarjeta en Google Wallet; en iPhone la usan desde el navegador.",
+        a: "No. Se inscriben escaneando el QR de tu negocio y escriben nombre y celular. Después guardan la tarjeta en Apple Wallet (iPhone) o Google Wallet (Android).",
       },
       {
         q: "¿La tarjeta se ve con el logo de mi negocio?",
@@ -317,8 +317,8 @@ export const GUIAS: Pagina[] = [
         a: "Solo tu negocio. Según la Ley 1581 de 2012, tu negocio es el responsable de los datos y Lazo es el encargado. Lazo no vende datos.",
       },
       {
-        q: "¿Habrá Apple Wallet?",
-        a: "Por ahora no está disponible. Los clientes con iPhone usan su tarjeta desde el navegador, sin instalar nada.",
+        q: "¿Funciona con Apple Wallet?",
+        a: "Sí. Los clientes con iPhone guardan su tarjeta en Apple Wallet con un botón, y se actualiza sola con cada sello.",
       },
       {
         q: "¿Qué pasa si un cliente borra la tarjeta de su billetera?",

@@ -20,7 +20,7 @@ const ESCENAS = [
   ["Y la próxima vez, compra en otro lado.", "La competencia está a una cuadra. Sin un motivo para elegirte, cualquiera le sirve."],
   ["Aquí entra Lazo.", "Una tarjeta de sellos digital con la marca de tu negocio, en el celular de cada cliente."],
   ["Escanea el QR una sola vez.", "Escribe su nombre y su celular, y ya tiene su tarjeta. No descarga ninguna app."],
-  ["La guarda en Google Wallet.", "En Android queda en la billetera del celular, con tu logo y tus colores, siempre a la mano."],
+  ["La guarda en su billetera.", "En iPhone queda en Apple Wallet y en Android en Google Wallet, con tu logo y tus colores, siempre a la mano."],
   ["Acerca el celular al mostrador.", "Una etiqueta NFC adhesiva hace el trabajo. Sin lector ni datáfono."],
   ["Sello registrado.", "Queda guardado con fecha y hora, y le llega el aviso al instante."],
   ["Completa los sellos y gana su premio.", "El premio aparece solo en su tarjeta, listo para canjearlo en tu caja."],
@@ -215,7 +215,7 @@ function aplicar(m: Mapa, T: number) {
   st("check", `scale(${(0.6 + 0.4 * acepta).toFixed(3)})`, acepta);
   st("btnCrear", `scale(${(1 - 0.04 * (tramo(T, 3.9, 3.93) - tramo(T, 3.95, 3.98))).toFixed(3)})`);
 
-  // Tarjeta nueva → Google Wallet
+  // Tarjeta nueva → billetera del celular (Apple Wallet o Google Wallet)
   const nueva = sal(tramo(T, 3.98, 4.18));
   const guarda = suave(tramo(T, 4.45, 4.78));
   st("paseNuevo", `translateY(${px(mezcla(18, 0, nueva) - 44 * guarda)}) scale(${mezcla(0.94, 1, nueva).toFixed(4)})`, nueva);
@@ -561,10 +561,10 @@ function Celular({ r }: { r: (k: string) => (n: Element | null) => void }) {
               <Pase />
             </div>
             <div ref={r("btnWallet")} className="absolute inset-x-4 bottom-10 flex h-11 items-center justify-center gap-2 rounded-full bg-black text-[13px] font-semibold text-white" style={{ opacity: 0 }}>
-              <Wallet className="size-4 text-sun" /> Agregar a Google Wallet
+              <Wallet className="size-4 text-sun" /> Agregar a la billetera
             </div>
             <div ref={r("toast")} className="absolute inset-x-4 bottom-8 flex items-center justify-center gap-2 rounded-2xl bg-coal py-3 text-[12px] font-medium text-white" style={{ opacity: 0 }}>
-              <Check className="size-4 text-sun" /> Guardada en Google Wallet
+              <Check className="size-4 text-sun" /> Guardada en Apple Wallet
             </div>
           </div>
 

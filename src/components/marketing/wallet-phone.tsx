@@ -61,7 +61,8 @@ export function WalletPhone() {
           </div>
         </div>
 
-        <WalletBadge name="Google Wallet" className="-right-8 top-[345px] lg:-right-14" />
+        <WalletBadge name="Apple Wallet" className="-left-6 top-[470px] lg:-left-12" />
+        <WalletBadge name="Google Wallet" className="-right-8 top-[400px] lg:-right-14" />
       </div>
     </div>
   );

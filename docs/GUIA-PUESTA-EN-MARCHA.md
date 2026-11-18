@@ -47,7 +47,8 @@ Una página para dejar el programa listo antes del primer cliente: unos 30 minut
 - Si el toque falla, el equipo suma la visita desde *Clientes → el cliente → Sumar visita*, con el motivo.
 - Para entregar un premio: *Recompensas → buscar al cliente → Canjear*.
 
-## Lo que viene
-- **Apple Wallet:** en el iPhone aparecerá «Añadir a Apple Wallet», y la tarjeta se actualizará sola con cada visita.
+## En la billetera del celular
+- **iPhone:** el cliente pulsa «Agregar a Apple Wallet» en su tarjeta y queda guardada. Se actualiza sola con cada visita.
+- **Android:** lo mismo con «Agregar a la Billetera de Google».
 
 ¿Dudas? Escríbenos por WhatsApp. Si nos lo pides, podemos revisar tu panel en modo solo lectura; cada revisión queda en tu *Historial → Auditoría*.

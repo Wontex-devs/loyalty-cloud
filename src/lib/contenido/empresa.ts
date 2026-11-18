@@ -53,7 +53,7 @@ export const EMPRESA_PAGINAS: Pagina[] = [
         titulo: "¿Qué hace y qué no hace Lazo hoy?",
         parrafos: [
           "Preferimos decirlo claro. Lazo hoy incluye la tarjeta de sellos con tu marca, los sellos por NFC con una etiqueta adhesiva en el mostrador, los premios, los avisos a quienes aceptaron recibirlos, las promociones por fechas y días, las estadísticas del negocio y usuarios propios para tu equipo.",
-          "En Android la tarjeta va en Google Wallet. En iPhone, por ahora, se usa desde el navegador: todavía no está en Apple Wallet.",
+          "La tarjeta se guarda en la billetera del celular: Apple Wallet en iPhone y Google Wallet en Android. También se puede usar desde el navegador, sin guardarla.",
         ],
       },
       {
