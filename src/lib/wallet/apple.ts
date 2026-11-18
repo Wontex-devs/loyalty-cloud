@@ -5,6 +5,7 @@
  */
 import { createHash, createHmac, createSign, timingSafeEqual, X509Certificate } from "node:crypto";
 import { passTheme, progressText, type WalletPass } from "./pass.ts";
+import { appleInfoFields } from "./pass-info.ts";
 import { DEFAULT_WALLET_SETTINGS, nearbyMessage } from "./messages.ts";
 import type { WalletSettings } from "../domain/types.ts";
 
@@ -84,6 +85,14 @@ export function nearbyText(p: WalletPass, extras: Pick<PassExtras, "settings" | 
   return nearbyMessage(extras.settings?.nearbyText || DEFAULT_WALLET_SETTINGS.nearbyText, { nombre, comercio: p.business.name, progreso: statusText(p) });
 }
 
+/** Reglas del programa en una frase, más sus condiciones si el comercio las escribió. */
+export function howItWorks(p: Pick<WalletPass, "program" | "business">) {
+  const n = p.program.stampsRequired;
+  const base = `Suma un sello en cada visita a ${p.business.name}. Al completar ${n} ${n === 1 ? "sello" : "sellos"}, recibes: ${p.program.rewardName}.`;
+  const terms = p.program.terms?.trim();
+  return terms ? `${base}\n\n${terms}` : base;
+}
+
 export function passJson(cfg: Pick<AppleWalletConfig, "passTypeId" | "teamId" | "authSecret">, p: WalletPass, origin: string, extras: PassExtras = {}) {
   const { message } = extras;
   // Mismos colores que la tarjeta web: texto legible y etiquetas con el color del comercio.
@@ -92,13 +101,15 @@ export function passJson(cfg: Pick<AppleWalletConfig, "passTypeId" | "teamId" | 
   const back: Record<string, unknown>[] = [{ key: "progress", label: "Tu progreso", value: progressText(p) }];
   if (p.promotion) back.push({ key: "promo", label: `Hoy: ${p.promotion.name}`, value: `Tu visita de hoy suma ${1 + p.promotion.bonusStamps} sellos.` });
   if (message) back.push({ key: "message", label: message.title, value: message.body, changeMessage: "%@" });
+  // Datos del comercio: WhatsApp, Instagram, cómo llegar, horario y sitio web (se pueden tocar).
+  back.push(...appleInfoFields(p.info));
   back.push({
     key: "card",
     label: "Tu tarjeta",
     value: p.cardUrl,
     attributedValue: `<a href="${p.cardUrl}">Ver mi tarjeta</a>`,
   });
-  back.push({ key: "business", label: "Comercio", value: p.business.name });
+  back.push({ key: "how", label: "Cómo funciona", value: howItWorks(p) });
 
   // Apple solo acepta un servicio web con HTTPS; en local el pase funciona sin actualizaciones.
   const updates = origin.startsWith("https://")

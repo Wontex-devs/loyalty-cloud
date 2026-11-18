@@ -85,6 +85,7 @@ export const beautyClub: Business = {
   timezone: "America/Bogota",
   legal: {},
   walletNotifications: { ...DEFAULT_WALLET_SETTINGS },
+  passInfo: {},
   createdAt: daysAgo(142),
   branding: {
     logoText: "BC",
@@ -114,6 +115,7 @@ const otherBusinesses: Business[] = [
   timezone: "America/Bogota",
   legal: {},
   walletNotifications: { ...DEFAULT_WALLET_SETTINGS },
+  passInfo: {},
   createdAt: daysAgo(30 + i * 17),
   branding: {
     logoText: name

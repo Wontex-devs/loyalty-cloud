@@ -4,6 +4,7 @@
  */
 import type { PublicCardData } from "@/components/public/card-screen";
 import type { Place } from "./geo.ts";
+import type { PassInfo } from "./pass-info.ts";
 import { cardTheme } from "../domain/card-palette.ts";
 import type { CardFont, CardStyle, StampIcon } from "../domain/types.ts";
 
@@ -14,15 +15,17 @@ export interface WalletPass {
   active: boolean;
   customerName: string;
   business: { name: string; slug: string; logoText: string; background: string; foreground: string; logoUrl: string; coverUrl?: string; stampIcon?: StampIcon; stampUrl?: string; style?: CardStyle; font?: CardFont };
-  program: { name: string; stampsRequired: number; rewardName: string };
+  program: { name: string; stampsRequired: number; rewardName: string; terms?: string };
   stamps: number;
   rewardsAvailable: { name: string; birthday: boolean }[];
   promotion: { name: string; bonusStamps: number } | null;
   /** Sedes con ubicación: el celular avisa al estar cerca. undefined = no se consultaron. */
   places?: Place[];
+  /** WhatsApp, Instagram, horario, cómo llegar… (reverso del pase). undefined = no se consultó. */
+  info?: PassInfo;
 }
 
-export function passFromCard(card: PublicCardData, origin: string, places?: Place[]): WalletPass {
+export function passFromCard(card: PublicCardData, origin: string, places?: Place[], info?: PassInfo): WalletPass {
   const slug = card.business.slug ?? "";
   const b = card.business.branding;
   return {
@@ -48,6 +51,7 @@ export function passFromCard(card: PublicCardData, origin: string, places?: Plac
     rewardsAvailable: card.rewards.map((r) => ({ name: r.name, birthday: r.kind === "birthday" })),
     promotion: card.promotion ?? null,
     ...(places ? { places } : {}),
+    ...(info ? { info } : {}),
   };
 }
 

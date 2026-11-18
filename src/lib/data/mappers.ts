@@ -1,5 +1,6 @@
 /** Conversión filas de Postgres (snake_case) → modelo de dominio (camelCase). */
 import { walletSettings } from "@/lib/wallet/messages";
+import { passInfoFrom } from "@/lib/wallet/pass-info";
 import type {
   AuditLog,
   Business,
@@ -51,6 +52,7 @@ export const toBusiness = (r: Row): Business => ({
     address: opt(r.address),
   },
   walletNotifications: walletSettings(r.wallet_notifications),
+  passInfo: passInfoFrom(r.pass_info),
   createdAt: r.created_at,
   branding: {
     logoText: "",

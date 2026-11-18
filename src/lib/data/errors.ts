@@ -15,6 +15,7 @@ const DB_ERRORS: Record<string, string> = {
   welcome_lt_required: "Los sellos de bienvenida deben ser menos que las visitas necesarias.",
   INVALID_BIRTHDAY: "La fecha de cumpleaños no es válida.",
   INVALID_WALLET_SETTINGS: "Revisa los ajustes de los avisos.",
+  INVALID_PASS_INFO: "Revisa los datos del reverso del pase.",
   INVALID_WALLET_MESSAGE: "Revisa el título y el mensaje del aviso.",
   NO_MARKETING_CONSENT: "Este cliente no aceptó recibir mensajes.",
   CUSTOMER_NOT_FOUND: "No se encontró el cliente.",

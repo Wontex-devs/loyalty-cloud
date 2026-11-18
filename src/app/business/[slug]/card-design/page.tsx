@@ -7,6 +7,7 @@ import { useScope, RequirePermission } from "@/components/business/business-shel
 import { LoyaltyCardView } from "@/components/loyalty/loyalty-card";
 import { contrast, readableOn } from "@/lib/domain/card-palette";
 import { ColorPicker } from "@/components/ui/color-picker";
+import { PassInfoCard } from "@/components/business/pass-info-card";
 import { BrandMark, brandCase, brandFont, CARD_FONT_STYLES, FILLED_STAMP_ICONS, STAMP_ICON_COMPONENTS, STAMP_ICON_LABELS, StampMark } from "@/components/loyalty/brand-mark";
 import { useData } from "@/lib/data/store";
 import { can } from "@/lib/domain/permissions";
@@ -256,6 +257,8 @@ export default function CardDesignPage() {
               <ColorPicker label="Color 2 · Sellos y detalles" value={b.cardForeground} onChange={(c) => updateBranding(business.id, twoColors(b.cardBackground, c))} />
             </div>
           </Card>
+
+          <PassInfoCard business={business} />
 
           <Card>
             <CardHeader title="QR de inscripción" description="Imprímelo y ubícalo en caja o en tu espejo. Tus clientes lo escanean para crear su tarjeta." />
