@@ -5,7 +5,6 @@
  */
 import { createHash, createHmac, createSign, timingSafeEqual, X509Certificate } from "node:crypto";
 import { passTheme, progressText, type WalletPass } from "./pass.ts";
-import { numeroMiembro } from "../domain/hilo.ts";
 import { appleInfoFields } from "./pass-info.ts";
 import { DEFAULT_WALLET_SETTINGS, nearbyMessage } from "./messages.ts";
 import type { WalletSettings } from "../domain/types.ts";
@@ -134,14 +133,6 @@ export function passJson(cfg: Pick<AppleWalletConfig, "passTypeId" | "teamId" | 
     // Hasta 10 sedes: cerca de una, la tarjeta aparece en la pantalla bloqueada.
     ...(p.places?.length && p.active
       ? { locations: p.places.map((l) => ({ latitude: l.latitude, longitude: l.longitude, relevantText: nearbyText(p, extras) })) }
-      : {}),
-    // Código QR con el enlace de la tarjeta: en caja confirman a quién pertenece. Lo puede quitar el comercio.
-    ...(p.qr
-      ? {
-          barcodes: [
-            { format: "PKBarcodeFormatQR", message: p.cardUrl, messageEncoding: "iso-8859-1", altText: `Miembro N.º ${numeroMiembro(p.token)}` },
-          ],
-        }
       : {}),
     storeCard: {
       // Arriba a la derecha: lo único que se ve cuando las tarjetas están apiladas en Wallet.

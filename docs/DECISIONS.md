@@ -37,4 +37,4 @@
 - **Alternativas descartadas:**
   - **Mantener una tarjeta web más rica (degradados, cristal, marco):** Wallet no lo permite y la diferencia confunde.
   - **Dibujar toda la tarjeta como una sola imagen:** los datos dejarían de ser texto (accesibilidad, notificaciones por campo y actualización en Wallet).
-- **Código QR:** vuelve al pase, encendido por defecto y apagable por el comercio (`passQr`). Antes el pase no llevaba código.
+- **Código QR:** se probó en el pase y en la tarjeta y se quitó el mismo día (no se veía bien y no hace falta: los sellos se suman con la tarjeta NFC). El pase sigue sin código, como antes.

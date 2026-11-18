@@ -1,7 +1,7 @@
 // Pruebas de «el hilo»: la composición de sellos que comparten la tarjeta web y el pase de Wallet.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { ajustePremio, hilo, HILO_MAX_UNA_FILA, numeroMiembro } from "../src/lib/domain/hilo.ts";
+import { ajustePremio, hilo, HILO_MAX_UNA_FILA } from "../src/lib/domain/hilo.ts";
 import { memberSinceText } from "../src/lib/wallet/pass.ts";
 
 const W = 375;
@@ -55,13 +55,6 @@ test("el nombre del premio va grande si es corto y en dos líneas si es largo", 
   assert.equal(enorme.lines, 2);
   assert.ok(enorme.text.endsWith("…") && enorme.text.length < 120);
   assert.ok(ajustePremio("Manicura de cortesía", true).size <= ajustePremio("Manicura de cortesía").size);
-});
-
-test("el número de miembro es estable y no deja ver el token", () => {
-  const token = "q7Lm2Xv9RkTz4pWb8Nc-_a";
-  assert.match(numeroMiembro(token), /^[0-9A-Z]{4} [0-9A-Z]{4}$/);
-  assert.equal(numeroMiembro(token), numeroMiembro(token));
-  assert.notEqual(numeroMiembro(token), numeroMiembro("otra-tarjeta-distinta-01"));
 });
 
 test("«desde» en mes y año", () => {

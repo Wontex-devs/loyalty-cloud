@@ -51,7 +51,7 @@ test("colores en el formato rgb() que exige Apple", () => {
   assert.equal(rgb("rojo", "rgb(0, 0, 0)"), "rgb(0, 0, 0)");
 });
 
-test("el pase muestra sellos arriba, miembro, desde cuándo, progreso y el código QR", () => {
+test("el pase muestra sellos arriba, miembro, desde cuándo y progreso, sin código de barras", () => {
   const j = passJson(base, passFromCard(card, origin), origin);
   assert.equal(j.serialNumber, card.token);
   assert.equal(j.passTypeIdentifier, base.passTypeId);
@@ -66,20 +66,13 @@ test("el pase muestra sellos arriba, miembro, desde cuándo, progreso y el códi
   assert.equal(j.labelColor, "rgb(26, 20, 22)");
   assert.equal(j.storeCard.auxiliaryFields[0].label, "TU PROGRESO");
   assert.equal(j.storeCard.auxiliaryFields[0].value, "Te faltan 3 visitas para Manicura gratis");
-  // El QR lleva el enlace de la tarjeta; debajo, un número de miembro que no deja ver el token.
-  const qr = (j as { barcodes?: { format: string; message: string; altText: string }[] }).barcodes?.[0];
-  assert.equal(qr?.format, "PKBarcodeFormatQR");
-  assert.equal(qr?.message, `${origin}/card/${card.token}`);
-  assert.match(qr?.altText ?? "", /^Miembro N\.º [0-9A-Z]{4} [0-9A-Z]{4}$/);
-  assert.equal((qr?.altText ?? "").replace(/\s/g, "").includes(card.token.slice(0, 6).toUpperCase()), false);
+  assert.equal("barcodes" in j, false);
   assert.equal("voided" in j, false);
   assert.equal(j.sharingProhibited, true);
   assert.ok(j.storeCard.backFields.some((f) => f.value === `${origin}/card/${card.token}`));
 });
 
-test("el comercio puede quitar el código QR; sin fecha válida no hay «desde»", () => {
-  const sinQr = passFromCard({ ...card, business: { ...card.business, branding: { ...card.business.branding, passQr: false } } }, origin);
-  assert.equal("barcodes" in passJson(base, sinQr, origin), false);
+test("sin fecha válida no hay «desde»", () => {
   const sinFecha = passJson(base, passFromCard({ ...card, memberSince: "" }, origin), origin);
   assert.deepEqual(sinFecha.storeCard.secondaryFields.map((f) => f.label), ["MIEMBRO"]);
 });

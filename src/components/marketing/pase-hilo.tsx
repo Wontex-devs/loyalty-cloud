@@ -1,5 +1,4 @@
 import { Gift, Scissors } from "lucide-react";
-import { QRCodeSVG } from "qrcode.react";
 import { hilo } from "@/lib/domain/hilo";
 
 const W = 375;
@@ -31,7 +30,7 @@ export function PaseHilo({
   /** Contenido del conteo, p. ej. «5 / 6» o las dos capas que se alternan. */
   contador: React.ReactNode;
   sello: (i: number) => { ref?: (n: Element | null) => void; className?: string; style?: React.CSSProperties };
-  /** Sin «progreso» ni código QR: para el celular pequeño de la historia. */
+  /** Sin «progreso»: para el celular pequeño de la historia. */
   compacto?: boolean;
   className?: string;
 }) {
@@ -117,17 +116,11 @@ export function PaseHilo({
 
       {!compacto && (
         <>
-          <div className="px-3.5 pt-2">
+          <div className="px-3.5 pt-2 pb-5">
             <p className={etiqueta} style={{ color: SOL }}>
               Tu progreso
             </p>
             <p className="text-[12.5px] leading-snug">Te falta 1 visita para Corte gratis</p>
-          </div>
-          <div className="flex justify-center pt-4 pb-4">
-            <div className="rounded-lg bg-white px-2.5 pt-2.5 pb-1.5 text-center">
-              <QRCodeSVG value="https://lazo.wontex-devs.com/tarjeta-de-sellos-digital" size={84} level="M" fgColor="#111111" />
-              <p className="mt-1 text-[9.5px] tracking-wide text-[#333333]">Miembro N.º 4F2A 9C1B</p>
-            </div>
           </div>
         </>
       )}

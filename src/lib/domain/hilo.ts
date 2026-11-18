@@ -95,18 +95,3 @@ export function ajustePremio(nombre: string, upper = false): AjustePremio {
   const caben = Math.floor(ancho / (size * porLetra)) * 2 - 2;
   return { size, lines: 2, text: text.length > caben ? `${text.slice(0, caben - 1).trimEnd()}…` : text };
 }
-
-/**
- * Número de miembro que se muestra bajo el código QR: 8 caracteres en dos grupos.
- * Se deriva del token con un resumen simple, así no deja ver parte del enlace secreto.
- */
-export function numeroMiembro(token: string): string {
-  let a = 0x811c9dc5;
-  let b = 0x01000193;
-  for (let i = 0; i < token.length; i++) {
-    a = Math.imul(a ^ token.charCodeAt(i), 0x01000193);
-    b = Math.imul(b + token.charCodeAt(i), 0x85ebca6b) ^ (b >>> 13);
-  }
-  const s = ((a >>> 0).toString(36) + (b >>> 0).toString(36)).toUpperCase().padEnd(8, "0").slice(0, 8);
-  return `${s.slice(0, 4)} ${s.slice(4)}`;
-}
