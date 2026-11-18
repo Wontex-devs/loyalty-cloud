@@ -7,6 +7,7 @@ import { createHash, createHmac, createSign, timingSafeEqual, X509Certificate } 
 import { progressText, type WalletPass } from "./pass.ts";
 import { DEFAULT_WALLET_SETTINGS, nearbyMessage } from "./messages.ts";
 import type { WalletSettings } from "../domain/types.ts";
+import { cardPalette, contrast } from "../domain/card-palette.ts";
 
 export interface AppleWalletConfig {
   /** Pass Type ID registrado en Apple Developer, p. ej. pass.com.wontex.lazo */
@@ -86,6 +87,9 @@ export function nearbyText(p: WalletPass, extras: Pick<PassExtras, "settings" | 
 
 export function passJson(cfg: Pick<AppleWalletConfig, "passTypeId" | "teamId" | "authSecret">, p: WalletPass, origin: string, extras: PassExtras = {}) {
   const { message } = extras;
+  // Mismos colores que la tarjeta web: texto legible y etiquetas con el color del comercio.
+  const c = cardPalette({ cardBackground: p.business.background, cardForeground: p.business.foreground });
+  const label = contrast(c.accent, c.bg) >= 3 ? c.accent : c.text;
   const back: Record<string, unknown>[] = [{ key: "progress", label: "Tu progreso", value: progressText(p) }];
   if (p.promotion) back.push({ key: "promo", label: `Hoy: ${p.promotion.name}`, value: `Tu visita de hoy suma ${1 + p.promotion.bonusStamps} sellos.` });
   if (message) back.push({ key: "message", label: message.title, value: message.body, changeMessage: "%@" });
@@ -110,9 +114,9 @@ export function passJson(cfg: Pick<AppleWalletConfig, "passTypeId" | "teamId" | 
     organizationName: p.business.name,
     description: `Tarjeta de fidelización de ${p.business.name}`,
     logoText: p.business.name,
-    backgroundColor: rgb(p.business.background),
-    foregroundColor: rgb(p.business.foreground, "rgb(0, 0, 0)"),
-    labelColor: rgb(p.business.foreground, "rgb(0, 0, 0)"),
+    backgroundColor: rgb(c.bg),
+    foregroundColor: rgb(c.text, "rgb(0, 0, 0)"),
+    labelColor: rgb(label, "rgb(0, 0, 0)"),
     sharingProhibited: true,
     ...(p.active ? {} : { voided: true }),
     ...updates,
@@ -122,10 +126,14 @@ export function passJson(cfg: Pick<AppleWalletConfig, "passTypeId" | "teamId" | 
       : {}),
     storeCard: {
       headerFields: [{ key: "stamps", label: "SELLOS", value: `${p.stamps}/${p.program.stampsRequired}` }],
-      primaryFields: p.rewardsAvailable.length
-        ? [{ key: "reward", label: "PREMIO LISTO", value: p.rewardsAvailable[0].name }]
-        : [{ key: "reward", label: "PREMIO", value: p.program.rewardName }],
-      secondaryFields: [{ key: "customer", label: "CLIENTE", value: p.customerName }],
+      // La franja (strip.png) muestra los sellos dibujados; sin campo principal encima para que se vean limpios.
+      primaryFields: [],
+      secondaryFields: [
+        { key: "customer", label: "CLIENTE", value: p.customerName },
+        p.rewardsAvailable.length
+          ? { key: "reward", label: "PREMIO LISTO", value: p.rewardsAvailable[0].name, textAlignment: "PKTextAlignmentRight" }
+          : { key: "reward", label: "PREMIO", value: p.program.rewardName, textAlignment: "PKTextAlignmentRight" },
+      ],
       // El único campo con changeMessage del frente: una notificación por visita, no varias.
       auxiliaryFields: [
         { key: "status", label: p.program.name.toUpperCase(), value: statusText(p), ...(statusNotifies(p, extras.settings) ? { changeMessage: "%@" } : {}) },

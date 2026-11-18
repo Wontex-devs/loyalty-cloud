@@ -4,7 +4,7 @@
  * Documentación: https://developers.google.com/wallet/retail/loyalty-cards
  */
 import { createSign } from "node:crypto";
-import { progressText, type WalletPass } from "./pass.ts";
+import { progressText, stripUrl, type WalletPass } from "./pass.ts";
 
 export interface GoogleWalletConfig {
   issuerId: string;
@@ -53,6 +53,8 @@ export function loyaltyObject(cfg: Pick<GoogleWalletConfig, "issuerId" | "smartT
     accountName: p.customerName,
     accountId: p.token.slice(0, 8),
     hexBackgroundColor: p.business.background,
+    // Los sellos dibujados (como en la tarjeta web), en lugar de la foto del comercio.
+    heroImage: { sourceUri: { uri: stripUrl(p) }, contentDescription: text(`${p.stamps} de ${p.program.stampsRequired} sellos`) },
     loyaltyPoints: { label: "Sellos", balance: { string: `${p.stamps}/${p.program.stampsRequired}` } },
     ...(p.rewardsAvailable.length ? { secondaryLoyaltyPoints: { label: "Premios", balance: { int: p.rewardsAvailable.length } } } : {}),
     textModulesData: modules,

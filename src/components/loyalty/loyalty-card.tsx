@@ -4,6 +4,7 @@ import { QRCodeSVG } from "qrcode.react";
 import { Gift, Sparkles } from "lucide-react";
 import { BrandMark, brandCase, brandFont, StampMark } from "./brand-mark";
 import { cn } from "@/lib/utils";
+import { alpha, cardPalette } from "@/lib/domain/card-palette";
 import type { Business, CardStatus, LoyaltyProgram } from "@/lib/domain/types";
 
 export interface LoyaltyCardViewProps {
@@ -24,6 +25,12 @@ export interface LoyaltyCardViewProps {
   /** Contorno oscuro en lugar de sombra, para la portada. */
   plano?: boolean;
 }
+
+/** La foto se desvanece hacia abajo y deja ver el color de la tarjeta, sin corte. */
+const FADE: React.CSSProperties = {
+  maskImage: "linear-gradient(to bottom, #000 45%, transparent 100%)",
+  WebkitMaskImage: "linear-gradient(to bottom, #000 45%, transparent 100%)",
+};
 
 const STATUS_LABEL: Record<CardStatus, string> = {
   active: "Activa",
@@ -48,62 +55,71 @@ export function LoyaltyCardView({
   plano,
 }: LoyaltyCardViewProps) {
   const b = business.branding;
+  const c = cardPalette(b);
   const remaining = Math.max(program.stampsRequired - stamps, 0);
   const cols = program.stampsRequired <= 10 ? Math.min(5, Math.ceil(program.stampsRequired / 2)) : 6;
   const font = brandFont(b);
   const titleFont = brandFont(b, "tracking-[0.12em]");
   const foto = coverUrl ?? (b.coverUrl || undefined);
+  const pad = compact ? "px-5" : "px-6 sm:px-7";
+  const subtitle = program.name.trim().toLowerCase() === business.name.trim().toLowerCase() ? "Tarjeta de fidelidad" : program.name;
+  // Sobre la foto el encabezado va siempre en blanco, con una sombra oscura suave detrás.
+  const headText = foto ? "#FFFFFF" : c.text;
+  const headMuted = foto ? "rgba(255, 255, 255, 0.78)" : c.muted;
+  const ready = rewardsAvailable > 0 || status === "reward_available";
 
   return (
     <div
       className={cn("relative mx-auto w-full max-w-[440px] overflow-hidden rounded-[28px]", plano ? "border-2 border-coal" : "shadow-pop", className)}
-      style={{ background: b.cardBackground, color: b.cardForeground }}
+      style={{ background: c.bg, color: c.text }}
     >
-      {/* Foto del local de fondo: se ve arriba y se funde con el color de la tarjeta hacia abajo */}
-      {foto && (
-        <>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={foto} alt="" className="pointer-events-none absolute inset-x-0 top-0 h-3/5 w-full object-cover" />
-          <div
-            aria-hidden
-            className="pointer-events-none absolute inset-x-0 top-0 h-3/5"
-            style={{ background: `linear-gradient(to bottom, ${b.cardBackground}73 0%, ${b.cardBackground}8c 35%, ${b.cardBackground}d9 70%, ${b.cardBackground}f7 90%, ${b.cardBackground} 100%)` }}
-          />
-        </>
-      )}
-      <div className={cn("relative", compact ? "p-5" : "p-6 sm:p-7")} style={foto ? { textShadow: `0 0 3px ${b.cardBackground}, 0 1px 12px ${b.cardBackground}` } : undefined}>
-        {/* Cabecera */}
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex items-center gap-3">
+      {/* Brillo suave: le da profundidad al color plano */}
+      <div aria-hidden className="pointer-events-none absolute inset-0" style={{ background: "linear-gradient(140deg, rgba(255,255,255,0.14) 0%, rgba(255,255,255,0) 45%, rgba(0,0,0,0.14) 100%)" }} />
+
+      {/* Encabezado: logo, comercio y estado (sobre la foto del local si hay) */}
+      <div className={cn("relative", pad, compact ? "pt-5" : "pt-6 sm:pt-7", foto ? (compact ? "pb-12" : "pb-16") : "pb-1")}>
+        {foto && (
+          <>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={foto} alt="" className="pointer-events-none absolute inset-0 size-full object-cover" style={FADE} />
+            <div aria-hidden className="pointer-events-none absolute inset-0" style={{ ...FADE, background: "linear-gradient(to bottom, rgba(0,0,0,0.5), rgba(0,0,0,0.2))" }} />
+          </>
+        )}
+        <div className="relative flex items-start justify-between gap-3" style={{ color: headText }}>
+          <div className="flex min-w-0 items-center gap-3">
             <BrandMark
               branding={b}
-              className={cn("size-14 rounded-full text-xl", brandFont(b, "tracking-wide"))}
-              style={{ background: b.cardForeground, color: b.cardBackground }}
+              className={cn("size-12 rounded-full text-lg shadow-sm", brandFont(b, "tracking-wide"))}
+              style={{ background: c.accent, color: c.onAccent }}
             />
-            <div>
-              <p className={cn("text-xl leading-none", brandCase(b), titleFont)}>{business.name}</p>
-              <p className="mt-1 text-[10px] font-medium tracking-[0.16em] whitespace-nowrap uppercase opacity-60">
-                {program.name.trim().toLowerCase() === business.name.trim().toLowerCase() ? "Tarjeta de fidelidad" : program.name}
+            <div className="min-w-0" style={foto ? { textShadow: "0 1px 8px rgba(0,0,0,0.45)" } : undefined}>
+              <p className={cn("text-xl leading-tight break-words", brandCase(b), titleFont)}>{business.name}</p>
+              <p className="mt-1 text-[10px] leading-snug font-medium tracking-[0.16em] uppercase" style={{ color: headMuted }}>
+                {subtitle}
               </p>
             </div>
           </div>
           <span
-            className="rounded-full px-2.5 py-1 text-[10px] font-semibold tracking-wider uppercase"
-            style={{
-              background: status === "blocked" ? "#7f1d1d" : b.cardForeground,
-              color: status === "blocked" ? "#fff" : b.cardBackground,
-              textShadow: "none",
-            }}
+            className="shrink-0 rounded-full px-2.5 py-1 text-[10px] font-semibold tracking-wider uppercase backdrop-blur-sm"
+            style={
+              status === "blocked"
+                ? { background: "#7f1d1d", color: "#fff" }
+                : ready
+                  ? { background: c.accent, color: c.onAccent }
+                  : { background: foto ? "rgba(0,0,0,0.32)" : c.slot, color: headText }
+            }
           >
             {STATUS_LABEL[status]}
           </span>
         </div>
+      </div>
 
+      <div className={cn("relative", pad, compact ? "pb-5" : "pb-6 sm:pb-7", foto ? "-mt-6" : compact ? "mt-4" : "mt-5")}>
         {/* Cliente */}
-        <div className={cn(compact ? "mt-5" : "mt-7")}>
-          <p className="text-[10px] font-semibold tracking-[0.22em] uppercase opacity-55">Miembro</p>
-          <p className="mt-0.5 text-lg font-medium">{customerName}</p>
-        </div>
+        <p className="text-[10px] font-semibold tracking-[0.22em] uppercase" style={{ color: c.muted }}>
+          Miembro
+        </p>
+        <p className="mt-0.5 truncate text-lg font-medium">{customerName}</p>
 
         {/* Sellos */}
         <div className={cn("grid gap-2.5", compact ? "mt-4" : "mt-5")} style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}>
@@ -115,21 +131,19 @@ export function LoyaltyCardView({
               <div
                 key={i}
                 className="flex aspect-square items-center justify-center rounded-full"
-                style={{
-                  background: filled ? b.cardForeground : "transparent",
-                  border: filled ? "none" : `2px dashed ${b.cardForeground}99`,
-                  color: b.cardBackground,
-                }}
+                style={
+                  filled
+                    ? { background: c.accent, color: c.onAccent, boxShadow: "0 2px 6px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.28)" }
+                    : isLast
+                      ? { background: alpha(c.accent, 0.14), border: `1.5px solid ${alpha(c.accent, 0.7)}`, color: c.accent }
+                      : { background: c.slot, border: `1px solid ${c.slotBorder}` }
+                }
               >
                 {filled ? (
-                  <StampMark branding={b} className={cn(b.stampUrl ? "size-[88%]" : "size-[45%]", justAdded && "animate-stamp")} />
+                  <StampMark branding={b} className={cn(b.stampUrl ? "size-[88%]" : "size-[46%]", justAdded && "animate-stamp")} />
                 ) : isLast ? (
-                  <Gift className="size-[42%]" style={{ color: b.cardForeground, opacity: 0.85 }} strokeWidth={1.75} />
-                ) : (
-                  <span className="text-[11px] font-medium" style={{ color: b.cardForeground, opacity: 0.75 }}>
-                    {i + 1}
-                  </span>
-                )}
+                  <Gift className="size-[44%]" strokeWidth={1.75} />
+                ) : null}
               </div>
             );
           })}
@@ -140,37 +154,50 @@ export function LoyaltyCardView({
           <div className="min-w-0">
             {rewardsAvailable > 0 ? (
               <p className="flex items-center gap-1.5 text-sm font-semibold">
-                <Sparkles className="size-4" /> {rewardsAvailable > 1 ? `${rewardsAvailable} recompensas` : "¡Recompensa"} disponible{rewardsAvailable > 1 ? "s" : "!"}
+                <Sparkles className="size-4" style={{ color: c.accent }} /> {rewardsAvailable > 1 ? `${rewardsAvailable} recompensas` : "¡Recompensa"} disponible{rewardsAvailable > 1 ? "s" : "!"}
               </p>
             ) : (
-              <p className="text-sm font-medium">
+              <p className="text-sm font-semibold">
                 {remaining === 0 ? "¡Meta alcanzada!" : remaining === 1 ? "¡Te falta 1 visita!" : `Te faltan ${remaining} visitas`}
               </p>
             )}
-            <p className="mt-0.5 truncate text-xs opacity-65">Recompensa: {program.rewardName}</p>
+            <p className="mt-0.5 truncate text-xs" style={{ color: c.muted }}>
+              Premio: {program.rewardName}
+            </p>
           </div>
           <p className={cn("tabular shrink-0 text-3xl leading-none", font)}>
             {stamps}
-            <span className="text-base opacity-50">/{program.stampsRequired}</span>
+            <span className="text-base" style={{ color: c.muted }}>
+              /{program.stampsRequired}
+            </span>
           </p>
+        </div>
+        <div className="mt-3 h-1.5 overflow-hidden rounded-full" style={{ background: c.slot }}>
+          <div className="h-full rounded-full transition-[width] duration-500" style={{ width: `${(Math.min(stamps, program.stampsRequired) / program.stampsRequired) * 100}%`, background: c.accent }} />
         </div>
 
         {qrValue && (
           <>
-            <div className="my-5 border-t border-dashed" style={{ borderColor: `${b.cardForeground}30` }} />
+            <div className="my-5 border-t" style={{ borderColor: c.slotBorder }} />
             <div className="flex items-center gap-4">
               <div className="rounded-2xl bg-white p-2.5 shadow-sm">
                 <QRCodeSVG value={qrValue} size={compact ? 84 : 104} level="M" fgColor="#111111" />
               </div>
-              <div className="min-w-0 text-xs leading-relaxed opacity-75">
-                <p className="font-semibold opacity-100">Muestra este código</p>
+              <div className="min-w-0 text-xs leading-relaxed" style={{ color: c.muted }}>
+                <p className="font-semibold" style={{ color: c.text }}>
+                  Muestra este código
+                </p>
                 <p>en caja para sumar tu visita o canjear tu recompensa.</p>
-                {memberSince && <p className="mt-2 opacity-70">Miembro desde {memberSince}</p>}
+                {memberSince && <p className="mt-2">Miembro desde {memberSince}</p>}
               </div>
             </div>
           </>
         )}
-        {!qrValue && memberSince && <p className="mt-4 text-xs opacity-60">Miembro desde {memberSince}</p>}
+        {!qrValue && memberSince && (
+          <p className="mt-4 text-xs" style={{ color: c.muted }}>
+            Miembro desde {memberSince}
+          </p>
+        )}
       </div>
     </div>
   );

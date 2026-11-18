@@ -3,7 +3,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { parseCoordinates, placesFrom } from "../src/lib/wallet/geo.ts";
 import { nearbyText, passJson } from "../src/lib/wallet/apple.ts";
-import { loyaltyClass } from "../src/lib/wallet/google.ts";
+import { loyaltyClass, loyaltyObject } from "../src/lib/wallet/google.ts";
 import { passFromCard } from "../src/lib/wallet/pass.ts";
 import { DEFAULT_WALLET_SETTINGS, nearbyMessage, walletSettings } from "../src/lib/wallet/messages.ts";
 import type { PublicCardData } from "../src/components/public/card-screen.tsx";
@@ -129,4 +129,28 @@ test("WhatsApp: invita a guardar la tarjeta solo si no está en la billetera", (
   assert.equal(cardMessage("Ana", "Prueba Salon", url, true), `Hola Ana, esta es tu tarjeta de Prueba Salon: ${url}`);
   assert.equal(cardMessage("", "Prueba Salon", url, true), `Hola, esta es tu tarjeta de Prueba Salon: ${url}`);
   assert.equal(whatsappUrl("+57 300 123 4567", "Hola Ana"), "https://wa.me/573001234567?text=Hola%20Ana");
+});
+
+// ---------- Paleta de la tarjeta e imagen de sellos ----------
+import { cardPalette, contrast } from "../src/lib/domain/card-palette.ts";
+import { stripUrl, stripVersion } from "../src/lib/wallet/pass.ts";
+
+test("paleta: texto legible sobre el fondo y sellos con el color del comercio", () => {
+  const azul = cardPalette({ cardBackground: "#1B3FD8", cardForeground: "#FFC928" });
+  assert.equal(azul.text, "#FFFFFF");
+  assert.equal(azul.accent, "#FFC928");
+  assert.ok(contrast(azul.onAccent, azul.accent) >= 4.5);
+  const rosa = cardPalette({ cardBackground: "#EBCFCB", cardForeground: "#1A1416" });
+  assert.equal(rosa.text, "#16130F");
+  // Color del comercio casi igual al fondo: los sellos usan el color del texto.
+  assert.equal(cardPalette({ cardBackground: "#FFFFFF", cardForeground: "#F4F4F4" }).accent, "#16130F");
+});
+
+test("imagen de sellos: la URL cambia con cada sello y con el diseño", () => {
+  const p = passFromCard(card, origin);
+  assert.match(stripUrl(p), new RegExp(`^${origin}/card/${card.token}/sellos/6-9-[0-9a-z]+$`));
+  assert.notEqual(stripVersion(p), stripVersion({ ...p, stamps: 7 }));
+  assert.notEqual(stripVersion(p), stripVersion({ ...p, business: { ...p.business, background: "#000000" } }));
+  const obj = loyaltyObject(google, p) as { heroImage?: { sourceUri: { uri: string } } };
+  assert.equal(obj.heroImage?.sourceUri.uri, stripUrl(p));
 });

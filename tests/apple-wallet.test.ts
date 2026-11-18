@@ -57,8 +57,12 @@ test("el pase muestra sellos, premio, cliente y progreso, sin código de barras"
   assert.equal(j.passTypeIdentifier, base.passTypeId);
   assert.equal(j.backgroundColor, "rgb(235, 207, 203)");
   assert.equal(j.storeCard.headerFields[0].value, "6/9");
-  assert.equal(j.storeCard.primaryFields[0].value, "Manicura gratis");
+  assert.equal(j.storeCard.primaryFields.length, 0); // los sellos van dibujados en la franja
   assert.equal(j.storeCard.secondaryFields[0].value, "Sofía Martínez");
+  assert.equal(j.storeCard.secondaryFields[1].value, "Manicura gratis");
+  // Fondo rosado claro: texto casi negro y etiquetas con el color del comercio.
+  assert.equal(j.foregroundColor, "rgb(22, 19, 15)");
+  assert.equal(j.labelColor, "rgb(26, 20, 22)");
   assert.equal(j.storeCard.auxiliaryFields[0].value, "Te faltan 3 visitas para Manicura gratis");
   assert.equal("barcodes" in j, false);
   assert.equal("voided" in j, false);
@@ -69,7 +73,7 @@ test("el pase muestra sellos, premio, cliente y progreso, sin código de barras"
 test("con premio listo lo destaca; tarjeta bloqueada queda anulada", () => {
   const conPremio = passFromCard({ ...card, stamps: 9, rewards: [{ name: "Manicura gratis" }] }, origin);
   const j = passJson(base, conPremio, origin);
-  assert.equal(j.storeCard.primaryFields[0].label, "PREMIO LISTO");
+  assert.equal(j.storeCard.secondaryFields[1].label, "PREMIO LISTO");
   assert.equal(statusText(conPremio), "Premio listo: Manicura gratis");
   assert.equal(passJson(base, passFromCard({ ...card, status: "blocked" }, origin), origin).voided, true);
 });
