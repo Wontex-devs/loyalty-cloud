@@ -133,7 +133,7 @@ export default function CustomersPage() {
         ) : (
           <>
             {/* Tabla escritorio */}
-            <Table className="hidden md:block">
+            <Table className="hidden lg:block">
               <thead>
                 <tr>
                   <Th>Cliente</Th>
@@ -142,8 +142,8 @@ export default function CustomersPage() {
                   <Th>Última visita</Th>
                   <Th>Estado</Th>
                   <Th>Billetera</Th>
-                  <Th>Marketing</Th>
-                  <Th>Alta</Th>
+                  <Th className="hidden xl:table-cell">Marketing</Th>
+                  <Th className="hidden xl:table-cell">Alta</Th>
                 </tr>
               </thead>
               <tbody>
@@ -175,19 +175,19 @@ export default function CustomersPage() {
                     </Td>
                     <Td>
                       <div className="flex items-center gap-2">
-                        <WalletBadge wallets={customer.anonymizedAt ? [] : walletsOf(wallet, card.id)} />
+                        <WalletBadge fallo={!wallet.loading && !wallet.ok} wallets={customer.anonymizedAt ? [] : walletsOf(wallet, card.id)} />
                         {invite(customer, card)}
                       </div>
                     </Td>
-                    <Td className="text-muted">{customer.marketingConsent ? "Sí" : "No"}</Td>
-                    <Td className="text-muted">{formatDate(customer.createdAt)}</Td>
+                    <Td className="hidden text-muted xl:table-cell">{customer.marketingConsent ? "Sí" : "No"}</Td>
+                    <Td className="hidden text-muted xl:table-cell">{formatDate(customer.createdAt)}</Td>
                   </tr>
                 ))}
               </tbody>
             </Table>
 
-            {/* Lista móvil */}
-            <ul className="divide-y divide-line md:hidden">
+            {/* Lista en celular y tableta */}
+            <ul className="divide-y divide-line lg:hidden">
               {rows.map(({ customer, card }) => (
                 <li key={customer.id} className="relative">
                   <button onClick={() => router.push(`/business/${business.slug}/customers/${customer.id}`)} className="flex w-full items-center gap-3 px-4 py-3 text-left">
@@ -201,7 +201,7 @@ export default function CustomersPage() {
                       </div>
                       <Progress value={(card.currentStamps / required) * 100} className="mt-1.5" />
                       <p className="mt-1 text-xs text-muted">Última visita {formatRelative(card.lastVisitAt)}</p>
-                      <WalletBadge wallets={customer.anonymizedAt ? [] : walletsOf(wallet, card.id)} className="mt-1.5" />
+                      <WalletBadge fallo={!wallet.loading && !wallet.ok} wallets={customer.anonymizedAt ? [] : walletsOf(wallet, card.id)} className="mt-1.5" />
                     </div>
                   </button>
                   {invite(customer, card) && <div className="absolute right-4 bottom-3">{invite(customer, card)}</div>}

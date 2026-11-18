@@ -319,7 +319,7 @@ export default function CustomerDetailPage() {
                 <div className="flex items-center justify-between gap-3">
                   <dt className="text-muted">Billetera del celular</dt>
                   <dd className="text-right">
-                    <WalletBadge wallets={wallets} />
+                    <WalletBadge fallo={!wallet.loading && !wallet.ok} wallets={wallets} />
                   </dd>
                 </div>
               )}

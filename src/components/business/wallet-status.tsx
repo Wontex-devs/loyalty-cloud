@@ -30,8 +30,14 @@ export function walletsOf(status: WalletStatus, cardId: string): WalletKind[] | 
   return status.byCard[cardId] ?? [];
 }
 
-export function WalletBadge({ wallets, className }: { wallets: WalletKind[] | null; className?: string }) {
-  if (wallets === null) return <span className={cn("text-xs text-subtle", className)}>…</span>;
+export function WalletBadge({ wallets, className, fallo }: { wallets: WalletKind[] | null; className?: string; fallo?: boolean }) {
+  // Sin dato: mientras consulta se dice; si la consulta falló, una raya en vez de «…» eternos.
+  if (wallets === null)
+    return (
+      <span className={cn("text-xs text-subtle", className)} title={fallo ? "No se pudo consultar la billetera en este momento" : undefined}>
+        {fallo ? "—" : "Consultando…"}
+      </span>
+    );
   if (!wallets.length)
     return (
       <Badge tone="neutral" className={className}>

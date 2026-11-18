@@ -27,6 +27,8 @@ import { ROLE_LABELS } from "@/lib/domain/permissions";
 import { Avatar, ButtonLink, EmptyState } from "@/components/ui";
 import { AlertTriangle, Eye, Lock, Nfc, PencilLine } from "lucide-react";
 import { SignOutButton } from "@/components/auth/sign-out-button";
+import { MiNombre } from "./mi-nombre";
+import { faltaNombre } from "@/lib/domain/nombre";
 import { BrandMark } from "@/components/loyalty/brand-mark";
 
 const ScopeCtx = createContext<BusinessScope | null>(null);
@@ -109,15 +111,21 @@ export function BusinessShell({ slug, children }: { slug: string; children: Reac
     </>
   );
 
+  // Si la cuenta no tiene nombre (se guardó el correo), se muestra el correo solo en el pie, sin partirlo.
+  const nombreVisible = scope.actingProfile?.fullName || "?";
+
   const footer = (
     <div className="flex items-center gap-2.5 rounded-lg p-1.5">
-      <Avatar name={scope.actingProfile?.fullName ?? "?"} className="size-7" />
+      <Avatar name={nombreVisible} className="size-7" />
       <div className="min-w-0 flex-1">
-        <p className="truncate text-[13px] font-medium">{scope.actingProfile?.fullName}</p>
+        <p className="truncate text-[13px] font-medium">{nombreVisible}</p>
         <p className="truncate text-xs text-muted">
           {supportView ? (supportView.modo === "edit" ? "Superadministrador · edición" : "Soporte · solo lectura") : membership ? ROLE_LABELS[membership.role] : "Sin acceso"}
           {membership?.role === "staff" && (membership.canRedeem ? " · puede canjear" : " · sin canjes")}
         </p>
+        {!supportView && scope.actingProfile && (
+          <MiNombre profileId={scope.actingProfile.id} actual={scope.actingProfile.fullName} faltante={faltaNombre(scope.actingProfile.fullName)} />
+        )}
       </div>
     </div>
   );
