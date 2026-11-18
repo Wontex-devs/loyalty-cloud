@@ -63,7 +63,7 @@ export function progressText(p: WalletPass) {
 
 /** Versión de la imagen de sellos: cambia con cada sello y con el diseño de la tarjeta. */
 export function stripVersion(p: Pick<WalletPass, "stamps" | "program" | "business" | "rewardsAvailable">) {
-  const design = ["minimal-1", p.business.background, p.business.foreground, p.program.rewardName, p.rewardsAvailable.length ? "ready" : ""].join("|");
+  const design = ["minimal-2", p.business.background, p.business.foreground, p.business.stampIcon ?? "", p.business.stampUrl ?? "", p.program.rewardName, p.rewardsAvailable.length ? "ready" : ""].join("|");
   let h = 0;
   for (const ch of design) h = (Math.imul(h, 31) + ch.charCodeAt(0)) | 0;
   return `${p.stamps}-${p.program.stampsRequired}-${(h >>> 0).toString(36)}`;

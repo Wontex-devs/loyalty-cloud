@@ -1,6 +1,7 @@
 import { ImageResponse } from "next/og";
 import { alpha, cardTheme } from "@/lib/domain/card-palette";
 import type { BusinessBranding } from "@/lib/domain/types";
+import { Icon } from "./stamp-icons";
 
 /**
  * Franja minimalista del pase (PNG): color sólido (color 1 del comercio), «VISITAS 3 de 8»
@@ -9,7 +10,7 @@ import type { BusinessBranding } from "@/lib/domain/types";
  * Va en el pase de Apple Wallet (strip) y como imagen principal del pase de Google Wallet.
  */
 export interface PassStripInput {
-  branding: Pick<BusinessBranding, "cardBackground" | "cardForeground">;
+  branding: Pick<BusinessBranding, "cardBackground" | "cardForeground" | "stampIcon" | "stampUrl">;
   stamps: number;
   required: number;
   rewardName: string;
@@ -19,7 +20,6 @@ export interface PassStripInput {
 
 type Font = { name: string; data: ArrayBuffer; weight: 400 | 500 | 600 | 700; style: "normal" };
 
-const CHECK = "M20 6 9 17l-5-5";
 const GIFT = [
   "M12 7v14",
   "M20 11v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-8",
@@ -40,6 +40,7 @@ export function passStrip(
   const line = alpha(text, 0.18);
   const font = opts.fonts?.some((f) => f.name === "Texto") ? "Texto" : undefined;
   const pad = 18 * k;
+  const stampUrl = branding.stampUrl?.startsWith("https://") ? branding.stampUrl : null;
 
   // Cadena de sellos: círculos unidos por una línea fina, a la derecha de «3 de 8».
   const left = 112 * k;
@@ -65,11 +66,14 @@ export function passStrip(
             border: filled ? "none" : `${ring}px solid ${alpha(c.accent, 0.7)}`,
           }}
         >
-          {filled && (
-            <svg width={d * 0.56} height={d * 0.56} viewBox="0 0 24 24" fill="none" stroke={c.onAccent} strokeWidth={3} strokeLinecap="round" strokeLinejoin="round">
-              <path d={CHECK} />
-            </svg>
-          )}
+          {/* Cada sello ganado lleva el sello del comercio: su imagen (o su logo) o el icono elegido */}
+          {filled &&
+            (stampUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element, jsx-a11y/alt-text
+              <img src={stampUrl} width={d * 0.9} height={d * 0.9} style={{ borderRadius: d, background: "#ffffff", objectFit: "contain", padding: d * 0.08 }} />
+            ) : (
+              <Icon name={branding.stampIcon ?? "check"} size={d * 0.56} color={c.onAccent} />
+            ))}
         </div>
       </div>
     );
