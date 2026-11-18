@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowUpRight, Gift, Repeat, Sparkles, Users, CalendarCheck } from "lucide-react";
+import { ArrowUpRight, Gift, Megaphone, QrCode, Repeat, Sparkles, Users, CalendarCheck } from "lucide-react";
+import { useData } from "@/lib/data/store";
+import { nombreParaSaludo } from "@/lib/domain/nombre";
 import { onboardingSteps } from "@/components/business/onboarding";
 import { useScope, RequirePermission } from "@/components/business/business-shell";
 import { BarChart, dailySeries } from "@/components/business/charts";
@@ -17,6 +19,9 @@ export default function BusinessDashboard() {
   const d60 = now.getTime() - 60 * 86400000;
   const base = `/business/${business.slug}`;
   const setup = onboardingSteps(s);
+  const supportView = useData().state.supportView;
+  const saludo = nombreParaSaludo(s.actingProfile?.fullName);
+  const m = membership ?? { role: "staff" as const, canRedeem: false };
   const customerLimitNear = !!s.plan?.maxCustomers && customers.length >= s.plan.maxCustomers * 0.8;
 
   const realVisits = visits.filter((v) => v.kind === "visit");
@@ -53,9 +58,35 @@ export default function BusinessDashboard() {
   return (
     <RequirePermission allowed={!!membership && can(membership, "analytics.read")}>
       <PageHeader
-        title={`Hola, ${s.actingProfile?.fullName.split(" ")[0]}`}
+        title={supportView ? business.name : saludo ? `Hola, ${saludo}` : "Hola"}
         description={`Así va ${program?.name ?? "tu programa"} en los últimos 30 días.`}
       />
+
+      {/* Lo que el dueño hace a diario, a un toque. */}
+      <div className="mb-4 grid grid-cols-1 gap-2 sm:grid-cols-3">
+        {[
+          { href: `${base}/card-design`, icon: QrCode, titulo: "Compartir mi QR", texto: "Para que tus clientes se inscriban", ok: can(m, "program.edit") },
+          { href: `${base}/campaigns`, icon: Megaphone, titulo: "Enviar notificación", texto: "Llega a la tarjeta en su celular", ok: can(m, "program.edit") },
+          { href: `${base}/customers`, icon: Users, titulo: "Ver mis clientes", texto: "Cuántos sellos lleva cada uno", ok: true },
+        ]
+          .filter((a) => a.ok)
+          .map((a) => (
+            <Link
+              key={a.href}
+              href={a.href}
+              className="flex items-center gap-3 rounded-xl border border-line bg-surface p-3.5 shadow-card transition-colors hover:bg-canvas"
+            >
+              <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-brand text-brand-fg">
+                <a.icon className="size-4.5" />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm font-semibold">{a.titulo}</span>
+                <span className="block truncate text-xs text-muted">{a.texto}</span>
+              </span>
+              <ArrowUpRight className="size-4 shrink-0 text-muted" />
+            </Link>
+          ))}
+      </div>
 
       {!setup.complete && (
         <Link
@@ -93,7 +124,7 @@ export default function BusinessDashboard() {
           label="Tasa de retorno"
           value={`${customers.length ? Math.round((returning / customers.length) * 100) : 0}%`}
           icon={Repeat}
-          hint="Clientes con 2+ visitas"
+          hint="Clientes que ya volvieron al menos una vez"
         />
       </div>
 

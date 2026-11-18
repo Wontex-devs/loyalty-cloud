@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { Check, Copy, Loader2, Nfc, RefreshCw } from "lucide-react";
 import { getNfcSettingsAction, setNfcSettingsAction, type NfcSettings } from "@/lib/data/nfc-actions";
 import { Button, Card, CardHeader, Field, Select, Switch } from "@/components/ui";
 import { cn } from "@/lib/utils";
+import { useData } from "@/lib/data/store";
 
 const ESPERAS = [
   { value: 0, label: "Solo el tiempo del programa" },
@@ -24,7 +24,8 @@ const escritorNfc = () => {
 };
 
 /**
- * Etiqueta NFC del mostrador: enciende el toque con el celular, muestra el enlace secreto y lo escribe en una etiqueta.
+ * Tarjeta NFC del mostrador: el comercio enciende o apaga el toque. El enlace secreto y el grabado de la
+ * etiqueta solo los ve el equipo de Lazo, que entrega la tarjeta en persona.
  */
 export function NfcCard({ businessId, slug }: { businessId: string; slug: string }) {
   const [ajustes, setAjustes] = useState<NfcSettings | null>(null);
@@ -35,6 +36,8 @@ export function NfcCard({ businessId, slug }: { businessId: string; slug: string
   const [copiado, setCopiado] = useState(false);
   const [escribiendo, setEscribiendo] = useState(false);
   const [origen, setOrigen] = useState("");
+  // Solo el superadministrador dentro del comercio ve el enlace secreto y graba etiquetas.
+  const equipoLazo = useData().state.supportView?.modo === "edit";
 
   useEffect(() => setOrigen(window.location.origin), []);
 
@@ -98,7 +101,7 @@ export function NfcCard({ businessId, slug }: { businessId: string; slug: string
     <Card>
       <CardHeader
         title="Sellar con el celular (NFC)"
-        description="Pega una etiqueta en el mostrador. Tu cliente acerca el celular y se registra su visita, sin pedirle nada al equipo."
+        description="Tu cliente acerca el celular a la tarjeta NFC del mostrador y se registra su visita, sin pedirle nada al equipo."
       />
       <div className="space-y-5 p-5 text-sm">
         {cargando ? (
@@ -134,44 +137,46 @@ export function NfcCard({ businessId, slug }: { businessId: string; slug: string
               </div>
             </Field>
 
-            <div className="space-y-2">
-              <p className="font-medium">Enlace de la etiqueta</p>
-              <p className="rounded-lg border border-line bg-canvas px-3 py-2 font-mono text-xs break-all text-muted select-all">{enlace || "…"}</p>
-              <p className="text-xs text-muted">Es secreto: no lo publiques. Solo debe estar dentro de la etiqueta del mostrador.</p>
-              <div className="flex flex-wrap gap-2">
-                <Button variant="secondary" size="sm" onClick={() => void copiar()} disabled={!enlace}>
-                  {copiado ? <Check className="size-4" /> : <Copy className="size-4" />} {copiado ? "Copiado" : "Copiar enlace"}
-                </Button>
-                <Button size="sm" onClick={() => void escribirEtiqueta()} disabled={!enlace || escribiendo}>
-                  {escribiendo ? <Loader2 className="size-4 animate-spin" /> : <Nfc className="size-4" />} Escribir en una etiqueta
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    if (window.confirm("Las etiquetas que ya escribiste dejarán de funcionar y tendrás que escribir una nueva. ¿Continuar?")) void guardar(ajustes.enabled, true);
-                  }}
-                  disabled={guardando}
-                >
-                  <RefreshCw className="size-4" /> Cambiar el secreto
-                </Button>
-              </div>
-            </div>
-
-            <ol className="list-decimal space-y-1 pl-5 text-xs text-muted">
-              <li>Compra etiquetas NFC tipo NTAG213 o NTAG215 (calcomanías, pocos pesos cada una).</li>
-              <li>Con Chrome en un Android, pulsa «Escribir en una etiqueta» y acércala al celular.</li>
-              <li>Pégala en el mostrador, donde el cliente pueda tocarla.</li>
-              <li>Pruébala con tu propia tarjeta. Cada toque queda en el historial como visita por NFC y se puede revertir.</li>
-            </ol>
-
             <p className="rounded-lg border border-line bg-canvas px-3 py-2 text-xs text-muted">
-              ¿Tienes un lector NFC conectado al computador de la caja? Abre el{" "}
-              <Link href={`/business/${slug}/lector`} className="font-medium text-ink underline">
-                Lector NFC
-              </Link>{" "}
-              y tus clientes con la tarjeta en Google Wallet solo acercan el celular.
+              La tarjeta NFC para tu mostrador te la entrega el equipo de Lazo en persona, lista para usar. Si se pierde o se daña, escríbenos.
             </p>
+
+            {/* Grabar la etiqueta lo hace el equipo de Lazo (superadministrador dentro del comercio). */}
+            {equipoLazo && (
+              <>
+                <div className="space-y-2">
+                  <p className="font-medium">Enlace de la etiqueta</p>
+                  <p className="rounded-lg border border-line bg-canvas px-3 py-2 font-mono text-xs break-all text-muted select-all">{enlace || "…"}</p>
+                  <p className="text-xs text-muted">Es secreto: no lo publiques. Solo debe estar dentro de la etiqueta del mostrador.</p>
+                  <div className="flex flex-wrap gap-2">
+                    <Button variant="secondary" size="sm" onClick={() => void copiar()} disabled={!enlace}>
+                      {copiado ? <Check className="size-4" /> : <Copy className="size-4" />} {copiado ? "Copiado" : "Copiar enlace"}
+                    </Button>
+                    <Button size="sm" onClick={() => void escribirEtiqueta()} disabled={!enlace || escribiendo}>
+                      {escribiendo ? <Loader2 className="size-4 animate-spin" /> : <Nfc className="size-4" />} Escribir en una etiqueta
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        if (window.confirm("Las etiquetas que ya escribiste dejarán de funcionar y tendrás que escribir una nueva. ¿Continuar?")) void guardar(ajustes.enabled, true);
+                      }}
+                      disabled={guardando}
+                    >
+                      <RefreshCw className="size-4" /> Cambiar el secreto
+                    </Button>
+                  </div>
+                </div>
+
+                <ol className="list-decimal space-y-1 pl-5 text-xs text-muted">
+                  <li>Compra etiquetas NFC tipo NTAG213 o NTAG215 (calcomanías, pocos pesos cada una).</li>
+                  <li>Con Chrome en un Android, pulsa «Escribir en una etiqueta» y acércala al celular.</li>
+                  <li>Pégala en el mostrador, donde el cliente pueda tocarla.</li>
+                  <li>Pruébala con tu propia tarjeta. Cada toque queda en el historial como visita por NFC y se puede revertir.</li>
+                </ol>
+
+              </>
+            )}
           </>
         )}
         {aviso && ajustes && <p className={aviso.ok ? "text-success" : "text-danger"}>{aviso.texto}</p>}

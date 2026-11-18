@@ -1,6 +1,6 @@
 # Puesta en marcha del comercio (guía para el dueño)
 
-Una página para dejar el programa listo antes del primer cliente: unos 30 minutos, más la etiqueta NFC.
+Una página para dejar el programa listo antes del primer cliente: unos 30 minutos. La tarjeta NFC del mostrador te la entrega Lazo en persona.
 
 ## 1. Datos del negocio — *Configuración*
 - **Responsable del tratamiento de datos:** razón social (o tu nombre), NIT o cédula y correo para consultas.
@@ -29,10 +29,10 @@ Una página para dejar el programa listo antes del primer cliente: unos 30 minut
 - **En Android**, la tarjeta ofrece «Agregar a la Billetera de Google».
 
 ## 6. Sellar con el celular (NFC) — *Tarjeta, QR y NFC → Sellar con el celular*
-1. Compra etiquetas NFC **NTAG213 o NTAG215**. Son calcomanías económicas; se consiguen en tiendas de electrónica o en línea.
+1. El equipo de Lazo te entrega **en persona** la tarjeta NFC ya grabada para tu comercio.
 2. Activa «Permitir sellar con el toque» y deja el tiempo mínimo en **2 horas**.
-3. Pulsa **Escribir en una etiqueta** desde Chrome en un Android y acércala. Desde iPhone, copia el enlace y grábalo con la app *NFC Tools*.
-4. Pega la etiqueta en el mostrador, visible y al alcance del cliente.
+3. Pon la tarjeta en el mostrador, visible y al alcance del cliente.
+4. Si se pierde o se daña, escríbenos y te entregamos otra.
 
 ## 7. Prueba completa antes de abrir (10 minutos)
 1. Inscríbete tú con tu celular, escaneando el cartel.
@@ -49,6 +49,5 @@ Una página para dejar el programa listo antes del primer cliente: unos 30 minut
 
 ## Lo que viene
 - **Apple Wallet:** en el iPhone aparecerá «Añadir a Apple Wallet», y la tarjeta se actualizará sola con cada visita.
-- **Lector NFC en caja (opcional):** con un lector VTAP100 conectado al computador, el cliente con Android solo acerca el celular al lector; no hace falta etiqueta. Se abre en *Más opciones → Lector NFC*.
 
 ¿Dudas? Escríbenos por WhatsApp. Si nos lo pides, podemos revisar tu panel en modo solo lectura; cada revisión queda en tu *Historial → Auditoría*.

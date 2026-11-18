@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Check, MessageCircle, ShieldCheck, Users } from "lucide-react";
 import { useScope, RequirePermission } from "@/components/business/business-shell";
 import { useData } from "@/lib/data/store";
@@ -65,14 +65,48 @@ const DAY = 86400000;
 export default function CampaignsPage() {
   const { business, program, membership, customers, cards, rewards, contacts, promotions } = useScope();
   const { logContact } = useData();
-  const [segment, setSegment] = useState<Segment>("near");
+  const required = program?.stampsRequired ?? 1;
+  const month = localDay(new Date(), business.timezone).month;
+  const promo = activePromotion(promotions, new Date(), business.timezone);
+
+  // ¿Pertenece esta clienta al grupo? (una sola regla para el listado y para los contadores)
+  const enGrupo = useCallback(
+    (seg: Segment, customer: (typeof customers)[number], c: (typeof cards)[number], now: number) => {
+      const left = required - c.currentStamps;
+      switch (seg) {
+        case "near":
+          return c.currentStamps > 0 && left <= 2;
+        case "reward":
+          return rewards.some((r) => r.cardId === c.id && isRewardUsable(r));
+        case "inactive":
+          return !!c.lastVisitAt && now - new Date(c.lastVisitAt).getTime() > 45 * DAY;
+        case "birthday":
+          return customer.birthMonth === month;
+        case "new":
+          return now - new Date(customer.createdAt).getTime() < 30 * DAY && c.totalVisits <= 1;
+        default:
+          return true;
+      }
+    },
+    [required, rewards, month],
+  );
+
+  // Cuántas personas que aceptaron mensajes hay en cada grupo: se muestra en las pestañas.
+  const conteo = useMemo(() => {
+    const now = Date.now();
+    const cardOf = new Map(cards.map((c) => [c.customerId, c]));
+    const base = customers.filter((cu) => cu.marketingConsent && cardOf.get(cu.id) && cardOf.get(cu.id)!.status !== "blocked");
+    return Object.fromEntries(
+      SEGMENTS.map((s) => [s.value, base.filter((cu) => enGrupo(s.value, cu, cardOf.get(cu.id)!, now)).length]),
+    ) as Record<Segment, number>;
+  }, [customers, cards, enGrupo]);
+
+  // Se abre en el primer grupo que tiene a alguien; si todos están vacíos, en «Todas».
+  const [segment, setSegment] = useState<Segment>(() => SEGMENTS.find((s) => s.value !== "all" && conteo[s.value] > 0)?.value ?? "all");
   const [templates, setTemplates] = useState<Record<Segment, string>>(
     () => Object.fromEntries(SEGMENTS.map((s) => [s.value, s.template])) as Record<Segment, string>,
   );
   const [sent, setSent] = useState<Set<string>>(new Set());
-  const required = program?.stampsRequired ?? 1;
-  const month = localDay(new Date(), business.timezone).month;
-  const promo = activePromotion(promotions, new Date(), business.timezone);
 
   const lastContact = useMemo(() => {
     const m = new Map<string, string>();
@@ -86,25 +120,8 @@ export default function CampaignsPage() {
     return customers
       .map((customer) => ({ customer, card: cardOf.get(customer.id) }))
       .filter(({ card }) => card && card.status !== "blocked")
-      .filter(({ customer, card }) => {
-        const c = card!;
-        const left = required - c.currentStamps;
-        switch (segment) {
-          case "near":
-            return c.currentStamps > 0 && left <= 2;
-          case "reward":
-            return rewards.some((r) => r.cardId === c.id && isRewardUsable(r));
-          case "inactive":
-            return !!c.lastVisitAt && now - new Date(c.lastVisitAt).getTime() > 45 * DAY;
-          case "birthday":
-            return customer.birthMonth === month;
-          case "new":
-            return now - new Date(customer.createdAt).getTime() < 30 * DAY && c.totalVisits <= 1;
-          default:
-            return true;
-        }
-      });
-  }, [customers, cards, rewards, segment, required, month]);
+      .filter(({ customer, card }) => enGrupo(segment, customer, card!, now));
+  }, [customers, cards, segment, enGrupo]);
 
   const allowed = rows.filter(({ customer }) => customer.marketingConsent);
   const withoutConsent = rows.length - allowed.length;
@@ -129,19 +146,23 @@ export default function CampaignsPage() {
     <RequirePermission allowed={!!membership && can(membership, "program.edit")}>
       <PageHeader
         title="Notificaciones"
-        description="Envía una notificación a la tarjeta en Wallet (Google y Apple) de todo un grupo con un botón. Solo les llega a quienes aceptaron recibir mensajes."
+        description="Elige un grupo, escribe el mensaje y envíalo: llega como notificación al celular de tus clientes y queda guardado en su tarjeta."
       />
 
       <div className="mb-4 flex items-start gap-2 rounded-lg border border-line bg-surface px-4 py-3 text-sm text-muted">
         <ShieldCheck className="mt-0.5 size-4 shrink-0" />
-        <p>
-          El aviso llega como notificación al celular y queda guardado en la tarjeta. Máximo una campaña por cliente a la semana. Si prefieres escribirle a alguien en particular, también puedes hacerlo por WhatsApp, uno por uno. Todo queda registrado.
-        </p>
+        <p>Solo les llega a quienes aceptaron recibir mensajes, y como máximo una notificación por semana a cada cliente.</p>
       </div>
 
+      <p className="mb-2 text-sm font-medium">1. Elige a quién le llega</p>
       <div className="mb-4 overflow-x-auto">
-        <Segmented<Segment> value={segment} onChange={setSegment} options={SEGMENTS.map(({ value, label }) => ({ value, label }))} />
+        <Segmented<Segment>
+          value={segment}
+          onChange={setSegment}
+          options={SEGMENTS.map(({ value, label }) => ({ value, label: `${label} · ${conteo[value]}` }))}
+        />
       </div>
+      <p className="mb-2 text-sm font-medium">2. Escribe y envía</p>
 
       {/* Lo principal (la notificación a la billetera) va primero; WhatsApp queda como opción aparte. */}
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_380px]">

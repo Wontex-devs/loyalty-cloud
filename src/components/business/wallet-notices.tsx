@@ -46,7 +46,7 @@ export function WalletCampaignCard({
     if (!res.ok) return setResult({ ok: false, text: res.message });
     const parts = [res.sent ? `Aviso enviado a ${res.sent} ${res.sent === 1 ? "cliente" : "clientes"}.` : "No se envió ningún aviso."];
     if (res.notSaved) parts.push(`${res.notSaved} no tienen la tarjeta en su billetera: a ellos escríbeles por WhatsApp.`);
-    if (res.skipped) parts.push(`${res.skipped} ya recibieron una campaña esta semana y no se les envió.`);
+    if (res.skipped) parts.push(`${res.skipped} ya recibieron una notificación esta semana y no se les envió.`);
     if (res.failed) parts.push(`${res.failed} no se pudieron enviar; inténtalo más tarde.`);
     setResult({ ok: true, text: parts.join(" ") });
   };
@@ -58,7 +58,7 @@ export function WalletCampaignCard({
         <p className="text-sm font-semibold">Aviso a la billetera</p>
       </div>
       <p className="mt-1 text-xs text-muted">
-        Le llega al celular a todo el grupo «{segmentLabel}» de una vez. Máximo una campaña por cliente a la semana.
+        Le llega al celular a todo el grupo «{segmentLabel}» de una vez. Máximo una notificación por cliente a la semana.
       </p>
       <Field label="Título" className="mt-3" hint={`${title.trim().length}/40`}>
         <Input value={title} maxLength={40} onChange={(e) => setTitle(e.target.value)} />

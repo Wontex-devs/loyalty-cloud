@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { BusinessShell } from "@/components/business/business-shell";
 import { SupportEntry } from "@/components/business/support-entry";
+import { EntradaSuperadmin } from "@/components/business/entrada-superadmin";
 import { getSession, loadBusinessSnapshot } from "@/lib/data/queries";
 import { LiveProvider } from "@/lib/data/live-provider";
 import { NoAccess } from "@/components/layout/no-access";
@@ -36,7 +37,11 @@ export default async function BusinessLayout({
       .order("expires_at", { ascending: false })
       .limit(1)
       .maybeSingle();
-    if (!abierta) return <SupportEntry businessId={biz.id} slug={slug} name={biz.name} puedeEditar={esSuperadmin(session.profile)} />;
+    if (!abierta) {
+      // Superadministrador: sin formulario ni motivo, un clic y entra con acceso completo.
+      if (esSuperadmin(session.profile)) return <EntradaSuperadmin businessId={biz.id} slug={slug} name={biz.name} />;
+      return <SupportEntry businessId={biz.id} slug={slug} name={biz.name} />;
+    }
 
     const snapshot = await loadBusinessSnapshot(slug, session);
     if (!snapshot) return <NoAccess />;

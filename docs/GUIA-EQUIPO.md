@@ -38,6 +38,5 @@ No intentes arreglarlo sumando o quitando visitas. Avisa a la encargada: ella **
 ## Si el toque NFC no funciona
 - Revisa que el cliente tenga el **celular desbloqueado** y el **NFC encendido** (en Android, en los ajustes rápidos). Debe acercar la parte de arriba del celular a la etiqueta.
 - Si le pide crear su tarjeta, es porque en ese celular no está guardada: que escanee el cartel con el QR y escriba **el mismo nombre y celular** con los que se inscribió. Así recupera su tarjeta y luego vuelve a tocar la etiqueta.
-- Si el comercio tiene **lector en caja**, abre *Más opciones → Lector NFC* y pide al cliente que acerque el celular al lector.
 - Si nada funciona, abre **Clientes → el cliente → Sumar visita**, elige o escribe el motivo y pulsa **Sumar 1 visita**. Queda registrada con tu nombre y el motivo, con las mismas reglas de siempre.
 - Si ves un sello que no corresponde, avisa a la encargada: ella lo **revierte** indicando el motivo, igual que cualquier visita.

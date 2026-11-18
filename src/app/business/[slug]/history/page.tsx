@@ -52,7 +52,7 @@ const AUDIT_LABELS: Record<string, string> = {
   "nfc.settings": "Cambió los ajustes del NFC",
   "customer.anonymized": "Eliminó los datos personales de un cliente",
   "customer.marketing_revoked": "Un cliente dejó de recibir mensajes",
-  "wallet.campaign_queued": "Envió una campaña a la billetera",
+  "wallet.campaign_queued": "Envió una notificación a la billetera",
   "wallet.settings_updated": "Cambió los avisos de la billetera",
   "locations.insert": "Creó una sede",
   "locations.update": "Cambió una sede",

@@ -1,5 +1,7 @@
 # Etapa 16: Lector NFC en el mostrador (Smart Tap de Google Wallet)
 
+> **Retirada del panel (18 de noviembre de 2026):** la pantalla «Lector NFC» se quitó del panel del comercio. Las tarjetas NFC del mostrador las entrega Lazo en persona. La pantalla se puede recuperar del historial de Git (`src/app/business/[slug]/lector/page.tsx`); lo demás de este documento queda como referencia.
+
 El cliente acerca su celular Android, con la tarjeta guardada en Google Wallet, a un lector NFC conectado al computador de la caja. La visita se registra sola: no hay que abrir la app ni escanear nada.
 
 Sin `GOOGLE_WALLET_SMART_TAP=1` los pases de Google quedan como antes. La pantalla **Lector NFC** funciona igual con un lector de códigos QR en modo teclado, que lee el QR de la tarjeta web.
