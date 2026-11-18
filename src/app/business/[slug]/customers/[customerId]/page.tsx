@@ -14,17 +14,14 @@ import { Avatar, Badge, Button, ButtonLink, buttonClass, Card, CardHeader, Empty
 import { cn, formatDate, formatDateTime } from "@/lib/utils";
 import { publicOrigin } from "@/lib/config";
 import { greetingName } from "@/lib/wallet/messages";
+import { cardMessage, whatsappUrl } from "@/lib/wallet/invite";
+import { useWalletStatus, WalletBadge, walletsOf } from "@/components/business/wallet-status";
 
 /** Motivos frecuentes para sumar una visita a mano (se pueden editar). */
 const MOTIVOS_MANUAL = ["El toque NFC no funcionó", "El cliente no tenía el celular", "El celular del cliente estaba sin batería"];
 
 const MONTHS = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
 
-/** Enlace de WhatsApp con la tarjeta: el empleado lo envía desde su propio WhatsApp, uno a uno. */
-function whatsappLink(phone: string, first: string, businessName: string, cardUrl: string) {
-  const text = `Hola ${first}, esta es tu tarjeta de ${businessName}: ${cardUrl}\nGuárdala o añádela a tu pantalla de inicio para sumar sellos en cada visita.`;
-  return `https://wa.me/${phone.replace(/\D/g, "")}?text=${encodeURIComponent(text)}`;
-}
 
 export default function CustomerDetailPage() {
   const { customerId } = useParams<{ customerId: string }>();
@@ -41,6 +38,7 @@ export default function CustomerDetailPage() {
   const [manualReason, setManualReason] = useState("");
   const activeLocations = locations.filter((l) => l.active);
   const [manualLocation, setManualLocation] = useState("");
+  const wallet = useWalletStatus(business.id);
 
   const customer = customers.find((c) => c.id === customerId);
   const card = cards.find((c) => c.customerId === customerId);
@@ -49,6 +47,10 @@ export default function CustomerDetailPage() {
 
   const progress = getProgress(card, program, rewards);
   const cardUrl = `${publicOrigin()}/card/${card.publicToken}`;
+  const wallets = walletsOf(wallet, card.id);
+  // El empleado lo envía desde su propio WhatsApp, uno a uno. Sin billetera, lo invita a guardarla.
+  const needsInvite = wallets?.length === 0 && card.status !== "blocked";
+  const whatsapp = whatsappUrl(customer.phone, cardMessage(greetingName(customer), business.name, cardUrl, !needsInvite));
   const reversedIds = new Set(visits.filter((v) => v.reversesVisitId).map((v) => v.reversesVisitId));
   const staffName = (id: string) => profiles.find((p) => p.id === id)?.fullName ?? "—";
   const canReverse = !!membership && can(membership, "visits.reverse") && !customer.anonymizedAt;
@@ -142,9 +144,11 @@ export default function CustomerDetailPage() {
           >
             <Copy className="size-4" /> {copied ? "Copiado" : "Copiar enlace"}
           </Button>
-          <a href={whatsappLink(customer.phone, greetingName(customer), business.name, cardUrl)} target="_blank" rel="noopener" className={buttonClass("secondary")}>
-            <MessageCircle className="size-4" /> Enviar por WhatsApp
-          </a>
+          {customer.phone && (
+            <a href={whatsapp} target="_blank" rel="noopener" className={buttonClass("secondary")}>
+              <MessageCircle className="size-4" /> {needsInvite ? "Invitar a guardarla" : "Enviar por WhatsApp"}
+            </a>
+          )}
           <ButtonLink href={`/card/${card.publicToken}`} target="_blank" variant="secondary">
             <ExternalLink className="size-4" /> Ver tarjeta
           </ButtonLink>
@@ -311,6 +315,19 @@ export default function CustomerDetailPage() {
           <Card className="p-5 text-sm">
             <p className="mb-3 font-semibold">Consentimientos</p>
             <dl className="space-y-2">
+              {!anonymized && (
+                <div className="flex items-center justify-between gap-3">
+                  <dt className="text-muted">Billetera del celular</dt>
+                  <dd className="text-right">
+                    <WalletBadge wallets={wallets} />
+                  </dd>
+                </div>
+              )}
+              {needsInvite && !anonymized && (
+                <p className="rounded-md bg-canvas px-3 py-2 text-xs text-muted">
+                  Sin la tarjeta en la billetera no le llegan los avisos de sellos, premios ni de cercanía. Usa «Invitar a guardarla» para mandarle el enlace por WhatsApp.
+                </p>
+              )}
               <div className="flex justify-between gap-3">
                 <dt className="text-muted">Términos y tratamiento de datos</dt>
                 <dd className="text-right">{formatDate(customer.termsAcceptedAt)}</dd>
