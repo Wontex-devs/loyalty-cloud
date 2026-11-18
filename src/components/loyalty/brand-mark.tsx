@@ -81,7 +81,8 @@ export function BrandMark({
     return (
       <span className={cn("flex shrink-0 items-center justify-center overflow-hidden bg-white ring-1 ring-black/5", className)}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={branding.logoUrl} alt="" className="size-full object-contain p-[10%]" />
+        {/* La imagen llena el círculo (o el cuadro redondeado): lo que sobra en las esquinas se recorta. */}
+        <img src={branding.logoUrl} alt="" className="size-full object-cover" />
       </span>
     );
   }

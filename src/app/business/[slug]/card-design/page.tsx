@@ -97,8 +97,8 @@ export default function CardDesignPage() {
                   <Input maxLength={3} value={b.logoText} onChange={(e) => updateBranding(business.id, { logoText: e.target.value.toUpperCase() })} className="w-24" />
                 </Field>
                 <p className="text-xs text-muted">
-                  <strong className="font-medium text-ink-2">Tamaño recomendado:</strong> cuadrado de al menos 512 × 512 px, en PNG con fondo transparente.
-                  Se muestra dentro de un círculo: un símbolo o iniciales se ven mejor que un texto largo. Los bordes vacíos los recortamos solos.
+                  <strong className="font-medium text-ink-2">Tamaño recomendado:</strong> cuadrado de al menos 512 × 512 px, con el logo centrado.
+                  La imagen llena el círculo y las esquinas se recortan en redondo: deja un poco de espacio alrededor para que no se corte nada importante.
                 </p>
                 {logoError && <p className="text-sm text-danger">{logoError}</p>}
               </div>
