@@ -55,14 +55,15 @@ export function LoyaltyCardView({
   plano,
 }: LoyaltyCardViewProps) {
   const b = business.branding;
-  const c = cardTheme(b);
+  // La tarjeta usa exactamente los dos colores del comercio, sin foto ni estilos.
+  const c = cardTheme({ cardBackground: b.cardBackground, cardForeground: b.cardForeground });
   const premium = c.style !== "clasico";
   const remaining = Math.max(program.stampsRequired - stamps, 0);
   const cols = program.stampsRequired <= 10 ? Math.min(5, Math.ceil(program.stampsRequired / 2)) : 6;
   const font = brandFont(b);
   const titleFont = brandFont(b, "tracking-[0.12em]");
-  const rawFoto = coverUrl ?? (b.coverUrl || undefined);
-  const foto = c.photo === "none" ? undefined : rawFoto;
+  void coverUrl; // ya no se muestra la foto del local
+  const foto: string | undefined = undefined;
   const pad = compact ? "px-5" : "px-6 sm:px-7";
   const subtitle = program.name.trim().toLowerCase() === business.name.trim().toLowerCase() ? "Tarjeta de fidelidad" : program.name;
   // Sobre la foto (clásico) el encabezado va siempre en blanco, con una sombra oscura suave detrás.

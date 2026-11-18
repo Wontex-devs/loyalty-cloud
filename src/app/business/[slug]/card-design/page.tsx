@@ -5,7 +5,8 @@ import { Download, ImageUp, Loader2, Printer, Trash2 } from "lucide-react";
 import { QRCodeCanvas, QRCodeSVG } from "qrcode.react";
 import { useScope, RequirePermission } from "@/components/business/business-shell";
 import { LoyaltyCardView } from "@/components/loyalty/loyalty-card";
-import { CARD_STYLE_INFO, CARD_STYLES, cardTheme } from "@/lib/domain/card-palette";
+import { contrast, readableOn } from "@/lib/domain/card-palette";
+import { ColorPicker } from "@/components/ui/color-picker";
 import { BrandMark, brandCase, brandFont, CARD_FONT_STYLES, FILLED_STAMP_ICONS, STAMP_ICON_COMPONENTS, STAMP_ICON_LABELS, StampMark } from "@/components/loyalty/brand-mark";
 import { useData } from "@/lib/data/store";
 import { can } from "@/lib/domain/permissions";
@@ -30,23 +31,24 @@ const PRESETS: { name: string; colors: Partial<BusinessBranding> }[] = [
   { name: "Cielo", colors: { cardBackground: "#cfe3ff", cardForeground: "#0e1a52", primary: "#0e1a52", primaryForeground: "#cfe3ff", accent: "#0e1a52" } },
 ];
 
-const COLOR_FIELDS: { key: keyof BusinessBranding; label: string }[] = [
-  { key: "cardBackground", label: "Fondo de la tarjeta" },
-  { key: "cardForeground", label: "Texto y sellos" },
-  { key: "primary", label: "Color principal (botones)" },
-  { key: "accent", label: "Acento" },
-];
+/** Con los dos colores del comercio se completan los demás (botones de la página pública). */
+function twoColors(color1: string, color2: string): Partial<BusinessBranding> {
+  return {
+    cardBackground: color1,
+    cardForeground: color2,
+    primary: color1,
+    primaryForeground: contrast(color2, color1) >= 3 ? color2 : readableOn(color1),
+    accent: color2,
+  };
+}
 
 export default function CardDesignPage() {
   const { business, program, membership } = useScope();
-  const { updateBranding, setLogo, setCover, setStamp } = useData();
+  const { updateBranding, setLogo, setStamp } = useData();
   const fileRef = useRef<HTMLInputElement>(null);
-  const coverRef = useRef<HTMLInputElement>(null);
   const stampRef = useRef<HTMLInputElement>(null);
   const [stampBusy, setStampBusy] = useState(false);
   const [stampError, setStampError] = useState<string | null>(null);
-  const [coverBusy, setCoverBusy] = useState(false);
-  const [coverError, setCoverError] = useState<string | null>(null);
   const [logoBusy, setLogoBusy] = useState(false);
   const [logoError, setLogoError] = useState<string | null>(null);
   const changeLogo = async (file: File | null) => {
@@ -55,13 +57,6 @@ export default function CardDesignPage() {
     const res = await setLogo(business.id, file);
     setLogoBusy(false);
     if (!res.ok) setLogoError(res.message);
-  };
-  const changeCover = async (file: File | null) => {
-    setCoverBusy(true);
-    setCoverError(null);
-    const res = await setCover(business.id, file);
-    setCoverBusy(false);
-    if (!res.ok) setCoverError(res.message);
   };
   const changeStamp = async (file: File | null) => {
     setStampBusy(true);
@@ -131,87 +126,6 @@ export default function CardDesignPage() {
           </Card>
 
           <Card>
-            <CardHeader title="Foto de fondo" description="Una foto horizontal de tu local o tu producto. Se ve en la parte de arriba de la tarjeta y se funde con su color." />
-            <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center">
-              <div className="flex h-20 w-32 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-line bg-canvas">
-                {b.coverUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={b.coverUrl} alt="" className="size-full object-cover" />
-                ) : (
-                  <ImageUp className="size-5 text-subtle" aria-hidden />
-                )}
-              </div>
-              <div className="flex-1">
-                <p className="text-sm text-muted">JPG o PNG de hasta 8 MB. La ajustamos sola para que cargue rápido.</p>
-                <p className="mt-1 text-xs text-muted">
-                  <strong className="font-medium text-ink-2">Tamaño recomendado:</strong> horizontal, de al menos 1200 × 800 px (proporción 3:2).
-                  Deja lo importante en el centro: los bordes se recortan y en Google Wallet se ve como una franja más ancha. Evita fotos con texto.
-                </p>
-                {coverError && <p className="mt-1 text-sm text-danger">{coverError}</p>}
-              </div>
-              <div className="flex flex-wrap gap-2">
-                <input
-                  ref={coverRef}
-                  type="file"
-                  accept="image/png,image/jpeg,image/webp"
-                  className="hidden"
-                  onChange={(e) => {
-                    const f = e.target.files?.[0];
-                    e.target.value = "";
-                    if (f) changeCover(f);
-                  }}
-                />
-                <Button variant="secondary" onClick={() => coverRef.current?.click()} disabled={coverBusy}>
-                  {coverBusy ? <Loader2 className="size-4 animate-spin" /> : <ImageUp className="size-4" />} {b.coverUrl ? "Cambiar foto" : "Subir foto"}
-                </Button>
-                {b.coverUrl && (
-                  <Button variant="ghost" onClick={() => changeCover(null)} disabled={coverBusy} aria-label="Quitar foto de fondo">
-                    <Trash2 className="size-4" />
-                  </Button>
-                )}
-              </div>
-            </div>
-          </Card>
-
-          <Card>
-            <CardHeader title="Estilo de la tarjeta" description="Cambia el acabado de la tarjeta web y de los pases de Apple y Google Wallet. Usa tus colores y tu logo." />
-            <div className="grid grid-cols-2 gap-3 p-5 sm:grid-cols-4">
-              {CARD_STYLES.map((key) => {
-                const t = cardTheme({ ...b, cardStyle: key });
-                const selected = (b.cardStyle ?? "clasico") === key;
-                return (
-                  <button
-                    key={key}
-                    type="button"
-                    onClick={() => updateBranding(business.id, { cardStyle: key })}
-                    aria-pressed={selected}
-                    className={cn("rounded-xl border p-2 text-left transition", selected ? "border-ink shadow-card" : "border-line hover:border-line-strong hover:shadow-card")}
-                  >
-                    <div className="rounded-lg p-px" style={{ background: t.frame ?? "transparent" }}>
-                      <div className="relative flex h-16 flex-col justify-end overflow-hidden rounded-[7px] p-2" style={{ background: t.bgCss }}>
-                        {key === "cristal" && b.coverUrl && (
-                          <>
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img src={b.coverUrl} alt="" className="absolute inset-0 size-full object-cover" />
-                            <div className="absolute inset-0" style={{ background: t.veil }} />
-                          </>
-                        )}
-                        <div className="relative flex gap-1">
-                          {[0, 1, 2, 3].map((i) => (
-                            <span key={i} className="size-3 rounded-full" style={i < 2 ? { background: t.accentCss } : { background: t.slot, border: `1px solid ${t.slotBorder}` }} />
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                    <p className="mt-2 text-xs font-medium">{CARD_STYLE_INFO[key].label}</p>
-                    <p className="text-[11px] leading-snug text-muted">{CARD_STYLE_INFO[key].description}</p>
-                  </button>
-                );
-              })}
-            </div>
-          </Card>
-
-          <Card>
             <CardHeader title="Colores predeterminados" description="Elige uno y ajústalo abajo si quieres." />
             <div className="grid grid-cols-2 gap-3 p-5 sm:grid-cols-4">
               {PRESETS.map((p) => (
@@ -243,7 +157,7 @@ export default function CardDesignPage() {
                     <StampMark branding={b} className={b.stampUrl ? "size-[88%]" : "size-5"} />
                   </span>
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium">{b.stampUrl ? "Tu sello propio" : "Sube tu propio sello"}</p>
+                    <p className="text-sm font-medium">{b.stampUrl ? (b.stampUrl === b.logoUrl ? "Tu logo como sello" : "Tu sello propio") : "Sube tu propio sello o usa tu logo"}</p>
                     <p className="text-xs text-muted">
                       <strong className="font-medium text-ink-2">Tamaño recomendado:</strong> cuadrado de al menos 256 × 256 px, PNG con fondo transparente. Se ve
                       pequeño dentro de cada círculo: un dibujo simple funciona mejor que uno con detalles o texto.
@@ -265,6 +179,11 @@ export default function CardDesignPage() {
                     <Button variant="secondary" size="sm" onClick={() => stampRef.current?.click()} disabled={stampBusy}>
                       {stampBusy ? <Loader2 className="size-4 animate-spin" /> : <ImageUp className="size-4" />} {b.stampUrl ? "Cambiar sello" : "Subir mi sello"}
                     </Button>
+                    {b.logoUrl && b.stampUrl !== b.logoUrl && (
+                      <Button variant="secondary" size="sm" onClick={() => updateBranding(business.id, { stampUrl: b.logoUrl })} disabled={stampBusy}>
+                        Usar mi logo
+                      </Button>
+                    )}
                     {b.stampUrl && (
                       <Button variant="ghost" size="sm" onClick={() => changeStamp(null)} disabled={stampBusy} aria-label="Quitar mi sello y usar un icono">
                         <Trash2 className="size-4" />
@@ -328,21 +247,13 @@ export default function CardDesignPage() {
           </Card>
 
           <Card>
-            <CardHeader title="Colores" />
+            <CardHeader
+              title="Colores"
+              description="Dos colores y listo: el 1 es el fondo de la tarjeta y del pase en Wallet; el 2, los sellos y los detalles. El texto se pone solo en blanco o negro para que siempre se lea."
+            />
             <div className="grid gap-4 p-5 sm:grid-cols-2">
-              {COLOR_FIELDS.map(({ key, label }) => (
-                <Field key={key} label={label}>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="color"
-                      value={b[key] as string}
-                      onChange={(e) => updateBranding(business.id, { [key]: e.target.value })}
-                      className="size-10 cursor-pointer rounded-lg border border-line-strong bg-surface p-1"
-                    />
-                    <Input value={b[key] as string} onChange={(e) => /^#[0-9a-fA-F]{0,6}$/.test(e.target.value) && updateBranding(business.id, { [key]: e.target.value })} className="font-mono uppercase" />
-                  </div>
-                </Field>
-              ))}
+              <ColorPicker label="Color 1 · Fondo" value={b.cardBackground} onChange={(c) => updateBranding(business.id, twoColors(c, b.cardForeground))} />
+              <ColorPicker label="Color 2 · Sellos y detalles" value={b.cardForeground} onChange={(c) => updateBranding(business.id, twoColors(b.cardBackground, c))} />
             </div>
           </Card>
 
