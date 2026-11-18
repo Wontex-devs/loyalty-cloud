@@ -5,7 +5,7 @@
 import type { PublicCardData } from "@/components/public/card-screen";
 import type { Place } from "./geo.ts";
 import { cardTheme } from "../domain/card-palette.ts";
-import type { CardStyle, StampIcon } from "../domain/types.ts";
+import type { CardFont, CardStyle, StampIcon } from "../domain/types.ts";
 
 export interface WalletPass {
   /** Token público de la tarjeta: identifica el pase sin exponer IDs internos. */
@@ -13,7 +13,7 @@ export interface WalletPass {
   cardUrl: string;
   active: boolean;
   customerName: string;
-  business: { name: string; slug: string; logoText: string; background: string; foreground: string; logoUrl: string; coverUrl?: string; stampIcon?: StampIcon; stampUrl?: string; style?: CardStyle };
+  business: { name: string; slug: string; logoText: string; background: string; foreground: string; logoUrl: string; coverUrl?: string; stampIcon?: StampIcon; stampUrl?: string; style?: CardStyle; font?: CardFont };
   program: { name: string; stampsRequired: number; rewardName: string };
   stamps: number;
   rewardsAvailable: { name: string; birthday: boolean }[];
@@ -41,6 +41,7 @@ export function passFromCard(card: PublicCardData, origin: string, places?: Plac
       stampIcon: b.stampIcon,
       stampUrl: b.stampUrl || undefined,
       style: b.cardStyle,
+      font: b.font,
     },
     program: card.program,
     stamps: Math.min(card.stamps, card.program.stampsRequired),
@@ -62,7 +63,7 @@ export function progressText(p: WalletPass) {
 
 /** Versión de la imagen de sellos: cambia con cada sello y con el diseño de la tarjeta. */
 export function stripVersion(p: Pick<WalletPass, "stamps" | "program" | "business">) {
-  const design = [p.business.background, p.business.foreground, p.business.stampIcon ?? "", p.business.stampUrl ?? "", p.business.style ?? "", p.business.style === "negro" ? "" : (p.business.coverUrl ?? "")].join("|");
+  const design = [p.business.background, p.business.foreground, p.business.stampIcon ?? "", p.business.stampUrl ?? "", p.business.style ?? "", p.business.style === "negro" ? "" : (p.business.coverUrl ?? ""), p.program.name, p.business.font ?? ""].join("|");
   let h = 0;
   for (const ch of design) h = (Math.imul(h, 31) + ch.charCodeAt(0)) | 0;
   return `${p.stamps}-${p.program.stampsRequired}-${(h >>> 0).toString(36)}`;

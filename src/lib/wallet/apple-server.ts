@@ -2,7 +2,10 @@ import "server-only";
 import { connect } from "node:http2";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getPublicCard } from "@/lib/data/public";
-import { businessIcon } from "@/components/brand/business-icon";
+import { businessIcon, businessWordmark } from "@/components/brand/business-icon";
+import { CARD_FONT_STYLES } from "@/components/loyalty/brand-mark";
+import { cardTheme } from "@/lib/domain/card-palette";
+import { walletFonts } from "./fonts";
 import { stampStrip, type StripInput } from "@/components/brand/stamp-strip";
 import { buildPkpass, type AppleWalletConfig, type PassMessage } from "./apple";
 import { walletSettings } from "./messages";
@@ -26,17 +29,23 @@ async function png(res: Response) {
   return Buffer.from(await res.arrayBuffer());
 }
 
-/** Imágenes del pase en 1x, 2x y 3x: icono (notificaciones y pantalla de bloqueo), logo y la franja con los sellos. */
-async function passImages(business: Parameters<typeof businessIcon>[0], strip: StripInput) {
-  const sizes = { icon: 29, logo: 50 };
+/**
+ * Imágenes del pase en 1x, 2x y 3x: icono (notificaciones y pantalla de bloqueo), logo con el
+ * nombre en la letra de la marca y la franja con la foto, el título y los sellos.
+ */
+async function passImages(business: Parameters<typeof businessWordmark>[0], strip: StripInput) {
   const scales = [1, 2, 3];
   const file = (name: string, scale: number) => `${name}${scale === 1 ? "" : `@${scale}x`}.png`;
+  const font = (business.branding.font ?? "serif") as keyof typeof CARD_FONT_STYLES;
+  const fonts = await walletFonts(font);
+  const color = cardTheme(business.branding as Parameters<typeof cardTheme>[0]).text;
+  const upper = (CARD_FONT_STYLES[font] ?? CARD_FONT_STYLES.serif).upper;
   const entries = await Promise.all([
-    ...Object.entries(sizes).flatMap(([name, pt]) =>
-      scales.map(async (scale) => [file(name, scale), await png(businessIcon(business, pt * scale, { transparent: name === "logo" }))] as const),
-    ),
+    ...scales.map(async (scale) => [file("icon", scale), await png(businessIcon(business, 29 * scale))] as const),
+    // Logo: 160 × 50 puntos como máximo.
+    ...scales.map(async (scale) => [file("logo", scale), await png(businessWordmark(business, 160 * scale, 50 * scale, { color, upper, fonts }))] as const),
     // Franja de la tarjeta de tienda: 375 × 144 puntos.
-    ...scales.map(async (scale) => [file("strip", scale), await png(stampStrip(strip, 375 * scale, 144 * scale))] as const),
+    ...scales.map(async (scale) => [file("strip", scale), await png(stampStrip(strip, 375 * scale, 144 * scale, { fonts }))] as const),
   ]);
   return Object.fromEntries(entries);
 }
@@ -75,6 +84,7 @@ export async function pkpassFor(cfg: AppleWalletConfig, token: string, origin: s
       branding: card.business.branding,
       stamps: Math.min(card.stamps, card.program.stampsRequired),
       required: card.program.stampsRequired,
+      ...stripTitle(card),
     }),
     ids ? latestMessage(ids.cardId) : null,
     ids ? businessSettings(ids.businessId) : null,
@@ -160,4 +170,9 @@ export async function notifyApplePasses(cfg: AppleWalletConfig, target: { cardId
   if (dead.length) await admin.from("apple_wallet_registrations").delete().in("push_token", dead);
   for (const r of data ?? []) if (delivered.has(r.push_token as string)) reached.add(r.card_id as string);
   return reached;
+}
+
+/** Título y línea pequeña de la franja: el nombre del club. */
+export function stripTitle(card: { business: { name: string }; program: { name: string } }) {
+  return { title: card.program.name.trim() || card.business.name, kicker: "Tarjeta de miembro" };
 }

@@ -48,3 +48,67 @@ export function businessIcon(business: IconBusiness | null, size: number, opts: 
     { width: size, height: size, headers: opts.headers },
   );
 }
+
+/**
+ * Logo del pase de Apple Wallet (máx. 160 × 50 puntos): el logo en un círculo y el nombre
+ * del comercio con su tipografía ("Marca"), como una marca impresa. Reemplaza al texto
+ * del sistema que Apple pone junto al logo.
+ */
+export function businessWordmark(
+  business: IconBusiness & { branding: IconBusiness["branding"] & { font?: string } },
+  width: number,
+  height: number,
+  opts: { color: string; upper: boolean; fonts?: { name: string; data: ArrayBuffer; weight: 400 | 500 | 600 | 700; style: "normal" }[] },
+) {
+  const fg = business.branding.cardForeground ?? "#1A1416";
+  const bg = business.branding.cardBackground ?? "#EBCFCB";
+  const logo = business.branding.logoUrl?.startsWith("https://") ? business.branding.logoUrl : null;
+  const d = Math.round(height * 0.78);
+  const name = business.name.trim();
+  const brand = opts.fonts?.some((f) => f.name === "Marca") ? "Marca" : undefined;
+  // El nombre se achica para que quepa en una línea al lado del logo.
+  const room = width - d - height * 0.25;
+  const size = Math.min(height * 0.46, (room / Math.max(name.length, 4)) * (opts.upper ? 1.55 : 1.9));
+  return new ImageResponse(
+    (
+      <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", background: "transparent" }}>
+        <div
+          style={{
+            width: d,
+            height: d,
+            borderRadius: d,
+            flexShrink: 0,
+            background: logo ? "#ffffff" : fg,
+            color: bg,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: d * 0.38,
+          }}
+        >
+          {logo ? (
+            // eslint-disable-next-line @next/next/no-img-element, jsx-a11y/alt-text
+            <img src={logo} width={d * 0.74} height={d * 0.74} style={{ objectFit: "contain" }} />
+          ) : (
+            (business.branding.logoText || name.slice(0, 2)).slice(0, 3)
+          )}
+        </div>
+        <div
+          style={{
+            display: "flex",
+            marginLeft: height * 0.22,
+            fontSize: size,
+            color: opts.color,
+            fontFamily: brand,
+            letterSpacing: opts.upper ? size * 0.08 : 0,
+            textTransform: opts.upper ? "uppercase" : "none",
+            whiteSpace: "nowrap",
+          }}
+        >
+          {name}
+        </div>
+      </div>
+    ),
+    { width, height, fonts: opts.fonts },
+  );
+}

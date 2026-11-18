@@ -186,3 +186,16 @@ test("pases: el estilo cambia los colores y la imagen de sellos", () => {
 });
 const cardTheme_bg = (p: ReturnType<typeof passFromCard>) => passTheme(p).bg;
 import { passTheme } from "../src/lib/wallet/pass.ts";
+
+test("Marfil y oro: fondo claro, texto oscuro y etiquetas doradas legibles", async () => {
+  const { cardTheme } = await import("../src/lib/domain/card-palette.ts");
+  const m = cardTheme({ cardBackground: "#1B3FD8", cardForeground: "#FFC928", cardStyle: "marfil" });
+  assert.equal(m.bg, "#F2EDE3");
+  assert.ok(contrast(m.text, m.bg) >= 7);
+  assert.ok(contrast(m.passLabel, m.bg) >= 3);
+  const p = passFromCard({ ...card, business: { ...card.business, branding: { ...card.business.branding, cardStyle: "marfil" as const } } }, origin);
+  const j = passJson(apple, p, origin) as { backgroundColor: string; labelColor: string; logoText?: string };
+  assert.equal(j.backgroundColor, "rgb(242, 237, 227)");
+  assert.equal(j.labelColor, "rgb(169, 130, 63)");
+  assert.equal("logoText" in j, false); // el nombre va dentro del logo, con la letra de la marca
+});

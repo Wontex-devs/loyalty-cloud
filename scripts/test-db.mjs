@@ -225,11 +225,11 @@ r = await as(U.ownerA, "insert into storage.objects (bucket_id, name) values ('b
 check("archivo fuera de una carpeta de comercio es rechazado", !r.ok, r);
 
 // Etapa 27: estilos premium de la tarjeta.
-for (const cardStyle of ["noche", "cristal", "negro", "clasico"]) {
+for (const cardStyle of ["noche", "cristal", "negro", "marfil", "clasico"]) {
   r = await as(U.ownerA, "select public.update_business_profile($1, null, null, null, null, $2::jsonb)", [A, JSON.stringify({ cardStyle })]);
   if (!r.ok) break;
 }
-check("se aceptan los cuatro estilos de tarjeta", r.ok, r);
+check("se aceptan los cinco estilos de tarjeta", r.ok, r);
 r = await as(U.ownerA, "select public.update_business_profile($1, null, null, null, null, $2::jsonb)", [A, JSON.stringify({ cardStyle: "dorado" })]);
 check("un estilo de tarjeta desconocido se rechaza", expectError(r, "INVALID_BRANDING"), r);
 r = await as(U.staffA, "select public.update_business_profile($1, null, null, null, null, $2::jsonb)", [A, JSON.stringify({ cardStyle: "negro" })]);

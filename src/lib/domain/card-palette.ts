@@ -77,7 +77,7 @@ export function cardPalette(b: { cardBackground: string; cardForeground: string 
 
 // ---------- Estilos de tarjeta ----------
 
-export const CARD_STYLES = ["clasico", "noche", "cristal", "negro"] as const;
+export const CARD_STYLES = ["clasico", "noche", "cristal", "negro", "marfil"] as const;
 export type CardStyle = (typeof CARD_STYLES)[number];
 
 export const CARD_STYLE_INFO: Record<CardStyle, { label: string; description: string }> = {
@@ -85,6 +85,7 @@ export const CARD_STYLE_INFO: Record<CardStyle, { label: string; description: st
   noche: { label: "Noche y oro", description: "Tu color en tono profundo con detalles dorados." },
   cristal: { label: "Cristal", description: "Tu foto de fondo y los sellos sobre vidrio." },
   negro: { label: "Negro mate", description: "Negro elegante; tu color solo en los sellos." },
+  marfil: { label: "Marfil y oro", description: "Fondo marfil, letras finas y detalles dorados." },
 };
 
 /** Oro metálico de los estilos premium. */
@@ -116,7 +117,14 @@ export interface CardTheme extends CardPalette {
   veil: string;
   /** Sellos y progreso sobre un panel de vidrio. */
   glass: boolean;
+  /** Color de las etiquetas en el pase de la billetera (hexadecimal, legible sobre `bg`). */
+  passLabel: string;
+  /** Detalles decorativos (arco de la franja). */
+  ornament: string;
 }
+
+const MARFIL_INK = "#2A2520";
+const MARFIL_GOLD = "#A9823F";
 
 export function cardTheme(b: { cardBackground: string; cardForeground: string; cardStyle?: CardStyle | string | null }): CardTheme {
   const style: CardStyle = (CARD_STYLES as readonly string[]).includes(b.cardStyle ?? "") ? (b.cardStyle as CardStyle) : "clasico";
@@ -143,6 +151,8 @@ export function cardTheme(b: { cardBackground: string; cardForeground: string; c
       photo: "tint",
       veil: "",
       glass: false,
+      passLabel: GOLD,
+      ornament: GOLD,
     };
   }
   if (style === "negro") {
@@ -164,6 +174,8 @@ export function cardTheme(b: { cardBackground: string; cardForeground: string; c
       photo: "none",
       veil: "",
       glass: false,
+      passLabel: accent,
+      ornament: accent,
     };
   }
   if (style === "cristal") {
@@ -185,11 +197,37 @@ export function cardTheme(b: { cardBackground: string; cardForeground: string; c
       photo: "full",
       veil: `linear-gradient(180deg, ${alpha(deep, 0.3)} 0%, ${alpha(deep, 0.78)} 100%)`,
       glass: true,
+      passLabel: contrast(accent, deep) >= 3 ? accent : LIGHT,
+      ornament: accent,
+    };
+  }
+  if (style === "marfil") {
+    return {
+      ...base,
+      style,
+      bg: "#F2EDE3",
+      bgCss: "linear-gradient(160deg, #F8F4ED 0%, #EFE9DD 60%, #E7DFD0 100%)",
+      text: MARFIL_INK,
+      muted: alpha(MARFIL_INK, 0.6),
+      accent: GOLD,
+      accentCss: GOLD_GRADIENT,
+      onAccent: GOLD_INK,
+      label: MARFIL_GOLD,
+      slot: alpha(MARFIL_INK, 0.05),
+      slotBorder: alpha(MARFIL_GOLD, 0.4),
+      frame: null,
+      photo: "fade",
+      veil: "",
+      glass: false,
+      passLabel: MARFIL_GOLD,
+      ornament: GOLD,
     };
   }
   return {
     ...base,
     style,
+    passLabel: contrast(base.accent, base.bg) >= 3 ? base.accent : base.text,
+    ornament: base.accent,
     bgCss: `linear-gradient(140deg, rgba(255,255,255,0.14) 0%, rgba(255,255,255,0) 45%, rgba(0,0,0,0.14) 100%), ${base.bg}`,
     accentCss: base.accent,
     label: base.muted,
