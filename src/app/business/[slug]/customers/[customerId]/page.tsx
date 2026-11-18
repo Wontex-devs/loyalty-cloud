@@ -310,7 +310,7 @@ export default function CustomerDetailPage() {
             stamps={progress.stamps}
             status={card.status}
             rewardsAvailable={progress.rewardsAvailable}
-            memberSince={anonymized ? undefined : formatDate(card.createdAt)}
+            memberSince={anonymized ? undefined : card.createdAt}
           />
           <Card className="p-5 text-sm">
             <p className="mb-3 font-semibold">Consentimientos</p>

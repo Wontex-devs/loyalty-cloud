@@ -141,7 +141,8 @@ export function CardScreen({
           stamps={Math.min(data.stamps, data.program.stampsRequired)}
           status={data.status}
           rewardsAvailable={data.rewards.length}
-          memberSince={formatDate(data.memberSince)}
+          memberSince={data.memberSince}
+          qrValue={url || undefined}
           highlightLastStamp={bump}
         />
 

@@ -14,6 +14,10 @@ export interface WalletPass {
   cardUrl: string;
   active: boolean;
   customerName: string;
+  /** Mes y año de inscripción, p. ej. «Nov 2026». Vacío = no se muestra. */
+  memberSince?: string;
+  /** El pase lleva código QR (lo decide el comercio). */
+  qr?: boolean;
   business: { name: string; slug: string; logoText: string; background: string; foreground: string; logoUrl: string; coverUrl?: string; stampIcon?: StampIcon; stampUrl?: string; style?: CardStyle; font?: CardFont };
   program: { name: string; stampsRequired: number; rewardName: string; terms?: string };
   stamps: number;
@@ -33,6 +37,8 @@ export function passFromCard(card: PublicCardData, origin: string, places?: Plac
     cardUrl: `${origin}/card/${card.token}`,
     active: card.status !== "blocked",
     customerName: card.customerName,
+    memberSince: memberSinceText(card.memberSince),
+    qr: b.passQr !== false,
     business: {
       name: card.business.name,
       slug,
@@ -55,6 +61,15 @@ export function passFromCard(card: PublicCardData, origin: string, places?: Plac
   };
 }
 
+const MESES = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
+
+/** «Nov 2026» a partir de una fecha ISO; vacío si no es una fecha. */
+export function memberSinceText(iso: string | null | undefined): string {
+  const m = /^(\d{4})-(\d{2})/.exec(iso ?? "");
+  const mes = m ? MESES[Number(m[2]) - 1] : undefined;
+  return m && mes ? `${mes} ${m[1]}` : "";
+}
+
 /** Texto de progreso común a todas las billeteras. */
 export function progressText(p: WalletPass) {
   if (p.rewardsAvailable.length) {
@@ -67,7 +82,17 @@ export function progressText(p: WalletPass) {
 
 /** Versión de la imagen de sellos: cambia con cada sello y con el diseño de la tarjeta. */
 export function stripVersion(p: Pick<WalletPass, "stamps" | "program" | "business" | "rewardsAvailable">) {
-  const design = ["minimal-3", p.business.background, p.business.foreground, p.business.stampIcon ?? "", p.business.stampUrl ?? "", p.program.rewardName, p.rewardsAvailable.length ? "ready" : ""].join("|");
+  const design = [
+    "hilo-1",
+    p.business.background,
+    p.business.foreground,
+    p.business.stampIcon ?? "",
+    p.business.stampUrl ?? "",
+    p.business.font ?? "",
+    p.business.name.slice(0, 1),
+    p.program.rewardName,
+    p.rewardsAvailable.length ? "ready" : "",
+  ].join("|");
   let h = 0;
   for (const ch of design) h = (Math.imul(h, 31) + ch.charCodeAt(0)) | 0;
   return `${p.stamps}-${p.program.stampsRequired}-${(h >>> 0).toString(36)}`;

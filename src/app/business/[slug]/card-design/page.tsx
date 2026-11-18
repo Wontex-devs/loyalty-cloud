@@ -13,9 +13,9 @@ import { useData } from "@/lib/data/store";
 import { can } from "@/lib/domain/permissions";
 import { PUBLIC_HOST_LABEL } from "@/lib/config";
 import { CARD_FONTS, STAMP_ICONS, type BusinessBranding, type CardStatus } from "@/lib/domain/types";
-import { cn, formatDate } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import { NfcCard } from "@/components/business/nfc-card";
-import { Button, buttonClass, Card, CardHeader, Field, Input, PageHeader, Segmented } from "@/components/ui";
+import { Button, buttonClass, Card, CardHeader, Field, Input, PageHeader, Segmented, Switch } from "@/components/ui";
 
 const PRESETS: { name: string; colors: Partial<BusinessBranding> }[] = [
   { name: "Azul Lazo", colors: { cardBackground: "#1b3fd8", cardForeground: "#ffc928", primary: "#1b3fd8", primaryForeground: "#ffc928", accent: "#ffc928" } },
@@ -67,6 +67,7 @@ export default function CardDesignPage() {
     if (!res.ok) setStampError(res.message);
   };
   const [previewState, setPreviewState] = useState<CardStatus>("active");
+  const [hoy] = useState(() => new Date().toISOString());
   const b = business.branding;
   const [joinUrl, setJoinUrl] = useState("");
   useEffect(() => setJoinUrl(`${window.location.origin}/join/${business.slug}`), [business.slug]);
@@ -84,7 +85,10 @@ export default function CardDesignPage() {
 
   return (
     <RequirePermission allowed={!!membership && can(membership, "business.branding.edit")}>
-      <PageHeader title="Tarjeta, QR y NFC" description="Personaliza la identidad visual que verán tus clientes. Los cambios se aplican al instante en todas las tarjetas." />
+      <PageHeader
+        title="Tarjeta, QR y NFC"
+        description="Lo que ves en la vista previa es lo que tus clientes guardan en la billetera de su celular. Los cambios se aplican al instante en todas las tarjetas."
+      />
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_400px]">
         <div className="space-y-4">
@@ -219,7 +223,8 @@ export default function CardDesignPage() {
                 </div>
               </div>
               <div className="space-y-2">
-                <p className="text-[13px] font-medium text-ink">Tipografía del nombre</p>
+                <p className="text-[13px] font-medium text-ink">Tipografía</p>
+                <p className="text-xs text-muted">Se usa en el nombre de tu comercio y en el nombre del premio. Los demás datos van con la letra del celular, como en Wallet.</p>
                 <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                   {CARD_FONTS.map((key) => {
                     const f = CARD_FONT_STYLES[key];
@@ -255,6 +260,20 @@ export default function CardDesignPage() {
             <div className="grid gap-4 p-5 sm:grid-cols-2">
               <ColorPicker label="Color 1 · Fondo" value={b.cardBackground} onChange={(c) => updateBranding(business.id, twoColors(c, b.cardForeground))} />
               <ColorPicker label="Color 2 · Sellos y detalles" value={b.cardForeground} onChange={(c) => updateBranding(business.id, twoColors(b.cardBackground, c))} />
+            </div>
+          </Card>
+
+          <Card>
+            <CardHeader
+              title="Código QR"
+              description="Va al final de la tarjeta y del pase de Wallet, con el número de miembro. En caja lo leen con cualquier cámara para confirmar de quién es la tarjeta."
+            />
+            <div className="flex items-center justify-between gap-4 p-5 text-sm">
+              <div>
+                <p className="font-medium">Mostrar el código QR</p>
+                <p className="text-xs text-muted">{b.passQr !== false ? "Encendido: aparece en la tarjeta y en el pase." : "Apagado: la tarjeta queda más limpia, sin código."}</p>
+              </div>
+              <Switch checked={b.passQr !== false} onChange={(v) => updateBranding(business.id, { passQr: v })} label="Mostrar el código QR en la tarjeta" />
             </div>
           </Card>
 
@@ -304,7 +323,7 @@ export default function CardDesignPage() {
               ]}
             />
           </div>
-          <div className="rounded-[36px] border border-line bg-[#f4f4f5] p-4">
+          <div className="rounded-[28px] border border-line bg-[#f4f4f5] p-4">
             <LoyaltyCardView
               business={business}
               program={program}
@@ -312,7 +331,8 @@ export default function CardDesignPage() {
               stamps={previewState === "active" ? 6 : 0}
               status={previewState}
               rewardsAvailable={previewState === "active" ? 0 : 1}
-              memberSince={formatDate(new Date().toISOString())}
+              memberSince={hoy}
+              qrValue={`https://${PUBLIC_HOST_LABEL}/card/ejemplo-vista-previa`}
             />
           </div>
         </div>

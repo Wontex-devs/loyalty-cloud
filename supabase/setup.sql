@@ -1,5 +1,5 @@
 -- Generado por npm run db:bundle. No editar: cambia las migraciones y vuelve a generarlo.
--- Incluye: 20261101000001_schema.sql, 20261101000002_rls.sql, 20261101000003_functions.sql, 20261101000004_reference_data.sql, 20261101000005_public_business.sql, 20261101000006_business_stats.sql, 20261101000007_pilot.sql, 20261101000008_customer_experience.sql, 20261101000009_promotions_birthdays.sql, 20261101000010_plans_locations.sql, 20261101000011_brand_assets.sql, 20261101000012_privacy_abuse.sql, 20261101000013_wallet_notifications.sql, 20261101000014_plan_prices.sql, 20261101000015_nfc_checkin.sql, 20261101000016_plan_prices_v2.sql, 20261101000017_eliminar_comercio.sql, 20261101000018_foto_tarjeta.sql, 20261101000019_panel_usuarios.sql, 20261101000020_apple_wallet.sql, 20261101000021_soporte_comercio.sql, 20261101000022_sello_propio_y_letras.sql, 20261101000023_visita_manual.sql, 20261101000024_nombre_aparte.sql, 20261101000025_sede_ubicacion.sql, 20261101000026_mensaje_cercania.sql, 20261101000027_superadmin_edita_comercio.sql
+-- Incluye: 20261101000001_schema.sql, 20261101000002_rls.sql, 20261101000003_functions.sql, 20261101000004_reference_data.sql, 20261101000005_public_business.sql, 20261101000006_business_stats.sql, 20261101000007_pilot.sql, 20261101000008_customer_experience.sql, 20261101000009_promotions_birthdays.sql, 20261101000010_plans_locations.sql, 20261101000011_brand_assets.sql, 20261101000012_privacy_abuse.sql, 20261101000013_wallet_notifications.sql, 20261101000014_plan_prices.sql, 20261101000015_nfc_checkin.sql, 20261101000016_plan_prices_v2.sql, 20261101000017_eliminar_comercio.sql, 20261101000018_foto_tarjeta.sql, 20261101000019_panel_usuarios.sql, 20261101000020_apple_wallet.sql, 20261101000021_soporte_comercio.sql, 20261101000022_sello_propio_y_letras.sql, 20261101000023_visita_manual.sql, 20261101000024_nombre_aparte.sql, 20261101000025_sede_ubicacion.sql, 20261101000026_mensaje_cercania.sql, 20261101000027_estilo_tarjeta.sql, 20261101000027_superadmin_edita_comercio.sql, 20261101000028_estilo_marfil.sql, 20261101000029_reverso_pase.sql, 20261101000030_qr_tarjeta.sql
 begin;
 
 -- >>> 20261101000001_schema.sql
@@ -4150,6 +4150,79 @@ as $$
              and length(btrim(s ->> 'nearbyText')) between 5 and 120));
 $$;
 
+-- >>> 20261101000027_estilo_tarjeta.sql
+-- =====================================================================
+-- Etapa 27 · Estilos premium de la tarjeta
+--  * cardStyle: clásico (por defecto), noche y oro, cristal o negro mate. Lo elige
+--    el comercio en «Tarjeta, QR y NFC»; cambia la tarjeta web y los pases de
+--    Apple y Google Wallet.
+--  * Solo cambia la validación de update_business_profile; nada más.
+-- =====================================================================
+
+create or replace function public.update_business_profile(
+  p_business_id uuid,
+  p_name text,
+  p_category text,
+  p_city text,
+  p_timezone text,
+  p_branding jsonb
+)
+returns void
+language plpgsql
+volatile security definer
+set search_path = ''
+as $$
+declare
+  k text;
+  v text;
+begin
+  if not (private.has_role(p_business_id, '{owner,admin}') or private.is_superadmin()) then
+    raise exception 'FORBIDDEN';
+  end if;
+  if p_branding is not null then
+    for k in select jsonb_object_keys(p_branding) loop
+      v := p_branding ->> k;
+      if k = 'logoText' then
+        if v is null or length(trim(v)) not between 1 and 3 then raise exception 'INVALID_BRANDING'; end if;
+      elsif k in ('logoUrl', 'coverUrl', 'stampUrl') then
+        -- Vacío = quitar la imagen. Si no, solo una imagen de su propia carpeta en Storage.
+        if v is null or (v <> '' and v !~ ('^https://[a-z0-9-]+\.supabase\.co/storage/v1/object/public/brand-assets/'
+                                           || p_business_id::text || '/[A-Za-z0-9._-]+$')) then
+          raise exception 'INVALID_BRANDING';
+        end if;
+      elsif k = 'stampIcon' then
+        if v is null or v not in ('check', 'heart', 'star', 'sparkles', 'flower', 'gem', 'crown', 'scissors') then
+          raise exception 'INVALID_BRANDING';
+        end if;
+      elsif k = 'font' then
+        if v is null or v not in ('serif', 'sans', 'elegante', 'manuscrita', 'redondeada', 'impacto', 'geometrica') then
+          raise exception 'INVALID_BRANDING';
+        end if;
+      elsif k = 'cardStyle' then
+        if v is null or v not in ('clasico', 'noche', 'cristal', 'negro') then
+          raise exception 'INVALID_BRANDING';
+        end if;
+      elsif k in ('primary', 'primaryForeground', 'accent', 'cardBackground', 'cardForeground') then
+        if v is null or v !~ '^#[0-9a-fA-F]{6}$' then raise exception 'INVALID_BRANDING'; end if;
+      else
+        raise exception 'INVALID_BRANDING';
+      end if;
+    end loop;
+  end if;
+
+  update public.businesses
+  set name     = coalesce(nullif(trim(p_name), ''), name),
+      category = coalesce(nullif(trim(p_category), ''), category),
+      city     = coalesce(nullif(trim(p_city), ''), city),
+      timezone = coalesce(nullif(trim(p_timezone), ''), timezone),
+      branding = case when p_branding is null then branding else branding || p_branding end
+  where id = p_business_id;
+
+  perform private.audit(p_business_id, 'business.updated', 'business', p_business_id::text,
+                        jsonb_build_object('branding_changed', p_branding is not null));
+end;
+$$;
+
 -- >>> 20261101000027_superadmin_edita_comercio.sql
 -- =====================================================================
 -- Etapa 27 · Entrar y editar un comercio (solo superadministrador)
@@ -4285,5 +4358,197 @@ $$;
 
 revoke all on function public.start_support_session(uuid, text, integer, text) from public, anon;
 grant execute on function public.start_support_session(uuid, text, integer, text) to authenticated;
+
+-- >>> 20261101000028_estilo_marfil.sql
+-- =====================================================================
+-- Etapa 28 · Estilo «Marfil y oro» de la tarjeta
+--  * cardStyle admite además 'marfil': fondo marfil, letras finas y detalles dorados.
+--  * Solo cambia la validación de update_business_profile; nada más.
+-- =====================================================================
+
+create or replace function public.update_business_profile(
+  p_business_id uuid,
+  p_name text,
+  p_category text,
+  p_city text,
+  p_timezone text,
+  p_branding jsonb
+)
+returns void
+language plpgsql
+volatile security definer
+set search_path = ''
+as $$
+declare
+  k text;
+  v text;
+begin
+  if not (private.has_role(p_business_id, '{owner,admin}') or private.is_superadmin()) then
+    raise exception 'FORBIDDEN';
+  end if;
+  if p_branding is not null then
+    for k in select jsonb_object_keys(p_branding) loop
+      v := p_branding ->> k;
+      if k = 'logoText' then
+        if v is null or length(trim(v)) not between 1 and 3 then raise exception 'INVALID_BRANDING'; end if;
+      elsif k in ('logoUrl', 'coverUrl', 'stampUrl') then
+        -- Vacío = quitar la imagen. Si no, solo una imagen de su propia carpeta en Storage.
+        if v is null or (v <> '' and v !~ ('^https://[a-z0-9-]+\.supabase\.co/storage/v1/object/public/brand-assets/'
+                                           || p_business_id::text || '/[A-Za-z0-9._-]+$')) then
+          raise exception 'INVALID_BRANDING';
+        end if;
+      elsif k = 'stampIcon' then
+        if v is null or v not in ('check', 'heart', 'star', 'sparkles', 'flower', 'gem', 'crown', 'scissors') then
+          raise exception 'INVALID_BRANDING';
+        end if;
+      elsif k = 'font' then
+        if v is null or v not in ('serif', 'sans', 'elegante', 'manuscrita', 'redondeada', 'impacto', 'geometrica') then
+          raise exception 'INVALID_BRANDING';
+        end if;
+      elsif k = 'cardStyle' then
+        if v is null or v not in ('clasico', 'noche', 'cristal', 'negro', 'marfil') then
+          raise exception 'INVALID_BRANDING';
+        end if;
+      elsif k in ('primary', 'primaryForeground', 'accent', 'cardBackground', 'cardForeground') then
+        if v is null or v !~ '^#[0-9a-fA-F]{6}$' then raise exception 'INVALID_BRANDING'; end if;
+      else
+        raise exception 'INVALID_BRANDING';
+      end if;
+    end loop;
+  end if;
+
+  update public.businesses
+  set name     = coalesce(nullif(trim(p_name), ''), name),
+      category = coalesce(nullif(trim(p_category), ''), category),
+      city     = coalesce(nullif(trim(p_city), ''), city),
+      timezone = coalesce(nullif(trim(p_timezone), ''), timezone),
+      branding = case when p_branding is null then branding else branding || p_branding end
+  where id = p_business_id;
+
+  perform private.audit(p_business_id, 'business.updated', 'business', p_business_id::text,
+                        jsonb_build_object('branding_changed', p_branding is not null));
+end;
+$$;
+
+-- >>> 20261101000029_reverso_pase.sql
+-- =====================================================================
+-- Etapa 29 · Reverso del pase en la billetera
+--  * El comercio agrega datos que el cliente ve al reverso del pase (Apple)
+--    y en los enlaces del pase (Google): WhatsApp, Instagram, sitio web y horario.
+--  * Se guardan en businesses.pass_info (jsonb). Todo es opcional.
+--  * La dirección sale de los ajustes del comercio y de sus sedes; no se repite aquí.
+--  * Solo propietario y administrador los cambian (update_pass_info).
+-- =====================================================================
+
+create or replace function private.valid_pass_info(s jsonb)
+returns boolean
+language sql
+immutable
+set search_path = ''
+as $$
+  select jsonb_typeof(s) = 'object'
+    and not exists (select 1 from jsonb_object_keys(s) k where k not in ('whatsapp', 'instagram', 'website', 'hours'))
+    and (not (s ? 'whatsapp') or (jsonb_typeof(s -> 'whatsapp') = 'string' and (s ->> 'whatsapp') ~ '^\+?[0-9]{7,15}$'))
+    and (not (s ? 'instagram') or (jsonb_typeof(s -> 'instagram') = 'string' and (s ->> 'instagram') ~ '^[A-Za-z0-9._]{1,30}$'))
+    and (not (s ? 'website') or (jsonb_typeof(s -> 'website') = 'string' and (s ->> 'website') ~ '^https://[^\s<>"]{3,200}$'))
+    and (not (s ? 'hours') or (jsonb_typeof(s -> 'hours') = 'string' and length(btrim(s ->> 'hours')) between 3 and 300));
+$$;
+
+alter table public.businesses
+  add column if not exists pass_info jsonb not null default '{}'::jsonb;
+alter table public.businesses drop constraint if exists businesses_pass_info_valid;
+alter table public.businesses add constraint businesses_pass_info_valid check (private.valid_pass_info(pass_info));
+
+create or replace function public.update_pass_info(p_business_id uuid, p_info jsonb)
+returns void
+language plpgsql
+volatile security definer
+set search_path = ''
+as $$
+begin
+  if not (private.has_role(p_business_id, '{owner,admin}') or private.is_superadmin()) then raise exception 'FORBIDDEN'; end if;
+  if p_info is null or not private.valid_pass_info(p_info) then raise exception 'INVALID_PASS_INFO'; end if;
+  update public.businesses set pass_info = p_info where id = p_business_id;
+  perform private.audit(p_business_id, 'wallet.pass_info_updated', 'business', p_business_id::text, p_info);
+end;
+$$;
+
+revoke all on function public.update_pass_info(uuid, jsonb) from public, anon, authenticated;
+grant execute on function public.update_pass_info(uuid, jsonb) to authenticated;
+
+-- >>> 20261101000030_qr_tarjeta.sql
+-- =====================================================================
+-- Etapa 30 · La tarjeta web es igual al pase de Wallet («el hilo»)
+--  * branding admite además 'passQr' (verdadero o falso): el comercio decide si la tarjeta
+--    y el pase de Wallet llevan código QR. Sin definir, se muestra.
+--  * Solo cambia la validación de update_business_profile; nada más. No toca datos.
+-- =====================================================================
+
+create or replace function public.update_business_profile(
+  p_business_id uuid,
+  p_name text,
+  p_category text,
+  p_city text,
+  p_timezone text,
+  p_branding jsonb
+)
+returns void
+language plpgsql
+volatile security definer
+set search_path = ''
+as $$
+declare
+  k text;
+  v text;
+begin
+  if not (private.has_role(p_business_id, '{owner,admin}') or private.is_superadmin()) then
+    raise exception 'FORBIDDEN';
+  end if;
+  if p_branding is not null then
+    for k in select jsonb_object_keys(p_branding) loop
+      v := p_branding ->> k;
+      if k = 'logoText' then
+        if v is null or length(trim(v)) not between 1 and 3 then raise exception 'INVALID_BRANDING'; end if;
+      elsif k in ('logoUrl', 'coverUrl', 'stampUrl') then
+        -- Vacío = quitar la imagen. Si no, solo una imagen de su propia carpeta en Storage.
+        if v is null or (v <> '' and v !~ ('^https://[a-z0-9-]+\.supabase\.co/storage/v1/object/public/brand-assets/'
+                                           || p_business_id::text || '/[A-Za-z0-9._-]+$')) then
+          raise exception 'INVALID_BRANDING';
+        end if;
+      elsif k = 'stampIcon' then
+        if v is null or v not in ('check', 'heart', 'star', 'sparkles', 'flower', 'gem', 'crown', 'scissors') then
+          raise exception 'INVALID_BRANDING';
+        end if;
+      elsif k = 'font' then
+        if v is null or v not in ('serif', 'sans', 'elegante', 'manuscrita', 'redondeada', 'impacto', 'geometrica') then
+          raise exception 'INVALID_BRANDING';
+        end if;
+      elsif k = 'cardStyle' then
+        if v is null or v not in ('clasico', 'noche', 'cristal', 'negro', 'marfil') then
+          raise exception 'INVALID_BRANDING';
+        end if;
+      elsif k = 'passQr' then
+        -- Código QR en la tarjeta y en el pase: solo verdadero o falso.
+        if jsonb_typeof(p_branding -> k) is distinct from 'boolean' then raise exception 'INVALID_BRANDING'; end if;
+      elsif k in ('primary', 'primaryForeground', 'accent', 'cardBackground', 'cardForeground') then
+        if v is null or v !~ '^#[0-9a-fA-F]{6}$' then raise exception 'INVALID_BRANDING'; end if;
+      else
+        raise exception 'INVALID_BRANDING';
+      end if;
+    end loop;
+  end if;
+
+  update public.businesses
+  set name     = coalesce(nullif(trim(p_name), ''), name),
+      category = coalesce(nullif(trim(p_category), ''), category),
+      city     = coalesce(nullif(trim(p_city), ''), city),
+      timezone = coalesce(nullif(trim(p_timezone), ''), timezone),
+      branding = case when p_branding is null then branding else branding || p_branding end
+  where id = p_business_id;
+
+  perform private.audit(p_business_id, 'business.updated', 'business', p_business_id::text,
+                        jsonb_build_object('branding_changed', p_branding is not null));
+end;
+$$;
 
 commit;

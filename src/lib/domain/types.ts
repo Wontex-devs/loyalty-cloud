@@ -66,6 +66,8 @@ export interface BusinessBranding {
   font?: CardFont;
   /** Estilo de la tarjeta: clásico (por defecto), noche y oro, cristal o negro mate. */
   cardStyle?: CardStyle;
+  /** Código QR en la tarjeta y en el pase de Wallet. Sin definir = se muestra. */
+  passQr?: boolean;
   primary: string; // color de marca
   primaryForeground: string;
   accent: string;
