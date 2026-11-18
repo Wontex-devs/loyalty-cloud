@@ -15,7 +15,7 @@ const SELLOS = 6;
 
 /**
  * El pase de Barbería El Faro (negocio de ejemplo) para la portada, con el mismo diseño que el
- * pase real de Wallet: conteo arriba, la franja con el premio y el hilo de sellos, y los datos.
+ * pase real de Wallet: conteo arriba, y la franja con el premio y el hilo de sellos.
  * Usa la misma geometría que la tarjeta real (`hilo`), así la portada no promete otra cosa.
  *
  * Cada sello ganado es una capa encima del círculo vacío; quien lo usa decide cómo aparece:
@@ -30,7 +30,7 @@ export function PaseHilo({
   /** Contenido del conteo, p. ej. «5 / 6» o las dos capas que se alternan. */
   contador: React.ReactNode;
   sello: (i: number) => { ref?: (n: Element | null) => void; className?: string; style?: React.CSSProperties };
-  /** Sin «progreso»: para el celular pequeño de la historia. */
+  /** Más pequeño: para el celular de la historia. */
   compacto?: boolean;
   className?: string;
 }) {
@@ -99,31 +99,7 @@ export function PaseHilo({
         })}
       </div>
 
-      <div className={`flex items-start justify-between gap-3 px-3.5 pt-2.5 ${compacto ? "pb-3" : ""}`}>
-        <div className="min-w-0">
-          <p className={etiqueta} style={{ color: SOL }}>
-            Miembro
-          </p>
-          <p className="truncate text-[13px] leading-snug">Andrés Molina</p>
-        </div>
-        <div className="shrink-0 text-right">
-          <p className={etiqueta} style={{ color: SOL }}>
-            Desde
-          </p>
-          <p className="text-[13px] leading-snug">Nov 2026</p>
-        </div>
-      </div>
-
-      {!compacto && (
-        <>
-          <div className="px-3.5 pt-2 pb-5">
-            <p className={etiqueta} style={{ color: SOL }}>
-              Tu progreso
-            </p>
-            <p className="text-[12.5px] leading-snug">Te falta 1 visita para Corte gratis</p>
-          </div>
-        </>
-      )}
+      <div className="h-4" />
     </div>
   );
 }

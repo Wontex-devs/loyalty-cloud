@@ -4,17 +4,17 @@ import { BrandMark, brandCase, brandFont } from "./brand-mark";
 import { HiloStrip } from "./hilo-strip";
 import { cn } from "@/lib/utils";
 import { cardTheme } from "@/lib/domain/card-palette";
-import { memberSinceText } from "@/lib/wallet/pass";
 import type { Business, CardStatus, LoyaltyProgram } from "@/lib/domain/types";
 
 export interface LoyaltyCardViewProps {
   business: Pick<Business, "name" | "branding">;
   program: Pick<LoyaltyProgram, "name" | "stampsRequired" | "rewardName">;
-  customerName: string;
+  /** Ya no se muestra en la tarjeta (solo conteo, premio y sellos). */
+  customerName?: string;
   stamps: number;
   status: CardStatus;
   rewardsAvailable: number;
-  /** Fecha de inscripción (ISO). Se muestra como «Nov 2026». */
+  /** Ya no se muestra en la tarjeta. */
   memberSince?: string;
   highlightLastStamp?: boolean;
   compact?: boolean;
@@ -25,7 +25,7 @@ export interface LoyaltyCardViewProps {
 
 /**
  * La tarjeta de fidelización, con la misma forma que el pase de Apple Wallet: logo y conteo
- * arriba, la franja con el premio y el hilo de sellos y los datos del miembro. Sin código QR.
+ * arriba y la franja con el premio y el hilo de sellos. Nada más: sin datos del miembro ni código QR.
  * Lo que se ve aquí es lo que el cliente guarda en su billetera: solo usa lo que Wallet permite
  * (dos colores planos, la letra de la marca dentro de la franja y el orden fijo de las piezas).
  * Se usa en la tarjeta pública, la vista previa del panel y la portada.
@@ -33,11 +33,9 @@ export interface LoyaltyCardViewProps {
 export function LoyaltyCardView({
   business,
   program,
-  customerName,
   stamps,
   status,
   rewardsAvailable,
-  memberSince,
   highlightLastStamp,
   compact,
   className,
@@ -48,17 +46,7 @@ export function LoyaltyCardView({
   const c = cardTheme({ cardBackground: b.cardBackground, cardForeground: b.cardForeground });
   const required = program.stampsRequired;
   const sellos = Math.min(stamps, required);
-  const remaining = Math.max(required - sellos, 0);
   const ready = rewardsAvailable > 0 || status === "reward_available";
-  const desde = memberSinceText(memberSince);
-  // Mismo texto que el pase muestra y envía como notificación.
-  const progreso =
-    status === "blocked"
-      ? "Tarjeta bloqueada. Habla con el comercio."
-      : ready
-        ? `Premio listo: ${program.rewardName}`
-        : `${remaining === 1 ? "Te falta 1 visita" : `Te faltan ${remaining} visitas`} para ${program.rewardName}`;
-
   const nombreLargo = business.name.trim().length;
   const label = "text-[10.5px] leading-tight font-semibold tracking-[0.06em] uppercase";
   const pad = compact ? "px-4" : "px-5";
@@ -95,30 +83,7 @@ export function LoyaltyCardView({
         highlightLastStamp={highlightLastStamp}
       />
 
-      {/* Datos del miembro */}
-      <div className={cn("flex items-start justify-between gap-4 pt-3", pad)}>
-        <div className="min-w-0">
-          <p className={label} style={{ color: c.passLabel }}>
-            Miembro
-          </p>
-          <p className="truncate text-[16px] leading-snug">{customerName}</p>
-        </div>
-        {desde && (
-          <div className="shrink-0 text-right">
-            <p className={label} style={{ color: c.passLabel }}>
-              Desde
-            </p>
-            <p className="text-[16px] leading-snug">{desde}</p>
-          </div>
-        )}
-      </div>
-      <div className={cn("pt-2.5", pad, compact ? "pb-5" : "pb-7")}>
-        <p className={label} style={{ color: c.passLabel }}>
-          Tu progreso
-        </p>
-        <p className="text-[15px] leading-snug">{progreso}</p>
-      </div>
-
+      <div className={compact ? "h-4" : "h-5"} />
     </div>
   );
 }

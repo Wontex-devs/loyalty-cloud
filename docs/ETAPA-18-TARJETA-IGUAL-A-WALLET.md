@@ -12,7 +12,7 @@ Fecha: 18 de noviembre de 2026.
 
 1. **Fila superior:** logo, nombre del comercio y «SELLOS 3 / 8». Es lo único que se ve cuando las tarjetas están apiladas en Wallet.
 2. **Franja «el hilo»:** el premio como protagonista, en la letra de la marca, y un hilo fino que enhebra los sellos hasta cerrar en un aro alrededor del premio. De fondo, la inicial del comercio casi transparente.
-3. **Datos:** «MIEMBRO», «DESDE» (mes y año de inscripción) y «TU PROGRESO», que es la misma frase que llega como notificación en cada visita.
+3. **Sin datos debajo.** Al principio llevaba «MIEMBRO», «DESDE» y «TU PROGRESO»; se quitaron (18 nov 2026) para que sea solo la tarjeta. La frase de progreso sigue al reverso del pase y es la que llega como notificación en cada visita.
 4. **Sin código QR.** Se probó con un QR al final y se quitó el mismo día: no se veía bien y los sellos se suman con la tarjeta NFC del mostrador.
 
 ## Qué puede personalizar el comercio

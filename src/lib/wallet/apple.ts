@@ -98,7 +98,8 @@ export function passJson(cfg: Pick<AppleWalletConfig, "passTypeId" | "teamId" | 
   // Mismos colores que la tarjeta web: texto legible y etiquetas con el color del comercio.
   const c = passTheme(p);
   const label = c.passLabel;
-  const back: Record<string, unknown>[] = [{ key: "progress", label: "Tu progreso", value: progressText(p) }];
+  // El progreso va al reverso; su changeMessage es el aviso de cada visita (uno solo, no varios).
+  const back: Record<string, unknown>[] = [{ key: "progress", label: "Tu progreso", value: progressText(p), ...(statusNotifies(p, extras.settings) ? { changeMessage: "%@" } : {}) }];
   if (p.promotion) back.push({ key: "promo", label: `Hoy: ${p.promotion.name}`, value: `Tu visita de hoy suma ${1 + p.promotion.bonusStamps} sellos.` });
   if (message) back.push({ key: "message", label: message.title, value: message.body, changeMessage: "%@" });
   // Datos del comercio: WhatsApp, Instagram, cómo llegar, horario y sitio web (se pueden tocar).
@@ -139,12 +140,9 @@ export function passJson(cfg: Pick<AppleWalletConfig, "passTypeId" | "teamId" | 
       headerFields: [{ key: "stamps", label: "SELLOS", value: `${p.stamps} / ${p.program.stampsRequired}`, textAlignment: "PKTextAlignmentRight" }],
       // La franja (strip.png) muestra el premio y el hilo de sellos: encima no va texto.
       primaryFields: [],
-      secondaryFields: [
-        { key: "customer", label: "MIEMBRO", value: p.customerName },
-        ...(p.memberSince ? [{ key: "since", label: "DESDE", value: p.memberSince, textAlignment: "PKTextAlignmentRight" }] : []),
-      ],
-      // El único campo con changeMessage del frente: una notificación por visita, no varias.
-      auxiliaryFields: [{ key: "status", label: "TU PROGRESO", value: statusText(p), ...(statusNotifies(p, extras.settings) ? { changeMessage: "%@" } : {}) }],
+      // El frente es solo la tarjeta: sin datos del miembro. El progreso está al reverso.
+      secondaryFields: [],
+      auxiliaryFields: [],
       backFields: back,
     },
   };
