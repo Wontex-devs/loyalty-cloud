@@ -55,6 +55,28 @@ export async function startSupportSessionAction(_prev: SupportState, form: FormD
   redirect(`/business/${parsed.data.slug}`);
 }
 
+/**
+ * Superadministrador: entra al comercio con un clic, con acceso completo (modo edición, 2 horas).
+ * No pide motivo: la entrada queda igual en la auditoría del comercio con este texto fijo.
+ * Al vencer, basta otro clic. Soporte no puede usarla (la base también lo rechaza).
+ */
+export async function entrarComoSuperadminAction(businessId: string, slug: string): Promise<SupportState> {
+  if (!z.uuid().safeParse(businessId).success || !/^[a-z0-9-]{2,60}$/.test(slug)) return { error: "Comercio no válido." };
+  const session = await getSession();
+  if (!session || !esSuperadmin(session.profile)) return { error: "Solo un superadministrador puede entrar así." };
+
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("start_support_session", {
+    p_business_id: businessId,
+    p_reason: "Acceso directo del superadministrador",
+    p_minutes: 120,
+    p_mode: "edit",
+  });
+  if (error) return { error: error.message.includes("NOT_FOUND") ? "No se encontró el comercio." : "No se pudo entrar al comercio." };
+  revalidatePath(`/business/${slug}`, "layout");
+  redirect(`/business/${slug}`);
+}
+
 /** Cierra la sesión y vuelve a la ficha del comercio en el panel de la plataforma. */
 export async function endSupportSessionAction(businessId: string) {
   if (!z.uuid().safeParse(businessId).success) return;

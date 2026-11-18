@@ -13,6 +13,7 @@ import { Avatar, Badge, Button, ButtonLink, Card, CardHeader, EmptyState, Field,
 import { formatDate, formatMoney, formatNumber } from "@/lib/utils";
 import { Store } from "lucide-react";
 import { BrandMark } from "@/components/loyalty/brand-mark";
+import { EntrarComercioBoton } from "@/components/business/entrar-comercio";
 import { DeleteBusiness } from "@/components/admin/delete-business";
 import { Aviso, Modal, usePuedeEditar } from "@/components/admin/piezas";
 
@@ -54,10 +55,14 @@ export default function AdminBusinessDetail() {
             {b.category} · {b.city} · desde {formatDate(b.createdAt)}
           </p>
         </div>
-        {/* Soporte entra solo a leer; el superadministrador elige ver o editar. Ambos con motivo y en la auditoría del comercio. */}
-        <ButtonLink href={`/business/${b.slug}`} variant="secondary">
-          <Eye className="size-4" /> {puedeEditar ? "Entrar al comercio" : "Ver como el comercio"}
-        </ButtonLink>
+        {/* Superadministrador: un clic y entra con acceso completo. Soporte: solo lectura, con motivo. Ambos quedan en la auditoría del comercio. */}
+        {puedeEditar ? (
+          <EntrarComercioBoton businessId={b.id} slug={b.slug} />
+        ) : (
+          <ButtonLink href={`/business/${b.slug}`} variant="secondary">
+            <Eye className="size-4" /> Ver como el comercio
+          </ButtonLink>
+        )}
         {puedeEditar && (
           <div className="flex gap-2">
             <Button

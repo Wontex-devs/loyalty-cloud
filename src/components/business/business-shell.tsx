@@ -154,15 +154,13 @@ export function BusinessShell({ slug, children }: { slug: string; children: Reac
       ) : (
         <ScopeCtx.Provider value={scope}>
           {supportView?.modo === "edit" && (
-            <div className="mb-6 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-lg border border-danger/30 bg-danger-bg px-4 py-3 text-sm text-danger">
-              <PencilLine className="size-4 shrink-0" />
+            <div className="mb-6 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-lg border border-cobalt/20 bg-cobalt/5 px-4 py-2.5 text-sm text-ink-2">
+              <PencilLine className="size-4 shrink-0 text-cobalt" />
               <span className="flex-1">
-                <strong>Modo edición de superadministrador.</strong> Estás dentro de {business.name} con permisos de propietario: los cambios son reales,
-                quedan a tu nombre en su historial y el comercio los ve. Vence a las{" "}
-                {new Date(supportView.expiresAt).toLocaleTimeString("es-CO", { hour: "numeric", minute: "2-digit" })}.
+                Estás dentro de <strong>{business.name}</strong> como superadministrador. Tus cambios son reales y quedan en su historial.
               </span>
               <form action={endSupportSessionAction.bind(null, business.id)}>
-                <button className="rounded-md border border-danger/40 px-2.5 py-1 text-xs font-medium hover:bg-danger/10">Salir del modo edición</button>
+                <button className="rounded-md border border-line-strong bg-surface px-2.5 py-1 text-xs font-medium hover:bg-canvas">Volver a la plataforma</button>
               </form>
             </div>
           )}
