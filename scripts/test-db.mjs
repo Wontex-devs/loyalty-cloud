@@ -224,6 +224,17 @@ check("empleado no puede subir logos", !r.ok, r);
 r = await as(U.ownerA, "insert into storage.objects (bucket_id, name) values ('brand-assets', 'sin-carpeta.webp')");
 check("archivo fuera de una carpeta de comercio es rechazado", !r.ok, r);
 
+// Etapa 27: estilos premium de la tarjeta.
+for (const cardStyle of ["noche", "cristal", "negro", "clasico"]) {
+  r = await as(U.ownerA, "select public.update_business_profile($1, null, null, null, null, $2::jsonb)", [A, JSON.stringify({ cardStyle })]);
+  if (!r.ok) break;
+}
+check("se aceptan los cuatro estilos de tarjeta", r.ok, r);
+r = await as(U.ownerA, "select public.update_business_profile($1, null, null, null, null, $2::jsonb)", [A, JSON.stringify({ cardStyle: "dorado" })]);
+check("un estilo de tarjeta desconocido se rechaza", expectError(r, "INVALID_BRANDING"), r);
+r = await as(U.staffA, "select public.update_business_profile($1, null, null, null, null, $2::jsonb)", [A, JSON.stringify({ cardStyle: "negro" })]);
+check("un empleado no puede cambiar el estilo de la tarjeta", expectError(r, "FORBIDDEN"), r);
+
 // ---------- Recompensas ----------
 console.log("\nRecompensas y canjes");
 await as(U.staffA, "select public.register_visit($1, 'op-key-0003')", [cardA]);

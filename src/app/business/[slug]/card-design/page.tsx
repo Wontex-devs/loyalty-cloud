@@ -5,6 +5,7 @@ import { Download, ImageUp, Loader2, Printer, Trash2 } from "lucide-react";
 import { QRCodeCanvas, QRCodeSVG } from "qrcode.react";
 import { useScope, RequirePermission } from "@/components/business/business-shell";
 import { LoyaltyCardView } from "@/components/loyalty/loyalty-card";
+import { CARD_STYLE_INFO, CARD_STYLES, cardTheme } from "@/lib/domain/card-palette";
 import { BrandMark, brandCase, brandFont, CARD_FONT_STYLES, FILLED_STAMP_ICONS, STAMP_ICON_COMPONENTS, STAMP_ICON_LABELS, StampMark } from "@/components/loyalty/brand-mark";
 import { useData } from "@/lib/data/store";
 import { can } from "@/lib/domain/permissions";
@@ -169,6 +170,44 @@ export default function CardDesignPage() {
                   </Button>
                 )}
               </div>
+            </div>
+          </Card>
+
+          <Card>
+            <CardHeader title="Estilo de la tarjeta" description="Cambia el acabado de la tarjeta web y de los pases de Apple y Google Wallet. Usa tus colores y tu logo." />
+            <div className="grid grid-cols-2 gap-3 p-5 sm:grid-cols-4">
+              {CARD_STYLES.map((key) => {
+                const t = cardTheme({ ...b, cardStyle: key });
+                const selected = (b.cardStyle ?? "clasico") === key;
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => updateBranding(business.id, { cardStyle: key })}
+                    aria-pressed={selected}
+                    className={cn("rounded-xl border p-2 text-left transition", selected ? "border-ink shadow-card" : "border-line hover:border-line-strong hover:shadow-card")}
+                  >
+                    <div className="rounded-lg p-px" style={{ background: t.frame ?? "transparent" }}>
+                      <div className="relative flex h-16 flex-col justify-end overflow-hidden rounded-[7px] p-2" style={{ background: t.bgCss }}>
+                        {key === "cristal" && b.coverUrl && (
+                          <>
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={b.coverUrl} alt="" className="absolute inset-0 size-full object-cover" />
+                            <div className="absolute inset-0" style={{ background: t.veil }} />
+                          </>
+                        )}
+                        <div className="relative flex gap-1">
+                          {[0, 1, 2, 3].map((i) => (
+                            <span key={i} className="size-3 rounded-full" style={i < 2 ? { background: t.accentCss } : { background: t.slot, border: `1px solid ${t.slotBorder}` }} />
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                    <p className="mt-2 text-xs font-medium">{CARD_STYLE_INFO[key].label}</p>
+                    <p className="text-[11px] leading-snug text-muted">{CARD_STYLE_INFO[key].description}</p>
+                  </button>
+                );
+              })}
             </div>
           </Card>
 

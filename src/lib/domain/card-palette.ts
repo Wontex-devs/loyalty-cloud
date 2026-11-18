@@ -74,3 +74,128 @@ export function cardPalette(b: { cardBackground: string; cardForeground: string 
     slotBorder: alpha(text, 0.22),
   };
 }
+
+// ---------- Estilos de tarjeta ----------
+
+export const CARD_STYLES = ["clasico", "noche", "cristal", "negro"] as const;
+export type CardStyle = (typeof CARD_STYLES)[number];
+
+export const CARD_STYLE_INFO: Record<CardStyle, { label: string; description: string }> = {
+  clasico: { label: "Clásico", description: "Tus colores tal cual, con la foto arriba." },
+  noche: { label: "Noche y oro", description: "Tu color en tono profundo con detalles dorados." },
+  cristal: { label: "Cristal", description: "Tu foto de fondo y los sellos sobre vidrio." },
+  negro: { label: "Negro mate", description: "Negro elegante; tu color solo en los sellos." },
+};
+
+/** Oro metálico de los estilos premium. */
+export const GOLD = "#E8C873";
+export const GOLD_GRADIENT = "linear-gradient(135deg, #F6E3A1 0%, #D9B45A 35%, #B8892E 60%, #F2D88A 100%)";
+const GOLD_INK = "#2A1F08";
+
+/** Mezcla dos colores: t = 0 → a, t = 1 → b. */
+export function mix(a: string, b: string, t: number) {
+  const [r1, g1, b1] = channels(a);
+  const [r2, g2, b2] = channels(b);
+  const h = (x: number) => Math.round(x).toString(16).padStart(2, "0");
+  return `#${h(r1 + (r2 - r1) * t)}${h(g1 + (g2 - g1) * t)}${h(b1 + (b2 - b1) * t)}`.toUpperCase();
+}
+
+export interface CardTheme extends CardPalette {
+  style: CardStyle;
+  /** Fondo en CSS (degradado). `bg` es el color sólido equivalente para las billeteras. */
+  bgCss: string;
+  /** Relleno de los sellos ganados y de la barra (puede ser un degradado dorado). */
+  accentCss: string;
+  /** Etiquetas pequeñas (MIEMBRO, PREMIO…). */
+  label: string;
+  /** Marco fino alrededor de la tarjeta (solo Noche y oro). */
+  frame: string | null;
+  /** Cómo se usa la foto del local. */
+  photo: "fade" | "tint" | "full" | "none";
+  /** Velo sobre la foto en el estilo Cristal. */
+  veil: string;
+  /** Sellos y progreso sobre un panel de vidrio. */
+  glass: boolean;
+}
+
+export function cardTheme(b: { cardBackground: string; cardForeground: string; cardStyle?: CardStyle | string | null }): CardTheme {
+  const style: CardStyle = (CARD_STYLES as readonly string[]).includes(b.cardStyle ?? "") ? (b.cardStyle as CardStyle) : "clasico";
+  const base = cardPalette(b);
+  const brand = hex6(b.cardForeground, base.accent);
+  const color = hex6(b.cardBackground, "#EBCFCB");
+  const white = { text: LIGHT, muted: alpha(LIGHT, 0.62), slot: alpha(LIGHT, 0.08), slotBorder: alpha(LIGHT, 0.2) };
+
+  if (style === "noche") {
+    const deep = mix(color, "#000000", luminance(color) > 0.4 ? 0.62 : 0.5);
+    const lift = mix(color, "#000000", 0.15);
+    return {
+      ...base,
+      ...white,
+      style,
+      bg: deep,
+      bgCss: `radial-gradient(120% 90% at 0% 0%, ${lift} 0%, ${deep} 55%, ${mix(deep, "#000000", 0.45)} 100%)`,
+      accent: GOLD,
+      accentCss: GOLD_GRADIENT,
+      onAccent: GOLD_INK,
+      label: GOLD,
+      slotBorder: alpha(GOLD, 0.35),
+      frame: GOLD_GRADIENT,
+      photo: "tint",
+      veil: "",
+      glass: false,
+    };
+  }
+  if (style === "negro") {
+    const ink = "#111114";
+    const accent = contrast(brand, ink) >= 3 ? brand : GOLD;
+    return {
+      ...base,
+      ...white,
+      style,
+      bg: ink,
+      bgCss: "linear-gradient(160deg, #26262B 0%, #111114 55%, #050506 100%)",
+      accent,
+      accentCss: accent,
+      onAccent: readableOn(accent),
+      label: alpha(LIGHT, 0.42),
+      slot: "transparent",
+      slotBorder: alpha(LIGHT, 0.14),
+      frame: null,
+      photo: "none",
+      veil: "",
+      glass: false,
+    };
+  }
+  if (style === "cristal") {
+    const deep = mix(color, "#000000", 0.55);
+    const accent = contrast(brand, deep) >= 3 ? brand : LIGHT;
+    return {
+      ...base,
+      ...white,
+      style,
+      bg: deep,
+      bgCss: `linear-gradient(160deg, ${mix(color, "#000000", 0.2)} 0%, ${deep} 100%)`,
+      accent,
+      accentCss: accent,
+      onAccent: readableOn(accent),
+      label: alpha(LIGHT, 0.7),
+      slot: alpha(LIGHT, 0.14),
+      slotBorder: alpha(LIGHT, 0.3),
+      frame: null,
+      photo: "full",
+      veil: `linear-gradient(180deg, ${alpha(deep, 0.3)} 0%, ${alpha(deep, 0.78)} 100%)`,
+      glass: true,
+    };
+  }
+  return {
+    ...base,
+    style,
+    bgCss: `linear-gradient(140deg, rgba(255,255,255,0.14) 0%, rgba(255,255,255,0) 45%, rgba(0,0,0,0.14) 100%), ${base.bg}`,
+    accentCss: base.accent,
+    label: base.muted,
+    frame: null,
+    photo: "fade",
+    veil: "",
+    glass: false,
+  };
+}

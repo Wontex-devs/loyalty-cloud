@@ -51,6 +51,8 @@ export const STAMP_ICONS = ["check", "heart", "star", "sparkles", "flower", "gem
 export type StampIcon = (typeof STAMP_ICONS)[number];
 export const CARD_FONTS = ["serif", "sans", "elegante", "manuscrita", "redondeada", "impacto", "geometrica"] as const;
 export type CardFont = (typeof CARD_FONTS)[number];
+export type { CardStyle } from "./card-palette";
+import type { CardStyle } from "./card-palette";
 
 export interface BusinessBranding {
   logoText: string; // monograma mientras no hay logo subido
@@ -62,6 +64,8 @@ export interface BusinessBranding {
   /** Sello propio (imagen en la misma carpeta que el logo). Si existe, reemplaza al icono. */
   stampUrl?: string;
   font?: CardFont;
+  /** Estilo de la tarjeta: clásico (por defecto), noche y oro, cristal o negro mate. */
+  cardStyle?: CardStyle;
   primary: string; // color de marca
   primaryForeground: string;
   accent: string;
