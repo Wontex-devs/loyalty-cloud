@@ -967,6 +967,25 @@ console.log("\nEtapa 26 · Mensaje de cercanía editable");
   await db.query("update public.businesses set wallet_notifications = $2 where id = $1", [A, JSON.stringify(base)]);
 }
 
+console.log("\nEtapa 29 · Reverso del pase");
+{
+  const info = { whatsapp: "+573001234567", instagram: "prueba.salon", website: "https://prueba.example.com", hours: "Lun a sáb 9:00–19:00" };
+  let r = await as(U.ownerA, "select public.update_pass_info($1, $2)", [A, JSON.stringify(info)]);
+  const saved = (await db.query("select pass_info from public.businesses where id = $1", [A])).rows[0].pass_info;
+  check("el dueño guarda WhatsApp, Instagram, web y horario", r.ok && saved.instagram === "prueba.salon", { r, saved });
+  r = await as(U.ownerA, "select public.update_pass_info($1, $2)", [A, JSON.stringify({})]);
+  check("todo es opcional: se puede dejar vacío", r.ok, r);
+  for (const bad of [{ whatsapp: "300-123" }, { instagram: "@con espacio" }, { website: "http://inseguro.com" }, { website: "javascript:alert(1)" }, { hours: "x".repeat(301) }, { otra: "cosa" }]) {
+    r = await as(U.ownerA, "select public.update_pass_info($1, $2)", [A, JSON.stringify(bad)]);
+    if (!expectError(r, "INVALID_PASS_INFO")) break;
+  }
+  check("datos inválidos se rechazan (teléfono, usuario, enlace, horario, claves)", expectError(r, "INVALID_PASS_INFO"), r);
+  r = await as(U.staffA, "select public.update_pass_info($1, $2)", [A, JSON.stringify(info)]);
+  check("un empleado no cambia el reverso del pase", expectError(r, "FORBIDDEN"), r);
+  r = await as(U.ownerA, "select public.update_pass_info($1, $2)", [B, JSON.stringify(info)]);
+  check("no se cambia el reverso de otro comercio", expectError(r, "FORBIDDEN"), r);
+}
+
 console.log("\nAdministradores de la plataforma");
 {
   let r = await as(U.ownerA, "update public.profiles set platform_role = 'superadmin' where id = $1", [U.ownerA]);

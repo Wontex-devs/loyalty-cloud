@@ -9,7 +9,7 @@ import { listObjects, savedTokens, updateClass, updateObject } from "./google";
 import { visitNotice, walletSettings } from "./messages";
 import { deliverNotices, queueNotices } from "./notify";
 import { passFromCard } from "./pass";
-import { businessPlaces } from "./places-server";
+import { businessPassData } from "./places-server";
 
 /** Datos de una visita recién registrada, para su aviso (sello nuevo, te falta 1 o premio listo). */
 export interface VisitNoticeInput {
@@ -85,7 +85,8 @@ export function scheduleBusinessWalletSync(businessId: string) {
     try {
       // Sin sesión (p. ej. desde el lector NFC) se lee con la clave del servidor.
       const { data } = await createAdminClient().from("businesses").select("slug").eq("id", businessId).maybeSingle();
-      const [b, places] = data?.slug ? await Promise.all([getPublicBusiness(data.slug), businessPlaces({ businessId })]) : [null, undefined];
+      const [b, extra] = data?.slug ? await Promise.all([getPublicBusiness(data.slug), businessPassData({ businessId })]) : [null, undefined];
+      const places = extra?.places;
       const cfg = googleWalletConfig();
       if (!b || !cfg) return;
       await updateClass(cfg, {
@@ -101,6 +102,7 @@ export function scheduleBusinessWalletSync(businessId: string) {
         },
         program: { name: b.program.name, stampsRequired: b.program.stampsRequired, rewardName: b.program.rewardName },
         places,
+        info: extra?.info,
       });
       // Cada pase guardado lleva su imagen de sellos y su color: se actualizan todos.
       const tokens = [...savedTokens(cfg, await listObjects(cfg, b.slug))];

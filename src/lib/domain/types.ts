@@ -87,6 +87,8 @@ export interface Business {
   legal: BusinessLegal;
   /** Avisos automáticos en la billetera (Etapa 12). */
   walletNotifications: WalletSettings;
+  /** Reverso del pase: WhatsApp, Instagram, sitio web y horario (Etapa 29). */
+  passInfo: { whatsapp?: string; instagram?: string; website?: string; hours?: string };
   createdAt: ISODate;
 }
 

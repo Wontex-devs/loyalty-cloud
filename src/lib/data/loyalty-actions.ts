@@ -22,6 +22,7 @@ import { toCard, toCustomer } from "./mappers";
 import { scheduleBusinessWalletSync, scheduleCardWalletSync } from "@/lib/wallet/sync";
 import { deliverNotices } from "@/lib/wallet/notify";
 import { NEARBY_TEXT_MAX, NEARBY_TEXT_MIN } from "@/lib/wallet/messages";
+import { normalizePassInfo, type PassInfoInput } from "@/lib/wallet/pass-info";
 import { rateLimit } from "./rate-limit";
 
 export type JoinActionResult = { ok: true; token: string; existing: boolean } | { ok: false; message: string };
@@ -421,4 +422,27 @@ export async function unsubscribeMarketingAction(token: string): Promise<boolean
   if (error) return false;
   revalidatePath(`/card/${token}`);
   return data === true;
+}
+
+// ---------- Etapa 29: reverso del pase ----------
+
+/** Guarda WhatsApp, Instagram, sitio web y horario del reverso del pase y actualiza los pases guardados. */
+export async function updatePassInfoAction(
+  businessId: string,
+  raw: { whatsapp?: string; instagram?: string; website?: string; hours?: string },
+): Promise<{ ok: true; info: PassInfoInput } | { ok: false; message: string }> {
+  if (!z.uuid().safeParse(businessId).success) return { ok: false, message: "Comercio no válido." };
+  const n = normalizePassInfo({
+    whatsapp: String(raw.whatsapp ?? "").slice(0, 40),
+    instagram: String(raw.instagram ?? "").slice(0, 80),
+    website: String(raw.website ?? "").slice(0, 220),
+    hours: String(raw.hours ?? "").slice(0, 400),
+  });
+  if (!n.ok) return n;
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("update_pass_info", { p_business_id: businessId, p_info: n.info });
+  if (error) return { ok: false, message: dbErrorMessage(error, "No se pudo guardar.") };
+  scheduleBusinessWalletSync(businessId);
+  revalidatePath("/business", "layout");
+  return { ok: true, info: n.info };
 }

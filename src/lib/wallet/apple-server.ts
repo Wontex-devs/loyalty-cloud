@@ -10,7 +10,7 @@ import { passStrip, type PassStripInput } from "@/components/brand/pass-strip";
 import { buildPkpass, type AppleWalletConfig, type PassMessage } from "./apple";
 import { walletSettings } from "./messages";
 import { passFromCard } from "./pass";
-import { businessPlaces } from "./places-server";
+import { businessPassData } from "./places-server";
 
 /** Mensajes del comercio que se muestran al reverso del pase (no los de cada visita). */
 const MESSAGE_KINDS = ["campaign", "birthday", "winback"];
@@ -79,7 +79,7 @@ export async function pkpassFor(cfg: AppleWalletConfig, token: string, origin: s
   const card = await getPublicCard(token);
   if (!card) return null;
   const ids = await cardBySerial(token);
-  const [images, message, settings, places, firstName] = await Promise.all([
+  const [images, message, settings, extra, firstName] = await Promise.all([
     passImages(card.business, {
       branding: card.business.branding,
       stamps: Math.min(card.stamps, card.program.stampsRequired),
@@ -88,10 +88,10 @@ export async function pkpassFor(cfg: AppleWalletConfig, token: string, origin: s
     }),
     ids ? latestMessage(ids.cardId) : null,
     ids ? businessSettings(ids.businessId) : null,
-    ids ? businessPlaces({ businessId: ids.businessId }) : undefined,
+    ids ? businessPassData({ businessId: ids.businessId }) : undefined,
     ids ? firstNameOf(ids.customerId) : null,
   ]);
-  return buildPkpass(cfg, passFromCard(card, origin, places), origin, images, { message, settings, firstName });
+  return buildPkpass(cfg, passFromCard(card, origin, extra?.places, extra?.info), origin, images, { message, settings, firstName });
 }
 
 export function pkpassResponse(pass: Buffer, token: string) {

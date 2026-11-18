@@ -5,6 +5,7 @@
  */
 import { createSign } from "node:crypto";
 import { passTheme, progressText, stripUrl, type WalletPass } from "./pass.ts";
+import { googleInfoModules } from "./pass-info.ts";
 
 export interface GoogleWalletConfig {
   issuerId: string;
@@ -24,7 +25,8 @@ export const objectId = (cfg: Pick<GoogleWalletConfig, "issuerId">, token: strin
 const text = (value: string) => ({ defaultValue: { language: "es", value } });
 
 /** Clase = diseño común del comercio (nombre, logo, color). */
-export function loyaltyClass(cfg: Pick<GoogleWalletConfig, "issuerId" | "smartTap">, p: Pick<WalletPass, "business" | "program" | "places">) {
+export function loyaltyClass(cfg: Pick<GoogleWalletConfig, "issuerId" | "smartTap">, p: Pick<WalletPass, "business" | "program" | "places" | "info">) {
+  const info = p.info ? googleInfoModules(p.info) : null;
   return {
     id: classId(cfg, p.business.slug),
     issuerName: p.business.name,
@@ -39,6 +41,9 @@ export function loyaltyClass(cfg: Pick<GoogleWalletConfig, "issuerId" | "smartTa
     // Sedes (máximo 10): Google avisa al cliente cuando entra al radio que Google define.
     // Una lista vacía borra las que hubiera; sin consultar las sedes no se tocan.
     ...(p.places ? { merchantLocations: p.places.map((l) => ({ latitude: l.latitude, longitude: l.longitude })) } : {}),
+    // WhatsApp, Instagram, cómo llegar y horario: iguales para todos los clientes, van en la clase.
+    // Sin consultarlos no se tocan; si el comercio los borra, las listas vacías los quitan.
+    ...(info ? { linksModuleData: { uris: info.links }, textModulesData: info.texts } : {}),
   };
 }
 
@@ -147,7 +152,7 @@ export async function addMessage(cfg: GoogleWalletConfig, token: string, m: { id
 }
 
 export const updateObject =(cfg: GoogleWalletConfig, p: WalletPass) => patch(cfg, "loyaltyObject", objectId(cfg, p.token), loyaltyObject(cfg, p));
-export const updateClass = (cfg: GoogleWalletConfig, p: Pick<WalletPass, "business" | "program" | "places">) => patch(cfg, "loyaltyClass", classId(cfg, p.business.slug), loyaltyClass(cfg, p));
+export const updateClass = (cfg: GoogleWalletConfig, p: Pick<WalletPass, "business" | "program" | "places" | "info">) => patch(cfg, "loyaltyClass", classId(cfg, p.business.slug), loyaltyClass(cfg, p));
 
 export interface GoogleObjectSummary {
   id: string;
