@@ -60,27 +60,26 @@ test("el pase muestra sellos arriba, miembro, desde cuándo y progreso, sin cód
   assert.deepEqual(j.storeCard.headerFields.map((f) => [f.label, f.value]), [["SELLOS", "6 / 9"]]);
   // El premio y el hilo de sellos van dibujados en la franja.
   assert.equal(j.storeCard.primaryFields.length, 0);
-  assert.deepEqual(j.storeCard.secondaryFields.map((f) => [f.label, f.value]), [["MIEMBRO", "Sofía Martínez"], ["DESDE", "Jul 2026"]]);
+  // El frente es solo la tarjeta: sin datos del miembro ni frase de progreso.
+  assert.equal(j.storeCard.secondaryFields.length, 0);
+  assert.equal(j.storeCard.auxiliaryFields.length, 0);
   // Fondo rosado claro: texto casi negro y etiquetas con el color del comercio.
   assert.equal(j.foregroundColor, "rgb(22, 19, 15)");
   assert.equal(j.labelColor, "rgb(26, 20, 22)");
-  assert.equal(j.storeCard.auxiliaryFields[0].label, "TU PROGRESO");
-  assert.equal(j.storeCard.auxiliaryFields[0].value, "Te faltan 3 visitas para Manicura gratis");
+  // El progreso va al reverso y es el aviso de cada visita.
+  const progreso = j.storeCard.backFields.find((f) => f.key === "progress");
+  assert.equal(progreso?.value, "Te faltan 3 visitas para: Manicura gratis.");
+  assert.equal(progreso?.changeMessage, "%@");
   assert.equal("barcodes" in j, false);
   assert.equal("voided" in j, false);
   assert.equal(j.sharingProhibited, true);
   assert.ok(j.storeCard.backFields.some((f) => f.value === `${origin}/card/${card.token}`));
 });
 
-test("sin fecha válida no hay «desde»", () => {
-  const sinFecha = passJson(base, passFromCard({ ...card, memberSince: "" }, origin), origin);
-  assert.deepEqual(sinFecha.storeCard.secondaryFields.map((f) => f.label), ["MIEMBRO"]);
-});
-
 test("con premio listo lo destaca; tarjeta bloqueada queda anulada", () => {
   const conPremio = passFromCard({ ...card, stamps: 9, rewards: [{ name: "Manicura gratis" }] }, origin);
   const j = passJson(base, conPremio, origin);
-  assert.equal(j.storeCard.auxiliaryFields[0].value, "Premio listo: Manicura gratis");
+  assert.match(String(j.storeCard.backFields.find((f) => f.key === "progress")?.value), /Tienes tu Manicura gratis/);
   assert.equal(statusText(conPremio), "Premio listo: Manicura gratis");
   assert.equal(passJson(base, passFromCard({ ...card, status: "blocked" }, origin), origin).voided, true);
 });
@@ -108,7 +107,7 @@ test("el aviso del iPhone respeta los avisos que el comercio apagó", () => {
   const off = { stamp: false, near: true, reward: true };
   assert.equal(statusNotifies(p, null), true);
   assert.equal(statusNotifies(p, off), false);
-  assert.equal("changeMessage" in passJson(base, p, origin, { settings: off }).storeCard.auxiliaryFields[0], false);
+  assert.equal("changeMessage" in passJson(base, p, origin, { settings: off }).storeCard.backFields.find((f) => f.key === "progress")!, false);
   assert.equal(statusNotifies(passFromCard({ ...card, stamps: 8 }, origin), off), true, "te falta 1");
   assert.equal(statusNotifies(passFromCard({ ...card, rewards: [{ name: "X" }] }, origin), { ...off, reward: false }), false);
 });
