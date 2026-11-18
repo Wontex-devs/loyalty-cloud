@@ -1,5 +1,7 @@
 import { getPublicCard } from "@/lib/data/public";
 import { stampStrip } from "@/components/brand/stamp-strip";
+import { walletFonts } from "@/lib/wallet/fonts";
+import { stripTitle } from "@/lib/wallet/apple-server";
 
 type Ctx = { params: Promise<{ token: string; v: string }> };
 
@@ -12,7 +14,9 @@ export async function GET(_req: Request, { params }: Ctx) {
   const card = /^[A-Za-z0-9_-]{8,64}$/.test(token) ? await getPublicCard(token) : null;
   if (!card) return new Response("No encontrada", { status: 404 });
   const required = card.program.stampsRequired;
-  return stampStrip({ branding: card.business.branding, stamps: Math.min(card.stamps, required), required }, 1032, 336, {
-    "Cache-Control": "public, max-age=3600",
+  const fonts = await walletFonts(card.business.branding.font);
+  return stampStrip({ branding: card.business.branding, stamps: Math.min(card.stamps, required), required, ...stripTitle(card) }, 1032, 336, {
+    headers: { "Cache-Control": "public, max-age=3600" },
+    fonts,
   });
 }

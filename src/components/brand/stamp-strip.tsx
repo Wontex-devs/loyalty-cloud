@@ -85,35 +85,48 @@ export interface StripInput {
   branding: Pick<BusinessBranding, "cardBackground" | "cardForeground" | "stampIcon" | "stampUrl" | "cardStyle" | "coverUrl">;
   stamps: number;
   required: number;
+  /** Título grande de la franja (p. ej. el nombre del club). */
+  title?: string;
+  /** Línea pequeña sobre el título (p. ej. el nombre del comercio). */
+  kicker?: string;
 }
 
-/** Filas y columnas de sellos para que quepan en una franja ancha y baja. */
+/** Filas y columnas de sellos para la zona derecha de la franja. */
 export function stripGrid(required: number) {
-  const rows = required <= 6 ? 1 : required <= 16 ? 2 : 3;
+  const rows = required <= 5 ? 1 : required <= 12 ? 2 : 3;
   return { rows, cols: Math.ceil(required / rows) };
 }
 
+/** Tamaño del título según lo largo que sea, para que quepa en dos líneas. */
+const titleSize = (t: string) => (t.length <= 12 ? 26 : t.length <= 18 ? 22 : t.length <= 26 ? 18 : 15);
+
 /**
- * Franja con los sellos de la tarjeta (PNG). Va en el pase de Apple Wallet (strip) y como
- * imagen principal del pase de Google Wallet. Mismo estilo que la tarjeta web.
+ * Franja del pase (PNG), al estilo de una revista: foto del local con velo, un arco fino,
+ * el título en letra elegante a la izquierda y los sellos a la derecha.
+ * Va en el pase de Apple Wallet (strip) y como imagen principal del pase de Google Wallet.
+ * `fonts` son las letras ya descargadas ("Titulo"); sin ellas se usa la letra por defecto.
  */
-export function stampStrip({ branding, stamps, required }: StripInput, width: number, height: number, headers?: Record<string, string>) {
+export function stampStrip(
+  { branding, stamps, required, title, kicker }: StripInput,
+  width: number,
+  height: number,
+  opts: { headers?: Record<string, string>; fonts?: { name: string; data: ArrayBuffer; weight: 400 | 500 | 600 | 700; style: "normal" }[] } = {},
+) {
   const c = cardTheme(branding);
-  // La foto del local va detrás de los sellos (menos en Negro mate), con un velo del color de la tarjeta.
+  const k = height / 144; // escala: la franja de Apple mide 144 puntos de alto
   const photo = c.photo !== "none" && branding.coverUrl?.startsWith("https://") ? branding.coverUrl : null;
-  const veil =
-    c.photo === "full"
-      ? c.veil
-      : c.photo === "tint"
-        ? `linear-gradient(180deg, ${alpha(c.bg, 0.62)} 0%, ${alpha(c.bg, 0.92)} 100%)`
-        : `linear-gradient(180deg, ${alpha(c.bg, 0.5)} 0%, ${alpha(c.bg, 0.86)} 100%)`;
-  const { rows, cols } = stripGrid(required);
-  const padX = width * 0.06;
-  const padY = height * 0.12;
-  const gap = Math.min(width, height) * 0.05;
-  const size = Math.floor(Math.min((width - 2 * padX - gap * (cols - 1)) / cols, (height - 2 * padY - gap * (rows - 1)) / rows));
+  const ink = photo ? "#FFFFFF" : c.text;
+  const soft = photo ? "rgba(255,255,255,0.82)" : c.muted;
   const stampUrl = branding.stampUrl?.startsWith("https://") ? branding.stampUrl : null;
   const icon = branding.stampIcon ?? "check";
+  const hasTitle = !!title;
+  const titleFont = opts.fonts?.some((f) => f.name === "Titulo") ? "Titulo" : undefined;
+
+  // Zona de sellos: a la derecha si hay título; si no, centrada en toda la franja.
+  const area = hasTitle ? width * 0.4 : width * 0.88;
+  const { rows, cols } = stripGrid(required);
+  const gap = 7 * k;
+  const size = Math.floor(Math.min((area - gap * (cols - 1)) / cols, (height - 30 * k - gap * (rows - 1)) / rows));
 
   const circle = (i: number) => {
     const filled = i < stamps;
@@ -121,10 +134,18 @@ export function stampStrip({ branding, stamps, required }: StripInput, width: nu
     const base = { width: size, height: size, borderRadius: size, display: "flex", alignItems: "center", justifyContent: "center", marginLeft: i % cols ? gap : 0 } as const;
     if (filled)
       return (
-        <div key={i} style={{ ...base, ...(c.accentCss.startsWith("linear") ? { backgroundImage: c.accentCss } : {}), backgroundColor: c.accent, boxShadow: `0 0 0 ${Math.round(size * 0.07)}px ${alpha(c.accent, 0.22)}, 0 ${Math.round(size * 0.06)}px ${Math.round(size * 0.16)}px rgba(0,0,0,0.4)` }}>
+        <div
+          key={i}
+          style={{
+            ...base,
+            ...(c.accentCss.startsWith("linear") ? { backgroundImage: c.accentCss } : {}),
+            backgroundColor: c.accent,
+            boxShadow: `0 0 0 ${Math.round(size * 0.07)}px ${alpha(c.accent, 0.25)}, 0 ${Math.round(size * 0.06)}px ${Math.round(size * 0.18)}px rgba(0,0,0,0.4)`,
+          }}
+        >
           {stampUrl ? (
             // eslint-disable-next-line @next/next/no-img-element, jsx-a11y/alt-text
-            <img src={stampUrl} width={size * 0.88} height={size * 0.88} style={{ borderRadius: size, background: "#ffffff", objectFit: "contain", padding: size * 0.1 }} />
+            <img src={stampUrl} width={size * 0.86} height={size * 0.86} style={{ borderRadius: size, background: "#ffffff", objectFit: "contain", padding: size * 0.1 }} />
           ) : (
             <Icon name={icon} size={size * 0.48} color={c.onAccent} />
           )}
@@ -132,48 +153,101 @@ export function stampStrip({ branding, stamps, required }: StripInput, width: nu
       );
     if (last)
       return (
-        <div key={i} style={{ ...base, background: alpha(c.accent, c.style === "negro" ? 0 : 0.12), border: `${Math.max(2, size * 0.022)}px solid ${alpha(c.accent, 0.75)}` }}>
-          <Icon name="gift" size={size * 0.46} color={c.accent} />
+        <div key={i} style={{ ...base, background: photo ? "rgba(0,0,0,0.25)" : alpha(c.accent, 0.12), border: `${Math.max(2, 1.5 * k)}px solid ${c.ornament}` }}>
+          <Icon name="gift" size={size * 0.46} color={c.ornament} />
         </div>
       );
     return (
       <div
         key={i}
-        style={{ ...base, background: c.slot === "transparent" ? "transparent" : photo ? alpha("#FFFFFF", 0.12) : c.slot, border: `${Math.max(1, size * 0.02)}px solid ${photo ? alpha("#FFFFFF", 0.35) : c.slotBorder}` }}
+        style={{
+          ...base,
+          background: photo ? "rgba(255,255,255,0.12)" : c.slot === "transparent" ? "transparent" : c.slot,
+          border: `${Math.max(1, 1.2 * k)}px solid ${photo ? "rgba(255,255,255,0.45)" : c.slotBorder}`,
+        }}
       />
     );
   };
 
+  const grid = (
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+      {Array.from({ length: rows }, (_, r) => (
+        <div key={r} style={{ display: "flex", marginTop: r ? gap : 0 }}>
+          {Array.from({ length: cols }, (_, j) => r * cols + j)
+            .filter((i) => i < required)
+            .map(circle)}
+        </div>
+      ))}
+    </div>
+  );
+
+  const full = { position: "absolute", top: 0, left: 0, width, height } as const;
   return new ImageResponse(
     (
-      <div
-        style={{
-          width: "100%",
-          height: "100%",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          position: "relative",
-          backgroundColor: c.bg,
-          backgroundImage: c.bgCss.replace(/,\s*#[0-9A-F]{6}$/i, ""),
-        }}
-      >
+      <div style={{ width: "100%", height: "100%", display: "flex", position: "relative", backgroundColor: c.bg, backgroundImage: c.bgCss.replace(/,\s*#[0-9A-F]{6}$/i, "") }}>
         {photo && (
           // eslint-disable-next-line @next/next/no-img-element, jsx-a11y/alt-text
-          <img src={photo} width={width} height={height} style={{ position: "absolute", top: 0, left: 0, width, height, objectFit: "cover" }} />
+          <img src={photo} width={width} height={height} style={{ ...full, objectFit: "cover" }} />
         )}
-        {photo && <div style={{ position: "absolute", top: 0, left: 0, width, height, backgroundImage: veil }} />}
-        {c.frame && <div style={{ position: "absolute", left: 0, bottom: 0, width, height: Math.max(2, Math.round(height / 144)), backgroundImage: c.frame }} />}
-        {Array.from({ length: rows }, (_, r) => (
-          <div key={r} style={{ display: "flex", marginTop: r ? gap : 0 }}>
-            {Array.from({ length: cols }, (_, k) => r * cols + k)
-              .filter((i) => i < required)
-              .map(circle)}
+        {/* Velo: tiñe la foto con el color de la tarjeta y oscurece la izquierda para el título */}
+        {photo && c.style !== "marfil" && <div style={{ ...full, background: alpha(c.bg, c.photo === "full" ? 0.3 : 0.45) }} />}
+        {photo && <div style={{ ...full, backgroundImage: "linear-gradient(90deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.28) 55%, rgba(0,0,0,0.18) 100%)" }} />}
+        {/* Arco fino, como un sello de lujo */}
+        <div
+          style={{
+            position: "absolute",
+            left: width * (hasTitle ? 0.4 : 0.6),
+            top: -height * 0.55,
+            width: height * 2,
+            height: height * 2,
+            borderRadius: height * 2,
+            border: `${Math.max(2, 1.6 * k)}px solid ${alpha(c.ornament, 0.85)}`,
+          }}
+        />
+        {c.frame && <div style={{ position: "absolute", left: 0, bottom: 0, width, height: Math.max(2, Math.round(k * 1.5)), backgroundImage: c.frame }} />}
+
+        {hasTitle && (
+          <div style={{ position: "absolute", left: 18 * k, top: 0, height, width: width * 0.47, display: "flex", flexDirection: "column", justifyContent: "center", color: ink, fontFamily: titleFont }}>
+            {kicker && (
+              <div style={{ display: "flex", fontSize: 9 * k, letterSpacing: 2.6 * k, textTransform: "uppercase", color: photo ? alpha(c.ornament, 1) : c.label, fontFamily: titleFont, fontWeight: 600 }}>
+                {kicker}
+              </div>
+            )}
+            <div
+              style={{
+                display: "flex",
+                marginTop: 4 * k,
+                fontSize: titleSize(title!) * k,
+                lineHeight: 1.02,
+                letterSpacing: 0.8 * k,
+                textTransform: "uppercase",
+                fontFamily: titleFont,
+                fontWeight: 500,
+                textShadow: photo ? "0 2px 12px rgba(0,0,0,0.45)" : "none",
+              }}
+            >
+              {title}
+            </div>
+            <div style={{ display: "flex", marginTop: 8 * k, fontSize: 9.5 * k, letterSpacing: 1.8 * k, textTransform: "uppercase", color: soft, fontWeight: 600 }}>
+              {`${stamps} de ${required} sellos`}
+            </div>
           </div>
-        ))}
+        )}
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            height,
+            ...(hasTitle ? { right: 16 * k, width: area } : { left: (width - area) / 2, width: area }),
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          {grid}
+        </div>
       </div>
     ),
-    { width, height, headers },
+    { width, height, headers: opts.headers, fonts: opts.fonts },
   );
 }

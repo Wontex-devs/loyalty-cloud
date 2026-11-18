@@ -7,7 +7,6 @@ import { createHash, createHmac, createSign, timingSafeEqual, X509Certificate } 
 import { passTheme, progressText, type WalletPass } from "./pass.ts";
 import { DEFAULT_WALLET_SETTINGS, nearbyMessage } from "./messages.ts";
 import type { WalletSettings } from "../domain/types.ts";
-import { contrast } from "../domain/card-palette.ts";
 
 export interface AppleWalletConfig {
   /** Pass Type ID registrado en Apple Developer, p. ej. pass.com.wontex.lazo */
@@ -89,7 +88,7 @@ export function passJson(cfg: Pick<AppleWalletConfig, "passTypeId" | "teamId" | 
   const { message } = extras;
   // Mismos colores que la tarjeta web: texto legible y etiquetas con el color del comercio.
   const c = passTheme(p);
-  const label = contrast(c.accent, c.bg) >= 3 ? c.accent : c.text;
+  const label = c.passLabel;
   const back: Record<string, unknown>[] = [{ key: "progress", label: "Tu progreso", value: progressText(p) }];
   if (p.promotion) back.push({ key: "promo", label: `Hoy: ${p.promotion.name}`, value: `Tu visita de hoy suma ${1 + p.promotion.bonusStamps} sellos.` });
   if (message) back.push({ key: "message", label: message.title, value: message.body, changeMessage: "%@" });
@@ -113,7 +112,7 @@ export function passJson(cfg: Pick<AppleWalletConfig, "passTypeId" | "teamId" | 
     serialNumber: p.token,
     organizationName: p.business.name,
     description: `Tarjeta de fidelización de ${p.business.name}`,
-    logoText: p.business.name,
+    // Sin logoText: el nombre va dentro del logo, con la letra de la marca.
     backgroundColor: rgb(c.bg),
     foregroundColor: rgb(c.text, "rgb(0, 0, 0)"),
     labelColor: rgb(label, "rgb(0, 0, 0)"),
