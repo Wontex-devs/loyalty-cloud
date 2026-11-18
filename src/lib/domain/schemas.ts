@@ -4,6 +4,7 @@
  */
 import { z } from "zod";
 import { CARD_FONTS, STAMP_ICONS } from "./types.ts";
+import { CARD_STYLES } from "./card-palette.ts";
 
 /** Normaliza teléfonos a formato E.164 simple. País por defecto: Colombia (+57). */
 export function normalizePhone(raw: string, defaultCountryCode = "57"): string {
@@ -82,6 +83,7 @@ export const brandingSchema = z.object({
   stampUrl: z.union([z.literal(""), z.url({ protocol: /^https$/ })]),
   stampIcon: z.enum(STAMP_ICONS),
   font: z.enum(CARD_FONTS),
+  cardStyle: z.enum(CARD_STYLES).optional(),
   primary: hex,
   primaryForeground: hex,
   accent: hex,

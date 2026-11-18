@@ -4,10 +4,10 @@
  * Documentación: https://developer.apple.com/documentation/walletpasses
  */
 import { createHash, createHmac, createSign, timingSafeEqual, X509Certificate } from "node:crypto";
-import { progressText, type WalletPass } from "./pass.ts";
+import { passTheme, progressText, type WalletPass } from "./pass.ts";
 import { DEFAULT_WALLET_SETTINGS, nearbyMessage } from "./messages.ts";
 import type { WalletSettings } from "../domain/types.ts";
-import { cardPalette, contrast } from "../domain/card-palette.ts";
+import { contrast } from "../domain/card-palette.ts";
 
 export interface AppleWalletConfig {
   /** Pass Type ID registrado en Apple Developer, p. ej. pass.com.wontex.lazo */
@@ -88,7 +88,7 @@ export function nearbyText(p: WalletPass, extras: Pick<PassExtras, "settings" | 
 export function passJson(cfg: Pick<AppleWalletConfig, "passTypeId" | "teamId" | "authSecret">, p: WalletPass, origin: string, extras: PassExtras = {}) {
   const { message } = extras;
   // Mismos colores que la tarjeta web: texto legible y etiquetas con el color del comercio.
-  const c = cardPalette({ cardBackground: p.business.background, cardForeground: p.business.foreground });
+  const c = passTheme(p);
   const label = contrast(c.accent, c.bg) >= 3 ? c.accent : c.text;
   const back: Record<string, unknown>[] = [{ key: "progress", label: "Tu progreso", value: progressText(p) }];
   if (p.promotion) back.push({ key: "promo", label: `Hoy: ${p.promotion.name}`, value: `Tu visita de hoy suma ${1 + p.promotion.bonusStamps} sellos.` });

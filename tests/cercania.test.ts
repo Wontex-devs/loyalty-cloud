@@ -154,3 +154,35 @@ test("imagen de sellos: la URL cambia con cada sello y con el diseño", () => {
   const obj = loyaltyObject(google, p) as { heroImage?: { sourceUri: { uri: string } } };
   assert.equal(obj.heroImage?.sourceUri.uri, stripUrl(p));
 });
+
+test("estilos premium: noche y oro, cristal y negro mate", async () => {
+  const { cardTheme, GOLD } = await import("../src/lib/domain/card-palette.ts");
+  const b = { cardBackground: "#1B3FD8", cardForeground: "#FFC928" };
+  assert.equal(cardTheme(b).style, "clasico");
+  assert.equal(cardTheme({ ...b, cardStyle: "otro" }).style, "clasico");
+  const noche = cardTheme({ ...b, cardStyle: "noche" });
+  assert.equal(noche.accent, GOLD);
+  assert.equal(noche.text, "#FFFFFF");
+  assert.ok(contrast(noche.bg, "#FFFFFF") >= 7, "el fondo profundo deja leer el texto blanco");
+  const negro = cardTheme({ ...b, cardStyle: "negro" });
+  assert.equal(negro.bg, "#111114");
+  assert.equal(negro.accent, "#FFC928");
+  // Color del comercio oscuro sobre negro: los sellos pasan a dorado.
+  assert.equal(cardTheme({ cardBackground: "#EBCFCB", cardForeground: "#1A1416", cardStyle: "negro" }).accent, GOLD);
+  const cristal = cardTheme({ ...b, cardStyle: "cristal" });
+  assert.equal(cristal.photo, "full");
+  assert.equal(cristal.glass, true);
+});
+
+test("pases: el estilo cambia los colores y la imagen de sellos", () => {
+  const premium = { ...card, business: { ...card.business, branding: { ...card.business.branding, cardStyle: "noche" as const } } };
+  const p = passFromCard(premium, origin);
+  const j = passJson(apple, p, origin) as { backgroundColor: string; foregroundColor: string; labelColor: string };
+  assert.equal(j.foregroundColor, "rgb(255, 255, 255)");
+  assert.equal(j.labelColor, "rgb(232, 200, 115)");
+  assert.notEqual(j.backgroundColor, "rgb(235, 207, 203)");
+  assert.notEqual(stripVersion(p), stripVersion(passFromCard(card, origin)));
+  assert.equal((loyaltyClass(google, p) as { hexBackgroundColor: string }).hexBackgroundColor, cardTheme_bg(p));
+});
+const cardTheme_bg = (p: ReturnType<typeof passFromCard>) => passTheme(p).bg;
+import { passTheme } from "../src/lib/wallet/pass.ts";

@@ -4,7 +4,8 @@
  */
 import type { PublicCardData } from "@/components/public/card-screen";
 import type { Place } from "./geo.ts";
-import type { StampIcon } from "../domain/types.ts";
+import { cardTheme } from "../domain/card-palette.ts";
+import type { CardStyle, StampIcon } from "../domain/types.ts";
 
 export interface WalletPass {
   /** Token público de la tarjeta: identifica el pase sin exponer IDs internos. */
@@ -12,7 +13,7 @@ export interface WalletPass {
   cardUrl: string;
   active: boolean;
   customerName: string;
-  business: { name: string; slug: string; logoText: string; background: string; foreground: string; logoUrl: string; coverUrl?: string; stampIcon?: StampIcon; stampUrl?: string };
+  business: { name: string; slug: string; logoText: string; background: string; foreground: string; logoUrl: string; coverUrl?: string; stampIcon?: StampIcon; stampUrl?: string; style?: CardStyle };
   program: { name: string; stampsRequired: number; rewardName: string };
   stamps: number;
   rewardsAvailable: { name: string; birthday: boolean }[];
@@ -39,6 +40,7 @@ export function passFromCard(card: PublicCardData, origin: string, places?: Plac
       coverUrl: b.coverUrl || undefined,
       stampIcon: b.stampIcon,
       stampUrl: b.stampUrl || undefined,
+      style: b.cardStyle,
     },
     program: card.program,
     stamps: Math.min(card.stamps, card.program.stampsRequired),
@@ -60,7 +62,7 @@ export function progressText(p: WalletPass) {
 
 /** Versión de la imagen de sellos: cambia con cada sello y con el diseño de la tarjeta. */
 export function stripVersion(p: Pick<WalletPass, "stamps" | "program" | "business">) {
-  const design = [p.business.background, p.business.foreground, p.business.stampIcon ?? "", p.business.stampUrl ?? ""].join("|");
+  const design = [p.business.background, p.business.foreground, p.business.stampIcon ?? "", p.business.stampUrl ?? "", p.business.style ?? "", p.business.style === "cristal" ? (p.business.coverUrl ?? "") : ""].join("|");
   let h = 0;
   for (const ch of design) h = (Math.imul(h, 31) + ch.charCodeAt(0)) | 0;
   return `${p.stamps}-${p.program.stampsRequired}-${(h >>> 0).toString(36)}`;
@@ -68,3 +70,7 @@ export function stripVersion(p: Pick<WalletPass, "stamps" | "program" | "busines
 
 /** URL pública de la imagen de sellos (Google Wallet la descarga y la guarda). */
 export const stripUrl = (p: WalletPass) => `${p.cardUrl}/sellos/${stripVersion(p)}`;
+
+/** Colores del pase en la billetera según el estilo de la tarjeta. */
+export const passTheme = (p: Pick<WalletPass, "business">) =>
+  cardTheme({ cardBackground: p.business.background, cardForeground: p.business.foreground, cardStyle: p.business.style });

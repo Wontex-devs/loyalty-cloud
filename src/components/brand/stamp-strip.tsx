@@ -1,5 +1,5 @@
 import { ImageResponse } from "next/og";
-import { alpha, cardPalette } from "@/lib/domain/card-palette";
+import { alpha, cardTheme } from "@/lib/domain/card-palette";
 import type { BusinessBranding, StampIcon } from "@/lib/domain/types";
 
 /** Trazos de los iconos de sello (Lucide, 24×24) para dibujarlos sin React en la imagen. */
@@ -82,7 +82,7 @@ function Icon({ name, size, color }: { name: StampIcon | "gift"; size: number; c
 }
 
 export interface StripInput {
-  branding: Pick<BusinessBranding, "cardBackground" | "cardForeground" | "stampIcon" | "stampUrl">;
+  branding: Pick<BusinessBranding, "cardBackground" | "cardForeground" | "stampIcon" | "stampUrl" | "cardStyle" | "coverUrl">;
   stamps: number;
   required: number;
 }
@@ -98,7 +98,8 @@ export function stripGrid(required: number) {
  * imagen principal del pase de Google Wallet. Mismo estilo que la tarjeta web.
  */
 export function stampStrip({ branding, stamps, required }: StripInput, width: number, height: number, headers?: Record<string, string>) {
-  const c = cardPalette(branding);
+  const c = cardTheme(branding);
+  const photo = c.photo === "full" && branding.coverUrl?.startsWith("https://") ? branding.coverUrl : null;
   const { rows, cols } = stripGrid(required);
   const padX = width * 0.06;
   const padY = height * 0.12;
@@ -113,7 +114,7 @@ export function stampStrip({ branding, stamps, required }: StripInput, width: nu
     const base = { width: size, height: size, borderRadius: size, display: "flex", alignItems: "center", justifyContent: "center", marginLeft: i % cols ? gap : 0 } as const;
     if (filled)
       return (
-        <div key={i} style={{ ...base, background: c.accent, boxShadow: "0 3px 8px rgba(0,0,0,0.22)" }}>
+        <div key={i} style={{ ...base, ...(c.accentCss.startsWith("linear") ? { backgroundImage: c.accentCss } : {}), backgroundColor: c.accent, boxShadow: "0 3px 8px rgba(0,0,0,0.25)" }}>
           {stampUrl ? (
             // eslint-disable-next-line @next/next/no-img-element, jsx-a11y/alt-text
             <img src={stampUrl} width={size * 0.88} height={size * 0.88} style={{ borderRadius: size, background: "#ffffff", objectFit: "contain", padding: size * 0.1 }} />
@@ -124,11 +125,11 @@ export function stampStrip({ branding, stamps, required }: StripInput, width: nu
       );
     if (last)
       return (
-        <div key={i} style={{ ...base, background: alpha(c.accent, 0.14), border: `${Math.max(2, size * 0.03)}px solid ${alpha(c.accent, 0.7)}` }}>
+        <div key={i} style={{ ...base, background: alpha(c.accent, c.style === "negro" ? 0 : 0.12), border: `${Math.max(2, size * 0.022)}px solid ${alpha(c.accent, 0.75)}` }}>
           <Icon name="gift" size={size * 0.46} color={c.accent} />
         </div>
       );
-    return <div key={i} style={{ ...base, background: c.slot, border: `${Math.max(1, size * 0.018)}px solid ${c.slotBorder}` }} />;
+    return <div key={i} style={{ ...base, background: c.slot === "transparent" ? "transparent" : c.slot, border: `${Math.max(1, size * 0.018)}px solid ${c.slotBorder}` }} />;
   };
 
   return new ImageResponse(
@@ -141,9 +142,16 @@ export function stampStrip({ branding, stamps, required }: StripInput, width: nu
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
-          background: `linear-gradient(140deg, ${alpha("#FFFFFF", 0.12)} 0%, ${alpha("#FFFFFF", 0)} 45%, ${alpha("#000000", 0.14)} 100%), ${c.bg}`,
+          position: "relative",
+          backgroundColor: c.bg,
+          backgroundImage: c.bgCss.replace(/,\s*#[0-9A-F]{6}$/i, ""),
         }}
       >
+        {photo && (
+          // eslint-disable-next-line @next/next/no-img-element, jsx-a11y/alt-text
+          <img src={photo} width={width} height={height} style={{ position: "absolute", top: 0, left: 0, width, height, objectFit: "cover" }} />
+        )}
+        {photo && <div style={{ position: "absolute", top: 0, left: 0, width, height, backgroundImage: c.veil }} />}
         {Array.from({ length: rows }, (_, r) => (
           <div key={r} style={{ display: "flex", marginTop: r ? gap : 0 }}>
             {Array.from({ length: cols }, (_, k) => r * cols + k)

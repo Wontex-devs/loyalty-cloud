@@ -4,7 +4,7 @@ import { QRCodeSVG } from "qrcode.react";
 import { Gift, Sparkles } from "lucide-react";
 import { BrandMark, brandCase, brandFont, StampMark } from "./brand-mark";
 import { cn } from "@/lib/utils";
-import { alpha, cardPalette } from "@/lib/domain/card-palette";
+import { alpha, cardTheme, GOLD } from "@/lib/domain/card-palette";
 import type { Business, CardStatus, LoyaltyProgram } from "@/lib/domain/types";
 
 export interface LoyaltyCardViewProps {
@@ -55,34 +55,123 @@ export function LoyaltyCardView({
   plano,
 }: LoyaltyCardViewProps) {
   const b = business.branding;
-  const c = cardPalette(b);
+  const c = cardTheme(b);
+  const premium = c.style !== "clasico";
   const remaining = Math.max(program.stampsRequired - stamps, 0);
   const cols = program.stampsRequired <= 10 ? Math.min(5, Math.ceil(program.stampsRequired / 2)) : 6;
   const font = brandFont(b);
   const titleFont = brandFont(b, "tracking-[0.12em]");
-  const foto = coverUrl ?? (b.coverUrl || undefined);
+  const rawFoto = coverUrl ?? (b.coverUrl || undefined);
+  const foto = c.photo === "none" ? undefined : rawFoto;
   const pad = compact ? "px-5" : "px-6 sm:px-7";
   const subtitle = program.name.trim().toLowerCase() === business.name.trim().toLowerCase() ? "Tarjeta de fidelidad" : program.name;
-  // Sobre la foto el encabezado va siempre en blanco, con una sombra oscura suave detrás.
-  const headText = foto ? "#FFFFFF" : c.text;
-  const headMuted = foto ? "rgba(255, 255, 255, 0.78)" : c.muted;
+  // Sobre la foto (clásico) el encabezado va siempre en blanco, con una sombra oscura suave detrás.
+  const onPhoto = !!foto && c.photo === "fade";
+  const headText = onPhoto ? "#FFFFFF" : c.text;
+  const headMuted = onPhoto ? "rgba(255, 255, 255, 0.78)" : c.style === "noche" ? c.label : c.muted;
   const ready = rewardsAvailable > 0 || status === "reward_available";
+  const labelClass = cn("text-[10px] font-semibold uppercase", premium ? "tracking-[0.3em]" : "tracking-[0.22em]");
+  const progress = (Math.min(stamps, program.stampsRequired) / program.stampsRequired) * 100;
+  const pct = `${progress}%`;
 
-  return (
-    <div
-      className={cn("relative mx-auto w-full max-w-[440px] overflow-hidden rounded-[28px]", plano ? "border-2 border-coal" : "shadow-pop", className)}
-      style={{ background: c.bg, color: c.text }}
-    >
-      {/* Brillo suave: le da profundidad al color plano */}
-      <div aria-hidden className="pointer-events-none absolute inset-0" style={{ background: "linear-gradient(140deg, rgba(255,255,255,0.14) 0%, rgba(255,255,255,0) 45%, rgba(0,0,0,0.14) 100%)" }} />
+  const stampsAndProgress = (
+    <>
+      {/* Sellos */}
+      <div className="grid gap-2.5" style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}>
+        {Array.from({ length: program.stampsRequired }, (_, i) => {
+          const filled = i < stamps;
+          const isLast = i === program.stampsRequired - 1;
+          const justAdded = highlightLastStamp && i === stamps - 1;
+          return (
+            <div
+              key={i}
+              className="flex aspect-square items-center justify-center rounded-full"
+              style={
+                filled
+                  ? { background: c.accentCss, color: c.onAccent, boxShadow: "0 3px 10px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.3)" }
+                  : isLast
+                    ? { background: alpha(c.accent, c.style === "negro" ? 0 : 0.12), border: `1px solid ${alpha(c.accent, 0.75)}`, color: c.accent }
+                    : { background: c.slot, border: `1px solid ${c.slotBorder}` }
+              }
+            >
+              {filled ? (
+                <StampMark branding={b} className={cn(b.stampUrl ? "size-[86%]" : "size-[46%]", justAdded && "animate-stamp")} />
+              ) : isLast ? (
+                <Gift className="size-[42%]" strokeWidth={1.5} />
+              ) : null}
+            </div>
+          );
+        })}
+      </div>
 
-      {/* Encabezado: logo, comercio y estado (sobre la foto del local si hay) */}
-      <div className={cn("relative", pad, compact ? "pt-5" : "pt-6 sm:pt-7", foto ? (compact ? "pb-12" : "pb-16") : "pb-1")}>
-        {foto && (
+      {/* Progreso */}
+      <div className="mt-5 flex items-end justify-between gap-3">
+        <div className="min-w-0">
+          {premium && (
+            <p className={labelClass} style={{ color: c.label }}>
+              Tu premio
+            </p>
+          )}
+          {rewardsAvailable > 0 ? (
+            <p className={cn("flex items-center gap-1.5 text-sm font-semibold", premium && "mt-1")}>
+              <Sparkles className="size-4" style={{ color: c.accent }} /> {rewardsAvailable > 1 ? `${rewardsAvailable} recompensas` : "¡Recompensa"} disponible{rewardsAvailable > 1 ? "s" : "!"}
+            </p>
+          ) : premium ? (
+            <p className="mt-1 truncate text-sm">
+              {program.rewardName}
+              <span style={{ color: c.muted }}> · {remaining === 0 ? "¡lista!" : remaining === 1 ? "falta 1" : `faltan ${remaining}`}</span>
+            </p>
+          ) : (
+            <p className="text-sm font-semibold">{remaining === 0 ? "¡Meta alcanzada!" : remaining === 1 ? "¡Te falta 1 visita!" : `Te faltan ${remaining} visitas`}</p>
+          )}
+          {!premium && (
+            <p className="mt-0.5 truncate text-xs" style={{ color: c.muted }}>
+              Premio: {program.rewardName}
+            </p>
+          )}
+        </div>
+        <p
+          className={cn("tabular shrink-0 text-3xl leading-none", c.style === "noche" ? "font-serif" : font)}
+          style={c.style === "noche" ? { backgroundImage: c.accentCss, WebkitBackgroundClip: "text", backgroundClip: "text", color: "transparent" } : undefined}
+        >
+          {stamps}
+          <span className="text-base" style={c.style === "noche" ? undefined : { color: c.muted }}>
+            /{program.stampsRequired}
+          </span>
+        </p>
+      </div>
+      <div className={cn("mt-3 overflow-hidden rounded-full", premium ? "h-[3px]" : "h-1.5")} style={{ background: c.style === "negro" ? alpha("#FFFFFF", 0.1) : c.slot }}>
+        <div className="h-full rounded-full transition-[width] duration-500" style={{ width: pct, background: c.accentCss }} />
+      </div>
+    </>
+  );
+
+  const card = (
+    <div className={cn("relative overflow-hidden", c.frame ? "rounded-[27px]" : "rounded-[28px]")} style={{ background: c.bgCss, color: c.text }}>
+      {/* Cristal: la foto ocupa toda la tarjeta, con un velo del color del comercio */}
+      {foto && c.photo === "full" && (
+        <>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={foto} alt="" className="pointer-events-none absolute inset-0 size-full object-cover" />
+          <div aria-hidden className="pointer-events-none absolute inset-0" style={{ background: c.veil }} />
+        </>
+      )}
+      {c.style === "negro" && <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-px bg-white/10" />}
+
+      {/* Encabezado: logo, comercio y estado */}
+      <div className={cn("relative", pad, compact ? "pt-5" : "pt-6 sm:pt-7", foto && c.photo !== "full" ? (compact ? "pb-12" : "pb-16") : "pb-1")}>
+        {foto && (c.photo === "fade" || c.photo === "tint") && (
           <>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={foto} alt="" className="pointer-events-none absolute inset-0 size-full object-cover" style={FADE} />
-            <div aria-hidden className="pointer-events-none absolute inset-0" style={{ ...FADE, background: "linear-gradient(to bottom, rgba(0,0,0,0.5), rgba(0,0,0,0.2))" }} />
+            <img
+              src={foto}
+              alt=""
+              className={cn("pointer-events-none absolute inset-0 size-full object-cover", c.photo === "tint" && "opacity-40 mix-blend-luminosity")}
+              style={FADE}
+            />
+            {c.photo === "fade" && (
+              <div aria-hidden className="pointer-events-none absolute inset-0" style={{ ...FADE, background: "linear-gradient(to bottom, rgba(0,0,0,0.5), rgba(0,0,0,0.2))" }} />
+            )}
           </>
         )}
         <div className="relative flex items-start justify-between gap-3" style={{ color: headText }}>
@@ -90,11 +179,11 @@ export function LoyaltyCardView({
             <BrandMark
               branding={b}
               className={cn("size-12 rounded-full text-lg shadow-sm", brandFont(b, "tracking-wide"))}
-              style={{ background: c.accent, color: c.onAccent }}
+              style={{ background: c.accentCss, color: c.onAccent, ...(c.style === "noche" ? { boxShadow: `0 0 0 1px ${GOLD}` } : {}) }}
             />
-            <div className="min-w-0" style={foto ? { textShadow: "0 1px 8px rgba(0,0,0,0.45)" } : undefined}>
+            <div className="min-w-0" style={onPhoto || c.photo === "full" ? { textShadow: "0 1px 8px rgba(0,0,0,0.45)" } : undefined}>
               <p className={cn("text-xl leading-tight break-words", brandCase(b), titleFont)}>{business.name}</p>
-              <p className="mt-1 text-[10px] leading-snug font-medium tracking-[0.16em] uppercase" style={{ color: headMuted }}>
+              <p className={cn("mt-1 text-[10px] leading-snug font-medium uppercase", premium ? "tracking-[0.3em]" : "tracking-[0.16em]")} style={{ color: headMuted }}>
                 {subtitle}
               </p>
             </div>
@@ -105,8 +194,10 @@ export function LoyaltyCardView({
               status === "blocked"
                 ? { background: "#7f1d1d", color: "#fff" }
                 : ready
-                  ? { background: c.accent, color: c.onAccent }
-                  : { background: foto ? "rgba(0,0,0,0.32)" : c.slot, color: headText }
+                  ? { background: c.accentCss, color: c.onAccent }
+                  : premium
+                    ? { border: `1px solid ${c.slotBorder}`, color: c.style === "noche" ? c.label : headText }
+                    : { background: onPhoto ? "rgba(0,0,0,0.32)" : c.slot, color: headText }
             }
           >
             {STATUS_LABEL[status]}
@@ -114,67 +205,14 @@ export function LoyaltyCardView({
         </div>
       </div>
 
-      <div className={cn("relative", pad, compact ? "pb-5" : "pb-6 sm:pb-7", foto ? "-mt-6" : compact ? "mt-4" : "mt-5")}>
+      <div className={cn("relative", pad, compact ? "pb-5" : "pb-6 sm:pb-7", foto && c.photo !== "full" ? "-mt-6" : c.photo === "full" ? (compact ? "mt-10" : "mt-14") : compact ? "mt-4" : "mt-6")}>
         {/* Cliente */}
-        <p className="text-[10px] font-semibold tracking-[0.22em] uppercase" style={{ color: c.muted }}>
+        <p className={labelClass} style={{ color: c.label }}>
           Miembro
         </p>
-        <p className="mt-0.5 truncate text-lg font-medium">{customerName}</p>
+        <p className={cn("mt-0.5 truncate text-lg", c.style === "noche" ? "font-serif tracking-wide" : "font-medium", c.style === "negro" && "tracking-wide")}>{customerName}</p>
 
-        {/* Sellos */}
-        <div className={cn("grid gap-2.5", compact ? "mt-4" : "mt-5")} style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}>
-          {Array.from({ length: program.stampsRequired }, (_, i) => {
-            const filled = i < stamps;
-            const isLast = i === program.stampsRequired - 1;
-            const justAdded = highlightLastStamp && i === stamps - 1;
-            return (
-              <div
-                key={i}
-                className="flex aspect-square items-center justify-center rounded-full"
-                style={
-                  filled
-                    ? { background: c.accent, color: c.onAccent, boxShadow: "0 2px 6px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.28)" }
-                    : isLast
-                      ? { background: alpha(c.accent, 0.14), border: `1.5px solid ${alpha(c.accent, 0.7)}`, color: c.accent }
-                      : { background: c.slot, border: `1px solid ${c.slotBorder}` }
-                }
-              >
-                {filled ? (
-                  <StampMark branding={b} className={cn(b.stampUrl ? "size-[88%]" : "size-[46%]", justAdded && "animate-stamp")} />
-                ) : isLast ? (
-                  <Gift className="size-[44%]" strokeWidth={1.75} />
-                ) : null}
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Progreso */}
-        <div className="mt-5 flex items-end justify-between gap-3">
-          <div className="min-w-0">
-            {rewardsAvailable > 0 ? (
-              <p className="flex items-center gap-1.5 text-sm font-semibold">
-                <Sparkles className="size-4" style={{ color: c.accent }} /> {rewardsAvailable > 1 ? `${rewardsAvailable} recompensas` : "¡Recompensa"} disponible{rewardsAvailable > 1 ? "s" : "!"}
-              </p>
-            ) : (
-              <p className="text-sm font-semibold">
-                {remaining === 0 ? "¡Meta alcanzada!" : remaining === 1 ? "¡Te falta 1 visita!" : `Te faltan ${remaining} visitas`}
-              </p>
-            )}
-            <p className="mt-0.5 truncate text-xs" style={{ color: c.muted }}>
-              Premio: {program.rewardName}
-            </p>
-          </div>
-          <p className={cn("tabular shrink-0 text-3xl leading-none", font)}>
-            {stamps}
-            <span className="text-base" style={{ color: c.muted }}>
-              /{program.stampsRequired}
-            </span>
-          </p>
-        </div>
-        <div className="mt-3 h-1.5 overflow-hidden rounded-full" style={{ background: c.slot }}>
-          <div className="h-full rounded-full transition-[width] duration-500" style={{ width: `${(Math.min(stamps, program.stampsRequired) / program.stampsRequired) * 100}%`, background: c.accent }} />
-        </div>
+        <div className={cn(compact ? "mt-4" : "mt-5", c.glass && "rounded-2xl border border-white/25 bg-white/10 p-4 backdrop-blur-xl")}>{stampsAndProgress}</div>
 
         {qrValue && (
           <>
@@ -199,6 +237,15 @@ export function LoyaltyCardView({
           </p>
         )}
       </div>
+    </div>
+  );
+
+  return (
+    <div
+      className={cn("relative mx-auto w-full max-w-[440px] rounded-[28px]", plano ? "border-2 border-coal" : "shadow-pop", c.frame && "p-px", className)}
+      style={c.frame ? { background: c.frame } : undefined}
+    >
+      {card}
     </div>
   );
 }

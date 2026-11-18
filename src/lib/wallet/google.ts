@@ -4,7 +4,7 @@
  * Documentación: https://developers.google.com/wallet/retail/loyalty-cards
  */
 import { createSign } from "node:crypto";
-import { progressText, stripUrl, type WalletPass } from "./pass.ts";
+import { passTheme, progressText, stripUrl, type WalletPass } from "./pass.ts";
 
 export interface GoogleWalletConfig {
   issuerId: string;
@@ -31,7 +31,7 @@ export function loyaltyClass(cfg: Pick<GoogleWalletConfig, "issuerId" | "smartTa
     programName: p.program.name,
     programLogo: { sourceUri: { uri: p.business.logoUrl }, contentDescription: text(p.business.name) },
     ...(p.business.coverUrl ? { heroImage: { sourceUri: { uri: p.business.coverUrl }, contentDescription: text(p.business.name) } } : {}),
-    hexBackgroundColor: p.business.background,
+    hexBackgroundColor: passTheme(p).bg,
     countryCode: "CO",
     reviewStatus: "UNDER_REVIEW",
     // El mismo emisor canjea: un solo Collector ID para todos los comercios.
@@ -52,7 +52,7 @@ export function loyaltyObject(cfg: Pick<GoogleWalletConfig, "issuerId" | "smartT
     state: p.active ? "ACTIVE" : "INACTIVE",
     accountName: p.customerName,
     accountId: p.token.slice(0, 8),
-    hexBackgroundColor: p.business.background,
+    hexBackgroundColor: passTheme(p).bg,
     // Los sellos dibujados (como en la tarjeta web), en lugar de la foto del comercio.
     heroImage: { sourceUri: { uri: stripUrl(p) }, contentDescription: text(`${p.stamps} de ${p.program.stampsRequired} sellos`) },
     loyaltyPoints: { label: "Sellos", balance: { string: `${p.stamps}/${p.program.stampsRequired}` } },
