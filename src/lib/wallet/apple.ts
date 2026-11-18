@@ -5,6 +5,7 @@
  */
 import { createHash, createHmac, createSign, timingSafeEqual, X509Certificate } from "node:crypto";
 import { passTheme, progressText, type WalletPass } from "./pass.ts";
+import { numeroMiembro } from "../domain/hilo.ts";
 import { appleInfoFields } from "./pass-info.ts";
 import { DEFAULT_WALLET_SETTINGS, nearbyMessage } from "./messages.ts";
 import type { WalletSettings } from "../domain/types.ts";
@@ -134,15 +135,25 @@ export function passJson(cfg: Pick<AppleWalletConfig, "passTypeId" | "teamId" | 
     ...(p.places?.length && p.active
       ? { locations: p.places.map((l) => ({ latitude: l.latitude, longitude: l.longitude, relevantText: nearbyText(p, extras) })) }
       : {}),
+    // Código QR con el enlace de la tarjeta: en caja confirman a quién pertenece. Lo puede quitar el comercio.
+    ...(p.qr
+      ? {
+          barcodes: [
+            { format: "PKBarcodeFormatQR", message: p.cardUrl, messageEncoding: "iso-8859-1", altText: `Miembro N.º ${numeroMiembro(p.token)}` },
+          ],
+        }
+      : {}),
     storeCard: {
-      // La franja (strip.png) ya muestra las visitas, los sellos y la recompensa: arriba no va nada más.
-      headerFields: [],
+      // Arriba a la derecha: lo único que se ve cuando las tarjetas están apiladas en Wallet.
+      headerFields: [{ key: "stamps", label: "SELLOS", value: `${p.stamps} / ${p.program.stampsRequired}`, textAlignment: "PKTextAlignmentRight" }],
+      // La franja (strip.png) muestra el premio y el hilo de sellos: encima no va texto.
       primaryFields: [],
-      secondaryFields: [{ key: "customer", label: "CLIENTE", value: p.customerName }],
-      // El único campo con changeMessage del frente: una notificación por visita, no varias.
-      auxiliaryFields: [
-        { key: "status", label: p.program.name.toUpperCase(), value: statusText(p), ...(statusNotifies(p, extras.settings) ? { changeMessage: "%@" } : {}) },
+      secondaryFields: [
+        { key: "customer", label: "MIEMBRO", value: p.customerName },
+        ...(p.memberSince ? [{ key: "since", label: "DESDE", value: p.memberSince, textAlignment: "PKTextAlignmentRight" }] : []),
       ],
+      // El único campo con changeMessage del frente: una notificación por visita, no varias.
+      auxiliaryFields: [{ key: "status", label: "TU PROGRESO", value: statusText(p), ...(statusNotifies(p, extras.settings) ? { changeMessage: "%@" } : {}) }],
       backFields: back,
     },
   };

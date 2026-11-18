@@ -235,6 +235,18 @@ check("un estilo de tarjeta desconocido se rechaza", expectError(r, "INVALID_BRA
 r = await as(U.staffA, "select public.update_business_profile($1, null, null, null, null, $2::jsonb)", [A, JSON.stringify({ cardStyle: "negro" })]);
 check("un empleado no puede cambiar el estilo de la tarjeta", expectError(r, "FORBIDDEN"), r);
 
+// Etapa 30: el comercio decide si la tarjeta y el pase llevan código QR.
+r = await as(U.ownerA, "select public.update_business_profile($1, null, null, null, null, $2::jsonb)", [A, JSON.stringify({ passQr: false })]);
+check("el propietario quita el código QR de la tarjeta", r.ok, r);
+r = await db.query("select branding->'passQr' as v from public.businesses where id = $1", [A]);
+check("queda guardado como falso", r.rows[0].v === false, r.rows[0]);
+r = await as(U.ownerA, "select public.update_business_profile($1, null, null, null, null, $2::jsonb)", [A, JSON.stringify({ passQr: "no" })]);
+check("un valor que no es verdadero o falso se rechaza", expectError(r, "INVALID_BRANDING"), r);
+r = await as(U.ownerB, "select public.update_business_profile($1, null, null, null, null, $2::jsonb)", [A, JSON.stringify({ passQr: true })]);
+check("otro comercio no puede cambiarlo (FORBIDDEN)", expectError(r, "FORBIDDEN"), r);
+r = await as(U.ownerA, "select public.update_business_profile($1, null, null, null, null, $2::jsonb)", [A, JSON.stringify({ passQr: true })]);
+check("y lo vuelve a poner", r.ok, r);
+
 // ---------- Recompensas ----------
 console.log("\nRecompensas y canjes");
 await as(U.staffA, "select public.register_visit($1, 'op-key-0003')", [cardA]);

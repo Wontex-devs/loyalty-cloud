@@ -30,3 +30,11 @@
   - **Agregar `or is_superadmin()` a cada política y función:** acceso permanente y sin motivo a datos personales de clientes; muchos cambios y fácil olvidar uno.
   - **Crear una membresía de propietario falsa:** rompe la regla de un solo propietario y ensucia el equipo del comercio.
   - **Usar la clave de servicio desde el servidor:** se saltaría RLS y la auditoría quedaría sin autor.
+
+## 2026-11-18 · La tarjeta web copia la forma del pase de Wallet
+- **Decisión:** la tarjeta web y la vista previa del panel tienen la misma composición que el pase de Apple Wallet («el hilo»), y solo se ofrecen opciones que Wallet puede mostrar. Una sola geometría (`src/lib/domain/hilo.ts`) dibuja la web y la imagen del pase.
+- **Motivo:** el comercio diseñaba una tarjeta web que no se parecía a lo que el cliente guardaba; ahora lo que ve es lo que se guarda.
+- **Alternativas descartadas:**
+  - **Mantener una tarjeta web más rica (degradados, cristal, marco):** Wallet no lo permite y la diferencia confunde.
+  - **Dibujar toda la tarjeta como una sola imagen:** los datos dejarían de ser texto (accesibilidad, notificaciones por campo y actualización en Wallet).
+- **Código QR:** vuelve al pase, encendido por defecto y apagable por el comercio (`passQr`). Antes el pase no llevaba código.

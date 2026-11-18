@@ -51,24 +51,37 @@ test("colores en el formato rgb() que exige Apple", () => {
   assert.equal(rgb("rojo", "rgb(0, 0, 0)"), "rgb(0, 0, 0)");
 });
 
-test("el pase muestra sellos, premio, cliente y progreso, sin código de barras", () => {
+test("el pase muestra sellos arriba, miembro, desde cuándo, progreso y el código QR", () => {
   const j = passJson(base, passFromCard(card, origin), origin);
   assert.equal(j.serialNumber, card.token);
   assert.equal(j.passTypeIdentifier, base.passTypeId);
   assert.equal(j.backgroundColor, "rgb(235, 207, 203)");
-  // Visitas, sellos y recompensa van dibujados en la franja: arriba no hay campos.
-  assert.equal(j.storeCard.headerFields.length, 0);
+  // Arriba a la derecha va el conteo: es lo único visible con las tarjetas apiladas.
+  assert.deepEqual(j.storeCard.headerFields.map((f) => [f.label, f.value]), [["SELLOS", "6 / 9"]]);
+  // El premio y el hilo de sellos van dibujados en la franja.
   assert.equal(j.storeCard.primaryFields.length, 0);
-  assert.equal(j.storeCard.secondaryFields.length, 1);
-  assert.equal(j.storeCard.secondaryFields[0].value, "Sofía Martínez");
+  assert.deepEqual(j.storeCard.secondaryFields.map((f) => [f.label, f.value]), [["MIEMBRO", "Sofía Martínez"], ["DESDE", "Jul 2026"]]);
   // Fondo rosado claro: texto casi negro y etiquetas con el color del comercio.
   assert.equal(j.foregroundColor, "rgb(22, 19, 15)");
   assert.equal(j.labelColor, "rgb(26, 20, 22)");
+  assert.equal(j.storeCard.auxiliaryFields[0].label, "TU PROGRESO");
   assert.equal(j.storeCard.auxiliaryFields[0].value, "Te faltan 3 visitas para Manicura gratis");
-  assert.equal("barcodes" in j, false);
+  // El QR lleva el enlace de la tarjeta; debajo, un número de miembro que no deja ver el token.
+  const qr = (j as { barcodes?: { format: string; message: string; altText: string }[] }).barcodes?.[0];
+  assert.equal(qr?.format, "PKBarcodeFormatQR");
+  assert.equal(qr?.message, `${origin}/card/${card.token}`);
+  assert.match(qr?.altText ?? "", /^Miembro N\.º [0-9A-Z]{4} [0-9A-Z]{4}$/);
+  assert.equal((qr?.altText ?? "").replace(/\s/g, "").includes(card.token.slice(0, 6).toUpperCase()), false);
   assert.equal("voided" in j, false);
   assert.equal(j.sharingProhibited, true);
   assert.ok(j.storeCard.backFields.some((f) => f.value === `${origin}/card/${card.token}`));
+});
+
+test("el comercio puede quitar el código QR; sin fecha válida no hay «desde»", () => {
+  const sinQr = passFromCard({ ...card, business: { ...card.business, branding: { ...card.business.branding, passQr: false } } }, origin);
+  assert.equal("barcodes" in passJson(base, sinQr, origin), false);
+  const sinFecha = passJson(base, passFromCard({ ...card, memberSince: "" }, origin), origin);
+  assert.deepEqual(sinFecha.storeCard.secondaryFields.map((f) => f.label), ["MIEMBRO"]);
 });
 
 test("con premio listo lo destaca; tarjeta bloqueada queda anulada", () => {

@@ -82,6 +82,8 @@ export async function pkpassFor(cfg: AppleWalletConfig, token: string, origin: s
   const [images, message, settings, extra, firstName] = await Promise.all([
     passImages(card.business, {
       branding: card.business.branding,
+      monogram: card.business.name,
+      upper: (CARD_FONT_STYLES[card.business.branding.font ?? "serif"] ?? CARD_FONT_STYLES.serif).upper,
       stamps: Math.min(card.stamps, card.program.stampsRequired),
       required: card.program.stampsRequired,
       ...stripReward(card),

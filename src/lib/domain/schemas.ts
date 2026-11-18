@@ -84,6 +84,7 @@ export const brandingSchema = z.object({
   stampIcon: z.enum(STAMP_ICONS),
   font: z.enum(CARD_FONTS),
   cardStyle: z.enum(CARD_STYLES).optional(),
+  passQr: z.boolean().optional(),
   primary: hex,
   primaryForeground: hex,
   accent: hex,
