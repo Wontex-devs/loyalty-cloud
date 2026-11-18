@@ -326,7 +326,7 @@ export default function CustomerDetailPage() {
                     variant="ghost"
                     disabled={busy === "consent"}
                     onClick={() =>
-                      run("consent", () => revokeMarketingConsent(customer.id), "Consentimiento retirado: ya no aparecerá en Campañas. Quedó en la auditoría.")
+                      run("consent", () => revokeMarketingConsent(customer.id), "Consentimiento retirado: ya no recibirá Notificaciones. Quedó en la auditoría.")
                     }
                   >
                     {busy === "consent" ? <Loader2 className="size-3.5 animate-spin" /> : <BellOff className="size-3.5" />} Retirar consentimiento

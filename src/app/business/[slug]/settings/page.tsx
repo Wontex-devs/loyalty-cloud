@@ -9,7 +9,6 @@ import { useData } from "@/lib/data/store";
 import type { BusinessSettingsInput } from "@/lib/domain/schemas";
 import { PUBLIC_HOST_LABEL } from "@/lib/config";
 import { Badge, Button, ButtonLink, Card, CardHeader, Field, Input, PageHeader, Select } from "@/components/ui";
-import { PlanUsageCard, usageOf } from "@/components/business/plan-usage";
 import { LocationsCard } from "@/components/business/locations-card";
 
 const TIMEZONES = ["America/Bogota", "America/Mexico_City", "America/Lima", "America/Santiago", "America/Argentina/Buenos_Aires", "Europe/Madrid"];
@@ -50,7 +49,7 @@ export default function SettingsPage() {
 
   return (
     <RequirePermission allowed={!!membership && can(membership, "staff.manage")}>
-      <PageHeader title="Configuración" description="Datos del establecimiento, responsable del tratamiento de datos y plan." />
+      <PageHeader title="Configuración" description="Datos del establecimiento, sedes y responsable del tratamiento de datos." />
 
       <div className="grid gap-4 lg:grid-cols-3">
         <div className="space-y-4 lg:col-span-2">
@@ -126,7 +125,6 @@ export default function SettingsPage() {
         </div>
 
         <div className="space-y-4">
-          <PlanUsageCard plan={plan} usage={usageOf(scope)} />
           <Card className="p-5 text-sm">
             <p className="font-semibold">Auditoría</p>
             <p className="mt-1 text-muted">El registro completo de acciones está en Historial → Auditoría.</p>

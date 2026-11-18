@@ -48,7 +48,7 @@ const AUDIT_LABELS: Record<string, string> = {
   "business.trial": "La plataforma pasó el comercio a prueba",
   "business.suspended": "La plataforma suspendió el comercio",
   "program.updated": "Cambió el programa",
-  "business.plan_changed": "La plataforma cambió el plan",
+  "business.plan_changed": "Lazo actualizó las condiciones de la cuenta",
   "nfc.settings": "Cambió los ajustes del NFC",
   "customer.anonymized": "Eliminó los datos personales de un cliente",
   "customer.marketing_revoked": "Un cliente dejó de recibir mensajes",

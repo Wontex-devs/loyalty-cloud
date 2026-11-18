@@ -58,12 +58,7 @@ export function BusinessShell({ slug, children }: { slug: string; children: Reac
   const masOpciones = [
     ...(can(m, "analytics.read") ? [{ href: `${base}/history`, label: "Historial", icon: History }] : []),
     ...(can(m, "visits.create") ? [{ href: `${base}/lector`, label: "Lector NFC", icon: Nfc }] : []),
-    ...(can(m, "program.edit")
-      ? [
-          { href: `${base}/promotions`, label: "Promociones", icon: Tag },
-          { href: `${base}/campaigns`, label: "Campañas", icon: Megaphone },
-        ]
-      : []),
+    ...(can(m, "program.edit") ? [{ href: `${base}/promotions`, label: "Promociones", icon: Tag }] : []),
     ...(can(m, "staff.manage")
       ? [
           { href: `${base}/staff`, label: "Empleados", icon: UserCog },
@@ -84,11 +79,12 @@ export function BusinessShell({ slug, children }: { slug: string; children: Reac
     ...(can(m, "program.edit")
       ? [
           {
-            title: "Mi programa",
+            title: "Mi tarjeta",
             items: [
               ...(!onboardingSteps(scope).complete ? [{ href: `${base}/onboarding`, label: "Primeros pasos", icon: ListChecks }] : []),
               { href: `${base}/card-design`, label: "Tarjeta, QR y NFC", icon: CreditCard },
               { href: `${base}/program`, label: "Sellos y premio", icon: Sparkles },
+              { href: `${base}/campaigns`, label: "Notificaciones", icon: Megaphone },
             ],
           },
         ]

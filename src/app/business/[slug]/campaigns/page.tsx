@@ -128,7 +128,7 @@ export default function CampaignsPage() {
   return (
     <RequirePermission allowed={!!membership && can(membership, "program.edit")}>
       <PageHeader
-        title="Campañas"
+        title="Notificaciones"
         description="Envía una notificación a la tarjeta en Wallet (Google y Apple) de todo un grupo con un botón. Solo les llega a quienes aceptaron recibir mensajes."
       />
 
