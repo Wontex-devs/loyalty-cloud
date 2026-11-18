@@ -22,3 +22,11 @@
   - Con `@theme`, Tailwind resolvía `var(--brand)` en `:root`.
   - El color que define cada panel en su contenedor nunca se aplicaba: salía negro.
 - **Alternativa descartada:** definir `--color-brand` directamente en cada contenedor. Duplica la lógica y es fácil de olvidar.
+
+## 2026-11-17 · El superadministrador entra a editar un comercio
+- **Decisión:** la sesión de soporte tiene un modo «edit», solo para superadministradores, con motivo y de máximo 2 horas. Mientras está abierta, las funciones de permisos (`is_member`, `has_role`, `can_redeem`) lo tratan como propietario de ese comercio.
+- **Motivo:** el equipo necesita resolver pedidos de los comercios sin pedirles la clave, y reutilizar las mismas reglas que ya protegen cada tabla evita duplicar permisos y dejar huecos.
+- **Alternativas descartadas:**
+  - **Agregar `or is_superadmin()` a cada política y función:** acceso permanente y sin motivo a datos personales de clientes; muchos cambios y fácil olvidar uno.
+  - **Crear una membresía de propietario falsa:** rompe la regla de un solo propietario y ensucia el equipo del comercio.
+  - **Usar la clave de servicio desde el servidor:** se saltaría RLS y la auditoría quedaría sin autor.

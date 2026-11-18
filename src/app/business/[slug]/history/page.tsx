@@ -23,6 +23,8 @@ const KINDS: Record<Kind, { label: string; icon: LucideIcon; tone: string }> = {
 const AUDIT_LABELS: Record<string, string> = {
   "support.view_started": "Soporte de Lazo entró a ver el panel (solo lectura)",
   "support.view_ended": "Soporte de Lazo salió del panel",
+  "support.edit_started": "Un superadministrador de Lazo entró a editar el panel",
+  "support.edit_ended": "El superadministrador de Lazo salió del modo edición",
   "visit.manual": "Sumó una visita a mano",
   "visit.created": "Registró una visita",
   "visit.reversed": "Revirtió una visita",
@@ -46,7 +48,7 @@ const AUDIT_LABELS: Record<string, string> = {
   "business.trial": "La plataforma pasó el comercio a prueba",
   "business.suspended": "La plataforma suspendió el comercio",
   "program.updated": "Cambió el programa",
-  "business.plan_changed": "La plataforma cambió el plan",
+  "business.plan_changed": "Lazo actualizó las condiciones de la cuenta",
   "nfc.settings": "Cambió los ajustes del NFC",
   "customer.anonymized": "Eliminó los datos personales de un cliente",
   "customer.marketing_revoked": "Un cliente dejó de recibir mensajes",
@@ -71,7 +73,17 @@ export default function HistoryPage() {
   const [limit, setLimit] = useState(PAGE);
   const isOwner = membership?.role === "owner";
 
-  const profileName = (id?: string | null) => (id ? profiles.find((p) => p.id === id)?.fullName ?? "Usuario eliminado" : "Cliente (autoservicio)");
+  // El comercio no puede leer los perfiles de la plataforma: el nombre de quien entró desde Lazo
+  // viene en el registro de entrada (support.*), así sus cambios no aparecen como «Usuario eliminado».
+  const plataforma = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const a of auditLogs) {
+      if (a.actorId && a.action.startsWith("support.") && typeof a.metadata?.by === "string") m.set(a.actorId, `${a.metadata.by} (Lazo)`);
+    }
+    return m;
+  }, [auditLogs]);
+  const profileName = (id?: string | null) =>
+    id ? profiles.find((p) => p.id === id)?.fullName ?? plataforma.get(id) ?? "Usuario eliminado" : "Cliente (autoservicio)";
   const customerById = useMemo(() => new Map(customers.map((c) => [c.id, c])), [customers]);
   const customerOfCard = useMemo(() => {
     const m = new Map<string, (typeof customers)[number]>();

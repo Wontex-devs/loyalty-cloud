@@ -50,7 +50,7 @@ export default function StaffPage() {
         title="Empleados"
         description="Gestiona quién puede ver a tus clientes y canjear recompensas."
         actions={
-          <Button onClick={() => setOpen(true)} disabled={staffFull} title={staffFull ? "Alcanzaste el límite de tu plan" : undefined}>
+          <Button onClick={() => setOpen(true)} disabled={staffFull} title={staffFull ? "Alcanzaste el máximo de personas de tu cuenta" : undefined}>
             <UserPlus className="size-4" /> Invitar empleado
           </Button>
         }
@@ -58,8 +58,8 @@ export default function StaffPage() {
 
       {staffFull && (
         <div className="mb-4 rounded-lg border border-warning/30 bg-warning-bg px-4 py-3 text-sm text-warning">
-          Tu plan {plan?.name} permite {plan?.maxStaff} {plan?.maxStaff === 1 ? "persona" : "personas"} en el equipo (sin contarte a ti). Desactiva a alguien o pide un
-          cambio de plan para invitar a más.
+          Tu cuenta permite {plan?.maxStaff} {plan?.maxStaff === 1 ? "persona" : "personas"} en el equipo (sin contarte a ti). Desactiva a alguien o escríbenos para
+          ampliarlo.
         </div>
       )}
 

@@ -54,9 +54,9 @@ export default function AdminBusinessDetail() {
             {b.category} · {b.city} · desde {formatDate(b.createdAt)}
           </p>
         </div>
-        {/* Superadmin y Soporte: entran con motivo, solo para leer (queda en la auditoría del comercio). */}
+        {/* Soporte entra solo a leer; el superadministrador elige ver o editar. Ambos con motivo y en la auditoría del comercio. */}
         <ButtonLink href={`/business/${b.slug}`} variant="secondary">
-          <Eye className="size-4" /> Ver como el comercio
+          <Eye className="size-4" /> {puedeEditar ? "Entrar al comercio" : "Ver como el comercio"}
         </ButtonLink>
         {puedeEditar && (
           <div className="flex gap-2">

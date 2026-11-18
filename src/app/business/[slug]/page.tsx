@@ -74,8 +74,8 @@ export default function BusinessDashboard() {
       )}
       {customerLimitNear && (
         <div className="mb-4 rounded-xl border border-warning/30 bg-warning-bg px-4 py-3 text-sm text-warning">
-          Llevas {formatNumber(customers.length)} de {formatNumber(s.plan!.maxCustomers!)} clientes de tu plan {s.plan!.name}. Al llegar al límite no se podrán inscribir
-          clientes nuevas: pide un cambio de plan a tiempo.
+          Llevas {formatNumber(customers.length)} de {formatNumber(s.plan!.maxCustomers!)} clientes permitidos en tu cuenta. Al llegar al máximo no se podrán inscribir
+          clientes nuevas: escríbenos a tiempo para ampliarlo.
         </div>
       )}
 
