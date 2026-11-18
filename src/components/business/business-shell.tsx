@@ -25,7 +25,7 @@ import { LazoLogo } from "@/components/brand/lazo-logo";
 import { can } from "@/lib/domain/permissions";
 import { ROLE_LABELS } from "@/lib/domain/permissions";
 import { Avatar, ButtonLink, EmptyState } from "@/components/ui";
-import { AlertTriangle, Eye, Lock, Nfc, PencilLine } from "lucide-react";
+import { AlertTriangle, Eye, Lock, PencilLine } from "lucide-react";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 import { MiNombre } from "./mi-nombre";
 import { faltaNombre } from "@/lib/domain/nombre";
@@ -59,7 +59,6 @@ export function BusinessShell({ slug, children }: { slug: string; children: Reac
   // Solo lo del día a día a la vista; lo demás queda en «Más opciones».
   const masOpciones = [
     ...(can(m, "analytics.read") ? [{ href: `${base}/history`, label: "Historial", icon: History }] : []),
-    ...(can(m, "visits.create") ? [{ href: `${base}/lector`, label: "Lector NFC", icon: Nfc }] : []),
     ...(can(m, "program.edit") ? [{ href: `${base}/promotions`, label: "Promociones", icon: Tag }] : []),
     ...(can(m, "staff.manage")
       ? [
