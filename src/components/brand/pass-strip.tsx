@@ -42,12 +42,11 @@ export function passStrip(
   const pad = 18 * k;
   const stampUrl = branding.stampUrl?.startsWith("https://") ? branding.stampUrl : null;
 
-  // Cadena de sellos: círculos unidos por una línea fina, a la derecha de «3 de 8».
-  const left = 112 * k;
-  const avail = width - pad * 2 - left;
-  const link = Math.max(4 * k, Math.min(10 * k, avail / (required * 4)));
-  const d = Math.floor(Math.min(26 * k, (avail - link * (required - 1)) / required));
-  const ring = Math.max(1.5, 1.6 * k);
+  // Cadena de sellos: círculos grandes unidos por una línea fina, a todo el ancho de la franja.
+  const avail = width - pad * 2;
+  const link = Math.max(3 * k, Math.min(8 * k, avail / (required * 6)));
+  const d = Math.floor(Math.min(40 * k, (avail - link * (required - 1)) / required));
+  const ring = Math.max(1.5, 1.8 * k);
 
   const chain = Array.from({ length: required }, (_, i) => {
     const filled = i < stamps;
@@ -83,28 +82,30 @@ export function passStrip(
   return new ImageResponse(
     (
       <div style={{ ...full, position: "relative", display: "flex", background: c.bg, color: text, fontFamily: font }}>
-        {/* Visitas y cadena de sellos */}
-        <div style={{ position: "absolute", left: pad, top: 14 * k, width: width - pad * 2, height: 56 * k, display: "flex", alignItems: "center" }}>
-          <div style={{ display: "flex", flexDirection: "column", width: left }}>
+        {/* Arriba: visitas a la izquierda y recompensa a la derecha */}
+        <div style={{ position: "absolute", left: pad, top: 14 * k, width: width - pad * 2, height: 50 * k, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div style={{ display: "flex", flexDirection: "column" }}>
             <div style={{ display: "flex", fontSize: 10.5 * k, letterSpacing: 1.2 * k, color: muted, textTransform: "uppercase" }}>Visitas</div>
             <div style={{ display: "flex", fontSize: 24 * k, fontWeight: 600, marginTop: 1 * k }}>{`${stamps} de ${required}`}</div>
           </div>
-          <div style={{ display: "flex", alignItems: "center" }}>{chain}</div>
-        </div>
-        <div style={{ position: "absolute", left: pad, top: 80 * k, width: width - pad * 2, height: Math.max(1, k), background: line }} />
-
-        {/* Recompensa */}
-        <div style={{ position: "absolute", left: pad, top: 88 * k, height: 48 * k, width: width * 0.66, display: "flex", alignItems: "center" }}>
-          <svg width={26 * k} height={26 * k} viewBox="0 0 24 24" fill="none" stroke={text} strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round">
-            {GIFT.map((g) => (
-              <path key={g} d={g} />
-            ))}
-            <rect x={3} y={7} width={18} height={4} rx={1} />
-          </svg>
-          <div style={{ display: "flex", flexDirection: "column", marginLeft: 12 * k }}>
-            <div style={{ display: "flex", fontSize: 11 * k, color: muted }}>{rewardReady ? "¡Tu recompensa está lista!" : "Recompensa:"}</div>
-            <div style={{ display: "flex", fontSize: 15 * k, fontWeight: 500, marginTop: 1 * k }}>{rewardName}</div>
+          <div style={{ display: "flex", alignItems: "center", maxWidth: (width - pad * 2) * 0.6 }}>
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", marginRight: 10 * k }}>
+              <div style={{ display: "flex", fontSize: 10.5 * k, color: muted }}>{rewardReady ? "¡Recompensa lista!" : "Recompensa"}</div>
+              <div style={{ display: "flex", fontSize: 14 * k, fontWeight: 500, marginTop: 1 * k, textAlign: "right" }}>{rewardName}</div>
+            </div>
+            <svg width={24 * k} height={24 * k} viewBox="0 0 24 24" fill="none" stroke={text} strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round">
+              {GIFT.map((g) => (
+                <path key={g} d={g} />
+              ))}
+              <rect x={3} y={7} width={18} height={4} rx={1} />
+            </svg>
           </div>
+        </div>
+        <div style={{ position: "absolute", left: pad, top: 70 * k, width: width - pad * 2, height: Math.max(1, k), background: line }} />
+
+        {/* Abajo: la cadena de sellos, grande */}
+        <div style={{ position: "absolute", left: pad, top: 74 * k, width: width - pad * 2, height: 66 * k, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          {chain}
         </div>
       </div>
     ),
