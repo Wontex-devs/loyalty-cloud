@@ -223,7 +223,7 @@ export default function Home() {
         <section className="reveal mx-auto max-w-7xl px-4 py-20 sm:px-8 lg:py-28">
           <h2 className={`${h2} max-w-4xl`}>Todo lo que hoy no sabes de tus clientes</h2>
           <div className="mt-12 grid gap-4 lg:grid-cols-6">
-            <div className="rounded-xl bg-sun p-7 sm:p-12 lg:col-span-4 lg:row-span-1">
+            <div className="rounded-xl bg-sun p-7 sm:p-12 lg:col-span-6">
               <h3 className={`${poster} text-3xl sm:text-5xl sm:leading-[1.02]`}>A quién avisarle, y el aviso ya listo</h3>
               <p className="mt-4 max-w-xl text-lg leading-relaxed">
                 Te mostramos a quién le falta poco para el premio, quién cumple años este mes y quién no viene hace tiempo. Con un botón, el aviso le llega al celular como una notificación, con su nombre. Solo a quienes aceptaron recibir mensajes.
@@ -239,17 +239,6 @@ export default function Home() {
                   <p>Hola Laura, estás a muy poco de tu premio. ¡Te esperamos!</p>
                 </div>
               </div>
-            </div>
-            <div className="rounded-xl bg-cobalt p-7 text-white sm:p-10 lg:col-span-2">
-              <h3 className={`${poster} text-3xl`}>Cada cliente, con su historia</h3>
-              <dl className="mt-7 space-y-4">
-                {[["Laura Gómez", "cliente desde marzo"], ["14", "visitas"], ["8 de 10", "sellos"], ["Hace 4 días", "su última visita"]].map(([v, l]) => (
-                  <div key={l} className="border-b border-white/20 pb-3">
-                    <dd className="text-xl font-semibold">{v}</dd>
-                    <dt className="text-sm text-white/85">{l}</dt>
-                  </div>
-                ))}
-              </dl>
             </div>
             <div className="rounded-xl bg-cobalt p-7 text-white sm:p-10 lg:col-span-2">
               <h3 className={`${poster} text-3xl`}>¿Martes flojo?</h3>
