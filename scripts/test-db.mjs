@@ -799,6 +799,74 @@ console.log("\nEtapa 21 · Ver como el comercio (soporte, solo lectura)");
   check("una cuenta suspendida pierde el acceso aunque tenga sesión abierta", r.ok && r.rows[0].n === 0, r);
 }
 
+console.log("\nEtapa 27 · El superadministrador entra a editar un comercio");
+{
+  let r = await joinProgram("negocio-a", "+573001190001", "Clienta Edición");
+  const tok = r.rows?.[0]?.public_token;
+  const cardE = (await db.query("select id from public.loyalty_cards where public_token = $1", [tok])).rows[0]?.id;
+  const soporte = "00000000-0000-0000-0000-0000000005e7";
+  const super2 = "00000000-0000-0000-0000-0000000005e8";
+  await db.query("insert into auth.users (id, email, raw_user_meta_data) values ($1, 'soporte-edita@test.local', '{}'), ($2, 'super-dos@test.local', '{\"full_name\":\"Super Dos\"}')", [soporte, super2]);
+  await db.query("update public.profiles set platform_role = 'support' where id = $1", [soporte]);
+  await db.query("update public.profiles set platform_role = 'superadmin' where id = $1", [super2]);
+  // Sin sesiones abiertas de otras pruebas.
+  await db.query("update public.support_sessions set ended_at = now() where ended_at is null");
+
+  r = await as(super2, "update public.customers set full_name = 'Antes' where business_id = $1", [A]);
+  check("sin sesión de edición, el superadministrador no cambia clientes", (r.ok && r.affected === 0) || expectError(r, "permission denied"), r);
+  r = await as(soporte, "select public.start_support_session($1, 'Quiero cambiar la tarjeta', 30, 'edit')", [A]);
+  check("Soporte no puede abrir el modo edición (FORBIDDEN)", expectError(r, "FORBIDDEN"), r);
+  r = await as(U.ownerB, "select public.start_support_session($1, 'Quiero cambiar la tarjeta', 30, 'edit')", [A]);
+  check("un comercio no puede abrir el modo edición en otro (FORBIDDEN)", expectError(r, "FORBIDDEN"), r);
+  r = await as(super2, "select public.start_support_session($1, 'hola', 30, 'edit')", [A]);
+  check("el modo edición también exige motivo", expectError(r, "REASON_REQUIRED"), r);
+  r = await as(super2, "select public.start_support_session($1, 'Mover el sello', 30, 'borrar')", [A]);
+  check("un modo desconocido se rechaza (INVALID_INPUT)", expectError(r, "INVALID_INPUT"), r);
+
+  r = await as(super2, "select public.start_support_session($1, 'El dueño pidió ayuda con su tarjeta', 500, 'edit') as hasta", [A]);
+  check("el superadministrador abre el modo edición, de máximo 2 horas", r.ok && new Date(r.rows[0].hasta).getTime() - Date.now() <= 2 * 3600_000 + 5000, r);
+  r = await as(super2, "update public.loyalty_programs set reward_name = 'Manicura completa' where business_id = $1", [A]);
+  check("durante la sesión cambia el programa del comercio", r.ok && r.affected === 1, r);
+  r = await as(super2, "update public.customers set full_name = 'Clienta Corregida' where id = (select customer_id from public.loyalty_cards where id = $1)", [cardE]);
+  check("corrige los datos de una clienta", r.ok && r.affected === 1, r);
+  r = await as(super2, "select public.register_visit($1, 'super-edita-0001') as res", [cardE]);
+  check("y registra visitas como el comercio", r.ok, r);
+  r = await as(super2, "update public.customers set full_name = 'Intruso' where business_id = $1", [B]);
+  check("pero no cambia otro comercio sin abrir su sesión", (r.ok && r.affected === 0) || expectError(r, "permission denied"), r);
+
+  r = await as(U.ownerA, "select metadata->>'reason' motivo, metadata->>'by' quien from public.audit_logs where business_id = $1 and action = 'support.edit_started' and actor_id = $2", [A, super2]);
+  check("el dueño ve en su auditoría quién entró a editar y por qué", r.ok && r.rows.length === 1 && r.rows[0].motivo === "El dueño pidió ayuda con su tarjeta" && r.rows[0].quien === "Super Dos", r);
+  r = await as(U.ownerA, "select count(*)::int n from public.audit_logs where business_id = $1 and actor_id = $2 and action not like 'support.%'", [A, super2]);
+  check("y cada cambio queda a nombre del superadministrador", r.ok && r.rows[0].n > 0, r);
+
+  r = await as(super2, "select public.end_support_session($1)", [A]);
+  check("el superadministrador cierra la sesión de edición", r.ok, r);
+  r = await as(U.ownerA, "select count(*)::int n from public.audit_logs where business_id = $1 and action = 'support.edit_ended' and actor_id = $2", [A, super2]);
+  check("el cierre queda como «salió del modo edición»", r.ok && r.rows[0].n === 1, r);
+  r = await as(super2, "update public.customers set full_name = 'Después' where business_id = $1", [A]);
+  check("al cerrarla ya no puede cambiar nada", (r.ok && r.affected === 0) || expectError(r, "permission denied"), r);
+
+  r = await as(super2, "select public.start_support_session($1, 'Solo quiero mirar las visitas', 30)", [A]);
+  check("sin indicar el modo, la sesión es de solo lectura", r.ok, r);
+  r = await as(super2, "update public.customers set full_name = 'Solo lectura' where business_id = $1", [A]);
+  check("y en solo lectura el superadministrador tampoco cambia nada", (r.ok && r.affected === 0) || expectError(r, "permission denied"), r);
+  await as(super2, "select public.end_support_session($1)", [A]);
+
+  await db.query("insert into public.support_sessions (profile_id, business_id, reason, started_at, expires_at, mode) values ($1, $2, 'edición vieja', now() - interval '2 hours', now() - interval '1 hour', 'edit')", [super2, A]);
+  r = await as(super2, "update public.customers set full_name = 'Vencida' where business_id = $1", [A]);
+  check("una sesión de edición vencida no da permisos", (r.ok && r.affected === 0) || expectError(r, "permission denied"), r);
+
+  await db.query("insert into public.support_sessions (profile_id, business_id, reason, expires_at, mode) values ($1, $2, 'edición de soporte', now() + interval '1 hour', 'edit')", [soporte, A]);
+  r = await as(soporte, "update public.customers set full_name = 'Soporte' where business_id = $1", [A]);
+  check("aunque existiera una sesión de edición de Soporte, no da permisos", (r.ok && r.affected === 0) || expectError(r, "permission denied"), r);
+
+  await db.query("insert into public.support_sessions (profile_id, business_id, reason, expires_at, mode) values ($1, $2, 'edición abierta', now() + interval '1 hour', 'edit')", [super2, A]);
+  await db.query("update public.profiles set suspended_at = now() where id = $1", [super2]);
+  r = await as(super2, "update public.customers set full_name = 'Suspendido' where business_id = $1", [A]);
+  check("un superadministrador suspendido pierde el modo edición", (r.ok && r.affected === 0) || expectError(r, "permission denied"), r);
+  await db.query("update public.support_sessions set ended_at = now() where ended_at is null");
+}
+
 console.log("\nEtapa 23 · Sumar visita a mano");
 {
   let r = await joinProgram("negocio-a", "+573001140001", "Cliente Manual");

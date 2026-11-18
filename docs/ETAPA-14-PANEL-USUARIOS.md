@@ -85,3 +85,14 @@ Para dar soporte sin pedirle la clave a nadie: en **Establecimientos → (comerc
 - **Qué se puede:** solo leer. Las políticas de la base de datos amplían únicamente la lectura (`private.has_support_access`); todo cambio sigue exigiendo ser miembro del comercio, así que se rechaza. La excepción son las acciones que el superadministrador ya podía hacer desde la plataforma, como invitar personas.
 - **Transparencia:** cada entrada y salida queda en la auditoría **del comercio**, con el nombre de quien entró y el motivo. Su dueño y sus administradores la ven en *Historial → Auditoría*.
 - **Datos personales (Ley 1581):** fuera de una sesión abierta, la plataforma sigue sin ver los clientes. La sesión vence sola, y también deja de valer si la cuenta se suspende.
+
+## Entrar a editar un comercio (superadministrador, migración 0027)
+Para resolver lo que pida un comercio sin pedirle su clave: en **Establecimientos → (comercio) → Entrar al comercio → «Ver y editar»**.
+
+- **Quién:** solo superadministradores activos. Soporte sigue en solo lectura; la base lo rechaza aunque alguien lo intente por fuera de la pantalla.
+- **Cómo:** se escribe el motivo y la duración (de 15 minutos a 2 horas). Se abre el panel del comercio con un aviso rojo de **modo edición** y el botón «Salir del modo edición».
+- **Qué se puede:** todo lo que puede el propietario (tarjeta, programa, sedes, equipo, clientes, campañas, registrar visitas y canjes). La base de datos lo trata como propietario solo mientras la sesión está abierta (`private.has_edit_access`, dentro de `is_member`, `has_role` y `can_redeem`).
+- **Qué no:** exportar el listado completo de clientes sigue siendo solo del propietario real (datos personales en bloque, Ley 1581).
+- **Transparencia:** la entrada (con motivo), la salida y **cada cambio** quedan en la auditoría del comercio a nombre del superadministrador. El dueño lo ve en *Historial → Auditoría* como «Nombre (Lazo)».
+- **Se corta solo:** al vencer, al pulsar «Salir del modo edición» o si la cuenta se suspende.
+- **Pruebas:** 20 pruebas nuevas de base de datos (336 en total).

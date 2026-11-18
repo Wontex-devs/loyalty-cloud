@@ -4,7 +4,7 @@ import { SupportEntry } from "@/components/business/support-entry";
 import { getSession, loadBusinessSnapshot } from "@/lib/data/queries";
 import { LiveProvider } from "@/lib/data/live-provider";
 import { NoAccess } from "@/components/layout/no-access";
-import { puedeVerPlataforma } from "@/lib/domain/acceso";
+import { esSuperadmin, puedeVerPlataforma } from "@/lib/domain/acceso";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function BusinessLayout({
@@ -20,14 +20,15 @@ export default async function BusinessLayout({
 
   const isMember = session.memberships.some((m) => m.business?.slug === slug);
 
-  // Plataforma (superadmin o Soporte) sin membresía: modo soporte de solo lectura, con motivo y vencimiento.
+  // Plataforma (superadmin o Soporte) sin membresía: modo soporte con motivo y vencimiento.
+  // Solo lectura para Soporte; el superadministrador también puede abrirlo en modo edición (migración 0027).
   if (!isMember && puedeVerPlataforma(session.profile)) {
     const supabase = await createClient();
     const { data: biz } = await supabase.from("businesses").select("id, name").eq("slug", slug).maybeSingle();
     if (!biz) return <NoAccess />;
     const { data: abierta } = await supabase
       .from("support_sessions")
-      .select("expires_at")
+      .select("expires_at, mode")
       .eq("profile_id", session.user.id)
       .eq("business_id", biz.id)
       .is("ended_at", null)
@@ -35,12 +36,13 @@ export default async function BusinessLayout({
       .order("expires_at", { ascending: false })
       .limit(1)
       .maybeSingle();
-    if (!abierta) return <SupportEntry businessId={biz.id} slug={slug} name={biz.name} />;
+    if (!abierta) return <SupportEntry businessId={biz.id} slug={slug} name={biz.name} puedeEditar={esSuperadmin(session.profile)} />;
 
     const snapshot = await loadBusinessSnapshot(slug, session);
     if (!snapshot) return <NoAccess />;
+    const modo = abierta.mode === "edit" && esSuperadmin(session.profile) ? "edit" : "read";
     return (
-      <LiveProvider snapshot={{ ...snapshot, supportView: { expiresAt: abierta.expires_at } }}>
+      <LiveProvider snapshot={{ ...snapshot, supportView: { expiresAt: abierta.expires_at, modo } }}>
         <BusinessShell slug={slug}>{children}</BusinessShell>
       </LiveProvider>
     );

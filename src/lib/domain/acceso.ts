@@ -82,6 +82,8 @@ const ACCIONES: Record<string, string> = {
   "platform.business_deleted": "Eliminó un comercio",
   "support.view_started": "Entró a ver un comercio (solo lectura)",
   "support.view_ended": "Salió del modo soporte de un comercio",
+  "support.edit_started": "Entró a editar un comercio",
+  "support.edit_ended": "Salió del modo edición de un comercio",
   "business.created": "Creó un comercio",
   "business.active": "Activó un comercio",
   "business.suspended": "Suspendió un comercio",
@@ -104,7 +106,7 @@ export function describirDetalle(a: AuditLog): string | null {
   if (a.action === "platform.role_changed") return `De ${rol(m.from)} a ${rol(m.to)}`;
   if (a.action === "platform.profile_updated") return `Nombre: «${m.from}» → «${m.to}»`;
   if (a.action === "platform.user_suspended") return m.reason ? `Motivo: ${m.reason}` : null;
-  if (a.action === "support.view_started") return `Motivo: ${m.reason}${typeof m.minutes === "number" ? ` · ${m.minutes} min` : ""}`;
+  if (a.action === "support.view_started" || a.action === "support.edit_started") return `Motivo: ${m.reason}${typeof m.minutes === "number" ? ` · ${m.minutes} min` : ""}`;
   if (a.action === "platform.user_invited") {
     const r = m.rol as string;
     return m.tipo === "plataforma" ? `Como ${rol(r)}` : `Como ${ROLES_COMERCIO[r as BusinessRole]?.nombre ?? r}`;
@@ -133,6 +135,7 @@ export const PERMISOS_PLATAFORMA: { permiso: string; superadmin: boolean; suppor
   { permiso: "Invitar personas, cambiar roles, suspender y eliminar cuentas", superadmin: true, support: false, user: false },
   { permiso: "Exportar usuarios y auditoría", superadmin: true, support: false, user: false },
   { permiso: "Ver el panel de un comercio en modo soporte: solo lectura, con motivo, máximo 2 horas y visible en su historial", superadmin: true, support: true, user: false },
+  { permiso: "Entrar a editar un comercio con permisos de propietario: con motivo, máximo 2 horas, cada cambio a su nombre en el historial del comercio", superadmin: true, support: false, user: false },
   { permiso: "Ver datos personales de los clientes fuera de una sesión de soporte", superadmin: false, support: false, user: false },
 ];
 

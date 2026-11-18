@@ -1,5 +1,5 @@
 -- Generado por npm run db:bundle. No editar: cambia las migraciones y vuelve a generarlo.
--- Incluye: 20261101000001_schema.sql, 20261101000002_rls.sql, 20261101000003_functions.sql, 20261101000004_reference_data.sql, 20261101000005_public_business.sql, 20261101000006_business_stats.sql, 20261101000007_pilot.sql, 20261101000008_customer_experience.sql, 20261101000009_promotions_birthdays.sql, 20261101000010_plans_locations.sql, 20261101000011_brand_assets.sql, 20261101000012_privacy_abuse.sql, 20261101000013_wallet_notifications.sql, 20261101000014_plan_prices.sql, 20261101000015_nfc_checkin.sql, 20261101000016_plan_prices_v2.sql, 20261101000017_eliminar_comercio.sql, 20261101000018_foto_tarjeta.sql, 20261101000019_panel_usuarios.sql
+-- Incluye: 20261101000001_schema.sql, 20261101000002_rls.sql, 20261101000003_functions.sql, 20261101000004_reference_data.sql, 20261101000005_public_business.sql, 20261101000006_business_stats.sql, 20261101000007_pilot.sql, 20261101000008_customer_experience.sql, 20261101000009_promotions_birthdays.sql, 20261101000010_plans_locations.sql, 20261101000011_brand_assets.sql, 20261101000012_privacy_abuse.sql, 20261101000013_wallet_notifications.sql, 20261101000014_plan_prices.sql, 20261101000015_nfc_checkin.sql, 20261101000016_plan_prices_v2.sql, 20261101000017_eliminar_comercio.sql, 20261101000018_foto_tarjeta.sql, 20261101000019_panel_usuarios.sql, 20261101000020_apple_wallet.sql, 20261101000021_soporte_comercio.sql, 20261101000022_sello_propio_y_letras.sql, 20261101000023_visita_manual.sql, 20261101000024_nombre_aparte.sql, 20261101000025_sede_ubicacion.sql, 20261101000026_mensaje_cercania.sql, 20261101000027_superadmin_edita_comercio.sql
 begin;
 
 -- >>> 20261101000001_schema.sql
@@ -3684,5 +3684,606 @@ grant execute on function
   public.admin_update_profile(uuid, text),
   public.admin_record_action(text, text, jsonb)
 to authenticated;
+
+-- >>> 20261101000020_apple_wallet.sql
+-- =====================================================================
+-- Etapa 20 · Apple Wallet
+--  * Cada iPhone que guarda un pase se registra en nuestro servicio web (protocolo de Apple):
+--    se guarda su identificador de dispositivo y el token para avisarle por APNs.
+--  * pass_updated_at marca cuándo cambió el pase: el iPhone pregunta «qué cambió desde…».
+--  * Solo el servidor (service_role) lee y escribe: el panel no necesita estos datos.
+--  * Al borrar la tarjeta (o el comercio) se borran sus registros.
+-- =====================================================================
+
+create table if not exists public.apple_wallet_registrations (
+  device_library_id text not null check (length(device_library_id) between 1 and 128),
+  card_id           uuid not null,
+  business_id       uuid not null,
+  push_token        text not null check (length(push_token) between 1 and 200),
+  pass_updated_at   timestamptz not null default now(),
+  created_at        timestamptz not null default now(),
+  primary key (device_library_id, card_id),
+  foreign key (card_id, business_id) references public.loyalty_cards (id, business_id) on delete cascade
+);
+create index if not exists apple_wallet_registrations_card_idx on public.apple_wallet_registrations (card_id);
+create index if not exists apple_wallet_registrations_business_idx on public.apple_wallet_registrations (business_id);
+
+alter table public.apple_wallet_registrations enable row level security;
+revoke all on public.apple_wallet_registrations from public, anon, authenticated;
+grant all on public.apple_wallet_registrations to service_role;
+
+-- >>> 20261101000021_soporte_comercio.sql
+-- =====================================================================
+-- Etapa 21 · Ver como el comercio (soporte en modo solo lectura)
+--  * Un superadministrador o Soporte puede abrir el panel de un comercio SOLO PARA LEER,
+--    escribiendo el motivo. El acceso dura como máximo 2 horas (por defecto 1).
+--  * Cada entrada queda en la auditoría DEL COMERCIO: su dueño y sus administradores la ven.
+--  * No da permisos de escritura: las funciones de escritura siguen exigiendo membresía
+--    (has_role / is_member), que no cambian. Solo se amplían las políticas de LECTURA.
+--  * Datos personales de clientes (Ley 1581): se ven únicamente durante una sesión abierta con
+--    motivo, nunca de forma permanente desde el panel de la plataforma.
+-- =====================================================================
+
+create table if not exists public.support_sessions (
+  id          uuid primary key default gen_random_uuid(),
+  profile_id  uuid not null references public.profiles (id) on delete cascade,
+  business_id uuid not null references public.businesses (id) on delete cascade,
+  reason      text not null check (length(btrim(reason)) between 5 and 300),
+  started_at  timestamptz not null default now(),
+  expires_at  timestamptz not null,
+  ended_at    timestamptz,
+  check (expires_at > started_at and expires_at <= started_at + interval '2 hours')
+);
+create index if not exists support_sessions_active_idx on public.support_sessions (profile_id, business_id, expires_at desc);
+
+alter table public.support_sessions enable row level security;
+revoke all on public.support_sessions from public, anon, authenticated;
+grant select on public.support_sessions to authenticated;
+grant all on public.support_sessions to service_role;
+-- Cada quien ve sus sesiones; los lectores de la plataforma ven todas. Se escriben solo con las funciones.
+create policy support_sessions_read on public.support_sessions for select to authenticated
+  using (profile_id = auth.uid() or private.is_platform_reader());
+
+-- ¿Tiene el usuario una sesión de soporte abierta en este comercio?
+create or replace function private.has_support_access(p_business uuid)
+returns boolean
+language sql stable security definer
+set search_path = ''
+as $$
+  select private.is_platform_reader() and exists (
+    select 1 from public.support_sessions s
+    where s.profile_id = auth.uid() and s.business_id = p_business
+      and s.ended_at is null and s.expires_at > now()
+  );
+$$;
+revoke all on function private.has_support_access(uuid) from public;
+grant execute on function private.has_support_access(uuid) to authenticated;
+
+-- ---------- Abrir y cerrar la sesión ----------
+create or replace function public.start_support_session(p_business_id uuid, p_reason text, p_minutes integer default 60)
+returns timestamptz
+language plpgsql
+volatile security definer
+set search_path = ''
+as $$
+declare
+  v_reason text := btrim(coalesce(p_reason, ''));
+  v_minutes integer := least(greatest(coalesce(p_minutes, 60), 15), 120);
+  v_expires timestamptz := now() + make_interval(mins => v_minutes);
+  v_name text;
+begin
+  if not private.is_platform_reader() then raise exception 'FORBIDDEN'; end if;
+  if length(v_reason) < 5 then raise exception 'REASON_REQUIRED'; end if;
+  select name into v_name from public.businesses where id = p_business_id;
+  if v_name is null then raise exception 'NOT_FOUND'; end if;
+
+  -- Una sola sesión abierta por persona y comercio.
+  update public.support_sessions set ended_at = now()
+    where profile_id = auth.uid() and business_id = p_business_id and ended_at is null;
+  insert into public.support_sessions (profile_id, business_id, reason, expires_at)
+    values (auth.uid(), p_business_id, left(v_reason, 300), v_expires);
+
+  -- El comercio no puede leer los perfiles de la plataforma: el nombre va en el registro.
+  perform private.audit(p_business_id, 'support.view_started', 'business', p_business_id::text,
+    jsonb_build_object('reason', left(v_reason, 300), 'minutes', v_minutes,
+      'by', (select full_name from public.profiles where id = auth.uid())));
+  return v_expires;
+end;
+$$;
+
+create or replace function public.end_support_session(p_business_id uuid)
+returns void
+language plpgsql
+volatile security definer
+set search_path = ''
+as $$
+begin
+  if not private.is_platform_reader() then raise exception 'FORBIDDEN'; end if;
+  update public.support_sessions set ended_at = now()
+    where profile_id = auth.uid() and business_id = p_business_id and ended_at is null and expires_at > now();
+  if found then
+    perform private.audit(p_business_id, 'support.view_ended', 'business', p_business_id::text,
+      jsonb_build_object('by', (select full_name from public.profiles where id = auth.uid())));
+  end if;
+end;
+$$;
+
+revoke all on function public.start_support_session(uuid, text, integer) from public, anon;
+revoke all on function public.end_support_session(uuid) from public, anon;
+grant execute on function public.start_support_session(uuid, text, integer) to authenticated;
+grant execute on function public.end_support_session(uuid) to authenticated;
+
+-- ---------- Lectura durante la sesión (solo SELECT) ----------
+drop policy if exists customers_read on public.customers;
+create policy customers_read on public.customers for select to authenticated
+  using (private.is_member(business_id) or private.has_support_access(business_id));
+
+drop policy if exists cards_read on public.loyalty_cards;
+create policy cards_read on public.loyalty_cards for select to authenticated
+  using (private.is_member(business_id) or private.has_support_access(business_id));
+
+drop policy if exists visits_read on public.visits;
+create policy visits_read on public.visits for select to authenticated
+  using (private.is_member(business_id) or private.has_support_access(business_id));
+
+drop policy if exists rewards_read on public.rewards;
+create policy rewards_read on public.rewards for select to authenticated
+  using (private.is_member(business_id) or private.has_support_access(business_id));
+
+drop policy if exists redemptions_read on public.redemptions;
+create policy redemptions_read on public.redemptions for select to authenticated
+  using (private.is_member(business_id) or private.has_support_access(business_id));
+
+drop policy if exists locations_read on public.locations;
+create policy locations_read on public.locations for select to authenticated
+  using (private.is_member(business_id) or private.has_support_access(business_id));
+
+drop policy if exists promotions_read on public.promotions;
+create policy promotions_read on public.promotions for select to authenticated
+  using (private.is_member(business_id) or private.has_support_access(business_id));
+
+drop policy if exists campaigns_read on public.campaigns;
+create policy campaigns_read on public.campaigns for select to authenticated
+  using (private.is_member(business_id) or private.has_support_access(business_id));
+
+drop policy if exists customer_contacts_read on public.customer_contacts;
+create policy customer_contacts_read on public.customer_contacts for select to authenticated
+  using (private.has_role(business_id, '{owner,admin}') or private.has_support_access(business_id));
+
+drop policy if exists wallet_notifications_read on public.wallet_notifications;
+create policy wallet_notifications_read on public.wallet_notifications for select to authenticated
+  using (private.has_role(business_id, '{owner,admin}') or private.has_support_access(business_id));
+
+-- >>> 20261101000022_sello_propio_y_letras.sql
+-- =====================================================================
+-- Etapa 22 · Sello propio y más tipografías para la tarjeta
+--  * stampUrl: el comercio sube su propio sello. Misma regla que el logo y la foto:
+--    vacío para quitarlo o una imagen de la carpeta del propio comercio en Storage.
+--  * font: además de clásica (serif) y moderna (sans), elegante, manuscrita,
+--    redondeada, impacto y geométrica.
+--  * Solo cambia la validación de update_business_profile; nada más.
+-- =====================================================================
+
+create or replace function public.update_business_profile(
+  p_business_id uuid,
+  p_name text,
+  p_category text,
+  p_city text,
+  p_timezone text,
+  p_branding jsonb
+)
+returns void
+language plpgsql
+volatile security definer
+set search_path = ''
+as $$
+declare
+  k text;
+  v text;
+begin
+  if not (private.has_role(p_business_id, '{owner,admin}') or private.is_superadmin()) then
+    raise exception 'FORBIDDEN';
+  end if;
+  if p_branding is not null then
+    for k in select jsonb_object_keys(p_branding) loop
+      v := p_branding ->> k;
+      if k = 'logoText' then
+        if v is null or length(trim(v)) not between 1 and 3 then raise exception 'INVALID_BRANDING'; end if;
+      elsif k in ('logoUrl', 'coverUrl', 'stampUrl') then
+        -- Vacío = quitar la imagen. Si no, solo una imagen de su propia carpeta en Storage.
+        if v is null or (v <> '' and v !~ ('^https://[a-z0-9-]+\.supabase\.co/storage/v1/object/public/brand-assets/'
+                                           || p_business_id::text || '/[A-Za-z0-9._-]+$')) then
+          raise exception 'INVALID_BRANDING';
+        end if;
+      elsif k = 'stampIcon' then
+        if v is null or v not in ('check', 'heart', 'star', 'sparkles', 'flower', 'gem', 'crown', 'scissors') then
+          raise exception 'INVALID_BRANDING';
+        end if;
+      elsif k = 'font' then
+        if v is null or v not in ('serif', 'sans', 'elegante', 'manuscrita', 'redondeada', 'impacto', 'geometrica') then
+          raise exception 'INVALID_BRANDING';
+        end if;
+      elsif k in ('primary', 'primaryForeground', 'accent', 'cardBackground', 'cardForeground') then
+        if v is null or v !~ '^#[0-9a-fA-F]{6}$' then raise exception 'INVALID_BRANDING'; end if;
+      else
+        raise exception 'INVALID_BRANDING';
+      end if;
+    end loop;
+  end if;
+
+  update public.businesses
+  set name     = coalesce(nullif(trim(p_name), ''), name),
+      category = coalesce(nullif(trim(p_category), ''), category),
+      city     = coalesce(nullif(trim(p_city), ''), city),
+      timezone = coalesce(nullif(trim(p_timezone), ''), timezone),
+      branding = case when p_branding is null then branding else branding || p_branding end
+  where id = p_business_id;
+
+  perform private.audit(p_business_id, 'business.updated', 'business', p_business_id::text,
+                        jsonb_build_object('branding_changed', p_branding is not null));
+end;
+$$;
+
+-- >>> 20261101000023_visita_manual.sql
+-- =====================================================================
+-- Etapa 23 · Sumar visita a mano (respaldo cuando el NFC falla en caja)
+--  * Cualquier miembro activo del comercio puede sumar la visita desde la ficha del cliente,
+--    escribiendo el motivo (5 a 200 caracteres).
+--  * Aplica las mismas reglas que cualquier visita (private.record_visit): tiempo mínimo
+--    entre visitas, tarjeta bloqueada, comercio suspendido, promociones y premios.
+--  * La visita queda con origen 'manual' y además una entrada en la auditoría con el motivo.
+--    Se puede revertir como cualquier otra.
+-- =====================================================================
+
+alter table public.visits drop constraint if exists visits_source_check;
+alter table public.visits add constraint visits_source_check check (source in ('staff', 'nfc', 'manual'));
+
+create or replace function public.register_manual_visit(
+  p_card_id uuid,
+  p_idempotency_key text,
+  p_reason text,
+  p_location_id uuid default null
+)
+returns jsonb
+language plpgsql
+volatile security definer
+set search_path = ''
+as $$
+declare
+  v_business uuid;
+  v_reason   text := btrim(coalesce(p_reason, ''));
+  v_result   jsonb;
+begin
+  if auth.uid() is null then raise exception 'FORBIDDEN'; end if;
+  select business_id into v_business from public.loyalty_cards where id = p_card_id;
+  if not found then raise exception 'CARD_NOT_FOUND'; end if;
+  if not private.is_member(v_business) then raise exception 'FORBIDDEN'; end if;
+  if length(v_reason) < 5 then raise exception 'REASON_REQUIRED'; end if;
+
+  v_result := private.record_visit(p_card_id, p_idempotency_key, p_location_id, auth.uid(), 'manual', 0);
+
+  perform private.audit(v_business, 'visit.manual', 'loyalty_card', p_card_id::text,
+    jsonb_build_object('reason', left(v_reason, 200), 'visit_id', v_result ->> 'visit_id'));
+  return v_result;
+end;
+$$;
+
+revoke all on function public.register_manual_visit(uuid, text, text, uuid) from public, anon;
+grant execute on function public.register_manual_visit(uuid, text, text, uuid) to authenticated;
+
+-- >>> 20261101000024_nombre_aparte.sql
+-- =====================================================================
+-- Etapa 24 · Nombre aparte para los avisos
+--  * La inscripción pide Nombre y Apellido por separado; el servidor los guarda con
+--    mayúscula inicial (full_name = «Nombre Apellido») y el nombre en customers.first_name.
+--  * Los avisos ({nombre}) usan first_name: «María José», no solo «María».
+--    Si falta (clientes anteriores), siguen usando la primera palabra del nombre completo.
+--  * Al eliminar los datos personales de un cliente también se borra su nombre.
+-- =====================================================================
+
+alter table public.customers add column if not exists first_name text
+  check (first_name is null or length(btrim(first_name)) between 1 and 60);
+
+-- Clientes ya inscritos: la primera palabra del nombre completo.
+update public.customers set first_name = split_part(btrim(full_name), ' ', 1)
+  where first_name is null and anonymized_at is null and btrim(coalesce(full_name, '')) <> '';
+
+-- Cualquier inserción sin nombre aparte (semillas, otras rutas) toma la primera palabra;
+-- al anonimizar se borra.
+create or replace function private.customer_first_name()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+begin
+  if new.anonymized_at is not null then
+    new.first_name := null;
+  elsif tg_op = 'UPDATE' and new.full_name is distinct from old.full_name
+        and new.first_name is not distinct from old.first_name then
+    -- Corrigieron el nombre completo sin tocar el nombre aparte: se vuelve a tomar la primera palabra.
+    new.first_name := nullif(split_part(btrim(coalesce(new.full_name, '')), ' ', 1), '');
+  elsif new.first_name is null or btrim(new.first_name) = '' then
+    new.first_name := nullif(split_part(btrim(coalesce(new.full_name, '')), ' ', 1), '');
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists customers_first_name on public.customers;
+create trigger customers_first_name before insert or update of full_name, first_name, anonymized_at on public.customers
+  for each row execute function private.customer_first_name();
+
+-- ---------- {nombre} con el nombre aparte ----------
+create or replace function public.queue_wallet_campaign(p_business_id uuid, p_customer_ids uuid[], p_title text, p_body text)
+returns table (notification_id uuid, public_token text, title text, body text)
+language plpgsql
+volatile security definer
+set search_path = ''
+as $$
+declare
+  v_ref text := 'campaign:' || gen_random_uuid()::text;
+begin
+  if not private.has_role(p_business_id, '{owner,admin}') then raise exception 'FORBIDDEN'; end if;
+  if p_title is null or length(trim(p_title)) not between 1 and 40
+     or p_body is null or length(trim(p_body)) not between 1 and 240 then
+    raise exception 'INVALID_WALLET_MESSAGE';
+  end if;
+  if coalesce(array_length(p_customer_ids, 1), 0) not between 1 and 2000 then raise exception 'INVALID_WALLET_MESSAGE'; end if;
+  if exists (select 1 from public.businesses where id = p_business_id and status = 'suspended') then
+    raise exception 'BUSINESS_SUSPENDED';
+  end if;
+
+  return query
+  with eligible as (
+    select c.id as card_id, c.public_token as token, cu.full_name, cu.first_name
+    from public.customers cu
+    join public.loyalty_cards c on c.customer_id = cu.id and c.business_id = cu.business_id
+    where cu.business_id = p_business_id
+      and cu.id = any (p_customer_ids)
+      and cu.marketing_consent
+      and cu.anonymized_at is null
+      and c.status <> 'blocked'
+      and not exists (select 1 from public.wallet_notifications n
+                      where n.card_id = c.id and n.kind = 'campaign' and n.created_at > now() - interval '7 days')
+  ), ins as (
+    insert into public.wallet_notifications (business_id, card_id, kind, ref, title, body, staff_id)
+    select p_business_id, e.card_id, 'campaign', v_ref, trim(p_title),
+           left(replace(trim(p_body), '{nombre}', coalesce(nullif(btrim(e.first_name), ''), split_part(trim(e.full_name), ' ', 1))), 300), auth.uid()
+    from eligible e
+    on conflict (card_id, ref) do nothing
+    returning id, card_id, wallet_notifications.title, wallet_notifications.body
+  )
+  select ins.id, e.token, ins.title, ins.body from ins join eligible e on e.card_id = ins.card_id;
+
+  perform private.audit(p_business_id, 'wallet.campaign_queued', 'business', p_business_id::text,
+                        jsonb_build_object('ref', v_ref, 'title', trim(p_title)));
+end;
+$$;
+
+create or replace function public.wallet_daily_candidates(p_now timestamptz default now())
+returns table (business_id uuid, card_id uuid, public_token text, kind text, ref text,
+               first_name text, business_name text, current_stamps integer, stamps_required integer, reward_name text)
+language sql
+stable security definer
+set search_path = ''
+as $$
+  with base as (
+    select b.id as business_id, b.name as business_name, b.wallet_notifications as s,
+           (p_now at time zone b.timezone) as local_now,
+           c.id as card_id, c.public_token, c.current_stamps, c.last_visit_at,
+           cu.full_name, cu.first_name, cu.birth_month, cu.birth_day,
+           p.stamps_required, p.reward_name
+    from public.businesses b
+    join public.loyalty_cards c on c.business_id = b.id
+    join public.customers cu on cu.id = c.customer_id
+    join public.loyalty_programs p on p.id = c.program_id
+    where b.status <> 'suspended'
+      and c.status <> 'blocked'
+      and cu.marketing_consent
+      and cu.anonymized_at is null
+  )
+  select business_id, card_id, public_token, 'birthday', 'birthday:' || extract(year from local_now)::int,
+         coalesce(nullif(btrim(first_name), ''), split_part(trim(full_name), ' ', 1)), business_name, current_stamps, stamps_required, reward_name
+  from base
+  where (s ->> 'birthday')::boolean
+    and birth_month = extract(month from local_now)::int
+    and coalesce(birth_day, 1) = extract(day from local_now)::int
+  union all
+  select business_id, card_id, public_token, 'winback', 'winback:' || to_char(last_visit_at, 'YYYYMMDDHH24MISS'),
+         coalesce(nullif(btrim(first_name), ''), split_part(trim(full_name), ' ', 1)), business_name, current_stamps, stamps_required, reward_name
+  from base
+  where (s ->> 'winback')::boolean
+    and last_visit_at is not null
+    and last_visit_at < p_now - make_interval(days => (s ->> 'winbackDays')::int)
+    -- Solo quienes se enfriaron hace poco: al activar el aviso no se escribe a clientes de hace años.
+    and last_visit_at > p_now - make_interval(days => (s ->> 'winbackDays')::int + 30);
+$$;
+
+-- >>> 20261101000025_sede_ubicacion.sql
+-- =====================================================================
+-- Etapa 25 · Ubicación de cada sede (aviso de cercanía en la billetera)
+--  * Cada sede puede guardar su latitud y longitud. Con ellas, el pase de Apple Wallet
+--    y el programa de Google Wallet llevan la ubicación del local: el celular del
+--    cliente muestra la tarjeta (iPhone) o un aviso (Android) al estar cerca.
+--  * Lazo no recibe ni guarda la ubicación del cliente: el cálculo lo hace su celular.
+--  * Van las dos o ninguna; sin ellas la sede no da aviso de cercanía.
+--  * Las políticas de la tabla no cambian (propietario y administrador editan).
+-- =====================================================================
+
+alter table public.locations
+  add column if not exists latitude  double precision check (latitude between -90 and 90),
+  add column if not exists longitude double precision check (longitude between -180 and 180);
+
+alter table public.locations drop constraint if exists locations_coords_pair;
+alter table public.locations add constraint locations_coords_pair
+  check ((latitude is null) = (longitude is null));
+
+-- >>> 20261101000026_mensaje_cercania.sql
+-- =====================================================================
+-- Etapa 26 · Mensaje de cercanía editable
+--  * El comercio escribe el texto que el iPhone muestra en la pantalla bloqueada
+--    cuando el cliente está cerca de una sede (avisos automáticos → «Cerca del local»).
+--  * Se guarda en businesses.wallet_notifications.nearbyText (opcional: sin él se usa
+--    el texto por defecto). Entre 5 y 120 caracteres.
+--  * Admite {nombre}, {comercio} y {progreso}; se reemplazan en cada pase.
+-- =====================================================================
+
+create or replace function private.valid_wallet_settings(s jsonb)
+returns boolean
+language sql
+immutable
+set search_path = ''
+as $$
+  select jsonb_typeof(s) = 'object'
+    and not exists (select 1 from jsonb_object_keys(s) k
+                    where k not in ('stamp', 'near', 'reward', 'birthday', 'winback', 'winbackDays', 'nearbyText'))
+    and jsonb_typeof(s -> 'stamp') = 'boolean'
+    and jsonb_typeof(s -> 'near') = 'boolean'
+    and jsonb_typeof(s -> 'reward') = 'boolean'
+    and jsonb_typeof(s -> 'birthday') = 'boolean'
+    and jsonb_typeof(s -> 'winback') = 'boolean'
+    and jsonb_typeof(s -> 'winbackDays') = 'number'
+    and (s ->> 'winbackDays') ~ '^[0-9]+$'
+    and (s ->> 'winbackDays')::int between 14 and 180
+    and (not (s ? 'nearbyText')
+         or (jsonb_typeof(s -> 'nearbyText') = 'string'
+             and length(btrim(s ->> 'nearbyText')) between 5 and 120));
+$$;
+
+-- >>> 20261101000027_superadmin_edita_comercio.sql
+-- =====================================================================
+-- Etapa 27 · Entrar y editar un comercio (solo superadministrador)
+--  * La sesión de soporte (Etapa 21) tiene ahora un modo: «read» (ver) o «edit» (ver y editar).
+--  * Solo un superadministrador activo puede abrir el modo «edit». Soporte sigue en solo lectura.
+--  * Durante una sesión «edit» abierta, el superadministrador cuenta como propietario del comercio
+--    en las funciones de permisos (is_member, has_role, can_redeem). Así se reutilizan TODAS las
+--    reglas existentes (RLS y funciones) sin duplicarlas.
+--  * Igual que en solo lectura: exige motivo, dura de 15 minutos a 2 horas, deja de valer si la
+--    cuenta se suspende, y la entrada, la salida y cada cambio quedan en la auditoría DEL COMERCIO
+--    con el nombre de quien los hizo.
+-- =====================================================================
+
+alter table public.support_sessions
+  add column if not exists mode text not null default 'read' check (mode in ('read', 'edit'));
+
+-- ¿Tiene el usuario una sesión de EDICIÓN abierta en este comercio? (solo superadministrador activo)
+create or replace function private.has_edit_access(p_business uuid)
+returns boolean
+language sql stable security definer
+set search_path = ''
+as $$
+  select private.is_superadmin() and exists (
+    select 1 from public.support_sessions s
+    where s.profile_id = auth.uid() and s.business_id = p_business and s.mode = 'edit'
+      and s.ended_at is null and s.expires_at > now()
+  );
+$$;
+revoke all on function private.has_edit_access(uuid) from public;
+grant execute on function private.has_edit_access(uuid) to authenticated;
+
+-- ---------- Funciones de permisos: la sesión de edición cuenta como propietario ----------
+create or replace function private.is_member(p_business uuid)
+returns boolean
+language sql stable security definer
+set search_path = ''
+as $$
+  select exists (
+    select 1 from public.business_memberships m
+    join public.profiles p on p.id = m.profile_id
+    where m.business_id = p_business and m.profile_id = auth.uid() and m.active and p.suspended_at is null
+  ) or private.has_edit_access(p_business);
+$$;
+
+create or replace function private.has_role(p_business uuid, p_roles public.business_role[])
+returns boolean
+language sql stable security definer
+set search_path = ''
+as $$
+  select exists (
+    select 1 from public.business_memberships m
+    join public.profiles p on p.id = m.profile_id
+    where m.business_id = p_business and m.profile_id = auth.uid() and m.active and m.role = any (p_roles)
+      and p.suspended_at is null
+  ) or private.has_edit_access(p_business);
+$$;
+
+create or replace function private.can_redeem(p_business uuid)
+returns boolean
+language sql stable security definer
+set search_path = ''
+as $$
+  select exists (
+    select 1 from public.business_memberships m
+    join public.profiles p on p.id = m.profile_id
+    where m.business_id = p_business and m.profile_id = auth.uid() and m.active
+      and (m.role in ('owner', 'admin') or m.can_redeem) and p.suspended_at is null
+  ) or private.has_edit_access(p_business);
+$$;
+
+-- ---------- Abrir y cerrar la sesión, ahora con modo ----------
+drop function if exists public.start_support_session(uuid, text, integer);
+create or replace function public.start_support_session(
+  p_business_id uuid, p_reason text, p_minutes integer default 60, p_mode text default 'read'
+)
+returns timestamptz
+language plpgsql
+volatile security definer
+set search_path = ''
+as $$
+declare
+  v_reason text := btrim(coalesce(p_reason, ''));
+  v_minutes integer := least(greatest(coalesce(p_minutes, 60), 15), 120);
+  v_expires timestamptz := now() + make_interval(mins => v_minutes);
+  v_mode text := coalesce(p_mode, 'read');
+  v_name text;
+begin
+  if not private.is_platform_reader() then raise exception 'FORBIDDEN'; end if;
+  if v_mode not in ('read', 'edit') then raise exception 'INVALID_INPUT'; end if;
+  -- Editar es solo del superadministrador; Soporte nunca cambia nada.
+  if v_mode = 'edit' and not private.is_superadmin() then raise exception 'FORBIDDEN'; end if;
+  if length(v_reason) < 5 then raise exception 'REASON_REQUIRED'; end if;
+  select name into v_name from public.businesses where id = p_business_id;
+  if v_name is null then raise exception 'NOT_FOUND'; end if;
+
+  -- Una sola sesión abierta por persona y comercio.
+  update public.support_sessions set ended_at = now()
+    where profile_id = auth.uid() and business_id = p_business_id and ended_at is null;
+  insert into public.support_sessions (profile_id, business_id, reason, expires_at, mode)
+    values (auth.uid(), p_business_id, left(v_reason, 300), v_expires, v_mode);
+
+  -- El comercio no puede leer los perfiles de la plataforma: el nombre va en el registro.
+  perform private.audit(p_business_id,
+    case when v_mode = 'edit' then 'support.edit_started' else 'support.view_started' end,
+    'business', p_business_id::text,
+    jsonb_build_object('reason', left(v_reason, 300), 'minutes', v_minutes,
+      'by', (select full_name from public.profiles where id = auth.uid())));
+  return v_expires;
+end;
+$$;
+
+create or replace function public.end_support_session(p_business_id uuid)
+returns void
+language plpgsql
+volatile security definer
+set search_path = ''
+as $$
+declare
+  v_mode text;
+begin
+  if not private.is_platform_reader() then raise exception 'FORBIDDEN'; end if;
+  update public.support_sessions set ended_at = now()
+    where profile_id = auth.uid() and business_id = p_business_id and ended_at is null and expires_at > now()
+    returning mode into v_mode;
+  if v_mode is not null then
+    perform private.audit(p_business_id,
+      case when v_mode = 'edit' then 'support.edit_ended' else 'support.view_ended' end,
+      'business', p_business_id::text,
+      jsonb_build_object('by', (select full_name from public.profiles where id = auth.uid())));
+  end if;
+end;
+$$;
+
+revoke all on function public.start_support_session(uuid, text, integer, text) from public, anon;
+grant execute on function public.start_support_session(uuid, text, integer, text) to authenticated;
 
 commit;
