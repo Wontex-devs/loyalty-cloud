@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { Bell, Check, Gift, Nfc, Scissors, Users, Wallet } from "lucide-react";
+import { Bell, Check, Gift, Nfc, Users, Wallet } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { LazoLogo, LazoMark } from "@/components/brand/lazo-logo";
+import { PaseHilo } from "./pase-hilo";
 
 /*
  * Historia de Lazo en 11 escenas, movida por el desplazamiento de la página.
@@ -241,7 +242,7 @@ function aplicar(m: Mapa, T: number) {
     if (v >= 0.5) sellos++;
     st(`sello${i}`, `scale(${(0.5 + 0.5 * rebote(v)).toFixed(3)})`, v * 3);
   });
-  texto("cuenta", `${sellos}/6`);
+  texto("cuenta", `${sellos} / 6`);
   const aviso = sal(tramo(T, 6.22, 6.4)) * (1 - sal(tramo(T, 6.85, 7.0)));
   st("aviso", `translateY(${px(-70 * (1 - aviso))})`, aviso);
   const premio = sal(tramo(T, 7.5, 7.68));
@@ -455,38 +456,14 @@ function Calle({ r }: { r: (k: string) => (n: Element | null) => void }) {
 
 // ——— Piezas del celular ———
 function Pase({ r }: { r?: (k: string) => (n: Element | null) => void }) {
+  // El mismo diseño que el pase real; los sellos aparecen al avanzar la historia.
   return (
-    <div className="overflow-hidden rounded-[20px] bg-cobalt text-white shadow-[0_14px_30px_-14px_rgb(6_10_36/0.7)]">
-      <div className="px-4 pt-3.5">
-        <div className="flex items-center gap-2.5">
-          <img src="/logos/el-faro.svg" alt="" className="size-8 rounded-full bg-white p-1" />
-          <span className="text-[13px] font-medium">Barbería El Faro</span>
-        </div>
-        <p className="mt-2 text-[19px] leading-none font-semibold">Club del Faro</p>
-        <div className="mt-2.5 flex items-end justify-between leading-tight">
-          <div>
-            <p className="text-[11px] text-white/85">Cortes</p>
-            <p ref={r?.("cuenta")} className="tabular text-[17px] font-medium">
-              0/6
-            </p>
-          </div>
-          <div className="text-right">
-            <p className="text-[11px] text-white/85">Próximo premio</p>
-            <p className="text-[14px] font-medium">Corte gratis</p>
-          </div>
-        </div>
-      </div>
-      <div className="mt-2.5 grid grid-cols-6 gap-1.5 bg-[#142fa8] px-4 py-3">
-        {[0, 1, 2, 3, 4, 5].map((i) => (
-          <span key={i} className="relative flex aspect-square items-center justify-center rounded-full border-[1.5px] border-dashed border-white/60">
-            {i === 5 && <Gift className="size-3.5 text-white/80" />}
-            <span ref={r?.(`sello${i}`)} className="absolute -inset-[1.5px] flex items-center justify-center rounded-full bg-sun text-coal" style={{ opacity: 0 }}>
-              {i === 5 ? <Gift className="size-3.5" /> : <Scissors className="size-3.5" />}
-            </span>
-          </span>
-        ))}
-      </div>
-    </div>
+    <PaseHilo
+      compacto
+      className="rounded-[20px] shadow-[0_14px_30px_-14px_rgb(6_10_36/0.7)]"
+      contador={<span ref={r?.("cuenta")}>0 / 6</span>}
+      sello={(i) => ({ ref: r?.(`sello${i}`), style: { opacity: 0 } })}
+    />
   );
 }
 
