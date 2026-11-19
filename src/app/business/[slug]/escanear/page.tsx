@@ -35,7 +35,7 @@ export default function EscanearPage() {
   const video = useRef<HTMLVideoElement>(null);
   const lector = useRef<Lector | null>(null);
   const ocupado = useRef(false);
-  const ultimo = useRef<{ codigo: string; en: number }>({ codigo: "", en: 0 });
+  const ultimo = useRef<{ codigo: string; en: number; clave: string }>({ codigo: "", en: 0, clave: "" });
 
   // Cada celular suele quedarse en la misma sede.
   useEffect(() => {
@@ -55,12 +55,19 @@ export default function EscanearPage() {
   }, [estado]);
 
   const sumar = useCallback(
-    async (leido: string) => {
+    async (leido: string, manual = false) => {
       const codigo = limpiarCodigo(leido);
       if (ocupado.current) return;
-      // La cámara lee el mismo código varias veces por segundo: solo cuenta una vez.
-      if (codigo === ultimo.current.codigo && Date.now() - ultimo.current.en < 6000) return;
-      ultimo.current = { codigo, en: Date.now() };
+      const repetido = codigo === ultimo.current.codigo && Date.now() - ultimo.current.en < 60_000;
+      // La cámara lee el mismo código varias veces por segundo: durante un minuto solo cuenta una vez
+      // y se avisa, en vez de ignorarlo en silencio.
+      if (repetido && !manual) {
+        setEstado((e) => (e.tipo === "esperando" ? { tipo: "error", mensaje: "Esta tarjeta ya se sumó hace un momento." } : e));
+        return;
+      }
+      // La misma clave para el mismo código: si se reintenta, la base reconoce la visita y no suma dos veces.
+      const clave = repetido ? ultimo.current.clave : crypto.randomUUID();
+      ultimo.current = { codigo, en: Date.now(), clave };
       if (!esCodigoTarjeta(codigo)) return setEstado({ tipo: "error", mensaje: "Ese código no es de una tarjeta de Lazo." });
       ocupado.current = true;
       setEstado({ tipo: "guardando" });
@@ -68,7 +75,7 @@ export default function EscanearPage() {
         const tarjeta = await findCardByScanCodeAction(business.id, codigo);
         if (!tarjeta) return setEstado({ tipo: "error", mensaje: "Esta tarjeta no es de este negocio." });
         if (tarjeta.status === "blocked") return setEstado({ tipo: "error", mensaje: "Esta tarjeta está bloqueada." });
-        const res = await registerVisit(tarjeta.id, crypto.randomUUID(), sede || undefined);
+        const res = await registerVisit(tarjeta.id, clave, sede || undefined);
         if (!res.ok) return setEstado({ tipo: "error", mensaje: res.message });
         try {
           navigator.vibrate?.(60);
@@ -212,8 +219,7 @@ export default function EscanearPage() {
           className="flex flex-col gap-3 sm:flex-row sm:items-end"
           onSubmit={(e) => {
             e.preventDefault();
-            ultimo.current = { codigo: "", en: 0 };
-            void sumar(numero);
+            void sumar(numero, true);
           }}
         >
           <label className="min-w-0 flex-1">
