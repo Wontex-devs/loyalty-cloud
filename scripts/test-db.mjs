@@ -1266,5 +1266,56 @@ console.log("\nDatos de demostración");
   }
 }
 
+// ---------- Control de cobros ----------
+{
+  console.log("\nControl de cobros");
+  const soporte = "00000000-0000-0000-0000-0000000000c5";
+  await db.query("insert into auth.users (id, email, raw_user_meta_data) values ($1, 'cobros-soporte@test.local', '{}') on conflict do nothing", [soporte]);
+  await db.query("update public.profiles set platform_role = 'support' where id = $1", [soporte]);
+
+  const fecha = async (id) => (await db.query("select to_char(paid_until, 'YYYY-MM-DD') d from public.business_billing where business_id = $1", [id])).rows[0]?.d;
+  const nuevo = (await db.query(`insert into public.businesses (slug, name, category, city, plan_id)
+    values ('cobro-nuevo', 'Cobro Nuevo', 'Café', 'Cali', 'plan_starter') returning id`)).rows[0].id;
+  const esperado = (await db.query("select to_char(((now() at time zone 'America/Bogota')::date + interval '1 month'), 'YYYY-MM-DD') d")).rows[0].d;
+  check("cobros: un comercio nuevo queda pagado hasta un mes después (mes gratis)", (await fecha(nuevo)) === esperado, await fecha(nuevo));
+  check("cobros: los comercios que ya existían también tienen fecha", !!(await fecha(A)) && !!(await fecha(B)));
+
+  let q = await as(U.ownerA, "select * from public.business_billing where business_id = $1", [A]);
+  check("cobros: el dueño del comercio no ve sus datos de cobro", q.ok && q.rows.length === 0, q);
+  q = await as(U.ownerA, "select * from public.business_payments");
+  check("cobros: el dueño no ve el historial de pagos", q.ok && q.rows.length === 0, q);
+  q = await as(soporte, "select * from public.business_billing where business_id = $1", [A]);
+  check("cobros: soporte sí ve la fecha de pago", q.ok && q.rows.length === 1, q);
+  q = await as(U.ownerA, "update public.business_billing set paid_until = '2099-01-01' where business_id = $1", [A]);
+  check("cobros: nadie cambia la fecha directamente en la tabla", !q.ok || q.affected === 0, q);
+  q = await as(U.ownerA, "select public.register_business_payment($1, 79990, current_date, 1, null)", [A]);
+  check("cobros: el dueño no puede registrar pagos", expectError(q, "FORBIDDEN"), q);
+  q = await as(soporte, "select public.register_business_payment($1, 79990, current_date, 1, null)", [A]);
+  check("cobros: soporte no puede registrar pagos", expectError(q, "FORBIDDEN"), q);
+  q = await as(U.super, "select public.register_business_payment($1, 79990, current_date, 13, null)", [A]);
+  check("cobros: no se aceptan más de 12 meses por pago", expectError(q, "INVALID_INPUT"), q);
+
+  await db.query("update public.business_billing set paid_until = '2026-01-31' where business_id = $1", [A]);
+  q = await as(U.super, "select to_char(public.register_business_payment($1, 79990, '2026-02-05', 1, '  Transferencia  '), 'YYYY-MM-DD') d", [A]);
+  check("cobros: el pago avanza desde la fecha anterior, no desde hoy (31 ene → 28 feb)", q.ok && q.rows[0].d === "2026-02-28", q);
+  q = await as(U.super, "select to_char(public.register_business_payment($1, 159980, '2026-03-01', 2, null), 'YYYY-MM-DD') d", [A]);
+  check("cobros: pagar 2 meses suma 2 meses", q.ok && q.rows[0].d === "2026-04-28", q);
+  const pagos = (await db.query("select amount, months, note, created_by from public.business_payments where business_id = $1 order by created_at", [A])).rows;
+  check("cobros: cada pago queda en el historial con quién lo registró", pagos.length === 2 && pagos[0].note === "Transferencia" && pagos[1].months === 2 && pagos[0].created_by === U.super, pagos);
+  const aud = (await db.query("select count(*)::int n from public.audit_logs where business_id = $1 and action = 'billing.payment_registered'", [A])).rows[0].n;
+  check("cobros: los pagos quedan en la auditoría", aud === 2, aud);
+
+  q = await as(U.super, "select public.set_business_paid_until($1, '2026-12-15', 'ok')", [A]);
+  check("cobros: corregir la fecha exige un motivo", expectError(q, "INVALID_INPUT"), q);
+  q = await as(U.super, "select public.set_business_paid_until($1, '2026-12-15', 'Acuerdo con el dueño')", [A]);
+  check("cobros: el superadministrador corrige la fecha con motivo", q.ok && (await fecha(A)) === "2026-12-15", q);
+  const audFecha = (await db.query("select metadata->>'reason' r from public.audit_logs where business_id = $1 and action = 'billing.paid_until_changed'", [A])).rows[0]?.r;
+  check("cobros: la corrección queda en la auditoría con su motivo", audFecha === "Acuerdo con el dueño", audFecha);
+
+  await db.query("delete from public.businesses where id = $1", [nuevo]);
+  const resto = (await db.query("select count(*)::int n from public.business_billing where business_id = $1", [nuevo])).rows[0].n;
+  check("cobros: al eliminar un comercio se borran sus datos de cobro", resto === 0, resto);
+}
+
 console.log(`\n${passed} correctas, ${failed} fallidas\n`);
 process.exit(failed ? 1 : 0);
