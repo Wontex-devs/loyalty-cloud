@@ -113,6 +113,20 @@ export async function findCardByScanCodeAction(
   return { id: data.id, status: data.status, stamps: data.current_stamps, firstName };
 }
 
+/** Premios listos para entregar de una tarjeta (los vencidos no). La base solo responde a quien es del comercio. */
+export async function premiosDeTarjetaAction(cardId: string): Promise<{ id: string; name: string }[]> {
+  if (!z.uuid().safeParse(cardId).success) return [];
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("rewards")
+    .select("id, name, expires_at")
+    .eq("card_id", cardId)
+    .eq("status", "available")
+    .order("earned_at", { ascending: true });
+  const ahora = Date.now();
+  return (data ?? []).filter((r) => !r.expires_at || new Date(r.expires_at as string).getTime() > ahora).map((r) => ({ id: r.id as string, name: r.name as string }));
+}
+
 export type VisitActionResult =
   | { ok: true; data: { reward?: string; currentStamps: number; bonusStamps: number; birthdayReward: string | null } }
   | { ok: false; message: string };

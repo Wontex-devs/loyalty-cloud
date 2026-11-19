@@ -52,6 +52,8 @@ export type NfcTapResult =
       token?: string;
       /** Este celular no tiene tarjeta guardada de este comercio: hay que confirmar los datos. */
       sinTarjeta?: true;
+      /** «pronto»: ya sumó su sello hace poco (no es una falla). «etiqueta»: la etiqueta no sirve, reintentar no ayuda. */
+      motivo?: "pronto" | "etiqueta";
     };
 
 const ipCliente = async () => {
@@ -88,10 +90,16 @@ async function registrarToque(slug: string, secret: string, cardToken: string, i
   // Reintento de un toque que ya se registró (se perdió la respuesta): se muestra como hecho, sin sumar otro.
   const repetido = !!error && /DUPLICATE_REQUEST/.test(error.message ?? "");
   if (error && !repetido) {
-    const message = dbErrorMessage(error, "No pudimos registrar tu visita. Inténtalo de nuevo.");
-    if (ERROR_DE_ETIQUETA.test(error.message ?? "") || !recordar) return { ok: false, message };
+    const codigo = error.message ?? "";
+    if (ERROR_DE_ETIQUETA.test(codigo)) return { ok: false, message: dbErrorMessage(error), motivo: "etiqueta" };
+    const pronto = /TOO_SOON/.test(codigo);
+    const message = pronto
+      ? "Ya sumaste un sello hace poco. El siguiente se suma en tu próxima visita."
+      : dbErrorMessage(error, "No pudimos registrar tu visita. Inténtalo de nuevo.");
+    const motivo = pronto ? ({ motivo: "pronto" } as const) : {};
+    if (!recordar) return { ok: false, message, ...motivo };
     await recordarTarjeta(cardToken);
-    return { ok: false, message, token: cardToken };
+    return { ok: false, message, token: cardToken, ...motivo };
   }
 
   if (!repetido) {

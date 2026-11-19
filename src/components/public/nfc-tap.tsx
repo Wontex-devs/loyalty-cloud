@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { Check, Loader2, Nfc } from "lucide-react";
+import { Check, Clock, Loader2, Nfc } from "lucide-react";
 import { nfcRecuperarAction, nfcTapAction, type NfcTapResult } from "@/lib/data/nfc-actions";
 import { LazoLogo } from "@/components/brand/lazo-logo";
 import type { BusinessBranding } from "@/lib/domain/types";
@@ -15,7 +15,7 @@ export type EstadoToque =
   | { fase: "sin-tarjeta" }
   | { fase: "enlace-invalido" }
   | { fase: "listo"; datos: Extract<NfcTapResult, { ok: true }> }
-  | { fase: "error"; mensaje: string };
+  | { fase: "error"; mensaje: string; motivo?: "pronto" | "etiqueta" };
 
 export type DatosCliente = { celular: string };
 
@@ -61,7 +61,7 @@ export function NfcTap({ slug, secret, business }: { slug: string; secret: strin
       guardarEnCelular(slug, res.token);
       setToken(res.token);
     }
-    setEstado({ fase: "error", mensaje: res.message });
+    setEstado({ fase: "error", mensaje: res.message, motivo: res.motivo });
   };
 
   const registrar = async (cardToken: string | null) => {
@@ -192,20 +192,38 @@ export function NfcTapVista({
           </>
         )}
 
-        {estado.fase === "error" && (
+        {/* Ya sumó hace poco: no es una falla, es una buena noticia. */}
+        {estado.fase === "error" && estado.motivo === "pronto" && (
+          <>
+            <span className="mx-auto mt-10 flex size-24 items-center justify-center rounded-full" style={{ background: `${b.cardForeground}1a` }}>
+              <Clock className="size-11" aria-hidden />
+            </span>
+            <h1 className="mt-6 text-2xl font-semibold">Tu sello de hoy ya está</h1>
+            <p className="mt-2 text-base">{estado.mensaje}</p>
+            {token && (
+              <Link href={`/card/${token}`} className={boton} style={botonPrincipal}>
+                Ver mi tarjeta
+              </Link>
+            )}
+          </>
+        )}
+
+        {estado.fase === "error" && estado.motivo !== "pronto" && (
           <>
             <Nfc className="mx-auto mt-10 size-14 opacity-70" aria-hidden />
             <h1 className="mt-6 text-2xl font-semibold">No pudimos marcar tu visita</h1>
             <p className="mt-2 text-base">{estado.mensaje}</p>
+            {/* Reintentar sirve siempre, salvo si la etiqueta no es válida. Sin tarjeta guardada, el servidor la busca en su cookie. */}
+            {estado.motivo !== "etiqueta" && (
+              <button type="button" className={boton} style={botonPrincipal} onClick={onReintentar}>
+                Intentar de nuevo
+              </button>
+            )}
+            {estado.motivo === "etiqueta" && <p className="mt-4 text-sm opacity-75">Avísale a quien te atiende para que sume tu sello.</p>}
             {token && (
-              <>
-                <button type="button" className={boton} style={botonPrincipal} onClick={onReintentar}>
-                  Intentar de nuevo
-                </button>
-                <Link href={`/card/${token}`} className={`${boton} !mt-3`} style={botonSecundario}>
-                  Ver mi tarjeta
-                </Link>
-              </>
+              <Link href={`/card/${token}`} className={`${boton} ${estado.motivo === "etiqueta" ? "" : "!mt-3"}`} style={estado.motivo === "etiqueta" ? botonPrincipal : botonSecundario}>
+                Ver mi tarjeta
+              </Link>
             )}
           </>
         )}

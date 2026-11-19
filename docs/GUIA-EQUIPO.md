@@ -18,8 +18,12 @@ El cliente desbloquea su celular y lo acerca a la **etiqueta NFC del mostrador**
 3. Sale «¡Sello registrado, Ana! Lleva 4 de 6». Si la cámara no lo lee, escribe el número de 12 dígitos que está debajo de las barras.
 
 ## Entregar una recompensa
-1. En el panel, abre **Recompensas** y busca al cliente.
-2. Pulsa **Canjear** y entrega el premio.
+**Desde el escáner (lo más rápido):** al escanear la tarjeta, si el cliente tiene un premio listo aparece
+**Canjear ahora**. Púlsalo y entrega el premio. Si no lo va a reclamar hoy, pulsa **Ahora no**.
+
+**Desde Recompensas:**
+1. En el panel, abre **Recompensas** y busca al cliente por nombre o por los últimos dígitos de su celular.
+2. Pulsa **Canjear**, luego **Confirmar**, y entrega el premio.
 3. Cada recompensa se canjea **una sola vez**. Si el sistema dice que ya se canjeó, no la entregues.
 
 Solo puede canjear quien tenga permiso. Si no te aparece el botón, llama al encargado.
@@ -42,6 +46,7 @@ No intentes arreglarlo sumando o quitando visitas. Avisa a la encargada: ella **
 
 ## Si el toque NFC no funciona
 - Revisa que el cliente tenga el **celular desbloqueado** y el **NFC encendido** (en Android, en los ajustes rápidos). Debe acercar la parte de arriba del celular a la etiqueta.
-- Si le pide crear su tarjeta, es porque en ese celular no está guardada: que escanee el cartel con el QR y escriba **el mismo nombre y celular** con los que se inscribió. Así recupera su tarjeta y luego vuelve a tocar la etiqueta.
+- Si le pide **escribir su celular**, es porque ese celular no recuerda su tarjeta: que escriba el mismo número con el que se inscribió y el sello se suma en ese momento.
+- Si dice «Tu sello de hoy ya está», ya sumó hace poco: no hay que hacer nada más.
 - Si nada funciona, abre **Clientes → el cliente → Sumar visita**, elige o escribe el motivo y pulsa **Sumar 1 visita**. Queda registrada con tu nombre y el motivo, con las mismas reglas de siempre.
 - Si ves un sello que no corresponde, avisa a la encargada: ella lo **revierte** indicando el motivo, igual que cualquier visita.
