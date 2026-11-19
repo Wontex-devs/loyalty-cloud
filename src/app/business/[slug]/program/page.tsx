@@ -8,6 +8,7 @@ import { useData } from "@/lib/data/store";
 import { can } from "@/lib/domain/permissions";
 import { programSchema, type ProgramInput } from "@/lib/domain/schemas";
 import { Badge, Button, Card, CardHeader, Field, Input, PageHeader, Switch, Textarea } from "@/components/ui";
+import { NumberInput } from "@/components/ui/number-input";
 
 export default function ProgramPage() {
   const { business, program, membership, cards } = useScope();
@@ -92,10 +93,10 @@ export default function ProgramPage() {
                 error={errors.stampsRequired}
                 hint={stampsChanged ? `Se aplicará a ${cards.length} tarjetas; los sellos actuales se conservan.` : "Entre 2 y 30."}
               >
-                <Input type="number" min={2} max={30} value={form.stampsRequired} onChange={(e) => set("stampsRequired", Number(e.target.value))} />
+                <NumberInput min={2} max={30} value={form.stampsRequired} onValueChange={(n) => set("stampsRequired", n)} />
               </Field>
-              <Field label="Tiempo mínimo entre visitas (min)" hint="Evita registros dobles por error." error={errors.minMinutesBetweenVisits}>
-                <Input type="number" min={0} value={form.minMinutesBetweenVisits} onChange={(e) => set("minMinutesBetweenVisits", Number(e.target.value))} />
+              <Field label="Tiempo mínimo entre visitas (min)" hint="Evita registros dobles por error. De 0 a 1440 (un día)." error={errors.minMinutesBetweenVisits}>
+                <NumberInput min={0} max={1440} value={form.minMinutesBetweenVisits} onValueChange={(n) => set("minMinutesBetweenVisits", n)} />
               </Field>
             </div>
           </Card>
@@ -109,11 +110,11 @@ export default function ProgramPage() {
               <Field label="Detalle" error={errors.rewardDescription} className="sm:col-span-2">
                 <Input value={form.rewardDescription} onChange={(e) => set("rewardDescription", e.target.value)} />
               </Field>
-              <Field label="Vigencia (días)" hint="0 = sin vencimiento." error={errors.rewardExpiryDays}>
-                <Input type="number" min={0} value={form.rewardExpiryDays} onChange={(e) => set("rewardExpiryDays", Number(e.target.value))} />
+              <Field label="Vigencia (días)" hint="De 0 a 365. 0 = sin vencimiento." error={errors.rewardExpiryDays}>
+                <NumberInput min={0} max={365} value={form.rewardExpiryDays} onValueChange={(n) => set("rewardExpiryDays", n)} />
               </Field>
               <Field label="Sellos de bienvenida" hint="Regalo al inscribirse: la tarjeta nueva empieza con estos sellos (0 a 5)." error={errors.welcomeStamps}>
-                <Input type="number" min={0} max={5} value={form.welcomeStamps} onChange={(e) => set("welcomeStamps", Number(e.target.value))} />
+                <NumberInput min={0} max={5} value={form.welcomeStamps} onValueChange={(n) => set("welcomeStamps", n)} />
               </Field>
               <Field
                 label="Regalo de cumpleaños"
