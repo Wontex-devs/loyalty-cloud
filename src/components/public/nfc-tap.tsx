@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { Check, Loader2, Nfc } from "lucide-react";
-import { nfcTapAction, type NfcTapResult } from "@/lib/data/nfc-actions";
+import { nfcRecuperarAction, nfcTapAction, type NfcTapResult } from "@/lib/data/nfc-actions";
 import { LazoLogo } from "@/components/brand/lazo-logo";
 import type { BusinessBranding } from "@/lib/domain/types";
 
@@ -17,24 +17,69 @@ export type EstadoToque =
   | { fase: "listo"; datos: Extract<NfcTapResult, { ok: true }> }
   | { fase: "error"; mensaje: string };
 
+export type DatosCliente = { nombre: string; apellido: string; celular: string };
+
 const nuevaClave = () => `nfc-${globalThis.crypto?.randomUUID?.() ?? Math.random().toString(36).slice(2) + Date.now().toString(36)}`;
+
+const guardarEnCelular = (slug: string, token: string) => {
+  try {
+    localStorage.setItem(cardStorageKey(slug), token);
+  } catch {
+    /* sin almacenamiento: queda la cookie del servidor */
+  }
+};
 
 /**
  * Pantalla que se abre al acercar el celular a la etiqueta NFC del mostrador.
- * Registra la visita de la tarjeta guardada en este celular y muestra el resultado.
+ * Busca la tarjeta de este celular (en la página o en la cookie del servidor) y registra la visita.
+ * Si no la encuentra, el cliente confirma su nombre y celular y el sello se suma en ese momento.
  */
 export function NfcTap({ slug, secret, business }: { slug: string; secret: string; business: { name: string; branding: BusinessBranding } }) {
   const [estado, setEstado] = useState<EstadoToque>({ fase: "cargando" });
   const [token, setToken] = useState<string | null>(null);
+  const [errorDatos, setErrorDatos] = useState<string | null>(null);
+  const [enviando, setEnviando] = useState(false);
   const enviado = useRef(false);
 
-  const registrar = async (cardToken: string) => {
+  const mostrar = (res: NfcTapResult) => {
+    if (res.ok) {
+      guardarEnCelular(slug, res.token);
+      setToken(res.token);
+      setEstado({ fase: "listo", datos: res });
+      return;
+    }
+    if (res.sinTarjeta) {
+      setEstado({ fase: "sin-tarjeta" });
+      return;
+    }
+    if (res.token) {
+      guardarEnCelular(slug, res.token);
+      setToken(res.token);
+    }
+    setEstado({ fase: "error", mensaje: res.message });
+  };
+
+  const registrar = async (cardToken: string | null) => {
     setEstado({ fase: "cargando" });
     try {
-      const res = await nfcTapAction(slug, secret, cardToken, nuevaClave());
-      setEstado(res.ok ? { fase: "listo", datos: res } : { fase: "error", mensaje: res.message });
+      mostrar(await nfcTapAction(slug, secret, cardToken, nuevaClave()));
     } catch {
       setEstado({ fase: "error", mensaje: "No pudimos conectar. Revisa tu internet e inténtalo de nuevo." });
+    }
+  };
+
+  const confirmar = async (datos: DatosCliente) => {
+    setEnviando(true);
+    setErrorDatos(null);
+    try {
+      const res = await nfcRecuperarAction(slug, secret, datos, nuevaClave());
+      // Datos que no coinciden: se queda en el formulario para corregirlos.
+      if (!res.ok && !res.token) setErrorDatos(res.message);
+      else mostrar(res);
+    } catch {
+      setErrorDatos("No pudimos conectar. Revisa tu internet e inténtalo de nuevo.");
+    } finally {
+      setEnviando(false);
     }
   };
 
@@ -50,18 +95,26 @@ export function NfcTap({ slug, secret, business }: { slug: string; secret: strin
     try {
       guardado = localStorage.getItem(cardStorageKey(slug));
     } catch {
-      /* sin almacenamiento: se trata como si no hubiera tarjeta */
+      /* sin almacenamiento: el servidor busca en su cookie */
     }
-    if (!guardado) {
-      setEstado({ fase: "sin-tarjeta" });
-      return;
-    }
-    setToken(guardado);
+    if (guardado) setToken(guardado);
+    // Aunque la página no recuerde la tarjeta, el servidor la busca en su cookie.
     void registrar(guardado);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  return <NfcTapVista slug={slug} business={business} estado={estado} token={token} onReintentar={() => token && void registrar(token)} />;
+  return (
+    <NfcTapVista
+      slug={slug}
+      business={business}
+      estado={estado}
+      token={token}
+      onReintentar={() => void registrar(token)}
+      onConfirmar={confirmar}
+      enviando={enviando}
+      errorDatos={errorDatos}
+    />
+  );
 }
 
 /** Solo la parte visual, para poder verla en cada estado. */
@@ -71,17 +124,25 @@ export function NfcTapVista({
   estado,
   token,
   onReintentar,
+  onConfirmar,
+  enviando = false,
+  errorDatos = null,
 }: {
   slug: string;
   business: { name: string; branding: BusinessBranding };
   estado: EstadoToque;
   token: string | null;
   onReintentar?: () => void;
+  onConfirmar?: (datos: DatosCliente) => void;
+  enviando?: boolean;
+  errorDatos?: string | null;
 }) {
   const b = business.branding;
-  const boton = "mt-6 flex h-12 w-full items-center justify-center rounded-xl px-5 text-[15px] font-semibold transition-transform duration-150 active:scale-[0.97]";
+  const boton = "mt-6 flex h-12 w-full items-center justify-center gap-2 rounded-xl px-5 text-[15px] font-semibold transition-transform duration-150 active:scale-[0.97] disabled:opacity-60";
   const botonPrincipal = { background: b.cardForeground, color: b.cardBackground };
   const botonSecundario = { border: `2px solid ${b.cardForeground}`, color: b.cardForeground };
+  const campo =
+    "h-12 w-full rounded-xl border-2 bg-transparent px-4 text-base outline-none placeholder:opacity-60 focus:border-current";
 
   return (
     <main className="flex min-h-dvh flex-col items-center justify-center px-6 py-10" style={{ background: b.cardBackground, color: b.cardForeground }}>
@@ -140,13 +201,53 @@ export function NfcTapVista({
 
         {estado.fase === "sin-tarjeta" && (
           <>
-            <Nfc className="mx-auto mt-10 size-14 opacity-70" aria-hidden />
-            <h1 className="mt-6 text-2xl font-semibold">Aún no tienes tarjeta en este celular</h1>
-            <p className="mt-2 text-base">Créala en un minuto y luego acerca el celular de nuevo para sumar tu sello.</p>
-            <Link href={`/join/${slug}`} className={boton} style={botonPrincipal}>
-              Crear mi tarjeta
+            <h1 className="mt-8 text-2xl font-semibold">¿Ya tienes tu tarjeta?</h1>
+            <p className="mt-2 text-base">Confirma tus datos y sumamos tu sello ahora mismo.</p>
+            <form
+              className="mt-6 space-y-3 text-left"
+              onSubmit={(e) => {
+                e.preventDefault();
+                const f = new FormData(e.currentTarget);
+                onConfirmar?.({ nombre: String(f.get("nombre") ?? ""), apellido: String(f.get("apellido") ?? ""), celular: String(f.get("celular") ?? "") });
+              }}
+            >
+              {/* Los nombres de campo y autocomplete permiten que el celular ofrezca los datos de su dueño con un toque. */}
+              <div className="grid grid-cols-2 gap-3">
+                <label className="block">
+                  <span className="sr-only">Nombre</span>
+                  <input name="nombre" autoComplete="given-name" required placeholder="Nombre" className={campo} style={{ borderColor: `${b.cardForeground}66` }} />
+                </label>
+                <label className="block">
+                  <span className="sr-only">Apellido</span>
+                  <input name="apellido" autoComplete="family-name" required placeholder="Apellido" className={campo} style={{ borderColor: `${b.cardForeground}66` }} />
+                </label>
+              </div>
+              <label className="block">
+                <span className="sr-only">Celular</span>
+                <input
+                  name="celular"
+                  type="tel"
+                  inputMode="tel"
+                  autoComplete="tel"
+                  required
+                  placeholder="Celular"
+                  className={campo}
+                  style={{ borderColor: `${b.cardForeground}66` }}
+                />
+              </label>
+              {errorDatos && (
+                <p role="alert" className="rounded-xl px-4 py-3 text-sm font-medium" style={{ background: `${b.cardForeground}1a` }}>
+                  {errorDatos}
+                </p>
+              )}
+              <button type="submit" className={`${boton} !mt-4`} style={botonPrincipal} disabled={enviando}>
+                {enviando && <Loader2 className="size-4 animate-spin" aria-hidden />} Sumar mi sello
+              </button>
+            </form>
+            <p className="mt-4 text-sm opacity-75">Escríbelos igual que cuando te inscribiste. Después, este celular te recordará.</p>
+            <Link href={`/join/${slug}`} className={`${boton} !mt-6`} style={botonSecundario}>
+              Es mi primera vez: crear mi tarjeta
             </Link>
-            <p className="mt-4 text-sm opacity-75">Si ya la tienes, ábrela desde tu enlace una vez y vuelve a acercar el celular.</p>
           </>
         )}
 

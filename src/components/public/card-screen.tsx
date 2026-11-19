@@ -8,6 +8,7 @@ import { InstallCard } from "./install-card";
 import { WalletButtons } from "./wallet-buttons";
 import { LazoLogo } from "@/components/brand/lazo-logo";
 import { formatDate, formatRelative } from "@/lib/utils";
+import { recordarTarjetaAction } from "@/lib/data/nfc-actions";
 import type { BusinessBranding, CardStatus } from "@/lib/domain/types";
 
 /** Datos que necesita la tarjeta pública. Coincide con lo que devuelve get_public_card. */
@@ -61,8 +62,10 @@ export function CardScreen({
     try {
       localStorage.setItem(`lazo:tarjeta:${data.business.slug}`, data.token);
     } catch {
-      /* sin almacenamiento: el toque pedirá abrir la tarjeta de nuevo */
+      /* sin almacenamiento: queda la cookie del servidor */
     }
+    // Safari borra lo anterior a los ~7 días sin visitas; la cookie del servidor dura mucho más.
+    void recordarTarjetaAction(data.token).catch(() => {});
   }, [data.business.slug, data.token]);
 
   // Animación cuando el empleado suma una visita.

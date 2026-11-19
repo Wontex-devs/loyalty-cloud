@@ -24,6 +24,7 @@ import { deliverNotices } from "@/lib/wallet/notify";
 import { NEARBY_TEXT_MAX, NEARBY_TEXT_MIN } from "@/lib/wallet/messages";
 import { normalizePassInfo, type PassInfoInput } from "@/lib/wallet/pass-info";
 import { rateLimit } from "./rate-limit";
+import { recordarTarjeta } from "./recordar-tarjeta";
 
 export type JoinActionResult = { ok: true; token: string; existing: boolean } | { ok: false; message: string };
 
@@ -87,6 +88,8 @@ export async function joinProgramAction(slug: string, input: JoinInput, captchaT
     const { error: nameError } = await supabase.from("customers").update({ first_name: parsed.data.firstName }).eq("id", card.customer_id);
     if (nameError) console.error("[join] no se pudo guardar el nombre aparte", nameError.message);
   }
+  // El celular queda recordado: al tocar la etiqueta NFC del mostrador lo reconoce aunque Safari borre la página.
+  await recordarTarjeta(row.public_token);
   revalidatePath("/business", "layout");
   return { ok: true, token: row.public_token, existing: row.existing };
 }

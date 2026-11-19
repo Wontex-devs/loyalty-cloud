@@ -11,6 +11,7 @@ import type { BusinessBranding } from "@/lib/domain/types";
 import { NotFoundScreen } from "./card-screen";
 import { Turnstile, TURNSTILE_SITE_KEY, type TurnstileHandle } from "./turnstile";
 import { BrandMark, brandCase, brandFont } from "@/components/loyalty/brand-mark";
+import { AbrirEnNavegador } from "./abrir-en-navegador";
 
 const MONTHS = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
 
@@ -83,6 +84,8 @@ export function JoinForm({ slug, business, program }: JoinFormProps) {
           <p className={cn("mt-4 text-3xl", brandCase(b), brandFont(b, "tracking-[0.14em]"))}>{business.name}</p>
           <p className="mt-2 text-sm opacity-70">{program.description}</p>
         </header>
+
+        <AbrirEnNavegador />
 
         <div className="mt-6 grid grid-cols-2 gap-2 text-sm">
           <div className="rounded-2xl bg-white/90 p-3.5 text-[#111111]">
