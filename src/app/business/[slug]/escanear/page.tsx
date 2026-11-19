@@ -1,0 +1,238 @@
+"use client";
+
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Camera, CameraOff, CheckCircle2, Loader2, MapPin, PartyPopper, ScanBarcode, XCircle } from "lucide-react";
+import { useScope } from "@/components/business/business-shell";
+import { useData } from "@/lib/data/store";
+import { can } from "@/lib/domain/permissions";
+import { findCardByScanCodeAction } from "@/lib/data/loyalty-actions";
+import { codigoLegible, esCodigoTarjeta, limpiarCodigo } from "@/lib/domain/code128";
+import { Button, Card, Input, PageHeader, Select } from "@/components/ui";
+import { cn } from "@/lib/utils";
+
+type Estado =
+  | { tipo: "esperando" }
+  | { tipo: "guardando" }
+  | { tipo: "ok"; nombre: string; sellos: number; requeridos: number; premio: boolean }
+  | { tipo: "error"; mensaje: string };
+
+type Lector = { stop: () => void };
+
+/**
+ * El cliente muestra el código de barras de su tarjeta (en Apple Wallet, Google Wallet o la tarjeta web)
+ * y quien atiende lo escanea con la cámara de su celular. Se suma el sello con las reglas de siempre.
+ * Si la cámara no lo lee, se puede escribir el número que aparece debajo de las barras.
+ */
+export default function EscanearPage() {
+  const { business, program, membership, locations } = useScope();
+  const { registerVisit } = useData();
+  const puede = !!membership && can(membership, "visits.create");
+  const sedes = locations.filter((l) => l.active);
+  const [sede, setSede] = useState("");
+  const [estado, setEstado] = useState<Estado>({ tipo: "esperando" });
+  const [camara, setCamara] = useState<"apagada" | "abriendo" | "encendida" | "sin-permiso">("apagada");
+  const [numero, setNumero] = useState("");
+  const video = useRef<HTMLVideoElement>(null);
+  const lector = useRef<Lector | null>(null);
+  const ocupado = useRef(false);
+  const ultimo = useRef<{ codigo: string; en: number }>({ codigo: "", en: 0 });
+
+  // Cada celular suele quedarse en la misma sede.
+  useEffect(() => {
+    try {
+      const guardada = localStorage.getItem(`scan-location:${business.id}`);
+      if (guardada && sedes.some((l) => l.id === guardada)) setSede(guardada);
+      else if (sedes.length === 1) setSede(sedes[0].id);
+    } catch {}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [business.id, sedes.length]);
+
+  // Después de cada lectura vuelve a quedar listo para el siguiente cliente.
+  useEffect(() => {
+    if (estado.tipo !== "ok" && estado.tipo !== "error") return;
+    const t = setTimeout(() => setEstado({ tipo: "esperando" }), 4000);
+    return () => clearTimeout(t);
+  }, [estado]);
+
+  const sumar = useCallback(
+    async (leido: string) => {
+      const codigo = limpiarCodigo(leido);
+      if (ocupado.current) return;
+      // La cámara lee el mismo código varias veces por segundo: solo cuenta una vez.
+      if (codigo === ultimo.current.codigo && Date.now() - ultimo.current.en < 6000) return;
+      ultimo.current = { codigo, en: Date.now() };
+      if (!esCodigoTarjeta(codigo)) return setEstado({ tipo: "error", mensaje: "Ese código no es de una tarjeta de Lazo." });
+      ocupado.current = true;
+      setEstado({ tipo: "guardando" });
+      try {
+        const tarjeta = await findCardByScanCodeAction(business.id, codigo);
+        if (!tarjeta) return setEstado({ tipo: "error", mensaje: "Esta tarjeta no es de este negocio." });
+        if (tarjeta.status === "blocked") return setEstado({ tipo: "error", mensaje: "Esta tarjeta está bloqueada." });
+        const res = await registerVisit(tarjeta.id, crypto.randomUUID(), sede || undefined);
+        if (!res.ok) return setEstado({ tipo: "error", mensaje: res.message });
+        try {
+          navigator.vibrate?.(60);
+        } catch {}
+        const requeridos = program?.stampsRequired ?? 0;
+        const sellos = res.data?.currentStamps ?? Math.min(tarjeta.stamps + 1 + (res.data?.bonusStamps ?? 0), requeridos);
+        setEstado({ tipo: "ok", nombre: tarjeta.firstName, sellos: Math.min(sellos, requeridos), requeridos, premio: !!res.data?.reward });
+        setNumero("");
+      } catch {
+        setEstado({ tipo: "error", mensaje: "No hay conexión. Intenta de nuevo." });
+      } finally {
+        ocupado.current = false;
+      }
+    },
+    [business.id, program?.stampsRequired, registerVisit, sede],
+  );
+
+  const apagar = useCallback(() => {
+    lector.current?.stop();
+    lector.current = null;
+    setCamara((c) => (c === "sin-permiso" ? c : "apagada"));
+  }, []);
+
+  const encender = async () => {
+    if (!video.current) return;
+    setCamara("abriendo");
+    try {
+      // La librería se carga solo cuando se abre la cámara: no pesa en el resto del panel.
+      const [{ BrowserMultiFormatReader }, { BarcodeFormat, DecodeHintType }] = await Promise.all([import("@zxing/browser"), import("@zxing/library")]);
+      const pistas = new Map();
+      pistas.set(DecodeHintType.POSSIBLE_FORMATS, [BarcodeFormat.CODE_128]);
+      pistas.set(DecodeHintType.TRY_HARDER, true);
+      const r = new BrowserMultiFormatReader(pistas, { delayBetweenScanAttempts: 120 });
+      lector.current = await r.decodeFromConstraints(
+        { video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 }, height: { ideal: 720 } } },
+        video.current,
+        (resultado) => {
+          if (resultado) void sumar(resultado.getText());
+        },
+      );
+      setCamara("encendida");
+    } catch {
+      lector.current = null;
+      setCamara("sin-permiso");
+    }
+  };
+
+  useEffect(() => apagar, [apagar]);
+
+  if (!program) return null;
+  if (!puede) return <PageHeader title="Escanear tarjeta" description="Tu usuario no puede registrar visitas." />;
+
+  return (
+    <div className="mx-auto max-w-xl">
+      <PageHeader title="Escanear tarjeta" description="Pide al cliente que muestre el código de barras de su tarjeta y apunta la cámara." />
+
+      {sedes.length > 1 && (
+        <label className="mb-4 flex items-center gap-2 text-sm">
+          <MapPin className="size-4 text-muted" />
+          <span className="text-muted">Sede:</span>
+          <Select
+            value={sede}
+            onChange={(e) => {
+              setSede(e.target.value);
+              try {
+                localStorage.setItem(`scan-location:${business.id}`, e.target.value);
+              } catch {}
+            }}
+          >
+            <option value="">Elige la sede donde estás</option>
+            {sedes.map((l) => (
+              <option key={l.id} value={l.id}>
+                {l.name}
+              </option>
+            ))}
+          </Select>
+        </label>
+      )}
+
+      <Card className="overflow-hidden">
+        <div className="relative aspect-[4/3] w-full bg-[#0b0b0b]">
+          <video ref={video} muted playsInline className={cn("size-full object-cover", camara !== "encendida" && "invisible")} />
+          {camara === "encendida" && (
+            <div aria-hidden className="pointer-events-none absolute inset-x-[8%] top-1/2 h-[34%] -translate-y-1/2 rounded-xl border-2 border-white/80 shadow-[0_0_0_9999px_rgb(0_0_0/0.35)]" />
+          )}
+          {camara !== "encendida" && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 p-6 text-center text-white">
+              {camara === "sin-permiso" ? <CameraOff className="size-10 opacity-80" /> : <ScanBarcode className="size-10 opacity-80" />}
+              <p className="max-w-xs text-sm opacity-85">
+                {camara === "sin-permiso"
+                  ? "No pudimos abrir la cámara. Permite el acceso a la cámara para este sitio en los ajustes del navegador, o escribe el número abajo."
+                  : "Abre la cámara y apunta al código de barras de la tarjeta del cliente."}
+              </p>
+              <Button onClick={() => void encender()} disabled={camara === "abriendo"}>
+                {camara === "abriendo" ? <Loader2 className="size-4 animate-spin" /> : <Camera className="size-4" />} {camara === "sin-permiso" ? "Intentar de nuevo" : "Abrir cámara"}
+              </Button>
+            </div>
+          )}
+
+          {/* El resultado aparece encima de la cámara, en grande, para leerlo de un vistazo. */}
+          {(estado.tipo === "ok" || estado.tipo === "error" || estado.tipo === "guardando") && (
+            <div
+              role="status"
+              className={cn(
+                "absolute inset-x-3 bottom-3 flex items-center gap-3 rounded-xl p-4 text-left shadow-lg",
+                estado.tipo === "ok" && "bg-success-bg text-success",
+                estado.tipo === "error" && "bg-danger-bg text-danger",
+                estado.tipo === "guardando" && "bg-surface text-ink",
+              )}
+            >
+              {estado.tipo === "guardando" && <Loader2 className="size-7 shrink-0 animate-spin" />}
+              {estado.tipo === "ok" && (estado.premio ? <PartyPopper className="size-7 shrink-0" /> : <CheckCircle2 className="size-7 shrink-0" />)}
+              {estado.tipo === "error" && <XCircle className="size-7 shrink-0" />}
+              <div className="min-w-0">
+                {estado.tipo === "guardando" && <p className="font-semibold">Sumando el sello…</p>}
+                {estado.tipo === "ok" && (
+                  <>
+                    <p className="text-lg font-semibold">¡Sello registrado, {estado.nombre}!</p>
+                    <p className="text-sm">
+                      {estado.premio ? "Completó su tarjeta: ya puede reclamar su premio." : `Lleva ${estado.sellos} de ${estado.requeridos}.`}
+                    </p>
+                  </>
+                )}
+                {estado.tipo === "error" && <p className="font-semibold">{estado.mensaje}</p>}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {camara === "encendida" && (
+          <div className="flex justify-end border-t border-line p-3">
+            <Button variant="ghost" size="sm" onClick={apagar}>
+              <CameraOff className="size-4" /> Cerrar cámara
+            </Button>
+          </div>
+        )}
+      </Card>
+
+      <Card className="mt-4 p-5">
+        <form
+          className="flex flex-col gap-3 sm:flex-row sm:items-end"
+          onSubmit={(e) => {
+            e.preventDefault();
+            ultimo.current = { codigo: "", en: 0 };
+            void sumar(numero);
+          }}
+        >
+          <label className="min-w-0 flex-1">
+            <span className="text-[13px] font-medium text-ink">¿La cámara no lo lee? Escribe el número</span>
+            <Input
+              className="mt-1.5 font-mono tracking-[0.12em]"
+              inputMode="numeric"
+              autoComplete="off"
+              placeholder="0000 0000 0000"
+              value={numero}
+              onChange={(e) => setNumero(codigoLegible(limpiarCodigo(e.target.value).slice(0, 12)))}
+            />
+          </label>
+          <Button type="submit" disabled={!esCodigoTarjeta(limpiarCodigo(numero)) || estado.tipo === "guardando"}>
+            Sumar sello
+          </Button>
+        </form>
+        <p className="mt-2 text-xs text-muted">Es el número que aparece debajo de las barras, en la tarjeta del cliente.</p>
+      </Card>
+    </div>
+  );
+}

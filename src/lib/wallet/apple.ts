@@ -7,6 +7,7 @@ import { createHash, createHmac, createSign, timingSafeEqual, X509Certificate } 
 import { passTheme, progressText, type WalletPass } from "./pass.ts";
 import { appleInfoFields } from "./pass-info.ts";
 import { DEFAULT_WALLET_SETTINGS, nearbyMessage } from "./messages.ts";
+import { codigoLegible, esCodigoTarjeta } from "../domain/code128.ts";
 import type { WalletSettings } from "../domain/types.ts";
 
 export interface AppleWalletConfig {
@@ -86,11 +87,13 @@ export function nearbyText(p: WalletPass, extras: Pick<PassExtras, "settings" | 
 }
 
 /** Reglas del programa en una frase, más sus condiciones si el comercio las escribió. */
-export function howItWorks(p: Pick<WalletPass, "program" | "business">) {
+export function howItWorks(p: Pick<WalletPass, "program" | "business" | "scanCode">) {
   const n = p.program.stampsRequired;
   const base = `Suma un sello en cada visita a ${p.business.name}. Al completar ${n} ${n === 1 ? "sello" : "sellos"}, recibes: ${p.program.rewardName}.`;
+  // Con código de barras, la instrucción en caja: mostrarlo para que lo escaneen.
+  const caja = p.scanCode ? " En caja, muestra el código de barras de esta tarjeta para sumar tu sello." : "";
   const terms = p.program.terms?.trim();
-  return terms ? `${base}\n\n${terms}` : base;
+  return terms ? `${base}${caja}\n\n${terms}` : `${base}${caja}`;
 }
 
 export function passJson(cfg: Pick<AppleWalletConfig, "passTypeId" | "teamId" | "authSecret">, p: WalletPass, origin: string, extras: PassExtras = {}) {
@@ -131,6 +134,10 @@ export function passJson(cfg: Pick<AppleWalletConfig, "passTypeId" | "teamId" | 
     sharingProhibited: true,
     ...(p.active ? {} : { voided: true }),
     ...updates,
+    // Código de barras al pie del pase: el comercio lo escanea con la cámara del panel para sumar el sello.
+    ...(p.scanCode && esCodigoTarjeta(p.scanCode)
+      ? { barcodes: [{ format: "PKBarcodeFormatCode128", message: p.scanCode, messageEncoding: "iso-8859-1", altText: codigoLegible(p.scanCode) }] }
+      : {}),
     // Hasta 10 sedes: cerca de una, la tarjeta aparece en la pantalla bloqueada.
     ...(p.places?.length && p.active
       ? { locations: p.places.map((l) => ({ latitude: l.latitude, longitude: l.longitude, relevantText: nearbyText(p, extras) })) }

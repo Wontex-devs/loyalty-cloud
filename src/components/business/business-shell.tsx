@@ -11,6 +11,7 @@ import {
   ListChecks,
   LayoutDashboard,
   Megaphone,
+  ScanBarcode,
   Settings,
   Sparkles,
   Tag,
@@ -73,6 +74,7 @@ export function BusinessShell({ slug, children }: { slug: string; children: Reac
     {
       items: [
         ...(can(m, "analytics.read") ? [{ href: base, label: "Inicio", icon: LayoutDashboard, exact: true }] : []),
+        ...(can(m, "visits.create") ? [{ href: `${base}/escanear`, label: "Escanear tarjeta", icon: ScanBarcode }] : []),
         { href: `${base}/customers`, label: "Clientes", icon: Users },
         ...(can(m, "rewards.redeem") || can(m, "analytics.read") ? [{ href: `${base}/rewards`, label: "Recompensas", icon: Gift }] : []),
       ],

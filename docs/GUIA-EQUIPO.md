@@ -12,6 +12,11 @@ Si ya estaba inscrito y vuelve a escanear, recupera su misma tarjeta: no se dupl
 ## Sumar una visita
 El cliente desbloquea su celular y lo acerca a la **etiqueta NFC del mostrador**. Se abre su tarjeta y el sello queda registrado. El equipo no tiene que hacer nada.
 
+**Con el código de barras (otra forma):**
+1. El cliente muestra su tarjeta: en Apple Wallet, Google Wallet o su enlace. Al pie está el código de barras.
+2. En el panel, abre **Escanear tarjeta** → **Abrir cámara** y apunta al código.
+3. Sale «¡Sello registrado, Ana! Lleva 4 de 6». Si la cámara no lo lee, escribe el número de 12 dígitos que está debajo de las barras.
+
 ## Entregar una recompensa
 1. En el panel, abre **Recompensas** y busca al cliente.
 2. Pulsa **Canjear** y entrega el premio.

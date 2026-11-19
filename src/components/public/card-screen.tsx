@@ -26,6 +26,8 @@ export interface PublicCardData {
   promotion?: { name: string; bonusStamps: number } | null;
   /** El cliente aceptó recibir mensajes: se le ofrece darse de baja. */
   marketingConsent?: boolean;
+  /** Número de 12 dígitos del código de barras (lo escanea el comercio). */
+  scanCode?: string;
 }
 
 /** Página de la tarjeta del cliente. Se refresca sola mientras está visible. */
@@ -143,6 +145,7 @@ export function CardScreen({
           rewardsAvailable={data.rewards.length}
           memberSince={data.memberSince}
           highlightLastStamp={bump}
+          scanCode={data.scanCode}
         />
 
         {data.status !== "blocked" ? (

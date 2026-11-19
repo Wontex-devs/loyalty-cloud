@@ -53,7 +53,7 @@ export interface DataState extends LedgerState {
 export type JoinResult = { ok: true; token: string; existing: boolean } | { ok: false; message: string };
 /** Resultado común de operaciones (RPC en Postgres). */
 export type OpResult =
-  | { ok: true; data?: { reward?: unknown; bonusStamps?: number; birthdayReward?: string | null } }
+  | { ok: true; data?: { reward?: unknown; bonusStamps?: number; birthdayReward?: string | null; currentStamps?: number } }
   | { ok: false; message: string };
 export type WalletCampaignResult =
   | { ok: true; queued: number; skipped: number; sent: number; notSaved: number; failed: number }

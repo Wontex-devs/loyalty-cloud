@@ -13,6 +13,8 @@ export interface WalletPass {
   token: string;
   cardUrl: string;
   active: boolean;
+  /** Número del código de barras (12 dígitos): lo escanea el comercio desde el panel. */
+  scanCode?: string;
   customerName: string;
   /** Mes y año de inscripción, p. ej. «Nov 2026». Vacío = no se muestra. */
   memberSince?: string;
@@ -33,6 +35,7 @@ export function passFromCard(card: PublicCardData, origin: string, places?: Plac
   return {
     token: card.token,
     cardUrl: `${origin}/card/${card.token}`,
+    ...(card.scanCode ? { scanCode: card.scanCode } : {}),
     active: card.status !== "blocked",
     customerName: card.customerName,
     memberSince: memberSinceText(card.memberSince),
