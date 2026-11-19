@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import { Printer } from "lucide-react";
-import { PLATFORM_NAME } from "@/lib/config";
 import type { BusinessBranding } from "@/lib/domain/types";
 import { BrandMark, brandCase, brandFont } from "@/components/loyalty/brand-mark";
 import { cn } from "@/lib/utils";
@@ -11,10 +10,10 @@ import { cn } from "@/lib/utils";
 interface PosterProps {
   slug: string;
   business: { name: string; branding: BusinessBranding };
-  program: { name: string; stampsRequired: number; rewardName: string };
+  program: { name: string };
 }
 
-/** Cartel imprimible con el QR general de inscripción (tamaño carta / A4). */
+/** Cartel imprimible con el QR general de inscripción (tamaño carta / A4). Sin las visitas ni el premio: cambian y el cartel queda impreso. */
 export function Poster({ slug, business, program }: PosterProps) {
   const [url, setUrl] = useState("");
   useEffect(() => setUrl(`${window.location.origin}/join/${slug}`), [slug]);
@@ -45,15 +44,11 @@ export function Poster({ slug, business, program }: PosterProps) {
           <div className="mx-auto mt-[6mm] w-fit rounded-[6mm] bg-white p-[6mm]">
             {url && <QRCodeSVG value={url} size={720} level="M" style={{ width: "80mm", height: "80mm" }} />}
           </div>
-          <p className="mt-[6mm] text-[5mm] font-medium">
-            {program.stampsRequired} visitas = {program.rewardName}
-          </p>
-          <p className="mt-[2mm] text-[3.6mm] opacity-70">Sin descargar aplicaciones · Tu tarjeta en el celular</p>
+          <p className="mt-[6mm] text-[3.6mm] opacity-70">Sin descargar aplicaciones · Tu tarjeta en el celular</p>
         </div>
 
-        <p className="text-[3mm] opacity-50">
-          {url.replace(/^https?:\/\//, "")} · {PLATFORM_NAME}
-        </p>
+        {/* Solo el dominio: la ruta completa ya va dentro del QR. */}
+        <p className="text-[3mm] opacity-50">{url ? new URL(url).host : ""}</p>
       </div>
     </div>
   );
