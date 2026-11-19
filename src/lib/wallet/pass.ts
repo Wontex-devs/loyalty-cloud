@@ -16,7 +16,7 @@ export interface WalletPass {
   customerName: string;
   /** Mes y año de inscripción, p. ej. «Nov 2026». Vacío = no se muestra. */
   memberSince?: string;
-  business: { name: string; slug: string; logoText: string; background: string; foreground: string; logoUrl: string; coverUrl?: string; stampIcon?: StampIcon; stampUrl?: string; style?: CardStyle; font?: CardFont };
+  business: { name: string; slug: string; logoText: string; background: string; foreground: string; logoUrl: string; coverUrl?: string; stampIcon?: StampIcon; stampUrl?: string; illustrationUrl?: string; style?: CardStyle; font?: CardFont };
   program: { name: string; stampsRequired: number; rewardName: string; terms?: string };
   stamps: number;
   rewardsAvailable: { name: string; birthday: boolean }[];
@@ -46,6 +46,7 @@ export function passFromCard(card: PublicCardData, origin: string, places?: Plac
       coverUrl: b.coverUrl || undefined,
       stampIcon: b.stampIcon,
       stampUrl: b.stampUrl || undefined,
+      illustrationUrl: b.illustrationUrl || undefined,
       style: b.cardStyle,
       font: b.font,
     },
@@ -85,6 +86,7 @@ export function stripVersion(p: Pick<WalletPass, "stamps" | "program" | "busines
     p.business.foreground,
     p.business.stampIcon ?? "",
     p.business.stampUrl ?? "",
+    p.business.illustrationUrl ?? "",
     p.business.font ?? "",
     p.business.name.slice(0, 1),
     p.program.rewardName,

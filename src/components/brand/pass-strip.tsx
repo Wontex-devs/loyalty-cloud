@@ -1,6 +1,6 @@
 import { ImageResponse } from "next/og";
 import { alpha, cardTheme } from "@/lib/domain/card-palette";
-import { ajustePremio, hilo } from "@/lib/domain/hilo";
+import { ajustePremio, hilo, ILUSTRACION } from "@/lib/domain/hilo";
 import type { BusinessBranding } from "@/lib/domain/types";
 import { Icon } from "./stamp-icons";
 
@@ -13,7 +13,7 @@ import { Icon } from "./stamp-icons";
  * La tarjeta web dibuja lo mismo con `HiloStrip`, a partir de la misma geometría (`hilo`).
  */
 export interface PassStripInput {
-  branding: Pick<BusinessBranding, "cardBackground" | "cardForeground" | "stampIcon" | "stampUrl">;
+  branding: Pick<BusinessBranding, "cardBackground" | "cardForeground" | "stampIcon" | "stampUrl" | "illustrationUrl">;
   stamps: number;
   required: number;
   rewardName: string;
@@ -39,6 +39,7 @@ export function passStrip(
   const marca = opts.fonts?.some((f) => f.name === "Marca") ? "Marca" : texto;
   const pad = 20 * k;
   const stampUrl = branding.stampUrl?.startsWith("https://") ? branding.stampUrl : null;
+  const ilustracion = branding.illustrationUrl?.startsWith("https://") ? branding.illustrationUrl : null;
   const h = hilo(required, width, height);
   const lista = !!rewardReady || stamps >= required;
   const premio = ajustePremio(rewardName, upper);
@@ -60,8 +61,17 @@ export function passStrip(
   return new ImageResponse(
     (
       <div style={{ width, height, position: "relative", display: "flex", overflow: "hidden", background: c.bg, color: c.text, fontFamily: texto }}>
-        {/* Marca de agua: la inicial del comercio */}
-        {inicial && (
+        {/* De fondo: la ilustración del comercio o, si no tiene, su inicial casi transparente */}
+        {ilustracion ? (
+          // eslint-disable-next-line @next/next/no-img-element, jsx-a11y/alt-text
+          <img
+            // Pegada a la derecha: la franja de Google es más ancha que la de Apple.
+            src={ilustracion}
+            width={ILUSTRACION.ancho * k}
+            height={ILUSTRACION.alto * k}
+            style={{ position: "absolute", left: width - (375 - ILUSTRACION.x) * k, top: ILUSTRACION.y * k, objectFit: "contain", opacity: ILUSTRACION.opacidad }}
+          />
+        ) : inicial && (
           <div
             style={{
               position: "absolute",

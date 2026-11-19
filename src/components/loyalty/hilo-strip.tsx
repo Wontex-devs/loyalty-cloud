@@ -1,6 +1,6 @@
 import { Gift } from "lucide-react";
 import { alpha, type CardTheme } from "@/lib/domain/card-palette";
-import { ajustePremio, hilo } from "@/lib/domain/hilo";
+import { ajustePremio, hilo, ILUSTRACION } from "@/lib/domain/hilo";
 import type { BusinessBranding } from "@/lib/domain/types";
 import { cn } from "@/lib/utils";
 import { brandCase, brandFont, StampMark } from "./brand-mark";
@@ -26,7 +26,7 @@ export function HiloStrip({
   rewardReady,
   highlightLastStamp,
 }: {
-  branding: Pick<BusinessBranding, "font" | "stampIcon" | "stampUrl">;
+  branding: Pick<BusinessBranding, "font" | "stampIcon" | "stampUrl" | "illustrationUrl">;
   theme: CardTheme;
   monogram: string;
   stamps: number;
@@ -43,14 +43,24 @@ export function HiloStrip({
 
   return (
     <div className="relative w-full overflow-hidden" style={{ aspectRatio: `${W} / ${H}`, containerType: "inline-size", background: c.bg, color: c.text }}>
-      {/* Marca de agua: la inicial del comercio */}
-      <span
-        aria-hidden
-        className={cn("pointer-events-none absolute leading-none select-none", brandFont(branding))}
-        style={{ left: px(W - 118), top: py(6), fontSize: cqw(190), color: alpha(c.text, 0.055) }}
-      >
-        {monogram.trim().slice(0, 1).toUpperCase()}
-      </span>
+      {/* De fondo: la ilustración del comercio o, si no tiene, su inicial casi transparente */}
+      {branding.illustrationUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={branding.illustrationUrl}
+          alt=""
+          className="pointer-events-none absolute object-contain select-none"
+          style={{ left: px(ILUSTRACION.x), top: py(ILUSTRACION.y), width: px(ILUSTRACION.ancho), height: py(ILUSTRACION.alto), opacity: ILUSTRACION.opacidad }}
+        />
+      ) : (
+        <span
+          aria-hidden
+          className={cn("pointer-events-none absolute leading-none select-none", brandFont(branding))}
+          style={{ left: px(W - 118), top: py(6), fontSize: cqw(190), color: alpha(c.text, 0.055) }}
+        >
+          {monogram.trim().slice(0, 1).toUpperCase()}
+        </span>
+      )}
 
       {/* El premio, protagonista */}
       <p className="absolute font-medium uppercase" style={{ left: px(20), top: py(16), fontSize: cqw(11.5), letterSpacing: "0.19em", lineHeight: 1.2, color: c.passLabel }}>

@@ -88,6 +88,8 @@ export interface DataApi {
   setLogo: (businessId: string, file: File | null) => Promise<OpResult>;
   setCover: (businessId: string, file: File | null) => Promise<OpResult>;
   setStamp: (businessId: string, file: File | null) => Promise<OpResult>;
+  /** Sube (o quita, con null) la ilustración de la franja. */
+  setIllustration: (businessId: string, file: File | null) => Promise<OpResult>;
   setBusinessStatus: (businessId: string, status: BusinessStatus) => Promise<OpResult>;
   inviteStaff: (businessId: string, input: { fullName: string; email: string; role: BusinessRole; canRedeem: boolean }) => void;
   toggleMembership: (membershipId: string, patch: Partial<BusinessMembership>) => void;

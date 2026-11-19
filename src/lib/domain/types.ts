@@ -63,6 +63,8 @@ export interface BusinessBranding {
   stampIcon?: StampIcon;
   /** Sello propio (imagen en la misma carpeta que el logo). Si existe, reemplaza al icono. */
   stampUrl?: string;
+  /** Ilustración de la franja (PNG transparente, misma carpeta). Si existe, reemplaza a la inicial de fondo. */
+  illustrationUrl?: string;
   font?: CardFont;
   /** Estilo de la tarjeta: clásico (por defecto), noche y oro, cristal o negro mate. */
   cardStyle?: CardStyle;
