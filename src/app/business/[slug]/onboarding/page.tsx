@@ -11,6 +11,7 @@ import { can } from "@/lib/domain/permissions";
 import type { BusinessBranding } from "@/lib/domain/types";
 import { Button, ButtonLink, Card, Field, Input, PageHeader, Progress } from "@/components/ui";
 import { cn } from "@/lib/utils";
+import { NumberInput } from "@/components/ui/number-input";
 
 const PRESETS: { name: string; colors: Partial<BusinessBranding> }[] = [
   { name: "Rosa empolvado", colors: { cardBackground: "#EBCFCB", cardForeground: "#1A1416", primary: "#1A1416", primaryForeground: "#FFFFFF", accent: "#D8A7A7" } },
@@ -141,13 +142,13 @@ export default function OnboardingPage() {
                   {s.id === "program" && (
                     <div className="grid gap-4 sm:grid-cols-3">
                       <Field label="Visitas para el premio">
-                        <Input type="number" min={2} max={30} value={prog.stampsRequired} onChange={(e) => setProg({ ...prog, stampsRequired: Number(e.target.value) })} />
+                        <NumberInput min={2} max={30} value={prog.stampsRequired} onValueChange={(n) => setProg({ ...prog, stampsRequired: n })} />
                       </Field>
                       <Field label="Recompensa" className="sm:col-span-2">
                         <Input placeholder="Ej.: Manicura gratis" value={prog.rewardName} onChange={(e) => setProg({ ...prog, rewardName: e.target.value })} />
                       </Field>
                       <Field label="Sellos de regalo al inscribirse" hint="0 si no quieres regalar sellos.">
-                        <Input type="number" min={0} max={5} value={prog.welcomeStamps} onChange={(e) => setProg({ ...prog, welcomeStamps: Number(e.target.value) })} />
+                        <NumberInput min={0} max={5} value={prog.welcomeStamps} onValueChange={(n) => setProg({ ...prog, welcomeStamps: n })} />
                       </Field>
                       <div className="flex items-end justify-between gap-2 sm:col-span-2">
                         <Link href={`/business/${business.slug}/program`} className="text-sm text-muted underline">

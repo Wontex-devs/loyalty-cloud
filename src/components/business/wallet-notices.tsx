@@ -8,6 +8,7 @@ import { DEFAULT_WALLET_SETTINGS, NEARBY_TEXT_MAX, NEARBY_TEXT_MIN, WALLET_NOTIC
 import type { WalletSettings } from "@/lib/domain/types";
 import { Badge, Button, Card, CardHeader, Field, Input, Switch, Textarea } from "@/components/ui";
 import { formatRelative } from "@/lib/utils";
+import { NumberInput } from "@/components/ui/number-input";
 
 /** Aviso a la billetera para todo el grupo elegido, con un botón. */
 export function WalletCampaignCard({
@@ -88,7 +89,6 @@ export function WalletSettingsCard() {
   const { business } = useScope();
   const { updateWalletSettings } = useData();
   const [draft, setDraft] = useState<WalletSettings>(() => walletSettings(business.walletNotifications));
-  const [days, setDays] = useState(String(draft.winbackDays));
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -119,19 +119,16 @@ export function WalletSettingsCard() {
           </li>
         ))}
         <li className="flex items-center gap-3 px-5 py-3">
-          <p className="flex-1 text-sm">Días sin venir para «Te extrañamos»</p>
-          <Input
-            type="number"
+          <p className="flex-1 text-sm">Días sin venir para «Te extrañamos» <span className="text-xs text-muted">(de 14 a 180)</span></p>
+          <NumberInput
             min={14}
             max={180}
+            soloAlSalir
             className="w-20"
-            value={days}
+            aria-label="Días sin venir para «Te extrañamos» (de 14 a 180)"
+            value={draft.winbackDays}
             disabled={!draft.winback}
-            onChange={(e) => setDays(e.target.value)}
-            onBlur={() => {
-              const n = Number(days);
-              if (n !== draft.winbackDays) void save({ ...draft, winbackDays: n });
-            }}
+            onValueChange={(n) => void save({ ...draft, winbackDays: n })}
           />
         </li>
         <NearbyMessage value={draft.nearbyText} busy={busy} onSave={(nearbyText) => save({ ...draft, nearbyText })} />
