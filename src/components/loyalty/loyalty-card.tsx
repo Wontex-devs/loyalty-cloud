@@ -2,6 +2,7 @@
 
 import { BrandMark, brandCase, brandFont } from "./brand-mark";
 import { HiloStrip } from "./hilo-strip";
+import { CodigoBarras } from "./codigo-barras";
 import { cn } from "@/lib/utils";
 import { cardTheme } from "@/lib/domain/card-palette";
 import type { Business, CardStatus, LoyaltyProgram } from "@/lib/domain/types";
@@ -21,6 +22,8 @@ export interface LoyaltyCardViewProps {
   className?: string;
   /** Contorno oscuro en lugar de sombra, para la portada. */
   plano?: boolean;
+  /** Número del código de barras (12 dígitos): va al pie, como en el pase de Wallet. */
+  scanCode?: string;
 }
 
 /**
@@ -40,6 +43,7 @@ export function LoyaltyCardView({
   compact,
   className,
   plano,
+  scanCode,
 }: LoyaltyCardViewProps) {
   const b = business.branding;
   // Exactamente los dos colores del comercio, como en el pase.
@@ -83,7 +87,13 @@ export function LoyaltyCardView({
         highlightLastStamp={highlightLastStamp}
       />
 
-      <div className={compact ? "h-4" : "h-5"} />
+      {scanCode ? (
+        <div className={cn("pt-4", pad, compact ? "pb-4" : "pb-5")}>
+          <CodigoBarras codigo={scanCode} />
+        </div>
+      ) : (
+        <div className={compact ? "h-4" : "h-5"} />
+      )}
     </div>
   );
 }

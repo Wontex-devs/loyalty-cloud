@@ -376,6 +376,7 @@ export default function CardDesignPage() {
               status={previewState}
               rewardsAvailable={previewState === "active" ? 0 : 1}
               memberSince={hoy}
+              scanCode="482910473365"
             />
           </div>
         </div>

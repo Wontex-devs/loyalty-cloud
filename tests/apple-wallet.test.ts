@@ -171,3 +171,16 @@ test("la plataforma avisa 60 días antes de que venza el certificado de Apple", 
   assert.equal(certStatus(pem, new Date(hoy.getTime() + 91 * 86_400_000))?.alert, "expired");
   assert.equal(certStatus("no es un certificado"), null);
 });
+
+test("el pase lleva el código de barras de la tarjeta (Code 128), con el número legible debajo", () => {
+  const j = passJson(base, passFromCard({ ...card, scanCode: "482910473365" }, origin), origin) as { barcodes?: { format: string; message: string; altText: string }[] };
+  assert.deepEqual(j.barcodes, [{ format: "PKBarcodeFormatCode128", message: "482910473365", messageEncoding: "iso-8859-1", altText: "4829 1047 3365" }]);
+  // Sin número (o con uno raro) no se dibuja nada.
+  assert.equal("barcodes" in passJson(base, passFromCard({ ...card, scanCode: "abc" }, origin), origin), false);
+});
+
+test("con código de barras, «Cómo funciona» dice que se muestra en caja", () => {
+  const j = passJson(base, passFromCard({ ...card, scanCode: "482910473365" }, origin), origin);
+  const how = j.storeCard.backFields.find((f) => f.key === "how");
+  assert.match(String(how?.value), /En caja, muestra el código de barras de esta tarjeta para sumar tu sello\./);
+});

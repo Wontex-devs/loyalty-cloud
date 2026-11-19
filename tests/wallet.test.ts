@@ -126,3 +126,9 @@ test("la clase del pase lleva la foto de fondo solo si el comercio tiene una", (
   const con = { ...sin, business: { ...sin.business, coverUrl: "https://x.supabase.co/storage/v1/object/public/brand-assets/a/foto.jpg" } };
   assert.equal(loyaltyClass(cfg, con).heroImage?.sourceUri.uri, con.business.coverUrl);
 });
+
+test("el pase de Google lleva el código de barras de la tarjeta (CODE_128)", () => {
+  const o = loyaltyObject(cfg, passFromCard({ ...card, scanCode: "482910473365" }, origin)) as { barcode?: unknown };
+  assert.deepEqual(o.barcode, { type: "CODE_128", value: "482910473365", alternateText: "4829 1047 3365" });
+  assert.equal("barcode" in loyaltyObject(cfg, passFromCard(card, origin)), false);
+});

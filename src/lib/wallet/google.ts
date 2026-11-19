@@ -6,6 +6,7 @@
 import { createSign } from "node:crypto";
 import { passTheme, progressText, stripUrl, type WalletPass } from "./pass.ts";
 import { googleInfoModules } from "./pass-info.ts";
+import { codigoLegible, esCodigoTarjeta } from "../domain/code128.ts";
 
 export interface GoogleWalletConfig {
   issuerId: string;
@@ -64,6 +65,10 @@ export function loyaltyObject(cfg: Pick<GoogleWalletConfig, "issuerId" | "smartT
     ...(p.rewardsAvailable.length ? { secondaryLoyaltyPoints: { label: "Premios", balance: { int: p.rewardsAvailable.length } } } : {}),
     textModulesData: modules,
     linksModuleData: { uris: [{ id: "card", uri: p.cardUrl, description: "Ver mi tarjeta" }] },
+    // Código de barras: el comercio lo escanea con la cámara del panel para sumar el sello.
+    ...(p.scanCode && esCodigoTarjeta(p.scanCode)
+      ? { barcode: { type: "CODE_128", value: p.scanCode, alternateText: codigoLegible(p.scanCode) } }
+      : {}),
     // Lo que el lector escribe en la pantalla «Lector NFC»: el mismo token del QR.
     ...(cfg.smartTap ? { smartTapRedemptionValue: p.token } : {}),
   };

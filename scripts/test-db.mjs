@@ -124,6 +124,22 @@ check("anon no puede registrar visitas", !r.ok, r);
 // ---------- Aislamiento multiempresa ----------
 console.log("\nAislamiento multiempresa");
 const cardA = (await db.query("select id from public.loyalty_cards where public_token = $1", [tokenA])).rows[0].id;
+
+// Código de barras: cada tarjeta tiene su número de 12 dígitos, que solo el equipo del comercio convierte en visita.
+{
+  const code = (await db.query("select scan_code from public.loyalty_cards where id = $1", [cardA])).rows[0].scan_code;
+  check("la tarjeta nueva trae su número de código de barras (12 dígitos)", /^[0-9]{12}$/.test(code), code);
+  let q = await as(null, "select public.get_public_card($1) as card", [tokenA]);
+  check("la tarjeta pública devuelve su número de código de barras", q.ok && q.rows[0].card.scan_code === code, q);
+  q = await as(U.staffA, "select id from public.loyalty_cards where business_id = $1 and scan_code = $2", [A, code]);
+  check("el equipo del comercio encuentra la tarjeta por su código", q.ok && q.rows.length === 1 && q.rows[0].id === cardA, q);
+  q = await as(U.ownerB, "select id from public.loyalty_cards where scan_code = $1", [code]);
+  check("otro comercio no encuentra la tarjeta por su código", q.ok && q.rows.length === 0, q);
+  q = await as(null, "select id from public.loyalty_cards where scan_code = $1", [code]);
+  check("sin sesión no se puede buscar por código", !q.ok || q.rows.length === 0, q);
+  const dup = await db.query("select count(*)::int n from (select scan_code from public.loyalty_cards group by scan_code having count(*) > 1) x");
+  check("no hay dos tarjetas con el mismo código", dup.rows[0].n === 0, dup.rows[0]);
+}
 r = await as(U.ownerB, "select * from public.customers");
 check("el comercio B no ve clientes de A", r.ok && r.rows.length === 0, r);
 r = await as(U.ownerB, "select * from public.loyalty_cards where id = $1", [cardA]);
