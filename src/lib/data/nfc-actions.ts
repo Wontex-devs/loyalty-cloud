@@ -13,7 +13,6 @@ import { scheduleBusinessWalletSync, scheduleCardWalletSync } from "@/lib/wallet
 import { dbErrorMessage } from "./errors";
 import { getPublicCard } from "./public";
 import { normalizePhone } from "@/lib/domain/schemas";
-import { normalizarNombre } from "@/lib/domain/recordar";
 import { recordarTarjeta, tarjetasRecordadas } from "./recordar-tarjeta";
 import { rateLimit } from "./rate-limit";
 
@@ -25,8 +24,6 @@ const tapInput = z.object({ slug: SLUG, secret: SECRETO, cardToken: TOKEN.nullab
 const recuperarInput = z.object({
   slug: SLUG,
   secret: SECRETO,
-  nombre: z.string().trim().min(1).max(60),
-  apellido: z.string().trim().min(1).max(60),
   celular: z.string().trim().min(7).max(25),
   idempotencyKey: CLAVE,
 });
@@ -43,8 +40,8 @@ export type NfcTapResult =
       rewardName: string;
       /** Se ganó un premio con esta visita (o hay uno disponible). */
       rewardReady: boolean;
-      /** Enlace de la tarjeta, para guardarlo también en este celular. */
-      token: string;
+      /** Enlace de la tarjeta, para guardarlo también en este celular. Sin él si se sumó solo con el celular. */
+      token?: string;
     }
   | {
       ok: false;
@@ -66,8 +63,12 @@ async function tarjetaDelComercio(token: string, slug: string) {
   return card?.business.slug === slug ? token : null;
 }
 
-/** Registra la visita y, si la tarjeta es legítima, deja este celular recordado por mucho tiempo. */
-async function registrarToque(slug: string, secret: string, cardToken: string, idempotencyKey: string): Promise<NfcTapResult> {
+/**
+ * Registra la visita. Si la tarjeta salió de este celular (`recordar`), lo deja recordado y devuelve su enlace.
+ * Si solo se escribió un número de celular, no: suma el sello pero no abre la tarjeta (con el número de otra
+ * persona no se ve su nombre ni su historial) ni la guarda en este celular.
+ */
+async function registrarToque(slug: string, secret: string, cardToken: string, idempotencyKey: string, recordar = true): Promise<NfcTapResult> {
   if (!rateLimit(`nfc-card:${cardToken}`, 8, 60 * 60_000)) {
     return { ok: false, message: "Demasiados intentos. Espera unos minutos e inténtalo de nuevo." };
   }
@@ -80,17 +81,17 @@ async function registrarToque(slug: string, secret: string, cardToken: string, i
   });
   if (error) {
     const message = dbErrorMessage(error, "No pudimos registrar tu visita. Inténtalo de nuevo.");
-    if (ERROR_DE_ETIQUETA.test(error.message ?? "")) return { ok: false, message };
+    if (ERROR_DE_ETIQUETA.test(error.message ?? "") || !recordar) return { ok: false, message };
     await recordarTarjeta(cardToken);
     return { ok: false, message, token: cardToken };
   }
 
   const res = data as { card_id: string; reward_id: string | null; birthday_reward_id?: string | null };
   scheduleCardWalletSync(res.card_id, { idempotencyKey, rewardEarned: !!res.reward_id, birthdayReward: !!res.birthday_reward_id }, { service: true });
-  await recordarTarjeta(cardToken);
+  if (recordar) await recordarTarjeta(cardToken);
 
   const card = await getPublicCard(cardToken);
-  if (!card) return { ok: false, message: "Se registró tu visita, pero no pudimos abrir tu tarjeta. Ábrela desde tu enlace.", token: cardToken };
+  if (!card) return { ok: false, message: "Se registró tu visita, pero no pudimos abrir tu tarjeta. Ábrela desde tu enlace.", ...(recordar ? { token: cardToken } : {}) };
   return {
     ok: true,
     businessName: card.business.name,
@@ -98,7 +99,7 @@ async function registrarToque(slug: string, secret: string, cardToken: string, i
     required: card.program.stampsRequired,
     rewardName: card.program.rewardName,
     rewardReady: card.rewards.length > 0,
-    token: cardToken,
+    ...(recordar ? { token: cardToken } : {}),
   };
 }
 
@@ -123,19 +124,14 @@ export async function nfcTapAction(slug: string, secret: string, cardToken: stri
 }
 
 /**
- * El celular no recuerda la tarjeta: el cliente confirma su nombre y celular (los mismos de la inscripción)
- * y se suma el sello en ese momento. Exige la misma regla que la inscripción (nombre igual, sin importar
- * tildes ni mayúsculas), así nadie abre la tarjeta de otra persona solo con su número. El mensaje de
- * «no encontrada» es el mismo exista o no el número.
+ * El celular no recuerda la tarjeta: el cliente escribe su número de celular (el de la inscripción) y se
+ * suma el sello en ese momento. Solo funciona con la etiqueta del mostrador (su enlace secreto) y con las
+ * reglas de siempre: tiempo mínimo entre visitas y límite de intentos.
+ * Para proteger los datos: no muestra el nombre ni abre la tarjeta, ni la guarda en este celular.
  */
-export async function nfcRecuperarAction(
-  slug: string,
-  secret: string,
-  datos: { nombre: string; apellido: string; celular: string },
-  idempotencyKey: string,
-): Promise<NfcTapResult> {
+export async function nfcRecuperarAction(slug: string, secret: string, datos: { celular: string }, idempotencyKey: string): Promise<NfcTapResult> {
   const parsed = recuperarInput.safeParse({ slug, secret, ...datos, idempotencyKey });
-  if (!parsed.success) return { ok: false, message: "Escribe tu nombre, tu apellido y tu celular." };
+  if (!parsed.success) return { ok: false, message: "Escribe tu número de celular." };
   if (!rateLimit(`nfc-recuperar:${await ipCliente()}`, 6, 10 * 60_000)) {
     return { ok: false, message: "Demasiados intentos. Espera unos minutos e inténtalo de nuevo." };
   }
@@ -144,18 +140,18 @@ export async function nfcRecuperarAction(
 
   const noEncontrada: NfcTapResult = {
     ok: false,
-    message: "No encontramos una tarjeta con esos datos. Escríbelos igual que cuando te inscribiste.",
+    message: "No encontramos una tarjeta con ese número. Escribe el mismo con el que te inscribiste.",
   };
   const supabase = createAdminClient();
   const { data: negocio } = await supabase.from("businesses").select("id").eq("slug", parsed.data.slug).maybeSingle();
   if (!negocio) return noEncontrada;
   const { data: cliente } = await supabase
     .from("customers")
-    .select("id, full_name")
+    .select("id")
     .eq("business_id", negocio.id)
     .eq("phone_e164", celular)
     .maybeSingle();
-  if (!cliente || normalizarNombre(cliente.full_name) !== normalizarNombre(`${parsed.data.nombre} ${parsed.data.apellido}`)) return noEncontrada;
+  if (!cliente) return noEncontrada;
   const { data: tarjetas } = await supabase
     .from("loyalty_cards")
     .select("public_token")
@@ -164,7 +160,7 @@ export async function nfcRecuperarAction(
     .limit(1);
   const token = tarjetas?.[0]?.public_token as string | undefined;
   if (!token) return noEncontrada;
-  return registrarToque(parsed.data.slug, parsed.data.secret, token, parsed.data.idempotencyKey);
+  return registrarToque(parsed.data.slug, parsed.data.secret, token, parsed.data.idempotencyKey, false);
 }
 
 /** La tarjeta se abrió en este celular: se recuerda (o se renueva) para el toque NFC. */

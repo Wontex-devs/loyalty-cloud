@@ -58,7 +58,7 @@
 Al tocar la etiqueta, Lazo reconoce al cliente por la tarjeta guardada en el navegador del celular. Safari borra lo que guardan las páginas a los ~7 días sin visitas, y por eso a veces salía «Aún no tienes tarjeta». Ahora:
 
 1. **Cookie del servidor** (`lazo_tarjetas`, solo HTTP, hasta 400 días). Se pone al inscribirse, al abrir la tarjeta (también desde «Ver mi tarjeta» en la billetera) y en cada toque, que la renueva. La pantalla del toque busca primero en lo que guardó la página y después en esta cookie.
-2. **Confirmar datos en la misma pantalla.** Si aun así no lo reconoce, el cliente escribe nombre, apellido y celular (el celular ofrece autocompletarlos) y el sello se suma ahí mismo. Exige el mismo nombre de la inscripción, igual que recuperar la tarjeta, y el mensaje es el mismo exista o no el número. Máximo 6 intentos cada 10 minutos por conexión.
+2. **Escribir el celular en la misma pantalla.** Si aun así no lo reconoce, el cliente escribe su número de celular (el celular ofrece autocompletarlo) y el sello se suma ahí mismo. Solo con la etiqueta del mostrador (su enlace secreto), con el tiempo mínimo entre visitas y máximo 6 intentos cada 10 minutos por conexión. Para proteger los datos, al sumarlo así no se muestra el nombre ni se abre la tarjeta, ni se guarda en ese celular (cambio del 19 nov 2026: antes pedía también nombre y apellido).
 3. **Aviso en la inscripción** cuando se abre desde Instagram, Facebook, WhatsApp o TikTok: la tarjeta quedaría guardada en esa app y el toque, que abre Safari o Chrome, no la encontraría.
 
 No verificado en un iPhone real: cuánto conserva Safari la cookie (según la documentación de WebKit, las cookies que pone el servidor no tienen el límite de 7 días).
