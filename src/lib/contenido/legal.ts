@@ -18,9 +18,9 @@ export const LEGAL: Pagina[] = [
     h1: "Política de tratamiento de datos personales",
     resumen:
       "Esta política explica qué datos personales trata Lazo, para qué, quién es responsable de cada uno y cómo puedes conocerlos, corregirlos o pedir que se borren, según la Ley 1581 de 2012 y el Decreto 1074 de 2015.",
-    actualizado: "2026-11-11",
+    actualizado: "2026-11-19",
     secciones: [
-      { titulo: "¿Quién es el responsable?", parrafos: [responsable, "Rige desde el 11 de noviembre de 2026."] },
+      { titulo: "¿Quién es el responsable?", parrafos: [responsable, "Rige desde el 11 de noviembre de 2026. Última actualización: 19 de noviembre de 2026."] },
       {
         titulo: "¿Cuándo Lazo es responsable y cuándo es encargado?",
         parrafos: [
@@ -43,6 +43,15 @@ export const LEGAL: Pagina[] = [
           "Responder a quien nos contacta y, si lo autoriza, enviarle información de Lazo.",
         ],
         parrafos: ["Lazo no vende datos personales, no los comparte entre negocios y no los usa para publicidad de terceros."],
+      },
+      {
+        titulo: "¿Qué guardamos en tu celular (cookies)?",
+        lista: [
+          "Una cookie de sesión para quienes entran al panel. Sin ella no se puede iniciar sesión.",
+          "Cuando un cliente abre su tarjeta, una cookie guarda el enlace de esa tarjeta en su propio celular, hasta por 400 días. Sirve para que, al acercar el celular a la etiqueta NFC del negocio, el sello se sume sin escribir nada. No guarda el nombre ni el celular.",
+          "No usamos cookies de publicidad ni de seguimiento de terceros.",
+        ],
+        parrafos: ["Puedes borrarlas cuando quieras desde los ajustes de tu navegador (borrar datos del sitio). Si las borras, al tocar la etiqueta te pediremos tu número de celular."],
       },
       {
         titulo: "¿Pedimos datos sensibles o de menores?",
@@ -103,7 +112,7 @@ export const LEGAL: Pagina[] = [
     h1: "Términos del servicio para negocios",
     resumen:
       "Estas son las condiciones con las que un negocio usa Lazo: qué incluye el servicio, cuánto cuesta, cómo se paga y se cancela, y qué le toca a cada parte. El acuerdo firmado con cada negocio puede ampliarlas.",
-    actualizado: "2026-11-11",
+    actualizado: "2026-11-19",
     secciones: [
       { titulo: "¿Quién presta el servicio?", parrafos: [responsable] },
       {
@@ -111,7 +120,8 @@ export const LEGAL: Pagina[] = [
         lista: [
           "Una tarjeta de fidelización digital con la marca del negocio.",
           "Inscripción de clientes con un código QR.",
-          "Sellos por toque NFC con una etiqueta en el mostrador.",
+          "Sellos por toque NFC con una etiqueta en el mostrador. Si el celular no recuerda la tarjeta, el cliente escribe su número de celular.",
+          "Código de barras en la tarjeta: quien atiende lo escanea con la cámara de su celular para sumar el sello.",
           "Premios, promociones y avisos al celular de los clientes que los aceptaron.",
           "Estadísticas del negocio y cuentas propias para cada persona del equipo.",
           "La tarjeta en Apple Wallet para los clientes con iPhone y en Google Wallet para los clientes con Android.",
@@ -167,7 +177,7 @@ export const LEGAL: Pagina[] = [
       {
         titulo: "¿Hasta dónde responde Lazo?",
         parrafos: [
-          "Lazo responde por los daños que cause por su culpa, hasta el valor pagado por el negocio en los 3 meses anteriores al hecho, salvo lo que la ley no permita limitar. No responde por fallas de servicios de terceros que no controla (internet, el celular del cliente, Google Wallet, Apple Wallet o los proveedores de nube), ni por el mal uso de la plataforma. Los controles del toque NFC reducen los abusos, pero no son infalibles.",
+          "Lazo responde por los daños que cause por su culpa, hasta el valor pagado por el negocio en los 3 meses anteriores al hecho, salvo lo que la ley no permita limitar. No responde por fallas de servicios de terceros que no controla (internet, el celular del cliente, Google Wallet, Apple Wallet o los proveedores de nube), ni por el mal uso de la plataforma. Los controles del toque NFC y del código de barras (tiempo mínimo entre visitas y límite de intentos) reducen los abusos, pero no son infalibles.",
         ],
       },
       {
