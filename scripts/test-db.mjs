@@ -752,6 +752,49 @@ console.log("\nEtapa 13 · Visita por toque NFC");
   r = await asService("select public.register_nfc_visit('negocio-a', $1, $2, 'nfc-key-0010')", [rotado.secret, tokNfc]);
   check("la etiqueta con el secreto nuevo sí", r.ok, r);
 
+  // Sumar el sello escribiendo el celular: la etiqueta se comprueba ANTES de mirar el número.
+  {
+    const secreto = rotado.secret;
+    const tel = "+573001110001";
+    let q = await as(U.ownerA, "select public.register_nfc_visit_by_phone('negocio-a', $1, $2, 'cel-key-0001', 'k1')", [secreto, tel]);
+    check("por celular: solo el servidor puede llamarla", expectError(q, "permission denied"), q);
+    q = await asService("select public.register_nfc_visit_by_phone('negocio-a', 'secreto-incorrecto-000', $1, 'cel-key-0002', 'k1')", [tel]);
+    const conNumero = q;
+    q = await asService("select public.register_nfc_visit_by_phone('negocio-a', 'secreto-incorrecto-000', '+573009998877', 'cel-key-0003', 'k1')");
+    check(
+      "por celular: sin la etiqueta correcta la respuesta es la misma exista o no el número (INVALID_TAG)",
+      expectError(conNumero, "INVALID_TAG") && expectError(q, "INVALID_TAG"),
+      { conNumero, q },
+    );
+    q = await asService("select public.register_nfc_visit_by_phone('no-existe', $1, $2, 'cel-key-0004', 'k1')", [secreto, tel]);
+    check("por celular: comercio inexistente también da INVALID_TAG", expectError(q, "INVALID_TAG"), q);
+    q = await asService("select public.register_nfc_visit_by_phone('negocio-a', $1, '+573009998877', 'cel-key-0005', 'k1') as res", [secreto]);
+    check("por celular: número que no es cliente → PHONE_NOT_FOUND", q.ok && q.rows[0].res?.error === "PHONE_NOT_FOUND", q);
+    q = await asService("select public.register_nfc_visit_by_phone('negocio-a', $1, '+573001110002', 'cel-key-0006', 'k1') as res", [secreto]);
+    check("por celular: el cliente de otro comercio no se encuentra aquí", q.ok && q.rows[0].res?.error === "PHONE_NOT_FOUND", q);
+    await db.query("update public.loyalty_cards set last_visit_at = now() - interval '3 hours' where id = $1", [cardNfc]);
+    const antes = (await db.query("select current_stamps from public.loyalty_cards where id = $1", [cardNfc])).rows[0].current_stamps;
+    q = await asService("select public.register_nfc_visit_by_phone('negocio-a', $1, $2, 'cel-key-0007', 'k2') as res", [secreto, tel]);
+    const despues = (await db.query("select current_stamps from public.loyalty_cards where id = $1", [cardNfc])).rows[0].current_stamps;
+    check("por celular: con la etiqueta correcta suma el sello", q.ok && q.rows[0].res?.card_id === cardNfc && despues === antes + 1, { q, antes, despues });
+    q = await asService("select public.register_nfc_visit_by_phone('negocio-a', $1, $2, 'cel-key-0007', 'k2')", [secreto, tel]);
+    check("por celular: el reintento con la misma clave no suma otro (DUPLICATE_REQUEST)", expectError(q, "DUPLICATE_REQUEST"), q);
+    await db.query("update public.loyalty_cards set status = 'blocked' where id = $1", [cardNfc]);
+    q = await asService("select public.register_nfc_visit_by_phone('negocio-a', $1, $2, 'cel-key-0008', 'k3') as res", [secreto, tel]);
+    check("por celular: tarjeta bloqueada responde igual que un número que no existe", q.ok && q.rows[0].res?.error === "PHONE_NOT_FOUND", q);
+    await db.query("update public.loyalty_cards set status = 'active' where id = $1", [cardNfc]);
+    // Límite por conexión: los intentos fallidos también cuentan.
+    for (let i = 0; i < 10; i++) {
+      await asService("select public.register_nfc_visit_by_phone('negocio-a', $1, '+573009990000', $2, 'k-limite')", [secreto, `cel-lim-${i}`]);
+    }
+    q = await asService("select public.register_nfc_visit_by_phone('negocio-a', $1, '+573009990000', 'cel-lim-x', 'k-limite')", [secreto]);
+    check("por celular: más de 10 intentos en 10 minutos por conexión → RATE_LIMITED", expectError(q, "RATE_LIMITED"), q);
+    q = await asService("select public.register_nfc_visit_by_phone('negocio-a', $1, '+573009990000', 'cel-lim-y', 'k-otra') as res", [secreto]);
+    check("por celular: otra conexión sigue pudiendo", q.ok, q);
+    q = await as(U.staffA, "select * from private.nfc_phone_attempts");
+    check("por celular: los intentos no se pueden leer desde la API", expectError(q, "permission denied"), q);
+  }
+
   // Reversión y auditoría.
   r = await as(U.adminA, "select public.reverse_visit($1, 'Toque hecho por error') as res", [visitaNfc?.visit_id]);
   check("una visita por NFC se puede revertir con motivo", r.ok, r);

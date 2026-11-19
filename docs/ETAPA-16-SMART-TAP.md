@@ -17,7 +17,7 @@ Sin `GOOGLE_WALLET_SMART_TAP=1` los pases de Google quedan como antes. La pantal
 | `src/lib/wallet/google.ts` | Campos de Smart Tap en la clase y el objeto, solo si está encendido. |
 | `src/lib/wallet/smart-tap.ts` | Interpreta lo que escribe el lector: token, ID del pase o URL de la tarjeta. |
 | `src/app/business/[slug]/lector/page.tsx` | Pantalla del computador de la caja. |
-| `src/lib/data/nfc-actions.ts` | `prepareSmartTapAction`: al abrir la pantalla, actualiza la clase del comercio en Google. |
+| `src/lib/data/nfc-actions.ts` | (Retirado el 19 nov 2026: `prepareSmartTapAction` no exigía sesión y ya nadie lo usaba.) Antes: al abrir la pantalla, actualizaba la clase del comercio en Google. |
 | `scripts/smart-tap-keys.ts` | Genera las claves (ECDSA P-256) fuera del proyecto. |
 | `tests/smart-tap.test.ts` | Pruebas del pase y de las lecturas. |
 

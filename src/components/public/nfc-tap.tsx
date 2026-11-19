@@ -40,6 +40,9 @@ export function NfcTap({ slug, secret, business }: { slug: string; secret: strin
   const [errorDatos, setErrorDatos] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
   const enviado = useRef(false);
+  // La misma clave en los reintentos: si la respuesta se perdió, la base reconoce la visita y no suma dos veces.
+  const claveToque = useRef(nuevaClave());
+  const claveCelular = useRef<{ celular: string; clave: string } | null>(null);
 
   const mostrar = (res: NfcTapResult) => {
     if (res.ok) {
@@ -64,7 +67,7 @@ export function NfcTap({ slug, secret, business }: { slug: string; secret: strin
   const registrar = async (cardToken: string | null) => {
     setEstado({ fase: "cargando" });
     try {
-      mostrar(await nfcTapAction(slug, secret, cardToken, nuevaClave()));
+      mostrar(await nfcTapAction(slug, secret, cardToken, claveToque.current));
     } catch {
       setEstado({ fase: "error", mensaje: "No pudimos conectar. Revisa tu internet e inténtalo de nuevo." });
     }
@@ -73,8 +76,10 @@ export function NfcTap({ slug, secret, business }: { slug: string; secret: strin
   const confirmar = async (datos: DatosCliente) => {
     setEnviando(true);
     setErrorDatos(null);
+    const digitos = datos.celular.replace(/\D/g, "");
+    if (claveCelular.current?.celular !== digitos) claveCelular.current = { celular: digitos, clave: nuevaClave() };
     try {
-      const res = await nfcRecuperarAction(slug, secret, datos, nuevaClave());
+      const res = await nfcRecuperarAction(slug, secret, datos, claveCelular.current.clave);
       // Número que no está o un error: se queda en el formulario para corregirlo.
       if (!res.ok) setErrorDatos(res.message);
       else mostrar(res);
@@ -167,9 +172,13 @@ export function NfcTapVista({
               <Check className="size-12" strokeWidth={3} aria-hidden />
             </span>
             <h1 className="mt-6 text-3xl font-semibold">¡Sello registrado!</h1>
-            <p className="mt-2 text-lg">
-              Llevas {estado.datos.stamps} de {estado.datos.required}
-            </p>
+            {estado.datos.sinDetalle ? (
+              <p className="mt-2 text-base">Mira tus sellos en tu tarjeta de la billetera.</p>
+            ) : (
+              <p className="mt-2 text-lg">
+                Llevas {estado.datos.stamps} de {estado.datos.required}
+              </p>
+            )}
             {estado.datos.rewardReady && (
               <p className="mt-4 rounded-xl px-4 py-3 text-base font-medium" style={{ background: `${b.cardForeground}1a` }}>
                 Tienes un premio listo: {estado.datos.rewardName}. Muéstralo en caja.

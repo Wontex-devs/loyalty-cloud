@@ -62,3 +62,10 @@ Al tocar la etiqueta, Lazo reconoce al cliente por la tarjeta guardada en el nav
 3. **Aviso en la inscripción** cuando se abre desde Instagram, Facebook, WhatsApp o TikTok: la tarjeta quedaría guardada en esa app y el toque, que abre Safari o Chrome, no la encontraría.
 
 No verificado en un iPhone real: cuánto conserva Safari la cookie (según la documentación de WebKit, las cookies que pone el servidor no tienen el límite de 7 días).
+
+## Revisión de seguridad (19 nov 2026)
+
+- **Sumar por celular, dentro de Postgres** (`register_nfc_visit_by_phone`, migración 20261101000035): primero se comprueba la etiqueta (si falla, siempre `INVALID_TAG`, sin mirar el número) y después el número. Número que no existe, tarjeta bloqueada o datos borrados responden igual. Límite guardado en la base: 10 intentos cada 10 minutos por conexión (HMAC de la IP) y 120 por comercio; los fallidos también cuentan. Al sumar así no se muestran sellos ni nombre.
+- **Reintentos sin sello doble:** la pantalla del toque usa la misma clave al pulsar «Intentar de nuevo», y el escáner la misma para el mismo código durante un minuto (avisa «ya se sumó hace un momento» en vez de callar).
+- **Celulares del panel:** si el navegador tiene la sesión del panel, no se recuerdan tarjetas (ni cookie ni en la página), para que quien atiende no termine sumando sellos a un cliente al probar la etiqueta.
+- El freno rápido por IP del toque subió a 120 cada 10 minutos (los clientes de un local comparten la wifi) y el límite en memoria se limpia solo.

@@ -38,6 +38,7 @@ export function CardScreen({
   googleWallet = false,
   appleWallet = false,
   onUnsubscribe,
+  recordar = true,
 }: {
   data: PublicCardData;
   isNew?: boolean;
@@ -45,6 +46,8 @@ export function CardScreen({
   appleWallet?: boolean;
   /** Retira el consentimiento de marketing de esta tarjeta. */
   onUnsubscribe?: () => Promise<boolean>;
+  /** Guardar la tarjeta en este navegador para el toque NFC. No, si aquí está abierto el panel del comercio. */
+  recordar?: boolean;
 }) {
   const router = useRouter();
   const [unsub, setUnsub] = useState<"idle" | "confirm" | "busy" | "done" | "error">("idle");
@@ -58,7 +61,7 @@ export function CardScreen({
 
   // Guarda el enlace de la tarjeta en este celular: la pantalla del toque NFC (/tap) lo usa para saber quién es.
   useEffect(() => {
-    if (!data.business.slug) return;
+    if (!data.business.slug || !recordar) return;
     try {
       localStorage.setItem(`lazo:tarjeta:${data.business.slug}`, data.token);
     } catch {
@@ -66,7 +69,7 @@ export function CardScreen({
     }
     // Safari borra lo anterior a los ~7 días sin visitas; la cookie del servidor dura mucho más.
     void recordarTarjetaAction(data.token).catch(() => {});
-  }, [data.business.slug, data.token]);
+  }, [data.business.slug, data.token, recordar]);
 
   // Animación cuando el empleado suma una visita.
   useEffect(() => {
