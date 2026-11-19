@@ -29,22 +29,6 @@ export function agregarTarjeta(lista: string[], token: string): string[] {
 export const escribirTarjetas = (lista: string[]) => lista.join(".");
 
 /**
- * Igual que private.normalize_name en Postgres (migración 20261101000008): minúsculas, sin tildes ni ñ,
- * sin espacios de sobra. Así «  maría  PÉREZ » y «Maria Perez» son el mismo nombre.
- */
-export function normalizarNombre(nombre: string): string {
-  const de = "áàäâãéèëêíìïîóòöôõúùüûñç";
-  const a = "aaaaaeeeeiiiiooooouuuunc";
-  const minus = (nombre ?? "").trim().toLowerCase();
-  let out = "";
-  for (const ch of minus) {
-    const i = de.indexOf(ch);
-    out += i >= 0 ? a[i] : ch;
-  }
-  return out.replace(/\s+/g, " ");
-}
-
-/**
  * ¿La página se abrió dentro de una app (Instagram, Facebook, WhatsApp, TikTok…) en lugar del navegador?
  * Ahí la tarjeta queda guardada en esa app y el toque NFC, que abre Safari o Chrome, no la encuentra.
  */

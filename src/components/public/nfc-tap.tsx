@@ -17,7 +17,7 @@ export type EstadoToque =
   | { fase: "listo"; datos: Extract<NfcTapResult, { ok: true }> }
   | { fase: "error"; mensaje: string };
 
-export type DatosCliente = { nombre: string; apellido: string; celular: string };
+export type DatosCliente = { celular: string };
 
 const nuevaClave = () => `nfc-${globalThis.crypto?.randomUUID?.() ?? Math.random().toString(36).slice(2) + Date.now().toString(36)}`;
 
@@ -43,8 +43,10 @@ export function NfcTap({ slug, secret, business }: { slug: string; secret: strin
 
   const mostrar = (res: NfcTapResult) => {
     if (res.ok) {
-      guardarEnCelular(slug, res.token);
-      setToken(res.token);
+      if (res.token) {
+        guardarEnCelular(slug, res.token);
+        setToken(res.token);
+      }
       setEstado({ fase: "listo", datos: res });
       return;
     }
@@ -73,8 +75,8 @@ export function NfcTap({ slug, secret, business }: { slug: string; secret: strin
     setErrorDatos(null);
     try {
       const res = await nfcRecuperarAction(slug, secret, datos, nuevaClave());
-      // Datos que no coinciden: se queda en el formulario para corregirlos.
-      if (!res.ok && !res.token) setErrorDatos(res.message);
+      // Número que no está o un error: se queda en el formulario para corregirlo.
+      if (!res.ok) setErrorDatos(res.message);
       else mostrar(res);
     } catch {
       setErrorDatos("No pudimos conectar. Revisa tu internet e inténtalo de nuevo.");
@@ -201,27 +203,17 @@ export function NfcTapVista({
 
         {estado.fase === "sin-tarjeta" && (
           <>
-            <h1 className="mt-8 text-2xl font-semibold">¿Ya tienes tu tarjeta?</h1>
-            <p className="mt-2 text-base">Confirma tus datos y sumamos tu sello ahora mismo.</p>
+            <h1 className="mt-8 text-2xl font-semibold">Escribe tu celular</h1>
+            <p className="mt-2 text-base">El mismo con el que te inscribiste. Sumamos tu sello ahora mismo.</p>
             <form
               className="mt-6 space-y-3 text-left"
               onSubmit={(e) => {
                 e.preventDefault();
                 const f = new FormData(e.currentTarget);
-                onConfirmar?.({ nombre: String(f.get("nombre") ?? ""), apellido: String(f.get("apellido") ?? ""), celular: String(f.get("celular") ?? "") });
+                onConfirmar?.({ celular: String(f.get("celular") ?? "") });
               }}
             >
-              {/* Los nombres de campo y autocomplete permiten que el celular ofrezca los datos de su dueño con un toque. */}
-              <div className="grid grid-cols-2 gap-3">
-                <label className="block">
-                  <span className="sr-only">Nombre</span>
-                  <input name="nombre" autoComplete="given-name" required placeholder="Nombre" className={campo} style={{ borderColor: `${b.cardForeground}66` }} />
-                </label>
-                <label className="block">
-                  <span className="sr-only">Apellido</span>
-                  <input name="apellido" autoComplete="family-name" required placeholder="Apellido" className={campo} style={{ borderColor: `${b.cardForeground}66` }} />
-                </label>
-              </div>
+              {/* autocomplete="tel": el celular ofrece el número de su dueño con un toque. */}
               <label className="block">
                 <span className="sr-only">Celular</span>
                 <input
@@ -230,8 +222,9 @@ export function NfcTapVista({
                   inputMode="tel"
                   autoComplete="tel"
                   required
-                  placeholder="Celular"
-                  className={campo}
+                  autoFocus
+                  placeholder="Tu celular"
+                  className={`${campo} text-center text-lg tracking-wide`}
                   style={{ borderColor: `${b.cardForeground}66` }}
                 />
               </label>
@@ -244,7 +237,6 @@ export function NfcTapVista({
                 {enviando && <Loader2 className="size-4 animate-spin" aria-hidden />} Sumar mi sello
               </button>
             </form>
-            <p className="mt-4 text-sm opacity-75">Escríbelos igual que cuando te inscribiste. Después, este celular te recordará.</p>
             <Link href={`/join/${slug}`} className={`${boton} !mt-6`} style={botonSecundario}>
               Es mi primera vez: crear mi tarjeta
             </Link>

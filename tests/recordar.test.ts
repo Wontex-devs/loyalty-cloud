@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { agregarTarjeta, esNavegadorDeApp, escribirTarjetas, leerTarjetas, MAX_TARJETAS_RECORDADAS, normalizarNombre } from "../src/lib/domain/recordar.ts";
+import { agregarTarjeta, esNavegadorDeApp, escribirTarjetas, leerTarjetas, MAX_TARJETAS_RECORDADAS } from "../src/lib/domain/recordar.ts";
 
 const t = (n: number) => `tarjeta-de-prueba-${String(n).padStart(4, "0")}`;
 
@@ -20,13 +20,6 @@ test("la cookie no crece sin límite e ignora valores raros", () => {
   assert.equal(lista[0], t(19));
   assert.deepEqual(leerTarjetas(`${t(1)}.<script>.corto.${t(2)}`), [t(1), t(2)]);
   assert.deepEqual(agregarTarjeta([t(1)], "no válido"), [t(1)]);
-});
-
-test("el nombre se compara igual que en la base de datos", () => {
-  assert.equal(normalizarNombre("  María   PÉREZ "), "maria perez");
-  assert.equal(normalizarNombre("Ñoño Gómez"), "nono gomez");
-  assert.equal(normalizarNombre("Ana Pérez"), normalizarNombre("ana perez"));
-  assert.notEqual(normalizarNombre("Ana Pérez"), normalizarNombre("Ana María Pérez"));
 });
 
 test("reconoce los navegadores de Instagram, Facebook, WhatsApp y TikTok, pero no Safari ni Chrome", () => {
