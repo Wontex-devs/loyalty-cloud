@@ -58,6 +58,14 @@ export const ICONS: Record<StampIcon | "gift", { shapes: Shape[]; filled?: boole
       ["path", { d: "M14.8 14.8 20 20" }],
     ],
   },
+  coffee: {
+    shapes: [
+      ["path", { d: "M10 2v2" }],
+      ["path", { d: "M14 2v2" }],
+      ["path", { d: "M16 8a1 1 0 0 1 1 1v8a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V9a1 1 0 0 1 1-1h14a4 4 0 1 1 0 8h-1" }],
+      ["path", { d: "M6 2v2" }],
+    ],
+  },
   gift: {
     shapes: [
       ["path", { d: "M12 7v14" }],

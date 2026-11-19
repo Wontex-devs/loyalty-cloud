@@ -1,4 +1,4 @@
-import { Check, Crown, Flower2, Gem, Heart, Scissors, Sparkles, Star, type LucideIcon } from "lucide-react";
+import { Check, Coffee, Crown, Flower2, Gem, Heart, Scissors, Sparkles, Star, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { BusinessBranding, CardFont, StampIcon } from "@/lib/domain/types";
 
@@ -11,6 +11,7 @@ export const STAMP_ICON_COMPONENTS: Record<StampIcon, LucideIcon> = {
   gem: Gem,
   crown: Crown,
   scissors: Scissors,
+  coffee: Coffee,
 };
 
 export const STAMP_ICON_LABELS: Record<StampIcon, string> = {
@@ -22,6 +23,7 @@ export const STAMP_ICON_LABELS: Record<StampIcon, string> = {
   gem: "Gema",
   crown: "Corona",
   scissors: "Tijeras",
+  coffee: "Café",
 };
 
 /** Iconos que se ven mejor rellenos dentro del sello. */

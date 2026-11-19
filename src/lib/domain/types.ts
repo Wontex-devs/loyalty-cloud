@@ -47,7 +47,7 @@ export interface LocationInput {
   coordinates?: { latitude: number; longitude: number } | null;
 }
 
-export const STAMP_ICONS = ["check", "heart", "star", "sparkles", "flower", "gem", "crown", "scissors"] as const;
+export const STAMP_ICONS = ["check", "heart", "star", "sparkles", "flower", "gem", "crown", "scissors", "coffee"] as const;
 export type StampIcon = (typeof STAMP_ICONS)[number];
 export const CARD_FONTS = ["serif", "sans", "elegante", "manuscrita", "redondeada", "impacto", "geometrica"] as const;
 export type CardFont = (typeof CARD_FONTS)[number];
