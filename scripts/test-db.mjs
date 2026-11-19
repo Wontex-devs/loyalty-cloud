@@ -190,6 +190,12 @@ r = await as(U.ownerA, "select public.update_business_profile($1, null, null, nu
 check("icono de sello desconocido es rechazado", expectError(r, "INVALID_BRANDING"), r);
 r = await as(U.ownerA, "select public.update_business_profile($1, null, null, null, null, $2::jsonb)", [A, JSON.stringify({ stampIcon: "coffee" })]);
 check("el sello de café se acepta", r.ok, r);
+r = await as(U.ownerA, "select public.update_business_profile($1, null, null, null, null, $2::jsonb)", [A, JSON.stringify({ illustrationUrl: logoA })]);
+check("la ilustración de la franja se acepta desde la carpeta del propio comercio", r.ok, r);
+r = await as(U.ownerA, "select public.update_business_profile($1, null, null, null, null, $2::jsonb)", [A, JSON.stringify({ illustrationUrl: logoB })]);
+check("no puede usar una ilustración de la carpeta de otro comercio", expectError(r, "INVALID_BRANDING"), r);
+r = await as(U.ownerA, "select public.update_business_profile($1, null, null, null, null, $2::jsonb)", [A, JSON.stringify({ illustrationUrl: "" })]);
+check("la ilustración se puede quitar", r.ok, r);
 r = await as(U.ownerA, "select public.update_business_profile($1, null, null, null, null, $2::jsonb)", [A, JSON.stringify({ coverUrl: logoA })]);
 check("la foto de fondo se acepta desde la carpeta del propio comercio", r.ok, r);
 r = await as(U.ownerA, "select public.update_business_profile($1, null, null, null, null, $2::jsonb)", [A, JSON.stringify({ coverUrl: logoB })]);

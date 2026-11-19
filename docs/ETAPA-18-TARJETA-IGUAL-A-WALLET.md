@@ -17,7 +17,9 @@ Fecha: 18 de noviembre de 2026.
 
 ## Qué puede personalizar el comercio
 
-Dos colores (fondo, y sellos y etiquetas), logo o iniciales, letra de la marca (nombre y premio), sello (icono o imagen propia), cantidad de sellos y premio.
+Dos colores (fondo, y sellos y etiquetas), logo o iniciales, letra de la marca (nombre y premio), sello (icono, entre ellos «Café», o imagen propia), cantidad de sellos y premio.
+
+**Ilustración de la franja (opcional, 19 nov 2026):** el comercio puede subir un dibujo de su marca (PNG transparente). Va arriba a la derecha de la franja, tenue y sobre el hilo, sin tocar los sellos, en lugar de la inicial de fondo. Se ve igual en la tarjeta web y en la imagen del pase de Apple Wallet y Google Wallet.
 
 ## Límites de Apple Wallet que se respetan
 

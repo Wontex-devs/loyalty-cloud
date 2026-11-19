@@ -9,7 +9,7 @@ import { useRouter } from "next/navigation";
 import { X } from "lucide-react";
 import { DataContext, type DataApi, type DataState } from "@/lib/data/store";
 import { createClient } from "@/lib/supabase/client";
-import { prepareCover, prepareLogo } from "@/lib/brand-image";
+import { prepareCover, prepareIlustracion, prepareLogo } from "@/lib/brand-image";
 import {
   inviteStaffAction,
   setBusinessStatusAction,
@@ -80,7 +80,7 @@ export function LiveProvider({ snapshot, children }: { snapshot: DataState; chil
     const guardarImagen = async (
       businessId: string,
       file: File | null,
-      campo: "logoUrl" | "coverUrl" | "stampUrl",
+      campo: "logoUrl" | "coverUrl" | "stampUrl" | "illustrationUrl",
       nombre: string,
       extension: string,
       preparar: (f: File) => Promise<Blob>,
@@ -181,6 +181,8 @@ export function LiveProvider({ snapshot, children }: { snapshot: DataState; chil
       setCover: (businessId, file) => guardarImagen(businessId, file, "coverUrl", "foto", "jpg", (f) => prepareCover(f), "la foto"),
       // El sello se ve pequeño (un círculo de la tarjeta): 256 px bastan y carga rápido.
       setStamp: (businessId, file) => guardarImagen(businessId, file, "stampUrl", "sello", "png", (f) => prepareLogo(f, 256), "el sello"),
+      // La ilustración ocupa el alto de la franja (336 px en el pase más grande): 600 px sobran.
+      setIllustration: (businessId, file) => guardarImagen(businessId, file, "illustrationUrl", "ilustracion", "png", (f) => prepareIlustracion(f, 600), "la ilustración"),
 
       setBusinessStatus: async (businessId, status) => {
         // Se espera la respuesta: la pantalla muestra el error si la base de datos lo rechaza.

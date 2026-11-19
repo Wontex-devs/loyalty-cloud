@@ -45,9 +45,19 @@ function twoColors(color1: string, color2: string): Partial<BusinessBranding> {
 
 export default function CardDesignPage() {
   const { business, program, membership } = useScope();
-  const { updateBranding, setLogo, setStamp } = useData();
+  const { updateBranding, setLogo, setStamp, setIllustration } = useData();
   const fileRef = useRef<HTMLInputElement>(null);
   const stampRef = useRef<HTMLInputElement>(null);
+  const ilustracionRef = useRef<HTMLInputElement>(null);
+  const [ilustracionBusy, setIlustracionBusy] = useState(false);
+  const [ilustracionError, setIlustracionError] = useState<string | null>(null);
+  const changeIlustracion = async (file: File | null) => {
+    setIlustracionBusy(true);
+    setIlustracionError(null);
+    const res = await setIllustration(business.id, file);
+    setIlustracionBusy(false);
+    if (!res.ok) setIlustracionError(res.message);
+  };
   const [stampBusy, setStampBusy] = useState(false);
   const [stampError, setStampError] = useState<string | null>(null);
   const [logoBusy, setLogoBusy] = useState(false);
@@ -123,6 +133,54 @@ export default function CardDesignPage() {
                 </Button>
                 {b.logoUrl && (
                   <Button variant="ghost" onClick={() => changeLogo(null)} disabled={logoBusy} aria-label="Quitar logotipo">
+                    <Trash2 className="size-4" />
+                  </Button>
+                )}
+              </div>
+            </div>
+          </Card>
+
+          <Card>
+            <CardHeader
+              title="Ilustración de la franja"
+              description="Opcional. Un dibujo de tu marca (tu mascota, tu producto) que va de fondo, a la derecha de la franja, en lugar de tu inicial."
+            />
+            <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center">
+              <span className="flex h-20 w-24 shrink-0 items-center justify-center overflow-hidden rounded-xl" style={{ background: b.cardBackground }}>
+                {b.illustrationUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={b.illustrationUrl} alt="Tu ilustración" className="size-full object-contain p-1.5" />
+                ) : (
+                  <span className={cn("text-4xl leading-none opacity-30", brandFont(b))} style={{ color: b.cardForeground }}>
+                    {business.name.trim().slice(0, 1).toUpperCase()}
+                  </span>
+                )}
+              </span>
+              <div className="min-w-0 flex-1 space-y-1">
+                <p className="text-xs text-muted">
+                  <strong className="font-medium text-ink-2">Recomendado:</strong> PNG con fondo transparente, de al menos 600 px. Se ve tenue para no tapar el premio ni los
+                  sellos: un dibujo de líneas claras funciona mejor que una foto.
+                </p>
+                {ilustracionError && <p className="text-sm text-danger">{ilustracionError}</p>}
+              </div>
+              <div className="flex gap-2">
+                <input
+                  ref={ilustracionRef}
+                  type="file"
+                  accept="image/png,image/webp,image/svg+xml"
+                  className="hidden"
+                  aria-label="Subir ilustración de la franja"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    e.target.value = "";
+                    if (f) changeIlustracion(f);
+                  }}
+                />
+                <Button variant="secondary" onClick={() => ilustracionRef.current?.click()} disabled={ilustracionBusy}>
+                  {ilustracionBusy ? <Loader2 className="size-4 animate-spin" /> : <ImageUp className="size-4" />} {b.illustrationUrl ? "Cambiar" : "Subir ilustración"}
+                </Button>
+                {b.illustrationUrl && (
+                  <Button variant="ghost" onClick={() => changeIlustracion(null)} disabled={ilustracionBusy} aria-label="Quitar la ilustración y volver a la inicial">
                     <Trash2 className="size-4" />
                   </Button>
                 )}

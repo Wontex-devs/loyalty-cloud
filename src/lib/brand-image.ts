@@ -117,6 +117,29 @@ export async function prepareLogo(file: File, size: number): Promise<Blob> {
   }
 }
 
+/**
+ * Prepara la ilustración de la franja: quita los márgenes vacíos y la deja en PNG de hasta `size` px
+ * por su lado mayor, sin cambiar su forma ni ponerle fondo (debe ser transparente para verse bien).
+ */
+export async function prepareIlustracion(file: File, size: number): Promise<Blob> {
+  comprobar(file);
+  const url = URL.createObjectURL(file);
+  try {
+    const img = await cargar(url);
+    const w = img.naturalWidth || size;
+    const h = img.naturalHeight || size;
+    const a = analizar(img, w, h) ?? { x: 0, y: 0, ancho: w, alto: h };
+    const k = Math.min(size / Math.max(a.ancho, a.alto), 1);
+    const { canvas, ctx } = lienzo(Math.max(1, Math.round(a.ancho * k)), Math.max(1, Math.round(a.alto * k)));
+    ctx.drawImage(img, a.x, a.y, a.ancho, a.alto, 0, 0, canvas.width, canvas.height);
+    const blob = await aBlob(canvas, "image/png");
+    if (blob.size > MAX_SALIDA_BYTES) throw new Error("La ilustración es demasiado pesada. Prueba con una más sencilla.");
+    return blob;
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
+
 /** Reduce la foto de fondo a un JPEG liviano: lado mayor de hasta `maximo` px y por debajo del límite de Storage. */
 export async function prepareCover(file: File, maximo = 1400): Promise<Blob> {
   comprobar(file);

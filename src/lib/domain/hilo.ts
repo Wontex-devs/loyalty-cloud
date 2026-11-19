@@ -29,6 +29,13 @@ export interface Hilo {
 }
 
 /** Con más sellos que estos, van en dos filas para que no queden diminutos. */
+/**
+ * Dónde va la ilustración del comercio en la franja de 375 × 144 (en lugar de la inicial de fondo):
+ * arriba a la derecha, sobre el hilo, sin tocar los sellos. Se ve tenue para no
+ * competir con el premio ni con los sellos.
+ */
+export const ILUSTRACION = { x: 258, y: 4, ancho: 110, alto: 80, opacidad: 0.4 } as const;
+
 export const HILO_MAX_UNA_FILA = 12;
 
 const n1 = (v: number) => Math.round(v * 10) / 10;

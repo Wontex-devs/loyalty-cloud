@@ -81,6 +81,7 @@ export const brandingSchema = z.object({
   logoUrl: z.union([z.literal(""), z.url({ protocol: /^https$/ })]),
   coverUrl: z.union([z.literal(""), z.url({ protocol: /^https$/ })]),
   stampUrl: z.union([z.literal(""), z.url({ protocol: /^https$/ })]),
+  illustrationUrl: z.union([z.literal(""), z.url({ protocol: /^https$/ })]).optional(),
   stampIcon: z.enum(STAMP_ICONS),
   font: z.enum(CARD_FONTS),
   cardStyle: z.enum(CARD_STYLES).optional(),
