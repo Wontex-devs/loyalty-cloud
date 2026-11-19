@@ -4855,6 +4855,8 @@ create table private.nfc_phone_attempts (
 create index nfc_phone_attempts_key_idx on private.nfc_phone_attempts (client_key, created_at);
 create index nfc_phone_attempts_business_idx on private.nfc_phone_attempts (business_id, created_at);
 create index nfc_phone_attempts_created_idx on private.nfc_phone_attempts (created_at);
+-- Sin políticas: nadie la lee por la API; solo la función (dueña de la tabla) escribe y cuenta.
+alter table private.nfc_phone_attempts enable row level security;
 
 create function public.register_nfc_visit_by_phone(
   p_slug text,
