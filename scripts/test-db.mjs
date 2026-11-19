@@ -1165,6 +1165,12 @@ console.log("\nDatos de demostración");
     const otros = (await seedDb.query("select count(*)::int n from public.businesses where id <> $1", [biz.id])).rows[0].n;
     const sup = (await seedDb.query("select id from public.profiles limit 1")).rows[0].id;
     await seedDb.query("update public.profiles set platform_role = 'superadmin' where id = $1", [sup]);
+    // Como en un comercio real: visitas hechas en una sede y con una promoción. Esos enlaces
+    // bloqueaban el borrado (la sede o la promoción se iban antes que sus visitas).
+    const sede = (await seedDb.query("insert into public.locations (business_id, name) values ($1, 'Sede de prueba') returning id", [biz.id])).rows[0].id;
+    const promo = (await seedDb.query("insert into public.promotions (business_id, name, bonus_stamps, starts_on, ends_on) values ($1, 'Promo de prueba', 1, current_date, current_date) returning id", [biz.id])).rows[0].id;
+    const tarjeta = (await seedDb.query("select id from public.loyalty_cards where business_id = $1 limit 1", [biz.id])).rows[0].id;
+    await seedDb.query("insert into public.visits (business_id, card_id, kind, delta, idempotency_key, location_id, promotion_id) values ($1, $2, 'visit', 1, 'visita-con-sede-y-promo', $3, $4)", [biz.id, tarjeta, sede, promo]);
     let error = null;
     await seedDb.query("begin");
     try {

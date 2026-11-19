@@ -1,5 +1,5 @@
 -- Generado por npm run db:bundle. No editar: cambia las migraciones y vuelve a generarlo.
--- Incluye: 20261101000001_schema.sql, 20261101000002_rls.sql, 20261101000003_functions.sql, 20261101000004_reference_data.sql, 20261101000005_public_business.sql, 20261101000006_business_stats.sql, 20261101000007_pilot.sql, 20261101000008_customer_experience.sql, 20261101000009_promotions_birthdays.sql, 20261101000010_plans_locations.sql, 20261101000011_brand_assets.sql, 20261101000012_privacy_abuse.sql, 20261101000013_wallet_notifications.sql, 20261101000014_plan_prices.sql, 20261101000015_nfc_checkin.sql, 20261101000016_plan_prices_v2.sql, 20261101000017_eliminar_comercio.sql, 20261101000018_foto_tarjeta.sql, 20261101000019_panel_usuarios.sql, 20261101000020_apple_wallet.sql, 20261101000021_soporte_comercio.sql, 20261101000022_sello_propio_y_letras.sql, 20261101000023_visita_manual.sql, 20261101000024_nombre_aparte.sql, 20261101000025_sede_ubicacion.sql, 20261101000026_mensaje_cercania.sql, 20261101000027_estilo_tarjeta.sql, 20261101000027_superadmin_edita_comercio.sql, 20261101000028_estilo_marfil.sql, 20261101000029_reverso_pase.sql, 20261101000030_qr_tarjeta.sql
+-- Incluye: 20261101000001_schema.sql, 20261101000002_rls.sql, 20261101000003_functions.sql, 20261101000004_reference_data.sql, 20261101000005_public_business.sql, 20261101000006_business_stats.sql, 20261101000007_pilot.sql, 20261101000008_customer_experience.sql, 20261101000009_promotions_birthdays.sql, 20261101000010_plans_locations.sql, 20261101000011_brand_assets.sql, 20261101000012_privacy_abuse.sql, 20261101000013_wallet_notifications.sql, 20261101000014_plan_prices.sql, 20261101000015_nfc_checkin.sql, 20261101000016_plan_prices_v2.sql, 20261101000017_eliminar_comercio.sql, 20261101000018_foto_tarjeta.sql, 20261101000019_panel_usuarios.sql, 20261101000020_apple_wallet.sql, 20261101000021_soporte_comercio.sql, 20261101000022_sello_propio_y_letras.sql, 20261101000023_visita_manual.sql, 20261101000024_nombre_aparte.sql, 20261101000025_sede_ubicacion.sql, 20261101000026_mensaje_cercania.sql, 20261101000027_estilo_tarjeta.sql, 20261101000027_superadmin_edita_comercio.sql, 20261101000028_estilo_marfil.sql, 20261101000029_reverso_pase.sql, 20261101000030_qr_tarjeta.sql, 20261101000031_eliminar_comercio_con_sedes.sql
 begin;
 
 -- >>> 20261101000001_schema.sql
@@ -4550,5 +4550,51 @@ begin
                         jsonb_build_object('branding_changed', p_branding is not null));
 end;
 $$;
+
+-- >>> 20261101000031_eliminar_comercio_con_sedes.sql
+-- =====================================================================
+-- Eliminar comercio: fallaba en comercios reales.
+-- Las visitas apuntan a su sede y a su promoción, y las recompensas a su visita,
+-- sin borrado en cascada. Al eliminar el comercio, la base borraba primero las sedes
+-- o las promociones y encontraba visitas que todavía las usaban: error y no borraba nada.
+-- Ahora se borra primero el historial de ese comercio (canjes, recompensas, visitas),
+-- en ese orden, y después el comercio con todo lo demás.
+-- Sigue siendo solo para superadministradores, con el identificador escrito y con auditoría.
+-- =====================================================================
+create or replace function public.admin_delete_business(p_business_id uuid, p_confirm_slug text)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_b public.businesses;
+begin
+  if not private.is_superadmin() then
+    raise exception 'FORBIDDEN' using errcode = 'P0001';
+  end if;
+  select * into v_b from public.businesses where id = p_business_id for update;
+  if not found then
+    raise exception 'BUSINESS_NOT_FOUND' using errcode = 'P0001';
+  end if;
+  if p_confirm_slug is distinct from v_b.slug then
+    raise exception 'CONFIRMATION_MISMATCH' using errcode = 'P0001';
+  end if;
+
+  insert into public.audit_logs (business_id, actor_id, action, entity, entity_id, metadata)
+  values (null, auth.uid(), 'platform.business_deleted', 'business', v_b.id::text,
+          jsonb_build_object('slug', v_b.slug, 'name', v_b.name, 'plan', v_b.plan_id));
+
+  perform set_config('lazo.eliminando_comercio', v_b.id::text, true);
+  -- Primero el historial, de lo que depende a lo dependido.
+  delete from public.redemptions where business_id = v_b.id;
+  delete from public.rewards where business_id = v_b.id;
+  delete from public.visits where business_id = v_b.id;
+  delete from public.businesses where id = v_b.id;
+  perform set_config('lazo.eliminando_comercio', '', true);
+end;
+$$;
+revoke all on function public.admin_delete_business(uuid, text) from public, anon;
+grant execute on function public.admin_delete_business(uuid, text) to authenticated;
 
 commit;
