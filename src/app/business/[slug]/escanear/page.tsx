@@ -1,11 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Camera, CameraOff, CheckCircle2, Loader2, MapPin, PartyPopper, ScanBarcode, XCircle } from "lucide-react";
+import { Camera, CameraOff, CheckCircle2, Gift, Loader2, MapPin, PartyPopper, ScanBarcode, XCircle } from "lucide-react";
 import { useScope } from "@/components/business/business-shell";
 import { useData } from "@/lib/data/store";
 import { can } from "@/lib/domain/permissions";
-import { findCardByScanCodeAction } from "@/lib/data/loyalty-actions";
+import { findCardByScanCodeAction, premiosDeTarjetaAction } from "@/lib/data/loyalty-actions";
 import { codigoLegible, esCodigoTarjeta, limpiarCodigo } from "@/lib/domain/code128";
 import { Button, Card, Input, PageHeader, Select } from "@/components/ui";
 import { cn } from "@/lib/utils";
@@ -13,7 +13,9 @@ import { cn } from "@/lib/utils";
 type Estado =
   | { tipo: "esperando" }
   | { tipo: "guardando" }
-  | { tipo: "ok"; nombre: string; sellos: number; requeridos: number; premio: boolean }
+  | { tipo: "ok"; nombre: string; sellos: number; requeridos: number; premio: boolean; premios: { id: string; name: string }[] }
+  | { tipo: "canjeando"; nombre: string; premio: string }
+  | { tipo: "canjeado"; nombre: string; premio: string }
   | { tipo: "error"; mensaje: string };
 
 type Lector = { stop: () => void };
@@ -25,8 +27,9 @@ type Lector = { stop: () => void };
  */
 export default function EscanearPage() {
   const { business, program, membership, locations } = useScope();
-  const { registerVisit } = useData();
+  const { registerVisit, redeemReward } = useData();
   const puede = !!membership && can(membership, "visits.create");
+  const puedeCanjear = !!membership && can(membership, "rewards.redeem");
   const sedes = locations.filter((l) => l.active);
   const [sede, setSede] = useState("");
   const [estado, setEstado] = useState<Estado>({ tipo: "esperando" });
@@ -49,7 +52,8 @@ export default function EscanearPage() {
 
   // Después de cada lectura vuelve a quedar listo para el siguiente cliente.
   useEffect(() => {
-    if (estado.tipo !== "ok" && estado.tipo !== "error") return;
+    if (estado.tipo !== "ok" && estado.tipo !== "error" && estado.tipo !== "canjeado") return;
+    if (estado.tipo === "ok" && estado.premios.length > 0) return;
     const t = setTimeout(() => setEstado({ tipo: "esperando" }), 4000);
     return () => clearTimeout(t);
   }, [estado]);
@@ -82,7 +86,9 @@ export default function EscanearPage() {
         } catch {}
         const requeridos = program?.stampsRequired ?? 0;
         const sellos = res.data?.currentStamps ?? Math.min(tarjeta.stamps + 1 + (res.data?.bonusStamps ?? 0), requeridos);
-        setEstado({ tipo: "ok", nombre: tarjeta.firstName, sellos: Math.min(sellos, requeridos), requeridos, premio: !!res.data?.reward });
+        // Premios por entregar: el que se acaba de ganar y los que tenía de antes.
+        const premios = await premiosDeTarjetaAction(tarjeta.id).catch(() => []);
+        setEstado({ tipo: "ok", nombre: tarjeta.firstName, sellos: Math.min(sellos, requeridos), requeridos, premio: !!res.data?.reward, premios });
         setNumero("");
       } catch {
         setEstado({ tipo: "error", mensaje: "No hay conexión. Intenta de nuevo." });
@@ -92,6 +98,17 @@ export default function EscanearPage() {
     },
     [business.id, program?.stampsRequired, registerVisit, sede],
   );
+
+  const canjear = async (nombre: string, premio: { id: string; name: string }) => {
+    setEstado({ tipo: "canjeando", nombre, premio: premio.name });
+    const r = await redeemReward(premio.id).catch(() => ({ ok: false as const, message: "No hay conexión. Intenta de nuevo." }));
+    if (r.ok) {
+      try {
+        navigator.vibrate?.([40, 60, 40]);
+      } catch {}
+      setEstado({ tipo: "canjeado", nombre, premio: premio.name });
+    } else setEstado({ tipo: "error", mensaje: r.message });
+  };
 
   const apagar = useCallback(() => {
     lector.current?.stop();
@@ -176,27 +193,61 @@ export default function EscanearPage() {
           )}
 
           {/* El resultado aparece encima de la cámara, en grande, para leerlo de un vistazo. */}
-          {(estado.tipo === "ok" || estado.tipo === "error" || estado.tipo === "guardando") && (
+          {estado.tipo !== "esperando" && (
             <div
               role="status"
               className={cn(
                 "absolute inset-x-3 bottom-3 flex items-center gap-3 rounded-xl p-4 text-left shadow-lg",
-                estado.tipo === "ok" && "bg-success-bg text-success",
+                (estado.tipo === "ok" || estado.tipo === "canjeado") && "bg-success-bg text-success",
                 estado.tipo === "error" && "bg-danger-bg text-danger",
-                estado.tipo === "guardando" && "bg-surface text-ink",
+                (estado.tipo === "guardando" || estado.tipo === "canjeando") && "bg-surface text-ink",
               )}
             >
-              {estado.tipo === "guardando" && <Loader2 className="size-7 shrink-0 animate-spin" />}
+              {(estado.tipo === "guardando" || estado.tipo === "canjeando") && <Loader2 className="size-7 shrink-0 animate-spin" />}
+              {estado.tipo === "canjeado" && <Gift className="size-7 shrink-0" />}
               {estado.tipo === "ok" && (estado.premio ? <PartyPopper className="size-7 shrink-0" /> : <CheckCircle2 className="size-7 shrink-0" />)}
               {estado.tipo === "error" && <XCircle className="size-7 shrink-0" />}
-              <div className="min-w-0">
+              <div className="min-w-0 flex-1">
                 {estado.tipo === "guardando" && <p className="font-semibold">Sumando el sello…</p>}
+                {estado.tipo === "canjeando" && <p className="font-semibold">Canjeando {estado.premio}…</p>}
+                {estado.tipo === "canjeado" && (
+                  <>
+                    <p className="text-lg font-semibold">Premio entregado</p>
+                    <p className="text-sm">
+                      {estado.premio} para {estado.nombre}.
+                    </p>
+                  </>
+                )}
                 {estado.tipo === "ok" && (
                   <>
                     <p className="text-lg font-semibold">¡Sello registrado, {estado.nombre}!</p>
                     <p className="text-sm">
-                      {estado.premio ? "Completó su tarjeta: ya puede reclamar su premio." : `Lleva ${estado.sellos} de ${estado.requeridos}.`}
+                      {estado.premio ? "¡Completó su tarjeta!" : `Lleva ${estado.sellos} de ${estado.requeridos}.`}
                     </p>
+                    {estado.premios.length > 0 && (
+                      <div className="mt-3 rounded-lg bg-surface p-3 text-ink">
+                        <p className="text-sm font-medium">
+                          {estado.premios.length === 1 ? "Tiene un premio listo:" : `Tiene ${estado.premios.length} premios listos. El primero:`} {estado.premios[0].name}
+                        </p>
+                        {puedeCanjear ? (
+                          <div className="mt-2 flex flex-wrap gap-2">
+                            <Button size="lg" onClick={() => void canjear(estado.nombre, estado.premios[0])}>
+                              <Gift className="size-4" /> Canjear ahora
+                            </Button>
+                            <Button size="lg" variant="ghost" onClick={() => setEstado({ tipo: "esperando" })}>
+                              Ahora no
+                            </Button>
+                          </div>
+                        ) : (
+                          <>
+                            <p className="mt-1 text-xs text-muted">Tu usuario no puede canjear premios: pídeselo a quien tenga ese permiso.</p>
+                            <Button size="lg" variant="ghost" className="mt-2" onClick={() => setEstado({ tipo: "esperando" })}>
+                              Listo
+                            </Button>
+                          </>
+                        )}
+                      </div>
+                    )}
                   </>
                 )}
                 {estado.tipo === "error" && <p className="font-semibold">{estado.mensaje}</p>}
@@ -233,7 +284,7 @@ export default function EscanearPage() {
               onChange={(e) => setNumero(codigoLegible(limpiarCodigo(e.target.value).slice(0, 12)))}
             />
           </label>
-          <Button type="submit" disabled={!esCodigoTarjeta(limpiarCodigo(numero)) || estado.tipo === "guardando"}>
+          <Button type="submit" size="lg" disabled={!esCodigoTarjeta(limpiarCodigo(numero)) || estado.tipo === "guardando" || estado.tipo === "canjeando"}>
             Sumar sello
           </Button>
         </form>

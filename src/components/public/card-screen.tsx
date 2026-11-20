@@ -201,7 +201,7 @@ export function CardScreen({
                       {r.name}
                       {r.kind === "birthday" && " · ¡Feliz cumpleaños!"}
                     </p>
-                    <p className="text-xs text-muted">{r.expiresAt ? `Válida hasta ${formatDate(r.expiresAt)}` : "Sin vencimiento"} · muestra tu QR para canjear</p>
+                    <p className="text-xs text-muted">{r.expiresAt ? `Válida hasta ${formatDate(r.expiresAt)}` : "Sin vencimiento"} · muestra el código de barras para canjear</p>
                   </div>
                 </li>
               ))}
