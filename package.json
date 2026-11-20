@@ -15,9 +15,11 @@
     "db:bundle": "node scripts/bundle-migrations.mjs",
     "admin:bootstrap": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/bootstrap-admin.ts",
     "smoke": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/smoke.ts",
+    "respaldo": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/respaldo.ts",
     "smart-tap:keys": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/smart-tap-keys.ts"
   },
   "dependencies": {
+    "@sentry/nextjs": "11.10.0",
     "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.118.0",
     "@zxing/browser": "0.2.1",

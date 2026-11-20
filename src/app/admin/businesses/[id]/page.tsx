@@ -16,6 +16,7 @@ import { BrandMark } from "@/components/loyalty/brand-mark";
 import { EntrarComercioBoton } from "@/components/business/entrar-comercio";
 import { DeleteBusiness } from "@/components/admin/delete-business";
 import { Aviso, Modal, usePuedeEditar } from "@/components/admin/piezas";
+import { TarjetaCobros } from "@/components/admin/cobros";
 
 export default function AdminBusinessDetail() {
   const { id } = useParams<{ id: string }>();
@@ -184,6 +185,8 @@ export default function AdminBusinessDetail() {
           </ul>
         </Card>
       </div>
+
+      <TarjetaCobros businessId={b.id} nombre={b.name} precioPlan={plan.priceMonthly} />
 
       {puedeEditar && <DeleteBusiness businessId={b.id} slug={b.slug} nombre={b.name} />}
     </>
