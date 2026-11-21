@@ -178,6 +178,17 @@ export function LiveProvider({ snapshot, children }: { snapshot: DataState; chil
         }, 700);
       },
 
+      // Guardado con botón: se espera la respuesta y solo entonces se refleja en el panel.
+      saveBranding: async (businessId, patch) => {
+        const res = await updateBrandingAction(businessId, patch);
+        if (!res.ok) return res;
+        setState((s) => ({
+          ...s,
+          businesses: s.businesses.map((b) => (b.id === businessId ? { ...b, branding: { ...b.branding, ...patch } } : b)),
+        }));
+        return { ok: true as const };
+      },
+
       setLogo: (businessId, file) => guardarImagen(businessId, file, "logoUrl", "logo", "png", (f) => prepareLogo(f, 512), "el logotipo"),
       setCover: (businessId, file) => guardarImagen(businessId, file, "coverUrl", "foto", "jpg", (f) => prepareCover(f), "la foto"),
       // El sello se ve pequeño (un círculo de la tarjeta): 256 px bastan y carga rápido.

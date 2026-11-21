@@ -84,6 +84,8 @@ export interface DataApi {
   exportCustomers: (businessId: string) => Promise<{ ok: true; csv: string } | { ok: false; message: string }>;
   updateProgram: (programId: string, patch: Partial<LoyaltyProgram>) => void;
   updateBranding: (businessId: string, patch: Partial<BusinessBranding>) => void;
+  /** Guarda varios cambios de marca de una vez y espera la respuesta (botón «Guardar cambios»). */
+  saveBranding: (businessId: string, patch: Partial<BusinessBranding>) => Promise<OpResult>;
   /** Sube (o quita, con null) el logotipo del comercio. */
   setLogo: (businessId: string, file: File | null) => Promise<OpResult>;
   setCover: (businessId: string, file: File | null) => Promise<OpResult>;
