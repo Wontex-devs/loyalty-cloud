@@ -1,10 +1,12 @@
 import { NextResponse, type NextRequest } from "next/server";
 import type { EmailOtpType } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
+import { rutaInterna } from "@/lib/domain/ruta-interna";
 
 const TIPOS: EmailOtpType[] = ["invite", "recovery", "magiclink", "signup", "email", "email_change"];
 
-const destinoSeguro = (valor: string | null) => (valor && valor.startsWith("/") && !valor.startsWith("//") ? valor : "/start");
+// Solo rutas de este mismo sitio (ver domain/ruta-interna.ts): un enlace armado no puede mandar a otra página.
+const destinoSeguro = (valor: string | null) => rutaInterna(valor);
 const escapar = (s: string) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c] ?? c);
 
 /**
