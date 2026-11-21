@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Download, ImageUp, Loader2, Printer, Trash2 } from "lucide-react";
+import { BarraGuardar } from "@/components/business/barra-guardar";
 import { QRCodeCanvas, QRCodeSVG } from "qrcode.react";
 import { useScope, RequirePermission } from "@/components/business/business-shell";
 import { LoyaltyCardView } from "@/components/loyalty/loyalty-card";
@@ -45,7 +46,40 @@ function twoColors(color1: string, color2: string): Partial<BusinessBranding> {
 
 export default function CardDesignPage() {
   const { business, program, membership } = useScope();
-  const { updateBranding, setLogo, setStamp, setIllustration } = useData();
+  const { saveBranding, setLogo, setStamp, setIllustration } = useData();
+  // Borrador: los cambios se ven en la vista previa, pero solo llegan a las tarjetas al pulsar «Guardar cambios».
+  const [borrador, setBorrador] = useState<Partial<BusinessBranding>>({});
+  const [guardando, setGuardando] = useState(false);
+  const [resultado, setResultado] = useState<{ ok: boolean; texto: string } | null>(null);
+  const hayCambios = Object.keys(borrador).length > 0;
+  const cambiar = (patch: Partial<BusinessBranding>) => {
+    setResultado(null);
+    setBorrador((actual) => {
+      const siguiente = { ...actual, ...patch };
+      // Si un valor vuelve a ser el guardado, deja de contar como cambio.
+      for (const k of Object.keys(siguiente) as (keyof BusinessBranding)[]) {
+        if (siguiente[k] === business.branding[k]) delete siguiente[k];
+      }
+      return siguiente;
+    });
+  };
+  const guardarCambios = async () => {
+    setGuardando(true);
+    setResultado(null);
+    const res = await saveBranding(business.id, borrador).catch(() => ({ ok: false as const, message: "No hay conexión. Tus cambios siguen aquí: intenta de nuevo." }));
+    setGuardando(false);
+    if (res.ok) {
+      setBorrador({});
+      setResultado({ ok: true, texto: "Cambios guardados. Ya se ven en todas las tarjetas." });
+    } else setResultado({ ok: false, texto: res.message });
+  };
+  // Aviso del navegador si se intenta salir con cambios sin guardar.
+  useEffect(() => {
+    if (!hayCambios) return;
+    const avisar = (e: BeforeUnloadEvent) => e.preventDefault();
+    window.addEventListener("beforeunload", avisar);
+    return () => window.removeEventListener("beforeunload", avisar);
+  }, [hayCambios]);
   const fileRef = useRef<HTMLInputElement>(null);
   const stampRef = useRef<HTMLInputElement>(null);
   const ilustracionRef = useRef<HTMLInputElement>(null);
@@ -83,7 +117,8 @@ export default function CardDesignPage() {
   };
   const [previewState, setPreviewState] = useState<CardStatus>("active");
   const [hoy] = useState(() => new Date().toISOString());
-  const b = business.branding;
+  const b = { ...business.branding, ...borrador };
+  const negocioConBorrador = { ...business, branding: b };
   const [joinUrl, setJoinUrl] = useState("");
   useEffect(() => setJoinUrl(`${window.location.origin}/join/${business.slug}`), [business.slug]);
 
@@ -102,7 +137,7 @@ export default function CardDesignPage() {
     <RequirePermission allowed={!!membership && can(membership, "business.branding.edit")}>
       <PageHeader
         title="Tarjeta, QR y NFC"
-        description="Lo que ves en la vista previa es lo que tus clientes guardan en la billetera de su celular. Los cambios se aplican al instante en todas las tarjetas."
+        description="Lo que ves en la vista previa es lo que tus clientes guardan en la billetera de su celular. Prueba los cambios aquí y pulsa «Guardar cambios» para aplicarlos a todas las tarjetas. Las imágenes (logo, ilustración y sello) se guardan al subirlas."
       />
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_400px]">
@@ -113,7 +148,7 @@ export default function CardDesignPage() {
               <BrandMark branding={b} className="size-16 rounded-full font-serif text-2xl" style={{ background: b.cardForeground, color: b.cardBackground }} />
               <div className="flex-1 space-y-2">
                 <Field label="Iniciales" hint={b.logoUrl ? "Se mostrarán si quitas el logotipo." : "Se muestran mientras no subas un logotipo."}>
-                  <Input maxLength={3} value={b.logoText} onChange={(e) => updateBranding(business.id, { logoText: e.target.value.toUpperCase() })} className="w-24" />
+                  <Input maxLength={3} value={b.logoText} onChange={(e) => cambiar({ logoText: e.target.value.toUpperCase() })} className="w-24" />
                 </Field>
                 <p className="text-xs text-muted">
                   <strong className="font-medium text-ink-2">Tamaño recomendado:</strong> cuadrado de al menos 512 × 512 px, con el logo centrado.
@@ -215,7 +250,7 @@ export default function CardDesignPage() {
               {PRESETS.map((p) => (
                 <button
                   key={p.name}
-                  onClick={() => updateBranding(business.id, p.colors)}
+                  onClick={() => cambiar(p.colors)}
                   className="group rounded-xl border border-line p-2 text-left transition hover:border-line-strong hover:shadow-card"
                 >
                   <div className="flex h-14 items-end rounded-lg p-2" style={{ background: p.colors.cardBackground }}>
@@ -264,7 +299,7 @@ export default function CardDesignPage() {
                       {stampBusy ? <Loader2 className="size-4 animate-spin" /> : <ImageUp className="size-4" />} {b.stampUrl ? "Cambiar sello" : "Subir mi sello"}
                     </Button>
                     {b.logoUrl && b.stampUrl !== b.logoUrl && (
-                      <Button variant="secondary" size="sm" onClick={() => updateBranding(business.id, { stampUrl: b.logoUrl })} disabled={stampBusy}>
+                      <Button variant="secondary" size="sm" onClick={() => cambiar({ stampUrl: b.logoUrl })} disabled={stampBusy}>
                         Usar mi logo
                       </Button>
                     )}
@@ -284,7 +319,7 @@ export default function CardDesignPage() {
                       <button
                         key={key}
                         type="button"
-                        onClick={() => updateBranding(business.id, { stampIcon: key })}
+                        onClick={() => cambiar({ stampIcon: key })}
                         aria-pressed={selected}
                         title={STAMP_ICON_LABELS[key]}
                         className={cn(
@@ -312,7 +347,7 @@ export default function CardDesignPage() {
                       <button
                         key={key}
                         type="button"
-                        onClick={() => updateBranding(business.id, { font: key })}
+                        onClick={() => cambiar({ font: key })}
                         aria-pressed={selected}
                         className={cn(
                           "flex min-w-0 flex-col items-start gap-1 rounded-xl border px-3 py-2.5 text-left transition",
@@ -337,8 +372,8 @@ export default function CardDesignPage() {
               description="Dos colores y listo: el 1 es el fondo de la tarjeta y del pase en Wallet; el 2, los sellos y los detalles. El texto se pone solo en blanco o negro para que siempre se lea."
             />
             <div className="grid gap-4 p-5 sm:grid-cols-2">
-              <ColorPicker label="Color 1 · Fondo" value={b.cardBackground} onChange={(c) => updateBranding(business.id, twoColors(c, b.cardForeground))} />
-              <ColorPicker label="Color 2 · Sellos y detalles" value={b.cardForeground} onChange={(c) => updateBranding(business.id, twoColors(b.cardBackground, c))} />
+              <ColorPicker label="Color 1 · Fondo" value={b.cardBackground} onChange={(c) => cambiar(twoColors(c, b.cardForeground))} />
+              <ColorPicker label="Color 2 · Sellos y detalles" value={b.cardForeground} onChange={(c) => cambiar(twoColors(b.cardBackground, c))} />
             </div>
           </Card>
 
@@ -390,7 +425,7 @@ export default function CardDesignPage() {
           </div>
           <div className="rounded-[28px] border border-line bg-[#f4f4f5] p-4">
             <LoyaltyCardView
-              business={business}
+              business={negocioConBorrador}
               program={program}
               customerName="Sofía Martínez"
               stamps={previewState === "active" ? 6 : 0}
@@ -402,6 +437,19 @@ export default function CardDesignPage() {
           </div>
         </div>
       </div>
+
+      {/* Barra de guardado: aparece cuando hay cambios sin guardar o un resultado que mostrar. */}
+      <BarraGuardar
+        hayCambios={hayCambios}
+        guardando={guardando}
+        resultado={resultado}
+        pendiente="Tienes cambios sin guardar. Todavía no se ven en las tarjetas de tus clientes."
+        onGuardar={() => void guardarCambios()}
+        onDescartar={() => {
+          setBorrador({});
+          setResultado(null);
+        }}
+      />
     </RequirePermission>
   );
 }
