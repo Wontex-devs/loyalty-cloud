@@ -1,6 +1,8 @@
 import "server-only";
 import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
+import { SUPABASE_ANON_KEY, SUPABASE_URL } from "@/lib/supabase/config";
 import type { PublicCardData } from "@/components/public/card-screen";
 import type { BusinessBranding, BusinessLegal } from "@/lib/domain/types";
 
@@ -53,6 +55,22 @@ export const getPublicBusiness = cache(async (slug: string): Promise<PublicBusin
   if (!/^[a-z0-9-]{3,40}$/.test(slug)) return null;
   const supabase = await createClient();
   const { data } = await supabase.rpc("get_public_business", { p_slug: slug });
+  return aNegocioPublico(data);
+});
+
+/**
+ * La misma ficha, sin leer la sesión (no usa cookies): permite que la página de inscripción se
+ * guarde ya armada y se sirva al instante, en vez de despertar el servidor con cada visita.
+ * Son los mismos datos públicos que ve cualquier visitante sin cuenta.
+ */
+export const getPublicBusinessSinSesion = cache(async (slug: string): Promise<PublicBusiness | null> => {
+  if (!/^[a-z0-9-]{3,40}$/.test(slug)) return null;
+  const supabase = createSupabaseClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { persistSession: false, autoRefreshToken: false } });
+  const { data } = await supabase.rpc("get_public_business", { p_slug: slug });
+  return aNegocioPublico(data);
+});
+
+function aNegocioPublico(data: unknown): PublicBusiness | null {
   if (!data) return null;
   const d = data as any;
   return {
@@ -77,4 +95,4 @@ export const getPublicBusiness = cache(async (slug: string): Promise<PublicBusin
       welcomeStamps: d.program.welcome_stamps ?? 0,
     },
   };
-});
+}

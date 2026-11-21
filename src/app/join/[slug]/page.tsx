@@ -1,10 +1,15 @@
 import type { Metadata } from "next";
-import { getPublicBusiness } from "@/lib/data/public";
+import { getPublicBusinessSinSesion as getPublicBusiness } from "@/lib/data/public";
 import { JoinForm, JoinUnavailable } from "@/components/public/join-form";
 
 type Props = { params: Promise<{ slug: string }> };
 
-export const dynamic = "force-dynamic";
+// La página se guarda ya armada y se sirve al instante (es lo primero que ve quien escanea el cartel).
+// Se vuelve a armar sola cada minuto, y de inmediato cuando el comercio cambia su marca o su programa.
+export const revalidate = 60;
+export function generateStaticParams() {
+  return [];
+}
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;

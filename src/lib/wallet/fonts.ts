@@ -27,18 +27,22 @@ export interface ImageFont {
 }
 
 const cache = new Map<string, Promise<ArrayBuffer | null>>();
+/** Las letras no cambian: se piden a Google una vez al mes como mucho, no en cada arranque del servidor. */
+const MES = 60 * 60 * 24 * 30;
 
 async function download(family: string, weight: number): Promise<ArrayBuffer | null> {
   try {
     const css = await fetch(`https://fonts.googleapis.com/css2?family=${encodeURIComponent(family)}:wght@${weight}`, {
       // Sin un navegador moderno, Google entrega TTF (el formato que entiende la imagen).
       headers: { "User-Agent": "Mozilla/4.0" },
+      cache: "force-cache",
+      next: { revalidate: MES },
     }).then((r) => (r.ok ? r.text() : ""));
     // El último bloque es el subconjunto latino (incluye tildes y ñ).
     const urls = [...css.matchAll(/src:\s*url\(([^)]+)\)\s*format\('(?:truetype|opentype)'\)/g)].map((m) => m[1]);
     const url = urls.at(-1);
     if (!url) return null;
-    const res = await fetch(url);
+    const res = await fetch(url, { cache: "force-cache", next: { revalidate: MES } });
     return res.ok ? await res.arrayBuffer() : null;
   } catch {
     return null;

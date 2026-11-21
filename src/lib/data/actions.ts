@@ -113,6 +113,7 @@ export async function updateProgramAction(programId: string, patch: Partial<Loya
   if (!data?.length) return fail({ message: "FORBIDDEN" });
   scheduleBusinessWalletSync(data[0].business_id);
   revalidatePath("/business", "layout");
+  revalidatePath("/join", "layout");
   return { ok: true };
 }
 
@@ -131,6 +132,7 @@ export async function updateBrandingAction(businessId: string, patch: Partial<Bu
   if (error) return fail(error);
   scheduleBusinessWalletSync(businessId);
   revalidatePath("/business", "layout");
+  revalidatePath("/join", "layout");
   return { ok: true };
 }
 
@@ -228,6 +230,7 @@ export async function setBusinessStatusAction(businessId: string, status: Busine
   const { error } = await supabase.rpc("set_business_status", { p_business_id: businessId, p_status: status, p_reason: null });
   if (error) return fail(error);
   revalidatePath("/admin", "layout");
+  revalidatePath("/join", "layout");
   return { ok: true };
 }
 

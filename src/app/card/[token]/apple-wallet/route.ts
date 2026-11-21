@@ -11,7 +11,7 @@ export async function GET(req: Request, { params }: Ctx) {
   const cfg = appleWalletConfig();
   const card = cfg ? await getPublicCard(token) : null;
   if (!cfg || !card || card.status === "blocked") return NextResponse.redirect(new URL(`/card/${token}`, req.url));
-  const pass = await pkpassFor(cfg, token, appOrigin(req));
+  const pass = await pkpassFor(cfg, token, appOrigin(req), card);
   if (!pass) return NextResponse.redirect(new URL(`/card/${token}`, req.url));
   return pkpassResponse(pass, token);
 }
