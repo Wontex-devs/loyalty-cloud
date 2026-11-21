@@ -248,7 +248,7 @@ export default function Home() {
               <h3 className={`${poster} text-3xl`}>Tu negocio en números</h3>
               <dl className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
                 {[
-                  ["89%", "de tus clientes vuelven"],
+                  ["142", "clientes inscritos"],
                   ["65", "visitas en 30 días"],
                   ["Sábado", "tu día más fuerte"],
                   ["12", "premios canjeados"],

@@ -6,13 +6,13 @@
 
 ## Partes
 
-**EL PROVEEDOR:** `[razón social de quien presta el servicio]`, NIT `[NIT]`, con domicilio en `[dirección y ciudad]`, representada por `[nombre del representante legal]`, correo de contacto `[correo]`. Presta el servicio bajo la marca **Lazo**.
+**EL PROVEEDOR:** Wontex `[razón social completa]`, NIT `[NIT: en trámite]`, con domicilio en `[dirección]`, Barranquilla, representada por `[nombre del representante legal]`, correo de contacto info@wontex-devs.com. Presta el servicio bajo la marca **Lazo**.
 
 **EL COMERCIO:** `[razón social o nombre del comercio]`, NIT/C.C. `[número]`, con domicilio en `[dirección y ciudad]`, representado por `[nombre del representante]`, correo `[correo]`.
 
 ## 1. Objeto
 
-El Proveedor da al Comercio acceso a la plataforma Lazo, que permite: (a) crear una tarjeta de fidelización digital con la marca del Comercio; (b) inscribir clientes mediante un código QR; (c) registrar visitas y sellos, por el personal del Comercio o por toque NFC con una etiqueta; (d) administrar recompensas, promociones y avisos; (e) ver estadísticas; y (f) cuando esté habilitado, añadir la tarjeta a Google Wallet.
+El Proveedor da al Comercio acceso a la plataforma Lazo, que permite: (a) crear una tarjeta de fidelización digital con la marca del Comercio; (b) inscribir clientes mediante un código QR; (c) registrar visitas y sellos: por el personal del Comercio desde el panel, escaneando con la cámara el código de barras de la tarjeta, o por toque NFC con una etiqueta (si el celular del cliente no recuerda su tarjeta, este escribe su número de celular); (d) administrar recompensas, promociones y avisos; (e) ver estadísticas; y (f) añadir la tarjeta a Apple Wallet (iPhone) y Google Wallet (Android).
 
 ## 2. Plan, precio y forma de pago
 
@@ -24,7 +24,7 @@ El Proveedor da al Comercio acceso a la plataforma Lazo, que permite: (a) crear 
 
 El plan contratado es: `[Starter / Pro / Business]`.
 
-- Los precios están en pesos colombianos (COP) y `[incluyen / no incluyen]` IVA. **Decisión:** definir con el contador.
+- Los precios están en pesos colombianos (COP) e incluyen IVA, como se publica en la página. **Decisión:** confirmar con el contador.
 - El pago es `[mensual anticipado]`, dentro de los `[5]` días siguientes a la factura electrónica, por `[transferencia / enlace de pago]`.
 - El primer mes gratis del plan Starter comienza en la fecha de activación. Si el Comercio no cancela antes de que termine, se factura el siguiente mes.
 - Si el Comercio supera los límites de su plan, el Proveedor le avisará y podrá proponer un plan superior. No se cobra de forma automática un plan mayor sin su aceptación.
@@ -41,7 +41,7 @@ El plan contratado es: `[Starter / Pro / Business]`.
 ## 4. Obligaciones del Proveedor
 
 1. Mantener la plataforma disponible con **esfuerzos razonables**. No se garantiza servicio ininterrumpido. **Decisión:** si se quiere ofrecer un porcentaje de disponibilidad (por ejemplo 99 %), escribirlo aquí y definir qué pasa si no se cumple.
-2. Dar soporte por `[WhatsApp / correo]` en horario `[días y horas]`.
+2. Dar soporte por WhatsApp y correo, sin horario fijo.
 3. Hacer copias de seguridad de la base de datos según el plan de su proveedor de nube.
 4. Aplicar las medidas de seguridad del Anexo C.
 5. Avisar con anticipación razonable los cambios importantes del servicio.
@@ -88,7 +88,7 @@ Cada parte guarda reserva de la información no pública de la otra (precios aco
 
 - El Proveedor responde por los daños que cause por su culpa o dolo, hasta el valor pagado por el Comercio en los `[3]` meses anteriores al hecho. **Decisión del abogado:** el tope es una propuesta y no aplica a lo que la ley no permita limitar.
 - El Proveedor no responde por: fallas de servicios de terceros fuera de su control (conexión a internet, el celular del cliente, Google Wallet, proveedores de nube), mal uso del Comercio o de su equipo, ni por la pérdida de la etiqueta NFC.
-- El toque NFC usa un enlace fijo guardado en una etiqueta. El Comercio entiende que puede haber intentos de uso indebido y que la plataforma aplica controles (tiempo mínimo entre toques, límites por dispositivo, historial y reversión), sin garantizar que sean infalibles.
+- El toque NFC usa un enlace fijo guardado en una etiqueta. El Comercio entiende que puede haber intentos de uso indebido (por ejemplo, alguien que escriba el celular de otro cliente frente a la etiqueta) y que la plataforma aplica controles (tiempo mínimo entre visitas, límite de intentos por conexión y por comercio, historial y reversión), sin garantizar que sean infalibles.
 
 ## 10. Suspensión
 
@@ -131,7 +131,8 @@ Firmado en `[ciudad]`, el `[fecha]`.
 |---|---|---|---|
 | Supabase | Base de datos y acceso de usuarios | Todos los datos de la plataforma | `[región del proyecto: verificar en Supabase]` |
 | Vercel | Alojamiento de la página | Datos en tránsito, registros técnicos | `[verificar]` |
-| Google (Google Wallet) | Tarjeta en el celular, **solo si el cliente la añade** | Nombre, sellos, recompensas, QR de la tarjeta | Servidores de Google |
+| Google (Google Wallet) | Tarjeta en el celular, **solo si el cliente la añade** | Nombre, sellos, recompensas, código de la tarjeta | Servidores de Google |
+| Apple (Apple Wallet) | Tarjeta en el iPhone, **solo si el cliente la añade** | Nombre, sellos, recompensas, código de la tarjeta | Servidores de Apple |
 | `[Resend u otro]` | Envío de correos del panel | Correo y nombre de las personas del equipo | `[verificar]` |
 
 > **No verificado:** las ubicaciones exactas deben confirmarse en la configuración de cada proveedor antes de firmar.
@@ -146,3 +147,5 @@ Firmado en `[ciudad]`, el `[fecha]`.
 - Anonimización de clientes y retiro de autorización de promociones desde el panel.
 - Copias de seguridad según el plan de la base de datos contratado.
 - Los enlaces de correo no se gastan al abrirlos (confirmación con botón).
+- Sumar el sello escribiendo el celular solo funciona con la etiqueta del comercio, no muestra el nombre ni los sellos y tiene límite de intentos guardado en la base de datos.
+- En el celular del cliente solo se guarda el enlace de su tarjeta (cookie de hasta 400 días), nunca su nombre ni su número. No se guarda en celulares donde está abierto el panel del comercio.
