@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Check, Copy, Loader2, Nfc, RefreshCw } from "lucide-react";
 import { getNfcSettingsAction, setNfcSettingsAction, type NfcSettings } from "@/lib/data/nfc-actions";
 import { Button, Card, CardHeader, Field, Select, Switch } from "@/components/ui";
+import { NumberInput } from "@/components/ui/number-input";
 import { cn } from "@/lib/utils";
 import { useData } from "@/lib/data/store";
 
@@ -30,6 +31,7 @@ const escritorNfc = () => {
 export function NfcCard({ businessId, slug }: { businessId: string; slug: string }) {
   const [ajustes, setAjustes] = useState<NfcSettings | null>(null);
   const [espera, setEspera] = useState(120);
+  const [porDia, setPorDia] = useState(1);
   const [cargando, setCargando] = useState(true);
   const [guardando, setGuardando] = useState(false);
   const [aviso, setAviso] = useState<{ ok: boolean; texto: string } | null>(null);
@@ -49,6 +51,7 @@ export function NfcCard({ businessId, slug }: { businessId: string; slug: string
       if (r.ok) {
         setAjustes(r.settings);
         setEspera(r.settings.minMinutes);
+        setPorDia(r.settings.maxPerDay);
       } else setAviso({ ok: false, texto: r.message });
     });
     return () => {
@@ -56,13 +59,14 @@ export function NfcCard({ businessId, slug }: { businessId: string; slug: string
     };
   }, [businessId]);
 
-  const guardar = async (enabled: boolean, rotar = false) => {
+  const guardar = async (enabled: boolean, rotar = false, exigirUbicacion?: boolean) => {
     setGuardando(true);
     setAviso(null);
-    const r = await setNfcSettingsAction(businessId, enabled, espera, rotar);
+    const r = await setNfcSettingsAction(businessId, enabled, espera, rotar, { maxPerDay: porDia, requireLocation: exigirUbicacion });
     setGuardando(false);
     if (r.ok) {
       setAjustes(r.settings);
+      setPorDia(r.settings.maxPerDay);
       setAviso({ ok: true, texto: rotar ? "Listo: las etiquetas viejas dejaron de funcionar. Escribe la nueva." : "Guardado." });
     } else setAviso({ ok: false, texto: r.message });
   };
@@ -101,7 +105,7 @@ export function NfcCard({ businessId, slug }: { businessId: string; slug: string
     <Card>
       <CardHeader
         title="Sellar con el celular (NFC)"
-        description="Tu cliente acerca el celular a la tarjeta NFC del mostrador y se registra su visita, sin pedirle nada al equipo."
+        description="Tu cliente acerca el celular a la tarjeta NFC del mostrador, escribe su número de celular y se registra su visita, sin pedirle nada al equipo."
       />
       <div className="space-y-5 p-5 text-sm">
         {cargando ? (
@@ -136,6 +140,34 @@ export function NfcCard({ businessId, slug }: { businessId: string; slug: string
                 </Button>
               </div>
             </Field>
+
+            <Field
+              label="Sellos por día con el toque"
+              hint="Cuántos sellos puede sumar una misma tarjeta en un día con la etiqueta. Con 1, quien guarde el enlace no puede sumar varias veces el mismo día."
+            >
+              <div className="flex gap-2">
+                <NumberInput value={porDia} min={1} max={20} onValueChange={setPorDia} className="max-w-24" aria-label="Sellos por día con el toque" />
+                <Button variant="secondary" onClick={() => void guardar(ajustes.enabled)} disabled={guardando || porDia === ajustes.maxPerDay}>
+                  Guardar
+                </Button>
+              </div>
+            </Field>
+
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="font-medium">Exigir estar en el local</p>
+                <p className="text-xs text-muted">
+                  {ajustes.canRequireLocation
+                    ? "El celular del cliente debe estar a menos de 200 metros de una de tus sedes. Le pedimos permiso de ubicación; no la guardamos. Si no lo da, puedes sumarle el sello escaneando su QR."
+                    : "Para activarlo, primero guarda la ubicación de al menos una sede (en Sedes)."}
+                </p>
+              </div>
+              <Switch
+                checked={ajustes.requireLocation}
+                onChange={(v) => void guardar(ajustes.enabled, false, v)}
+                label="Exigir estar en el local para sumar con el toque"
+              />
+            </div>
 
             <p className="rounded-lg border border-line bg-canvas px-3 py-2 text-xs text-muted">
               La tarjeta NFC para tu mostrador te la entrega el equipo de Lazo en persona, lista para usar. Si se pierde o se daña, escríbenos.

@@ -21,7 +21,7 @@ const ESCENAS = [
   ["Aquí entra Lazo.", "Una tarjeta de sellos digital con la marca de tu negocio, en el celular de cada cliente."],
   ["Escanea el QR una sola vez.", "Escribe su nombre y su celular, y ya tiene su tarjeta. No descarga ninguna app."],
   ["La guarda en su billetera.", "En iPhone queda en Apple Wallet y en Android en Google Wallet, con tu logo y tus colores, siempre a la mano."],
-  ["Acerca el celular al mostrador.", "Una etiqueta NFC adhesiva hace el trabajo. Sin lector ni datáfono."],
+  ["Acerca el celular y escribe tu número.", "Una etiqueta NFC adhesiva abre la página del sello. Sin lector ni datáfono."],
   ["Sello registrado.", "Queda guardado con fecha y hora, y le llega el aviso al instante."],
   ["Completa los sellos y gana su premio.", "El premio aparece solo en su tarjeta, listo para canjearlo en tu caja."],
   ["Y vuelve. Una y otra vez.", "Ahora tiene un motivo para elegirte a ti y no a la competencia."],

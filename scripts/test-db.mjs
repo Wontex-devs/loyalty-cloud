@@ -712,7 +712,7 @@ console.log("\nEtapa 13 · Visita por toque NFC");
   check("un empleado no puede encender el NFC (FORBIDDEN)", expectError(r, "FORBIDDEN"), r);
   r = await as(U.ownerA, "select public.set_nfc_settings($1, true, 5000, false)", [A]);
   check("tiempo mínimo fuera de rango → INVALID_NFC_SETTINGS", expectError(r, "INVALID_NFC_SETTINGS"), r);
-  r = await as(U.adminA, "select public.set_nfc_settings($1, true, 120, false) as s", [A]);
+  r = await as(U.adminA, "select public.set_nfc_settings($1, true, 120, false, 20) as s", [A]);
   check("el administrador enciende el NFC", r.ok && r.rows[0].s.enabled === true && r.rows[0].s.secret === inicial.secret, r);
 
   r = await asService("select public.register_nfc_visit('negocio-a', 'secreto-incorrecto', $1, 'nfc-key-0002')", [tokNfc]);
@@ -1264,6 +1264,98 @@ console.log("\nDatos de demostración");
     const otrosDespues = (await seedDb.query("select count(*)::int n from public.businesses")).rows[0].n;
     check("los demás comercios siguen intactos", otrosDespues === otros, { otros, otrosDespues });
   }
+}
+
+// ---------- NFC: límite por día y ubicación ----------
+{
+  console.log("\nNFC: límite por día y ubicación");
+  const N = (await db.query(`insert into public.businesses (slug, name, category, city, plan_id, status)
+    values ('negocio-nfc', 'Negocio NFC', 'Café', 'Barranquilla', 'plan_pro', 'active') returning id`)).rows[0].id;
+  await db.query(`insert into public.loyalty_programs (business_id, name, stamps_required, reward_name, min_minutes_between_visits)
+    values ($1, 'Club NFC', 6, 'Café', 0)`, [N]);
+  const dueno = "00000000-0000-0000-0000-0000000000d7";
+  await db.query("insert into auth.users (id, email, raw_user_meta_data) values ($1, 'dueno-nfc@test.local', '{}') on conflict do nothing", [dueno]);
+  await db.query("insert into public.business_memberships (business_id, profile_id, role, can_redeem) values ($1, $2, 'owner', true)", [N, dueno]);
+  const alta = async (tel) => (await asService("select * from public.join_program('negocio-nfc', $1, $2, null, true, false)", ["Cliente Prueba", tel])).rows[0]?.public_token;
+  const t1 = await alta("+573000000101");
+  const t2 = await alta("+573000000102");
+
+  // Sin tiempo mínimo entre toques: lo único que frena es el límite del día.
+  let q = await as(dueno, "select public.set_nfc_settings($1, true, 0, false) as s", [N]);
+  const secreto = q.rows[0]?.s?.secret;
+  check("nfc: por defecto el límite es 1 sello al día y no exige ubicación", q.ok && q.rows[0].s.max_per_day === 1 && q.rows[0].s.require_location === false, q);
+  const toque = (token, clave, lat = null, lng = null) =>
+    asService("select public.register_nfc_visit('negocio-nfc', $1, $2, $3, $4, $5) as r", [secreto, token, clave, lat, lng]);
+
+  q = await toque(t1, "nfc37-toque-0001");
+  check("nfc: el primer toque del día suma", q.ok, q);
+  q = await toque(t1, "nfc37-toque-0002");
+  check("nfc: el segundo toque del mismo día se rechaza (NFC_DAILY_LIMIT)", expectError(q, "NFC_DAILY_LIMIT"), q);
+  q = await toque(t1, "nfc37-toque-0001");
+  check("nfc: reintentar el toque ya registrado no choca con el límite (DUPLICATE_REQUEST)", expectError(q, "DUPLICATE_REQUEST"), q);
+  q = await toque(t2, "nfc37-toque-0003");
+  check("nfc: el límite es por tarjeta: otro cliente sí suma", q.ok, q);
+
+  // Un sello de ayer no cuenta para hoy.
+  await db.query("alter table public.visits disable trigger visits_immutable");
+  await db.query("update public.visits set created_at = now() - interval '26 hours' where idempotency_key = 'nfc37-toque-0001'");
+  await db.query("alter table public.visits enable trigger visits_immutable");
+  await db.query("update public.loyalty_cards set last_visit_at = now() - interval '26 hours' where public_token = $1", [t1]);
+  q = await toque(t1, "nfc37-toque-0004");
+  check("nfc: al día siguiente vuelve a sumar", q.ok, q);
+
+  // Si el comercio revierte el sello de hoy, el cliente puede volver a sumar.
+  const v = (await db.query("select id from public.visits where idempotency_key = 'nfc37-toque-0004'")).rows[0].id;
+  q = await as(dueno, "select public.reverse_visit($1, 'Sello por error')", [v]);
+  q = await toque(t1, "nfc37-toque-0005");
+  check("nfc: un sello revertido no cuenta para el límite del día", q.ok, q);
+
+  q = await as(dueno, "select public.set_nfc_settings($1, true, 0, false, 3) as s", [N]);
+  check("nfc: el dueño puede subir el límite del día", q.ok && q.rows[0].s.max_per_day === 3, q);
+  q = await as(dueno, "select public.set_nfc_settings($1, true, 0, false, 99)", [N]);
+  check("nfc: no se acepta un límite fuera de 1 a 20", expectError(q, "INVALID_NFC_SETTINGS"), q);
+  q = await toque(t1, "nfc37-toque-0006");
+  check("nfc: con límite 3, el segundo sello válido del día suma", q.ok, q);
+  await as(dueno, "select public.set_nfc_settings($1, true, 0, false, 1)", [N]);
+
+  // Ubicación.
+  q = await as(dueno, "select public.set_nfc_settings($1, true, 0, false, null, true)", [N]);
+  check("nfc: no se puede exigir ubicación sin una sede con ubicación", expectError(q, "NFC_NEEDS_LOCATION"), q);
+  await db.query("insert into public.locations (business_id, name, latitude, longitude) values ($1, 'Sede con mapa', 10.9878, -74.7889)", [N]);
+  q = await as(dueno, "select public.set_nfc_settings($1, true, 0, false, null, true) as s", [N]);
+  check("nfc: con una sede con ubicación sí se puede exigir", q.ok && q.rows[0].s.require_location === true && q.rows[0].s.can_require_location === true, q);
+
+  const t3 = await alta("+573000000103");
+  q = await toque(t3, "nfc37-ubica-0001");
+  check("nfc: sin ubicación se rechaza (LOCATION_REQUIRED)", expectError(q, "LOCATION_REQUIRED"), q);
+  q = await toque(t3, "nfc37-ubica-0002", 4.711, -74.0721);
+  check("nfc: desde otra ciudad se rechaza (TOO_FAR)", expectError(q, "TOO_FAR"), q);
+  q = await toque(t3, "nfc37-ubica-0003", 10.9952, -74.7889);
+  check("nfc: a 800 m del local se rechaza (TOO_FAR)", expectError(q, "TOO_FAR"), q);
+  q = await toque(t3, "nfc37-ubica-0004", 10.9886, -74.7891);
+  check("nfc: a unos 90 m del local suma", q.ok, q);
+  const guardada = (await db.query("select count(*)::int n from information_schema.columns where table_schema in ('public','private') and table_name in ('visits','nfc_phone_attempts') and column_name ~ 'lat|lng|longitude'")).rows[0].n;
+  check("nfc: la ubicación del cliente no se guarda en ninguna tabla de visitas", guardada === 0, guardada);
+
+  // Por celular: lejos del local, la respuesta es la misma exista o no el número.
+  const porCelular = (tel, clave, lat = null, lng = null) =>
+    asService("select public.register_nfc_visit_by_phone('negocio-nfc', $1, $2, $3, 'conexion-prueba-37', $4, $5) as r", [secreto, tel, clave, lat, lng]);
+  const lejosExiste = await porCelular("+573000000102", "nfc37-cel-0001", 4.711, -74.0721);
+  const lejosNoExiste = await porCelular("+573009999999", "nfc37-cel-0002", 4.711, -74.0721);
+  check(
+    "nfc por celular: lejos del local responde igual (TOO_FAR) exista o no el número",
+    expectError(lejosExiste, "TOO_FAR") && expectError(lejosNoExiste, "TOO_FAR"),
+    { lejosExiste, lejosNoExiste },
+  );
+  q = await porCelular("+573009999999", "nfc37-cel-0003", 10.9886, -74.7891);
+  check("nfc por celular: en el local, un número que no existe da PHONE_NOT_FOUND", q.ok && q.rows[0].r.error === "PHONE_NOT_FOUND", q);
+  q = await porCelular("+573000000102", "nfc37-cel-0004", 10.9886, -74.7891);
+  check("nfc por celular: el límite del día también aplica", expectError(q, "NFC_DAILY_LIMIT"), q);
+
+  q = await as(U.ownerA, "select public.set_nfc_settings($1, true, 0, false, 5, false)", [N]);
+  check("nfc: el dueño de otro comercio no cambia estos ajustes", expectError(q, "FORBIDDEN"), q);
+  q = await as(dueno, "select public.register_nfc_visit('negocio-nfc', $1, $2, 'nfc37-directo-01', 10.9886, -74.7891)", [secreto, t3]);
+  check("nfc: nadie con sesión puede llamar directamente a la función de sumar", expectError(q, "permission denied"), q);
 }
 
 // ---------- Control de cobros ----------

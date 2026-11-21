@@ -23,7 +23,7 @@ export const metadata: Metadata = {
     siteName: PLATFORM_NAME,
     url: "/",
     title: "Tarjeta de sellos digital para que tus clientes vuelvan",
-    description: "Tarjeta de fidelización con la marca de tu negocio: tus clientes la guardan en Apple Wallet o Google Wallet y suman sellos acercando el celular.",
+    description: "Tarjeta de fidelización con la marca de tu negocio: tus clientes la guardan en Apple Wallet o Google Wallet y suman sellos acercando el celular al mostrador y escribiendo su número.",
   },
   twitter: { card: "summary_large_image" },
 };
@@ -41,7 +41,7 @@ const PLANS = [
 ];
 
 const FAQ = [
-  { q: "¿Qué es Lazo?", a: "Lazo es una plataforma colombiana de tarjetas de fidelización digitales para negocios locales. Cada negocio tiene su tarjeta de sellos con su marca, sus clientes la guardan en la billetera del celular (Apple Wallet en iPhone, Google Wallet en Android) y suman sellos acercando el celular a una etiqueta NFC del mostrador. El dueño ve en un panel quién vuelve, quién dejó de venir y a quién avisarle." },
+  { q: "¿Qué es Lazo?", a: "Lazo es una plataforma colombiana de tarjetas de fidelización digitales para negocios locales. Cada negocio tiene su tarjeta de sellos con su marca, sus clientes la guardan en la billetera del celular (Apple Wallet en iPhone, Google Wallet en Android) y suman sellos acercando el celular a una etiqueta NFC del mostrador y escribiendo su número de celular. El dueño ve en un panel quién vuelve, quién dejó de venir y a quién avisarle." },
   { q: "¿Cómo funciona el primer mes gratis?", a: "Aplica al plan Starter. Te dejamos la tarjeta lista con tu marca y la usas un mes sin pagar. Si decides seguir, pagas $79.990 al mes, con IVA incluido." },
   { q: "¿Los precios incluyen IVA? ¿Hay permanencia?", a: "Sí, los precios ya incluyen el IVA. Se paga mes a mes y no hay permanencia mínima: puedes cancelar cuando quieras escribiéndonos por WhatsApp o a info@wontex-devs.com, y no se cobra el mes siguiente." },
   { q: "¿Mis clientes tienen que descargar algo?", a: "No. Tu cliente crea su tarjeta escaneando el QR de tu negocio, desde el navegador del celular. Luego la guarda con un botón en la billetera que ya trae su celular: Apple Wallet en iPhone o Google Wallet en Android. No instala ninguna app." },
@@ -171,7 +171,7 @@ export default function Home() {
               <WhatsAppButton className="bg-sun text-coal" />
               <a href="#como-funciona" className={`${btn} border-2 border-white/60 text-white`}>Ver cómo funciona</a>
             </div>
-            <p className="mt-5 text-[15px] text-white/80">Tu cliente se inscribe con un QR, guarda la tarjeta en Apple Wallet o Google Wallet y suma sellos acercando el celular a una etiqueta NFC.</p>
+            <p className="mt-5 text-[15px] text-white/80">Tu cliente se inscribe con un QR, guarda la tarjeta en Apple Wallet o Google Wallet y suma sellos acercando el celular a una etiqueta NFC y escribiendo su número.</p>
           </div>
           <div className="relative isolate mx-auto">
             {/* Silueta de Nudo de fondo, detrás del celular */}
@@ -207,7 +207,7 @@ export default function Home() {
               {[
                 ["Escanea el QR una sola vez", "Lo pones en la caja. Tu cliente escribe su nombre y su celular y ya tiene su tarjeta. No descarga nada."],
                 ["La guarda en su billetera", "En iPhone queda en Apple Wallet y en Android en Google Wallet: siempre a la mano, sin instalar nada."],
-                ["Acerca el celular a la etiqueta y se marca el sello", "Pegas una etiqueta NFC en el mostrador. El sello queda guardado con fecha y hora y, al completar los sellos, el premio aparece solo en su tarjeta."],
+                ["Acerca el celular, escribe su número y se marca el sello", "Pegas una etiqueta NFC en el mostrador. Al acercar el celular se abre una página donde tu cliente escribe su número. El sello queda guardado con fecha y hora y, al completar los sellos, el premio aparece solo en su tarjeta."],
               ].map(([t, d], i) => (
                 <li key={t} className="reveal grid gap-2 py-7 md:grid-cols-[6rem_1fr_1.2fr] md:items-baseline md:gap-6">
                   <span className={`${poster} text-5xl`}>{i + 1}</span>
@@ -280,12 +280,12 @@ export default function Home() {
           <div className="reveal mx-auto grid max-w-7xl items-center gap-10 px-4 py-20 sm:px-8 lg:grid-cols-[1.2fr_0.8fr] lg:py-24">
             <div>
               <h2 className={`${h2} max-w-4xl`}>
-                Sellos con NFC: <span className="text-sun">acerca el celular y listo.</span>
+                Sellos con NFC: <span className="text-sun">acerca el celular, escribe tu número y listo.</span>
               </h2>
               <p className="mt-6 max-w-3xl text-xl leading-relaxed text-white/90">
-                Pegas una etiqueta NFC en tu mostrador y la activas desde tu panel. Tu cliente acerca el celular y el sello se marca solo, con fecha y hora. No necesitas lector ni datáfono.
+                Pegas una etiqueta NFC en tu mostrador y la activas desde tu panel. Tu cliente acerca el celular, escribe su número de celular y el sello queda marcado, con fecha y hora. No necesitas lector ni datáfono.
               </p>
-              <p className="mt-4 max-w-3xl text-lg text-white/85">El QR solo sirve la primera vez, para crear la tarjeta. Después, todo es acercar el celular.</p>
+              <p className="mt-4 max-w-3xl text-lg text-white/85">El QR del cartel solo sirve la primera vez, para crear la tarjeta. Cada tarjeta suma máximo un sello al día con la etiqueta, y puedes exigir que el cliente esté en tu local.</p>
             </div>
             <NfcAnimacion />
           </div>

@@ -72,7 +72,7 @@ export const SECTORES: Pagina[] = [
         titulo: "¿Cómo se ve en el mostrador de la barbería?",
         parrafos: [
           "Con dos cosas pequeñas: un cartel con el código QR cerca de la caja o del espejo de espera, y una etiqueta NFC adhesiva pegada en el mostrador. El cliente nuevo escanea el QR una sola vez y escribe su nombre y su celular; no descarga ninguna aplicación.",
-          "Guarda la tarjeta en la billetera de su celular (Apple Wallet en iPhone, Google Wallet en Android) y los sellos se actualizan solos. Para sumar un sello, el cliente acerca el celular a la etiqueta al pagar. No necesitas lector ni datáfono.",
+          "Guarda la tarjeta en la billetera de su celular (Apple Wallet en iPhone, Google Wallet en Android) y los sellos se actualizan solos. Para sumar un sello, el cliente acerca el celular a la etiqueta al pagar y escribe su número. No necesitas lector ni datáfono.",
           "Para que nadie abuse, tú eliges el tiempo mínimo entre un sello y otro, así nadie se sella tres veces el mismo día. El sistema frena los toques repetidos, cada sello queda con fecha y hora, puedes anularlo desde el historial y, si sospechas que alguien copió la etiqueta, la cambias y la anterior deja de funcionar.",
         ],
       },
@@ -130,7 +130,7 @@ export const SECTORES: Pagina[] = [
     antetitulo: "Para cafeterías",
     h1: "Tarjeta de fidelización para cafeterías",
     resumen:
-      "Una tarjeta de sellos para café con el nombre y los colores de tu cafetería. Tu cliente la guarda en el celular, suma un sello con cada visita acercando el teléfono al mostrador, y tú ves en un panel quién es de la casa y quién hace rato no pasa.",
+      "Una tarjeta de sellos para café con el nombre y los colores de tu cafetería. Tu cliente la guarda en el celular, suma un sello con cada visita acercando el teléfono al mostrador y escribiendo su número, y tú ves en un panel quién es de la casa y quién hace rato no pasa.",
     secciones: [
       {
         titulo: "¿Sirve una tarjeta de sellos en una cafetería?",
@@ -192,7 +192,7 @@ export const SECTORES: Pagina[] = [
         titulo: "¿Cómo se ve en el mostrador de la cafetería?",
         parrafos: [
           "Con un cartel QR en la caja y una etiqueta NFC adhesiva pegada junto a ella. El cliente nuevo escanea el QR una sola vez, escribe su nombre y su celular y la tarjeta queda lista; no descarga ninguna aplicación.",
-          "La guarda en la billetera de su celular (Apple Wallet en iPhone, Google Wallet en Android) y los sellos se actualizan solos. Para sumar el sello, acerca el celular a la etiqueta mientras paga. No hay lector ni datáfono de por medio, así que no se alarga la fila.",
+          "La guarda en la billetera de su celular (Apple Wallet en iPhone, Google Wallet en Android) y los sellos se actualizan solos. Para sumar el sello, acerca el celular a la etiqueta mientras paga y escribe su número. No hay lector ni datáfono de por medio.",
           "Para cuidar la tarjeta, tú eliges el tiempo mínimo entre sellos, de modo que nadie junte tres cafés en una misma mañana. El sistema frena los toques repetidos, cada sello queda con fecha y hora y puedes anularlo desde el historial. Si la etiqueta se copia, la cambias y la anterior deja de funcionar.",
         ],
       },
@@ -219,7 +219,7 @@ export const SECTORES: Pagina[] = [
     preguntas: [
       {
         q: "¿La tarjeta hace la fila más lenta?",
-        a: "No. El cliente acerca el celular a la etiqueta NFC del mostrador mientras paga y el sello se marca. No hay lector ni datáfono de por medio.",
+        a: "No. El cliente acerca el celular a la etiqueta NFC del mostrador mientras paga, escribe su número y el sello se marca. No hay lector ni datáfono de por medio.",
       },
       {
         q: "¿Sirve para clientes con iPhone y con Android?",
@@ -312,7 +312,7 @@ export const SECTORES: Pagina[] = [
         titulo: "¿Cómo se ve en el mostrador del salón?",
         parrafos: [
           "Con un cartel QR en la recepción y una etiqueta NFC adhesiva pegada en el mostrador donde se paga. La clienta nueva escanea el QR una vez, escribe su nombre y su celular, y listo; no descarga ninguna aplicación.",
-          "Guarda la tarjeta en la billetera de su celular (Apple Wallet en iPhone, Google Wallet en Android) y los sellos se actualizan solos. Para sumar un sello, acerca el celular a la etiqueta al pagar. No necesitas lector ni datáfono.",
+          "Guarda la tarjeta en la billetera de su celular (Apple Wallet en iPhone, Google Wallet en Android) y los sellos se actualizan solos. Para sumar un sello, acerca el celular a la etiqueta al pagar y escribe su número. No necesitas lector ni datáfono.",
           "Para evitar abusos, tú eliges el tiempo mínimo entre sellos y el sistema frena los toques repetidos. Cada sello queda con fecha y hora, puedes anularlo desde el historial y, si alguien copia la etiqueta, la cambias y la anterior deja de funcionar.",
         ],
       },

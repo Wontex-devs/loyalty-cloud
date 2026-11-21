@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { Check, Clock, Loader2, Nfc } from "lucide-react";
-import { nfcRecuperarAction, nfcTapAction, type NfcTapResult } from "@/lib/data/nfc-actions";
+import { Check, Clock, Loader2, MapPin, Nfc } from "lucide-react";
+import { nfcRecuperarAction, nfcTapAction, type NfcTapResult, type Ubicacion } from "@/lib/data/nfc-actions";
 import { LazoLogo } from "@/components/brand/lazo-logo";
 import type { BusinessBranding } from "@/lib/domain/types";
 
@@ -15,7 +15,8 @@ export type EstadoToque =
   | { fase: "sin-tarjeta" }
   | { fase: "enlace-invalido" }
   | { fase: "listo"; datos: Extract<NfcTapResult, { ok: true }> }
-  | { fase: "error"; mensaje: string; motivo?: "pronto" | "etiqueta" };
+  | { fase: "ubicacion"; buscando?: boolean; problema?: string }
+  | { fase: "error"; mensaje: string; motivo?: "pronto" | "etiqueta" | "ubicacion" | "lejos" };
 
 export type DatosCliente = { celular: string };
 
@@ -43,6 +44,9 @@ export function NfcTap({ slug, secret, business }: { slug: string; secret: strin
   // La misma clave en los reintentos: si la respuesta se perdió, la base reconoce la visita y no suma dos veces.
   const claveToque = useRef(nuevaClave());
   const claveCelular = useRef<{ celular: string; clave: string } | null>(null);
+  // Solo si el comercio exige estar en el local: la ubicación de este momento y lo que quedó pendiente de reintentar.
+  const ubicacion = useRef<Ubicacion | undefined>(undefined);
+  const pendiente = useRef<{ tipo: "toque"; token: string | null } | { tipo: "celular"; datos: DatosCliente } | null>(null);
 
   const mostrar = (res: NfcTapResult) => {
     if (res.ok) {
@@ -57,6 +61,10 @@ export function NfcTap({ slug, secret, business }: { slug: string; secret: strin
       setEstado({ fase: "sin-tarjeta" });
       return;
     }
+    if (res.motivo === "ubicacion") {
+      setEstado({ fase: "ubicacion" });
+      return;
+    }
     if (res.token) {
       guardarEnCelular(slug, res.token);
       setToken(res.token);
@@ -66,8 +74,9 @@ export function NfcTap({ slug, secret, business }: { slug: string; secret: strin
 
   const registrar = async (cardToken: string | null) => {
     setEstado({ fase: "cargando" });
+    pendiente.current = { tipo: "toque", token: cardToken };
     try {
-      mostrar(await nfcTapAction(slug, secret, cardToken, claveToque.current));
+      mostrar(await nfcTapAction(slug, secret, cardToken, claveToque.current, ubicacion.current));
     } catch {
       setEstado({ fase: "error", mensaje: "No pudimos conectar. Revisa tu internet e inténtalo de nuevo." });
     }
@@ -79,15 +88,45 @@ export function NfcTap({ slug, secret, business }: { slug: string; secret: strin
     const digitos = datos.celular.replace(/\D/g, "");
     if (claveCelular.current?.celular !== digitos) claveCelular.current = { celular: digitos, clave: nuevaClave() };
     try {
-      const res = await nfcRecuperarAction(slug, secret, datos, claveCelular.current.clave);
-      // Número que no está o un error: se queda en el formulario para corregirlo.
-      if (!res.ok) setErrorDatos(res.message);
+      pendiente.current = { tipo: "celular", datos };
+      const res = await nfcRecuperarAction(slug, secret, datos, claveCelular.current.clave, ubicacion.current);
+      // Falta la ubicación o está lejos: pantalla aparte. Número que no está u otro error: se queda en el formulario.
+      if (!res.ok && (res.motivo === "ubicacion" || res.motivo === "lejos")) mostrar(res);
+      else if (!res.ok) setErrorDatos(res.message);
       else mostrar(res);
     } catch {
       setErrorDatos("No pudimos conectar. Revisa tu internet e inténtalo de nuevo.");
     } finally {
       setEnviando(false);
     }
+  };
+
+  /** Pide la ubicación al celular (el navegador muestra su permiso) y repite lo que quedó pendiente. */
+  const compartirUbicacion = () => {
+    if (!("geolocation" in navigator)) {
+      setEstado({ fase: "ubicacion", problema: "Este navegador no puede compartir la ubicación. Pídele a quien te atiende que sume tu sello." });
+      return;
+    }
+    setEstado({ fase: "ubicacion", buscando: true });
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        ubicacion.current = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        const p = pendiente.current;
+        if (p?.tipo === "celular") {
+          setEstado({ fase: "sin-tarjeta" });
+          void confirmar(p.datos);
+        } else void registrar(p?.tipo === "toque" ? p.token : token);
+      },
+      (err) =>
+        setEstado({
+          fase: "ubicacion",
+          problema:
+            err.code === err.PERMISSION_DENIED
+              ? "No tenemos permiso para ver tu ubicación. Actívalo en los ajustes del navegador para este sitio, o pídele a quien te atiende que sume tu sello."
+              : "No pudimos encontrar tu ubicación. Revisa que el GPS esté encendido e inténtalo de nuevo.",
+        }),
+      { enableHighAccuracy: true, timeout: 12_000, maximumAge: 60_000 },
+    );
   };
 
   useEffect(() => {
@@ -116,8 +155,13 @@ export function NfcTap({ slug, secret, business }: { slug: string; secret: strin
       business={business}
       estado={estado}
       token={token}
-      onReintentar={() => void registrar(token)}
+      onReintentar={() => {
+        // Tras «estás lejos» se pide de nuevo la ubicación (pudo haber salido mal la primera vez).
+        if (estado.fase === "error" && estado.motivo === "lejos") compartirUbicacion();
+        else void registrar(token);
+      }}
       onConfirmar={confirmar}
+      onUbicacion={compartirUbicacion}
       enviando={enviando}
       errorDatos={errorDatos}
     />
@@ -132,6 +176,7 @@ export function NfcTapVista({
   token,
   onReintentar,
   onConfirmar,
+  onUbicacion,
   enviando = false,
   errorDatos = null,
 }: {
@@ -141,6 +186,7 @@ export function NfcTapVista({
   token: string | null;
   onReintentar?: () => void;
   onConfirmar?: (datos: DatosCliente) => void;
+  onUbicacion?: () => void;
   enviando?: boolean;
   errorDatos?: string | null;
 }) {
@@ -192,6 +238,26 @@ export function NfcTapVista({
           </>
         )}
 
+        {/* El comercio exige estar en el local: se explica antes de que el navegador pida el permiso. */}
+        {estado.fase === "ubicacion" && (
+          <>
+            <span className="mx-auto mt-10 flex size-24 items-center justify-center rounded-full" style={{ background: `${b.cardForeground}1a` }}>
+              <MapPin className="size-11" aria-hidden />
+            </span>
+            <h1 className="mt-6 text-2xl font-semibold">Confirma que estás en el local</h1>
+            <p className="mt-2 text-base">Para sumar tu sello comprobamos que estás aquí. Solo se usa en este momento y no se guarda.</p>
+            {estado.problema && (
+              <p role="alert" className="mt-4 rounded-xl px-4 py-3 text-sm" style={{ background: `${b.cardForeground}1a` }}>
+                {estado.problema}
+              </p>
+            )}
+            <button type="button" className={boton} style={botonPrincipal} onClick={onUbicacion} disabled={estado.buscando}>
+              {estado.buscando ? <Loader2 className="size-5 animate-spin" aria-hidden /> : <MapPin className="size-5" aria-hidden />}
+              {estado.buscando ? "Buscando tu ubicación…" : estado.problema ? "Intentar de nuevo" : "Compartir mi ubicación"}
+            </button>
+          </>
+        )}
+
         {/* Ya sumó hace poco: no es una falla, es una buena noticia. */}
         {estado.fase === "error" && estado.motivo === "pronto" && (
           <>
@@ -211,7 +277,7 @@ export function NfcTapVista({
         {estado.fase === "error" && estado.motivo !== "pronto" && (
           <>
             <Nfc className="mx-auto mt-10 size-14 opacity-70" aria-hidden />
-            <h1 className="mt-6 text-2xl font-semibold">No pudimos marcar tu visita</h1>
+            <h1 className="mt-6 text-2xl font-semibold">{estado.motivo === "lejos" ? "Acércate al mostrador" : "No pudimos marcar tu visita"}</h1>
             <p className="mt-2 text-base">{estado.mensaje}</p>
             {/* Reintentar sirve siempre, salvo si la etiqueta no es válida. Sin tarjeta guardada, el servidor la busca en su cookie. */}
             {estado.motivo !== "etiqueta" && (
