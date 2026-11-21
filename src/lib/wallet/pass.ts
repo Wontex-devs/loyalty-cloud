@@ -13,7 +13,7 @@ export interface WalletPass {
   token: string;
   cardUrl: string;
   active: boolean;
-  /** Número del código de barras (12 dígitos): lo escanea el comercio desde el panel. */
+  /** Número del código QR (12 dígitos): lo escanea el comercio desde el panel. */
   scanCode?: string;
   customerName: string;
   /** Mes y año de inscripción, p. ej. «Nov 2026». Vacío = no se muestra. */

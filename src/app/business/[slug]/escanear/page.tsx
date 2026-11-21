@@ -21,9 +21,10 @@ type Estado =
 type Lector = { stop: () => void };
 
 /**
- * El cliente muestra el código de barras de su tarjeta (en Apple Wallet, Google Wallet o la tarjeta web)
+ * El cliente muestra el código QR de su tarjeta (en Apple Wallet, Google Wallet o la tarjeta web)
  * y quien atiende lo escanea con la cámara de su celular. Se suma el sello con las reglas de siempre.
- * Si la cámara no lo lee, se puede escribir el número que aparece debajo de las barras.
+ * Si la cámara no lo lee, se puede escribir el número que aparece debajo del código.
+ * También lee el código de barras de las tarjetas guardadas antes del cambio a QR.
  */
 export default function EscanearPage() {
   const { business, program, membership, locations } = useScope();
@@ -123,9 +124,10 @@ export default function EscanearPage() {
       // La librería se carga solo cuando se abre la cámara: no pesa en el resto del panel.
       const [{ BrowserMultiFormatReader }, { BarcodeFormat, DecodeHintType }] = await Promise.all([import("@zxing/browser"), import("@zxing/library")]);
       const pistas = new Map();
-      pistas.set(DecodeHintType.POSSIBLE_FORMATS, [BarcodeFormat.CODE_128]);
-      pistas.set(DecodeHintType.TRY_HARDER, true);
-      const r = new BrowserMultiFormatReader(pistas, { delayBetweenScanAttempts: 120 });
+      // QR primero (lo que llevan las tarjetas). CODE_128 queda por las tarjetas guardadas en la billetera
+      // antes del cambio: se actualizan solas, pero mientras tanto se siguen leyendo.
+      pistas.set(DecodeHintType.POSSIBLE_FORMATS, [BarcodeFormat.QR_CODE, BarcodeFormat.CODE_128]);
+      const r = new BrowserMultiFormatReader(pistas, { delayBetweenScanAttempts: 80 });
       lector.current = await r.decodeFromConstraints(
         { video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 }, height: { ideal: 720 } } },
         video.current,
@@ -147,7 +149,7 @@ export default function EscanearPage() {
 
   return (
     <div className="mx-auto max-w-xl">
-      <PageHeader title="Escanear tarjeta" description="Pide al cliente que muestre el código de barras de su tarjeta y apunta la cámara." />
+      <PageHeader title="Escanear tarjeta" description="Pide al cliente que muestre el código QR de su tarjeta y apunta la cámara." />
 
       {sedes.length > 1 && (
         <label className="mb-4 flex items-center gap-2 text-sm">
@@ -176,7 +178,7 @@ export default function EscanearPage() {
         <div className="relative aspect-[4/3] w-full bg-[#0b0b0b]">
           <video ref={video} muted playsInline className={cn("size-full object-cover", camara !== "encendida" && "invisible")} />
           {camara === "encendida" && (
-            <div aria-hidden className="pointer-events-none absolute inset-x-[8%] top-1/2 h-[34%] -translate-y-1/2 rounded-xl border-2 border-white/80 shadow-[0_0_0_9999px_rgb(0_0_0/0.35)]" />
+            <div aria-hidden className="pointer-events-none absolute top-1/2 left-1/2 aspect-square h-[62%] -translate-x-1/2 -translate-y-1/2 rounded-2xl border-2 border-white/80 shadow-[0_0_0_9999px_rgb(0_0_0/0.35)]" />
           )}
           {camara !== "encendida" && (
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 p-6 text-center text-white">
@@ -184,7 +186,7 @@ export default function EscanearPage() {
               <p className="max-w-xs text-sm opacity-85">
                 {camara === "sin-permiso"
                   ? "No pudimos abrir la cámara. Permite el acceso a la cámara para este sitio en los ajustes del navegador, o escribe el número abajo."
-                  : "Abre la cámara y apunta al código de barras de la tarjeta del cliente."}
+                  : "Abre la cámara y apunta al código QR de la tarjeta del cliente."}
               </p>
               <Button onClick={() => void encender()} disabled={camara === "abriendo"}>
                 {camara === "abriendo" ? <Loader2 className="size-4 animate-spin" /> : <Camera className="size-4" />} {camara === "sin-permiso" ? "Intentar de nuevo" : "Abrir cámara"}
@@ -288,7 +290,7 @@ export default function EscanearPage() {
             Sumar sello
           </Button>
         </form>
-        <p className="mt-2 text-xs text-muted">Es el número que aparece debajo de las barras, en la tarjeta del cliente.</p>
+        <p className="mt-2 text-xs text-muted">Es el número que aparece debajo del código QR, en la tarjeta del cliente.</p>
       </Card>
     </div>
   );

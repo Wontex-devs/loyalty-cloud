@@ -30,3 +30,24 @@ Los pases ya guardados reciben el código en su próxima actualización (por eje
 ## No verificado
 - Escanear con la cámara de un celular real el código en otra pantalla (brillo, distancia).
 - Cómo dibujan Apple y Google el código en el pase real.
+
+## Cambio a código QR (21-nov-2026)
+
+El código de barras se cambió por un **código QR** en la tarjeta web, Apple Wallet (`PKBarcodeFormatQR`)
+y Google Wallet (`QR_CODE`). Lleva el mismo número de 12 dígitos, que sigue impreso debajo para escribirlo a mano.
+
+Por qué: con solo 12 dígitos el QR tiene 21 cuadros de lado (contra 101 barras finas a lo ancho), así que
+cada cuadro es mucho más grande para la cámara y se lee en cualquier posición. Comparación con el mismo lector
+del panel y los tamaños reales de la tarjeta (`npm run comparar:lectura`, 60 situaciones de distancia, giro y desenfoque):
+
+| | Leídos | Girado 20° o más | Tiempo medio por intento |
+|---|---|---|---|
+| QR | 55 de 60 (92 %) | 33 de 36 | 4,7 ms |
+| Código de barras | 16 de 60 (27 %) | 0 de 36 | 22,3 ms |
+
+Es una simulación (no un celular real): sirve para comparar, no como medida exacta.
+
+- El escáner lee **QR y también Code 128**: las tarjetas guardadas en la billetera antes del cambio siguen
+  funcionando hasta que se actualicen (se actualizan con el siguiente sello o cambio de diseño).
+- `src/components/loyalty/codigo-qr.tsx` reemplaza a `codigo-barras.tsx`. `code128.ts` se conserva por las
+  funciones del número (`codigoLegible`, `esCodigoTarjeta`, `limpiarCodigo`) y por la comparación.
