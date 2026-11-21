@@ -21,6 +21,13 @@ const SECRETO = z.string().regex(/^[A-Za-z0-9_-]{16,64}$/);
 const TOKEN = z.string().regex(/^[A-Za-z0-9_-]{16,64}$/);
 const CLAVE = z.string().min(8).max(100);
 const tapInput = z.object({ slug: SLUG, secret: SECRETO, cardToken: TOKEN.nullable(), idempotencyKey: CLAVE });
+/** Ubicación del celular, solo si el comercio exige estar en el local. Se compara en la base y no se guarda. */
+const UBICACION = z.object({ lat: z.number().min(-90).max(90), lng: z.number().min(-180).max(180) }).optional();
+export type Ubicacion = { lat: number; lng: number };
+const coordenadas = (u: unknown) => {
+  const p = UBICACION.safeParse(u);
+  return { p_lat: p.success && p.data ? p.data.lat : null, p_lng: p.success && p.data ? p.data.lng : null };
+};
 const recuperarInput = z.object({
   slug: SLUG,
   secret: SECRETO,
@@ -52,8 +59,12 @@ export type NfcTapResult =
       token?: string;
       /** Este celular no tiene tarjeta guardada de este comercio: hay que confirmar los datos. */
       sinTarjeta?: true;
-      /** «pronto»: ya sumó su sello hace poco (no es una falla). «etiqueta»: la etiqueta no sirve, reintentar no ayuda. */
-      motivo?: "pronto" | "etiqueta";
+      /**
+       * «pronto»: ya sumó su sello hace poco o ya sumó el de hoy (no es una falla). «etiqueta»: la etiqueta no sirve,
+       * reintentar no ayuda. «ubicacion»: el comercio exige estar en el local; hay que pedir la ubicación y reintentar.
+       * «lejos»: el celular no está cerca del local.
+       */
+      motivo?: "pronto" | "etiqueta" | "ubicacion" | "lejos";
     };
 
 const ipCliente = async () => {
@@ -76,7 +87,7 @@ async function tarjetaDelComercio(token: string, slug: string) {
  * Si solo se escribió un número de celular, no: suma el sello pero no abre la tarjeta (con el número de otra
  * persona no se ve su nombre ni su historial) ni la guarda en este celular.
  */
-async function registrarToque(slug: string, secret: string, cardToken: string, idempotencyKey: string, recordar = true): Promise<NfcTapResult> {
+async function registrarToque(slug: string, secret: string, cardToken: string, idempotencyKey: string, recordar = true, ubicacion?: Ubicacion): Promise<NfcTapResult> {
   if (!rateLimit(`nfc-card:${cardToken}`, 8, 60 * 60_000)) {
     return { ok: false, message: "Demasiados intentos. Espera unos minutos e inténtalo de nuevo." };
   }
@@ -86,14 +97,17 @@ async function registrarToque(slug: string, secret: string, cardToken: string, i
     p_secret: secret,
     p_card_token: cardToken,
     p_idempotency_key: idempotencyKey,
+    ...coordenadas(ubicacion),
   });
   // Reintento de un toque que ya se registró (se perdió la respuesta): se muestra como hecho, sin sumar otro.
   const repetido = !!error && /DUPLICATE_REQUEST/.test(error.message ?? "");
   if (error && !repetido) {
     const codigo = error.message ?? "";
     if (ERROR_DE_ETIQUETA.test(codigo)) return { ok: false, message: dbErrorMessage(error), motivo: "etiqueta" };
-    const pronto = /TOO_SOON/.test(codigo);
-    const message = pronto
+    if (/LOCATION_REQUIRED/.test(codigo)) return { ok: false, message: dbErrorMessage(error), motivo: "ubicacion" };
+    if (/TOO_FAR/.test(codigo)) return { ok: false, message: dbErrorMessage(error), motivo: "lejos" };
+    const pronto = /TOO_SOON|NFC_DAILY_LIMIT/.test(codigo);
+    const message = /TOO_SOON/.test(codigo)
       ? "Ya sumaste un sello hace poco. El siguiente se suma en tu próxima visita."
       : dbErrorMessage(error, "No pudimos registrar tu visita. Inténtalo de nuevo.");
     const motivo = pronto ? ({ motivo: "pronto" } as const) : {};
@@ -125,7 +139,7 @@ async function registrarToque(slug: string, secret: string, cardToken: string, i
  * Registra la visita de quien acercó el celular a la etiqueta. Sin sesión: solo el servidor puede llamar a la base.
  * Busca la tarjeta en lo que guardó la página (`cardToken`) y, si no está, en la cookie del servidor.
  */
-export async function nfcTapAction(slug: string, secret: string, cardToken: string | null, idempotencyKey: string): Promise<NfcTapResult> {
+export async function nfcTapAction(slug: string, secret: string, cardToken: string | null, idempotencyKey: string, ubicacion?: Ubicacion): Promise<NfcTapResult> {
   const parsed = tapInput.safeParse({ slug, secret, cardToken, idempotencyKey });
   if (!parsed.success) return { ok: false, message: "Este enlace no es válido. Acerca el celular a la etiqueta de nuevo." };
   // Frenos rápidos en este servidor; el que cuenta es el tiempo mínimo entre visitas en Postgres.
@@ -137,7 +151,7 @@ export async function nfcTapAction(slug: string, secret: string, cardToken: stri
   const candidatas = [parsed.data.cardToken, ...(await tarjetasRecordadas())].filter((t, i, l): t is string => !!t && l.indexOf(t) === i);
   for (const t of candidatas) {
     const propia = await tarjetaDelComercio(t, parsed.data.slug);
-    if (propia) return registrarToque(parsed.data.slug, parsed.data.secret, propia, parsed.data.idempotencyKey);
+    if (propia) return registrarToque(parsed.data.slug, parsed.data.secret, propia, parsed.data.idempotencyKey, true, ubicacion);
   }
   return { ok: false, message: "No encontramos tu tarjeta en este celular.", sinTarjeta: true };
 }
@@ -149,7 +163,7 @@ export async function nfcTapAction(slug: string, secret: string, cardToken: stri
  * fuera del local si un número es cliente.
  * Para proteger los datos: no muestra el nombre ni los sellos, no abre la tarjeta ni la guarda en este celular.
  */
-export async function nfcRecuperarAction(slug: string, secret: string, datos: { celular: string }, idempotencyKey: string): Promise<NfcTapResult> {
+export async function nfcRecuperarAction(slug: string, secret: string, datos: { celular: string }, idempotencyKey: string, ubicacion?: Ubicacion): Promise<NfcTapResult> {
   const parsed = recuperarInput.safeParse({ slug, secret, ...datos, idempotencyKey });
   if (!parsed.success) return { ok: false, message: "Escribe tu número de celular." };
   const celular = normalizePhone(parsed.data.celular);
@@ -162,11 +176,15 @@ export async function nfcRecuperarAction(slug: string, secret: string, datos: { 
     p_phone_e164: celular,
     p_idempotency_key: parsed.data.idempotencyKey,
     p_client_key: claveDeConexion(await ipCliente()),
+    ...coordenadas(ubicacion),
   });
   if (error) {
     const codigo = error.message ?? "";
     if (/RATE_LIMITED/.test(codigo)) return { ok: false, message: "Demasiados intentos. Espera unos minutos e inténtalo de nuevo." };
+    if (/LOCATION_REQUIRED/.test(codigo)) return { ok: false, message: dbErrorMessage(error), motivo: "ubicacion" };
+    if (/TOO_FAR/.test(codigo)) return { ok: false, message: dbErrorMessage(error), motivo: "lejos" };
     if (/TOO_SOON/.test(codigo)) return { ok: false, message: "Con este número ya se sumó una visita hace poco." };
+    if (/NFC_DAILY_LIMIT/.test(codigo)) return { ok: false, message: "Con este número ya se sumó el sello de hoy. Vuelve mañana por el siguiente." };
     if (/DUPLICATE_REQUEST/.test(codigo)) return { ok: true, businessName: "", stamps: 0, required: 0, rewardName: "", rewardReady: false, sinDetalle: true };
     return { ok: false, message: dbErrorMessage(error, "No pudimos registrar tu visita. Inténtalo de nuevo.") };
   }
@@ -187,13 +205,26 @@ export async function recordarTarjetaAction(token: string): Promise<void> {
 
 // ---------- Panel: ajustes de la etiqueta ----------
 
-export type NfcSettings = { enabled: boolean; secret: string; minMinutes: number };
+export type NfcSettings = {
+  enabled: boolean;
+  secret: string;
+  minMinutes: number;
+  /** Sellos por NFC que una tarjeta puede sumar en un día. */
+  maxPerDay: number;
+  /** El celular debe estar cerca de una sede para sumar. */
+  requireLocation: boolean;
+  /** Hay al menos una sede con ubicación guardada (sin ella no se puede exigir). */
+  canRequireLocation: boolean;
+};
 export type NfcSettingsResult = { ok: true; settings: NfcSettings } | { ok: false; message: string };
 
-const toSettings = (d: { enabled: boolean; secret: string; min_minutes: number }): NfcSettings => ({
+const toSettings = (d: { enabled: boolean; secret: string; min_minutes: number; max_per_day?: number; require_location?: boolean; can_require_location?: boolean }): NfcSettings => ({
   enabled: d.enabled,
   secret: d.secret,
   minMinutes: d.min_minutes,
+  maxPerDay: d.max_per_day ?? 1,
+  requireLocation: d.require_location === true,
+  canRequireLocation: d.can_require_location === true,
 });
 
 export async function getNfcSettingsAction(businessId: string): Promise<NfcSettingsResult> {
@@ -204,15 +235,26 @@ export async function getNfcSettingsAction(businessId: string): Promise<NfcSetti
   return { ok: true, settings: toSettings(data as never) };
 }
 
-export async function setNfcSettingsAction(businessId: string, enabled: boolean, minMinutes: number, rotate = false): Promise<NfcSettingsResult> {
+export async function setNfcSettingsAction(
+  businessId: string,
+  enabled: boolean,
+  minMinutes: number,
+  rotate = false,
+  extra: { maxPerDay?: number; requireLocation?: boolean } = {},
+): Promise<NfcSettingsResult> {
   if (!z.uuid().safeParse(businessId).success) return { ok: false, message: "Establecimiento no válido." };
   if (!Number.isInteger(minMinutes) || minMinutes < 0 || minMinutes > 1440) return { ok: false, message: "Revisa el tiempo mínimo entre toques." };
+  if (extra.maxPerDay !== undefined && (!Number.isInteger(extra.maxPerDay) || extra.maxPerDay < 1 || extra.maxPerDay > 20)) {
+    return { ok: false, message: "El límite de sellos por día va de 1 a 20." };
+  }
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("set_nfc_settings", {
     p_business_id: businessId,
     p_enabled: enabled,
     p_min_minutes: minMinutes,
     p_rotate: rotate,
+    p_max_per_day: extra.maxPerDay ?? null,
+    p_require_location: extra.requireLocation ?? null,
   });
   if (error) return { ok: false, message: dbErrorMessage(error) };
   return { ok: true, settings: toSettings(data as never) };

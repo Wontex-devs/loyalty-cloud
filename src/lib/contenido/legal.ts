@@ -69,6 +69,12 @@ export const LEGAL: Pagina[] = [
         ],
       },
       {
+        titulo: "¿Usamos tu ubicación?",
+        parrafos: [
+          "Solo si el negocio lo activa: al sumar un sello con la etiqueta NFC, tu celular te pide permiso para compartir tu ubicación. La usamos en ese momento para comprobar que estás en el local y no la guardamos. Si no quieres compartirla, pide en caja que te sumen el sello.",
+        ],
+      },
+      {
         titulo: "¿Qué proveedores usamos?",
         parrafos: [
           "Usamos proveedores de tecnología para la base de datos y el acceso (Supabase), el alojamiento de la página (Vercel), la tarjeta en el celular cuando el cliente la agrega (Google Wallet y Apple Wallet) y el envío de correos. Algunos guardan datos fuera de Colombia. Los usamos solo para operar Lazo y con medidas de seguridad adecuadas.",

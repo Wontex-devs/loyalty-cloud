@@ -69,3 +69,25 @@ No verificado en un iPhone real: cuánto conserva Safari la cookie (según la do
 - **Reintentos sin sello doble:** la pantalla del toque usa la misma clave al pulsar «Intentar de nuevo», y el escáner la misma para el mismo código durante un minuto (avisa «ya se sumó hace un momento» en vez de callar).
 - **Celulares del panel:** si el navegador tiene la sesión del panel, no se recuerdan tarjetas (ni cookie ni en la página), para que quien atiende no termine sumando sellos a un cliente al probar la etiqueta.
 - El freno rápido por IP del toque subió a 120 cada 10 minutos (los clientes de un local comparten la wifi) y el límite en memoria se limpia solo.
+
+## Límite por día y estar en el local (21-nov-2026, migración 0037)
+
+**El problema:** el enlace de la etiqueta es fijo. Quien lo guarde (una foto, un marcador) puede abrirlo desde
+su casa y sumarse sellos. Antes solo lo frenaba el tiempo mínimo entre toques (2 horas): un sello cada 2 horas.
+
+**Qué se agregó** (panel → Tarjeta, QR y NFC → Sellar con el celular):
+- **Sellos por día con el toque** (por defecto **1**, de 1 a 20): una tarjeta no suma más de eso por NFC en un día
+  (día del comercio). Los sellos revertidos no cuentan. Repetir el mismo toque (reintento) no choca con el límite.
+- **Exigir estar en el local** (apagado por defecto): el celular comparte su ubicación y debe estar a menos de
+  200 m de una sede con ubicación guardada. La ubicación se compara en la base y **no se guarda**. Solo se puede
+  activar si hay al menos una sede con ubicación.
+  - En el sello escribiendo el celular, la ubicación se comprueba **antes** de buscar el número: lejos del local,
+    la respuesta es la misma exista o no el número.
+  - Si el cliente no da el permiso, se le suma el sello escaneando su QR desde el panel.
+
+**Límites honestos:** la ubicación la reporta el celular; alguien con conocimientos técnicos puede falsearla.
+Con las dos medidas, lo máximo que logra es un sello al día. La forma sin riesgo sigue siendo que el equipo
+escanee el QR de la tarjeta. Si se sospecha que el enlace circula, se cambia el secreto de la etiqueta.
+
+**En la web** se corrigieron los textos: ya no dicen que el sello «se marca solo»; dicen que el cliente acerca
+el celular y escribe su número.

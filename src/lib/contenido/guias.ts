@@ -23,12 +23,12 @@ export const GUIAS: Pagina[] = [
         titulo: "¿Cómo funciona una tarjeta de fidelización digital con Lazo?",
         parrafos: [
           "Tu cliente se inscribe una sola vez escaneando un QR que pones en la caja. Escribe su nombre y su celular, y listo: no descarga ninguna app. Después guarda la tarjeta en la billetera de su celular: Apple Wallet en iPhone o Google Wallet en Android.",
-          "Para sumar sellos, el cliente acerca el celular a una etiqueta NFC adhesiva pegada en tu mostrador. No necesitas lector ni datáfono. Tú activas la etiqueta desde tu panel, y cada sello nuevo aparece solo en la tarjeta.",
+          "Para sumar sellos, el cliente acerca el celular a una etiqueta NFC adhesiva pegada en tu mostrador y escribe su número de celular. No necesitas lector ni datáfono. Tú activas la etiqueta desde tu panel, y cada sello nuevo aparece solo en la tarjeta.",
         ],
         pasos: [
           "Pegas la etiqueta NFC en el mostrador y la activas desde tu panel.",
           "Pones el QR en la caja para que los clientes creen su tarjeta.",
-          "El cliente suma un sello en cada visita acercando el celular.",
+          "El cliente suma un sello en cada visita: acerca el celular y escribe su número.",
           "Al completar los sellos, el premio aparece en su tarjeta y tú lo canjeas desde el panel.",
         ],
       },
@@ -128,12 +128,12 @@ export const GUIAS: Pagina[] = [
     antetitulo: "Guía",
     h1: "Tarjeta de sellos digital: cómo montarla paso a paso",
     resumen:
-      "Una tarjeta de sellos digital reemplaza el cartón por una tarjeta en el celular de tu cliente, que suma sellos acercando el teléfono a una etiqueta NFC. En esta guía comparas ambas opciones, decides cuántos sellos poner, eliges el premio y la montas con Lazo paso a paso.",
+      "Una tarjeta de sellos digital reemplaza el cartón por una tarjeta en el celular de tu cliente, que suma sellos acercando el teléfono a una etiqueta NFC y escribiendo su número. En esta guía comparas ambas opciones, decides cuántos sellos poner, eliges el premio y la montas con Lazo paso a paso.",
     secciones: [
       {
         titulo: "¿Qué es una tarjeta de sellos digital?",
         parrafos: [
-          "Es la versión en el celular de la tarjeta de cartón que se sella en cada compra. Tiene la marca de tu negocio, una cantidad de sellos que tú defines y un premio al completarla. Los sellos se suman solos cuando el cliente acerca el celular a una etiqueta NFC en tu mostrador.",
+          "Es la versión en el celular de la tarjeta de cartón que se sella en cada compra. Tiene la marca de tu negocio, una cantidad de sellos que tú defines y un premio al completarla. Para sumar un sello, el cliente acerca el celular a una etiqueta NFC en tu mostrador y escribe su número de celular.",
           "No hace falta timbre, tinta ni lector. Tampoco que el cliente descargue una app: se inscribe escaneando un QR y guarda la tarjeta en Apple Wallet (iPhone) o Google Wallet (Android).",
         ],
       },
@@ -212,7 +212,7 @@ export const GUIAS: Pagina[] = [
       },
       {
         q: "¿Necesito lector o datáfono para sumar sellos?",
-        a: "No. Basta una etiqueta NFC adhesiva pegada en tu mostrador y activada desde tu panel. El cliente acerca el celular y el sello se suma.",
+        a: "No. Basta una etiqueta NFC adhesiva pegada en tu mostrador y activada desde tu panel. El cliente acerca el celular, escribe su número y el sello se suma.",
       },
       {
         q: "¿Qué pasa si un cliente cambia de celular?",
@@ -270,7 +270,7 @@ export const GUIAS: Pagina[] = [
       {
         titulo: "¿Cómo se actualizan los sellos solos?",
         parrafos: [
-          "El cliente acerca el celular a una etiqueta NFC adhesiva pegada en tu mostrador y el sello se suma. La tarjeta en Google Wallet se actualiza sola, sin que él ni tú tengan que hacer nada más.",
+          "El cliente acerca el celular a una etiqueta NFC adhesiva pegada en tu mostrador, escribe su número de celular y el sello se suma. La tarjeta en Google Wallet se actualiza sola, sin que él ni tú tengan que hacer nada más.",
           "No necesitas lector ni datáfono. La etiqueta es NTAG213 o NTAG215 y la activas desde tu panel. Entre dos sellos pasa un tiempo mínimo que tú eliges, y el sistema frena los toques repetidos.",
         ],
       },
@@ -278,7 +278,7 @@ export const GUIAS: Pagina[] = [
         titulo: "¿Qué pasa con los clientes que tienen iPhone?",
         parrafos: [
           "En iPhone la tarjeta se guarda en Apple Wallet con el botón «Agregar a Apple Wallet». Queda con el logo y los colores de tu negocio, y se actualiza sola con cada sello, igual que en Google Wallet.",
-          "Así, tus clientes con iPhone y con Android tienen la misma tarjeta; solo cambia la billetera donde la guardan. Para sumar sellos, pídeles que usen siempre el mismo navegador (Safari en iPhone), porque así el toque NFC reconoce su tarjeta.",
+          "Así, tus clientes con iPhone y con Android tienen la misma tarjeta; solo cambia la billetera donde la guardan. Para sumar sellos, acercan el celular a la etiqueta y escriben el mismo número de celular con el que se inscribieron.",
         ],
       },
       {
