@@ -51,12 +51,17 @@ export default function CardDesignPage() {
   const ilustracionRef = useRef<HTMLInputElement>(null);
   const [ilustracionBusy, setIlustracionBusy] = useState(false);
   const [ilustracionError, setIlustracionError] = useState<string | null>(null);
+  const [ilustracionAviso, setIlustracionAviso] = useState<string | null>(null);
+  // Quitar el fondo al subir: encendido por defecto; cada quien lo puede apagar para subirla con fondo.
+  const [quitarFondo, setQuitarFondo] = useState(true);
   const changeIlustracion = async (file: File | null) => {
     setIlustracionBusy(true);
     setIlustracionError(null);
-    const res = await setIllustration(business.id, file);
+    setIlustracionAviso(null);
+    const res = await setIllustration(business.id, file, { quitarFondo });
     setIlustracionBusy(false);
     if (!res.ok) setIlustracionError(res.message);
+    else if (res.aviso) setIlustracionAviso(res.aviso);
   };
   const [stampBusy, setStampBusy] = useState(false);
   const [stampError, setStampError] = useState<string | null>(null);
@@ -158,16 +163,32 @@ export default function CardDesignPage() {
               </span>
               <div className="min-w-0 flex-1 space-y-1">
                 <p className="text-xs text-muted">
-                  <strong className="font-medium text-ink-2">Recomendado:</strong> PNG con fondo transparente, de al menos 600 px. Se ve tenue para no tapar el premio ni los
+                  <strong className="font-medium text-ink-2">Recomendado:</strong> un dibujo de al menos 600 px (PNG o JPG). Se ve tenue para no tapar el premio ni los
                   sellos: un dibujo de líneas claras funciona mejor que una foto.
                 </p>
+                <label className="flex cursor-pointer items-start gap-2 pt-1 text-sm">
+                  <input type="checkbox" className="mt-0.5 size-4 accent-cobalt" checked={quitarFondo} onChange={(e) => setQuitarFondo(e.target.checked)} />
+                  <span>
+                    Quitar el fondo automáticamente
+                    <span className="block text-xs text-muted">
+                      {quitarFondo
+                        ? "Al subirla, borramos el fondo liso (blanco o de un solo color) y queda transparente."
+                        : "Se sube tal cual, con su fondo."}
+                    </span>
+                  </span>
+                </label>
+                {ilustracionAviso && (
+                  <p role="status" className="text-sm text-success">
+                    {ilustracionAviso}
+                  </p>
+                )}
                 {ilustracionError && <p className="text-sm text-danger">{ilustracionError}</p>}
               </div>
               <div className="flex gap-2">
                 <input
                   ref={ilustracionRef}
                   type="file"
-                  accept="image/png,image/webp,image/svg+xml"
+                  accept="image/png,image/jpeg,image/webp,image/svg+xml"
                   className="hidden"
                   aria-label="Subir ilustración de la franja"
                   onChange={(e) => {

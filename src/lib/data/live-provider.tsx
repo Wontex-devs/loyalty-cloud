@@ -10,6 +10,7 @@ import { X } from "lucide-react";
 import { DataContext, type DataApi, type DataState } from "@/lib/data/store";
 import { createClient } from "@/lib/supabase/client";
 import { prepareCover, prepareIlustracion, prepareLogo } from "@/lib/brand-image";
+import type { ResultadoFondo } from "@/lib/domain/quitar-fondo";
 import {
   inviteStaffAction,
   setBusinessStatusAction,
@@ -182,7 +183,26 @@ export function LiveProvider({ snapshot, children }: { snapshot: DataState; chil
       // El sello se ve pequeño (un círculo de la tarjeta): 256 px bastan y carga rápido.
       setStamp: (businessId, file) => guardarImagen(businessId, file, "stampUrl", "sello", "png", (f) => prepareLogo(f, 256), "el sello"),
       // La ilustración ocupa el alto de la franja (336 px en el pase más grande): 600 px sobran.
-      setIllustration: (businessId, file) => guardarImagen(businessId, file, "illustrationUrl", "ilustracion", "png", (f) => prepareIlustracion(f, 600), "la ilustración"),
+      setIllustration: async (businessId, file, opciones) => {
+        let fondo: ResultadoFondo | null = null;
+        const res = await guardarImagen(
+          businessId,
+          file,
+          "illustrationUrl",
+          "ilustracion",
+          "png",
+          (f) => prepareIlustracion(f, 600, { quitarFondo: opciones?.quitarFondo, alTerminar: (r) => (fondo = r) }),
+          "la ilustración",
+        );
+        if (!res.ok || !file || !opciones?.quitarFondo) return res;
+        const aviso =
+          fondo === "quitado"
+            ? "Le quitamos el fondo a tu imagen."
+            : fondo === "fondo-no-liso"
+              ? "No encontramos un fondo liso para quitar (pasa con fotos): la subimos tal cual."
+              : undefined;
+        return aviso ? { ...res, aviso } : res;
+      },
 
       setBusinessStatus: async (businessId, status) => {
         // Se espera la respuesta: la pantalla muestra el error si la base de datos lo rechaza.

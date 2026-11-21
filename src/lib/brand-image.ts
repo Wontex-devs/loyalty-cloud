@@ -1,3 +1,5 @@
+import { cajaVisible, quitarFondo, type ResultadoFondo } from "@/lib/domain/quitar-fondo";
+
 /** Tamaño máximo del archivo que el usuario puede elegir (luego se reduce). */
 export const LOGO_MAX_INPUT_BYTES = 8 * 1024 * 1024;
 /** Límite del bucket brand-assets. */
@@ -121,13 +123,17 @@ export async function prepareLogo(file: File, size: number): Promise<Blob> {
  * Prepara la ilustración de la franja: quita los márgenes vacíos y la deja en PNG de hasta `size` px
  * por su lado mayor, sin cambiar su forma ni ponerle fondo (debe ser transparente para verse bien).
  */
-export async function prepareIlustracion(file: File, size: number): Promise<Blob> {
+export async function prepareIlustracion(file: File, size: number, opciones: { quitarFondo?: boolean; alTerminar?: (r: ResultadoFondo) => void } = {}): Promise<Blob> {
   comprobar(file);
   const url = URL.createObjectURL(file);
   try {
     const img = await cargar(url);
     const w = img.naturalWidth || size;
     const h = img.naturalHeight || size;
+    if (opciones.quitarFondo) {
+      const conFondoQuitado = await sinFondo(img, w, h, size, opciones.alTerminar);
+      if (conFondoQuitado) return conFondoQuitado;
+    }
     const a = analizar(img, w, h) ?? { x: 0, y: 0, ancho: w, alto: h };
     const k = Math.min(size / Math.max(a.ancho, a.alto), 1);
     const { canvas, ctx } = lienzo(Math.max(1, Math.round(a.ancho * k)), Math.max(1, Math.round(a.alto * k)));
@@ -138,6 +144,38 @@ export async function prepareIlustracion(file: File, size: number): Promise<Blob
   } finally {
     URL.revokeObjectURL(url);
   }
+}
+
+/**
+ * Quita el fondo liso de la ilustración (ver domain/quitar-fondo.ts), recorta los márgenes y la deja en PNG
+ * transparente de hasta `size` px. Devuelve null si no había nada que quitar: se sigue por el camino de siempre.
+ */
+async function sinFondo(img: HTMLImageElement, w: number, h: number, size: number, alTerminar?: (r: ResultadoFondo) => void): Promise<Blob | null> {
+  // Se trabaja al doble del tamaño final: el contorno queda más fino al reducir.
+  const k = Math.min((size * 2) / Math.max(w, h), 1);
+  const tw = Math.max(1, Math.round(w * k));
+  const th = Math.max(1, Math.round(h * k));
+  const trabajo = lienzo(tw, th);
+  trabajo.ctx.drawImage(img, 0, 0, tw, th);
+  let pixeles: ImageData;
+  try {
+    pixeles = trabajo.ctx.getImageData(0, 0, tw, th);
+  } catch {
+    alTerminar?.("fondo-no-liso"); // lienzo protegido (algunos SVG)
+    return null;
+  }
+  const resultado = quitarFondo(pixeles.data, tw, th);
+  alTerminar?.(resultado);
+  if (resultado !== "quitado") return null;
+  trabajo.ctx.putImageData(pixeles, 0, 0);
+  const caja = cajaVisible(pixeles.data, tw, th);
+  if (!caja) return null;
+  const r = Math.min(size / Math.max(caja.ancho, caja.alto), 1);
+  const salida = lienzo(Math.max(1, Math.round(caja.ancho * r)), Math.max(1, Math.round(caja.alto * r)));
+  salida.ctx.drawImage(trabajo.canvas, caja.x, caja.y, caja.ancho, caja.alto, 0, 0, salida.canvas.width, salida.canvas.height);
+  const blob = await aBlob(salida.canvas, "image/png");
+  if (blob.size > MAX_SALIDA_BYTES) throw new Error("La ilustración es demasiado pesada. Prueba con una más sencilla.");
+  return blob;
 }
 
 /** Reduce la foto de fondo a un JPEG liviano: lado mayor de hasta `maximo` px y por debajo del límite de Storage. */
