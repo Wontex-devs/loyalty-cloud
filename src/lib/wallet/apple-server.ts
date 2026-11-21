@@ -2,6 +2,8 @@ import "server-only";
 import { connect } from "node:http2";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getPublicCard } from "@/lib/data/public";
+import type { PublicCardData } from "@/components/public/card-screen";
+import { imagenEnCache } from "./imagenes-cache";
 import { businessIcon, businessWordmark } from "@/components/brand/business-icon";
 import { CARD_FONT_STYLES } from "@/components/loyalty/brand-mark";
 import { cardTheme } from "@/lib/domain/card-palette";
@@ -37,15 +39,24 @@ async function passImages(business: Parameters<typeof businessWordmark>[0], stri
   const scales = [1, 2, 3];
   const file = (name: string, scale: number) => `${name}${scale === 1 ? "" : `@${scale}x`}.png`;
   const font = (business.branding.font ?? "serif") as keyof typeof CARD_FONT_STYLES;
-  const fonts = await walletFonts(font);
+  // Las letras solo se cargan si de verdad hay que dibujar algo (una sola vez, compartida).
+  let letras: ReturnType<typeof walletFonts> | null = null;
+  const fonts = () => (letras ??= walletFonts(font));
   const color = cardTheme({ cardBackground: business.branding.cardBackground, cardForeground: business.branding.cardForeground }).text;
   const upper = (CARD_FONT_STYLES[font] ?? CARD_FONT_STYLES.serif).upper;
+  // De qué depende cada dibujo: si nada de esto cambia, se usa la imagen guardada (ver imagenes-cache.ts).
+  const marca = { nombre: business.name, branding: business.branding };
   const entries = await Promise.all([
-    ...scales.map(async (scale) => [file("icon", scale), await png(businessIcon(business, 29 * scale))] as const),
+    ...scales.map(async (scale) => [file("icon", scale), await imagenEnCache(["icon", scale, marca], () => png(businessIcon(business, 29 * scale)))] as const),
     // Logo: 160 × 50 puntos como máximo.
-    ...scales.map(async (scale) => [file("logo", scale), await png(businessWordmark(business, 160 * scale, 50 * scale, { color, upper, fonts }))] as const),
+    ...scales.map(
+      async (scale) =>
+        [file("logo", scale), await imagenEnCache(["logo", scale, marca], async () => png(businessWordmark(business, 160 * scale, 50 * scale, { color, upper, fonts: await fonts() })))] as const,
+    ),
     // Franja de la tarjeta de tienda: 375 × 144 puntos.
-    ...scales.map(async (scale) => [file("strip", scale), await png(passStrip(strip, 375 * scale, 144 * scale, { fonts }))] as const),
+    ...scales.map(
+      async (scale) => [file("strip", scale), await imagenEnCache(["strip", scale, font, strip], async () => png(passStrip(strip, 375 * scale, 144 * scale, { fonts: await fonts() })))] as const,
+    ),
   ]);
   return Object.fromEntries(entries);
 }
@@ -75,10 +86,10 @@ async function businessSettings(businessId: string) {
 }
 
 /** El .pkpass firmado de una tarjeta, o null si no existe. */
-export async function pkpassFor(cfg: AppleWalletConfig, token: string, origin: string) {
-  const card = await getPublicCard(token);
+export async function pkpassFor(cfg: AppleWalletConfig, token: string, origin: string, cardLeida?: PublicCardData | null) {
+  // La tarjeta y sus datos internos se leen a la vez (y la tarjeta no se lee dos veces si ya la trae la ruta).
+  const [card, ids] = await Promise.all([cardLeida ?? getPublicCard(token), cardBySerial(token)]);
   if (!card) return null;
-  const ids = await cardBySerial(token);
   const [images, message, settings, extra, firstName] = await Promise.all([
     passImages(card.business, {
       branding: card.business.branding,

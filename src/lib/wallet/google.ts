@@ -65,9 +65,9 @@ export function loyaltyObject(cfg: Pick<GoogleWalletConfig, "issuerId" | "smartT
     ...(p.rewardsAvailable.length ? { secondaryLoyaltyPoints: { label: "Premios", balance: { int: p.rewardsAvailable.length } } } : {}),
     textModulesData: modules,
     linksModuleData: { uris: [{ id: "card", uri: p.cardUrl, description: "Ver mi tarjeta" }] },
-    // Código de barras: el comercio lo escanea con la cámara del panel para sumar el sello.
+    // Código QR: el comercio lo escanea con la cámara del panel para sumar el sello.
     ...(p.scanCode && esCodigoTarjeta(p.scanCode)
-      ? { barcode: { type: "CODE_128", value: p.scanCode, alternateText: codigoLegible(p.scanCode) } }
+      ? { barcode: { type: "QR_CODE", value: p.scanCode, alternateText: codigoLegible(p.scanCode) } }
       : {}),
     // Lo que el lector escribe en la pantalla «Lector NFC»: el mismo token del QR.
     ...(cfg.smartTap ? { smartTapRedemptionValue: p.token } : {}),

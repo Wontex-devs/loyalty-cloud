@@ -16,6 +16,7 @@
     "admin:bootstrap": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/bootstrap-admin.ts",
     "smoke": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/smoke.ts",
     "respaldo": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/respaldo.ts",
+    "comparar:lectura": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/comparar-lectura.ts",
     "smart-tap:keys": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/smart-tap-keys.ts"
   },
   "dependencies": {

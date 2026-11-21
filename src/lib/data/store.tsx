@@ -53,7 +53,7 @@ export interface DataState extends LedgerState {
 export type JoinResult = { ok: true; token: string; existing: boolean } | { ok: false; message: string };
 /** Resultado común de operaciones (RPC en Postgres). */
 export type OpResult =
-  | { ok: true; data?: { reward?: unknown; bonusStamps?: number; birthdayReward?: string | null; currentStamps?: number } }
+  | { ok: true; data?: { reward?: unknown; bonusStamps?: number; birthdayReward?: string | null; currentStamps?: number }; aviso?: string }
   | { ok: false; message: string };
 export type WalletCampaignResult =
   | { ok: true; queued: number; skipped: number; sent: number; notSaved: number; failed: number }
@@ -88,8 +88,8 @@ export interface DataApi {
   setLogo: (businessId: string, file: File | null) => Promise<OpResult>;
   setCover: (businessId: string, file: File | null) => Promise<OpResult>;
   setStamp: (businessId: string, file: File | null) => Promise<OpResult>;
-  /** Sube (o quita, con null) la ilustración de la franja. */
-  setIllustration: (businessId: string, file: File | null) => Promise<OpResult>;
+  /** Sube (o quita, con null) la ilustración de la franja. Con `quitarFondo`, borra el fondo liso antes de subirla. */
+  setIllustration: (businessId: string, file: File | null, opciones?: { quitarFondo?: boolean }) => Promise<OpResult>;
   setBusinessStatus: (businessId: string, status: BusinessStatus) => Promise<OpResult>;
   inviteStaff: (businessId: string, input: { fullName: string; email: string; role: BusinessRole; canRedeem: boolean }) => void;
   toggleMembership: (membershipId: string, patch: Partial<BusinessMembership>) => void;

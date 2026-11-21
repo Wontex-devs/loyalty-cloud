@@ -36,6 +36,10 @@ export async function proxy(request: NextRequest) {
   return response;
 }
 
+/**
+ * Solo las rutas que usan la sesión del panel. Antes corría en TODAS: la página de inicio, la tarjeta
+ * del cliente, la inscripción y el toque NFC pagaban un arranque extra del servidor sin necesitarlo.
+ */
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)"],
+  matcher: ["/admin/:path*", "/business/:path*", "/account/:path*", "/login", "/start", "/auth/:path*"],
 };

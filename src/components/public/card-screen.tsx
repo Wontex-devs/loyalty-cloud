@@ -27,7 +27,7 @@ export interface PublicCardData {
   promotion?: { name: string; bonusStamps: number } | null;
   /** El cliente aceptó recibir mensajes: se le ofrece darse de baja. */
   marketingConsent?: boolean;
-  /** Número de 12 dígitos del código de barras (lo escanea el comercio). */
+  /** Número de 12 dígitos del código QR (lo escanea el comercio). */
   scanCode?: string;
 }
 
@@ -201,7 +201,7 @@ export function CardScreen({
                       {r.name}
                       {r.kind === "birthday" && " · ¡Feliz cumpleaños!"}
                     </p>
-                    <p className="text-xs text-muted">{r.expiresAt ? `Válida hasta ${formatDate(r.expiresAt)}` : "Sin vencimiento"} · muestra el código de barras para canjear</p>
+                    <p className="text-xs text-muted">{r.expiresAt ? `Válida hasta ${formatDate(r.expiresAt)}` : "Sin vencimiento"} · muestra tu código QR para canjear</p>
                   </div>
                 </li>
               ))}

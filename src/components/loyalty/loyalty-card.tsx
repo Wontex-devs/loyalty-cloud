@@ -2,7 +2,7 @@
 
 import { BrandMark, brandCase, brandFont } from "./brand-mark";
 import { HiloStrip } from "./hilo-strip";
-import { CodigoBarras } from "./codigo-barras";
+import { CodigoQr } from "./codigo-qr";
 import { cn } from "@/lib/utils";
 import { cardTheme } from "@/lib/domain/card-palette";
 import type { Business, CardStatus, LoyaltyProgram } from "@/lib/domain/types";
@@ -22,7 +22,7 @@ export interface LoyaltyCardViewProps {
   className?: string;
   /** Contorno oscuro en lugar de sombra, para la portada. */
   plano?: boolean;
-  /** Número del código de barras (12 dígitos): va al pie, como en el pase de Wallet. */
+  /** Número de la tarjeta (12 dígitos): va en el código QR del pie, como en el pase de Wallet. */
   scanCode?: string;
 }
 
@@ -89,7 +89,7 @@ export function LoyaltyCardView({
 
       {scanCode ? (
         <div className={cn("pt-4", pad, compact ? "pb-4" : "pb-5")}>
-          <CodigoBarras codigo={scanCode} />
+          <CodigoQr codigo={scanCode} />
         </div>
       ) : (
         <div className={compact ? "h-4" : "h-5"} />

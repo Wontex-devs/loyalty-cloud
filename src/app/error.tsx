@@ -1,13 +1,13 @@
 "use client";
 
 import { useEffect } from "react";
-import * as Sentry from "@sentry/nextjs";
+import { avisarError } from "@/lib/avisar-error";
 
 /** Error inesperado en cualquier pantalla: mensaje claro y opción de reintentar, sin detalles técnicos. */
 export default function Error({ error, retry }: { error: unknown; retry: () => void }) {
   useEffect(() => {
     console.error(error);
-    Sentry.captureException(error);
+    avisarError(error);
   }, [error]);
 
   return (

@@ -15,6 +15,7 @@ import { brandingSchema, businessSchema, businessSettingsSchema, programSchema, 
 import { getSession, homePathFor } from "./queries";
 import { esSuperadmin } from "@/lib/domain/acceso";
 import { dbErrorMessage } from "./errors";
+import { rutaInterna } from "@/lib/domain/ruta-interna";
 import { scheduleBusinessWalletSync } from "@/lib/wallet/sync";
 import type { BusinessBranding, BusinessMembership, BusinessStatus, LoyaltyProgram } from "@/lib/domain/types";
 
@@ -45,7 +46,7 @@ export async function signInWithPassword(_: unknown, form: FormData): Promise<Ac
   await registrarInicio(supabase, "password");
 
   const next = String(form.get("next") ?? "");
-  redirect(next.startsWith("/") && !next.startsWith("//") ? next : "/start");
+  redirect(rutaInterna(next));
 }
 
 export async function sendMagicLink(_: unknown, form: FormData): Promise<ActionResult> {
@@ -113,6 +114,7 @@ export async function updateProgramAction(programId: string, patch: Partial<Loya
   if (!data?.length) return fail({ message: "FORBIDDEN" });
   scheduleBusinessWalletSync(data[0].business_id);
   revalidatePath("/business", "layout");
+  revalidatePath("/join", "layout");
   return { ok: true };
 }
 
@@ -131,6 +133,7 @@ export async function updateBrandingAction(businessId: string, patch: Partial<Bu
   if (error) return fail(error);
   scheduleBusinessWalletSync(businessId);
   revalidatePath("/business", "layout");
+  revalidatePath("/join", "layout");
   return { ok: true };
 }
 
@@ -228,6 +231,7 @@ export async function setBusinessStatusAction(businessId: string, status: Busine
   const { error } = await supabase.rpc("set_business_status", { p_business_id: businessId, p_status: status, p_reason: null });
   if (error) return fail(error);
   revalidatePath("/admin", "layout");
+  revalidatePath("/join", "layout");
   return { ok: true };
 }
 

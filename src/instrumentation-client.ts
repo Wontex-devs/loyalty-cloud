@@ -1,9 +1,11 @@
-import * as Sentry from "@sentry/nextjs";
-import { opcionesAlertas } from "@/lib/alertas";
+/**
+ * Alertas de errores en el navegador (ver src/lib/alertas.ts). Solo se descarga la librería si
+ * NEXT_PUBLIC_SENTRY_DSN está puesta: sin ella, el celular del cliente no carga nada extra.
+ */
+if (process.env.NEXT_PUBLIC_SENTRY_DSN) {
+  void Promise.all([import("@sentry/nextjs"), import("@/lib/alertas")])
+    .then(([Sentry, { opcionesAlertas }]) => Sentry.init(opcionesAlertas()))
+    .catch(() => {});
+}
 
-/** Alertas de errores en el navegador. Ver src/lib/alertas.ts. */
-try {
-  Sentry.init(opcionesAlertas());
-} catch {}
-
-export const onRouterTransitionStart = Sentry.captureRouterTransitionStart;
+export {};

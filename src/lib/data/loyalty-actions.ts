@@ -94,7 +94,7 @@ export async function joinProgramAction(slug: string, input: JoinInput, captchaT
   return { ok: true, token: row.public_token, existing: row.existing };
 }
 
-/** Tarjeta por el número de su código de barras. RLS limita la búsqueda al comercio del usuario. */
+/** Tarjeta por el número de su código QR. RLS limita la búsqueda al comercio del usuario. */
 export async function findCardByScanCodeAction(
   businessId: string,
   code: string,
