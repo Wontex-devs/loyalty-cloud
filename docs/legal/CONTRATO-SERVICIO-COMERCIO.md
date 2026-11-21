@@ -12,7 +12,7 @@
 
 ## 1. Objeto
 
-El Proveedor da al Comercio acceso a la plataforma Lazo, que permite: (a) crear una tarjeta de fidelización digital con la marca del Comercio; (b) inscribir clientes mediante un código QR; (c) registrar visitas y sellos: por el personal del Comercio desde el panel, escaneando con la cámara el código de barras de la tarjeta, o por toque NFC con una etiqueta (si el celular del cliente no recuerda su tarjeta, este escribe su número de celular); (d) administrar recompensas, promociones y avisos; (e) ver estadísticas; y (f) añadir la tarjeta a Apple Wallet (iPhone) y Google Wallet (Android).
+El Proveedor da al Comercio acceso a la plataforma Lazo, que permite: (a) crear una tarjeta de fidelización digital con la marca del Comercio; (b) inscribir clientes mediante un código QR; (c) registrar visitas y sellos: por el personal del Comercio desde el panel, escaneando con la cámara el código QR de la tarjeta, o por toque NFC con una etiqueta (el cliente acerca el celular y escribe su número de celular); (d) administrar recompensas, promociones y avisos; (e) ver estadísticas; y (f) añadir la tarjeta a Apple Wallet (iPhone) y Google Wallet (Android).
 
 ## 2. Plan, precio y forma de pago
 
@@ -148,4 +148,5 @@ Firmado en `[ciudad]`, el `[fecha]`.
 - Copias de seguridad según el plan de la base de datos contratado.
 - Los enlaces de correo no se gastan al abrirlos (confirmación con botón).
 - Sumar el sello escribiendo el celular solo funciona con la etiqueta del comercio, no muestra el nombre ni los sellos y tiene límite de intentos guardado en la base de datos.
+- Con la etiqueta NFC, cada tarjeta suma como máximo los sellos por día que fije el Comercio (1 por defecto). El Comercio puede exigir que el celular esté cerca de una sede: la ubicación se compara en ese momento y no se guarda.
 - En el celular del cliente solo se guarda el enlace de su tarjeta (cookie de hasta 400 días), nunca su nombre ni su número. No se guarda en celulares donde está abierto el panel del comercio.
