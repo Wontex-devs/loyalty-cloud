@@ -126,8 +126,8 @@ export const LEGAL: Pagina[] = [
         lista: [
           "Una tarjeta de fidelización digital con la marca del negocio.",
           "Inscripción de clientes con un código QR.",
-          "Sellos por toque NFC con una etiqueta en el mostrador. Si el celular no recuerda la tarjeta, el cliente escribe su número de celular.",
-          "Código de barras en la tarjeta: quien atiende lo escanea con la cámara de su celular para sumar el sello.",
+          "Sellos por toque NFC con una etiqueta en el mostrador: el cliente acerca el celular y escribe su número de celular.",
+          "Código QR en la tarjeta: quien atiende lo escanea con la cámara de su celular para sumar el sello.",
           "Premios, promociones y avisos al celular de los clientes que los aceptaron.",
           "Estadísticas del negocio y cuentas propias para cada persona del equipo.",
           "La tarjeta en Apple Wallet para los clientes con iPhone y en Google Wallet para los clientes con Android.",
@@ -183,7 +183,7 @@ export const LEGAL: Pagina[] = [
       {
         titulo: "¿Hasta dónde responde Lazo?",
         parrafos: [
-          "Lazo responde por los daños que cause por su culpa, hasta el valor pagado por el negocio en los 3 meses anteriores al hecho, salvo lo que la ley no permita limitar. No responde por fallas de servicios de terceros que no controla (internet, el celular del cliente, Google Wallet, Apple Wallet o los proveedores de nube), ni por el mal uso de la plataforma. Los controles del toque NFC y del código de barras (tiempo mínimo entre visitas y límite de intentos) reducen los abusos, pero no son infalibles.",
+          "Lazo responde por los daños que cause por su culpa, hasta el valor pagado por el negocio en los 3 meses anteriores al hecho, salvo lo que la ley no permita limitar. No responde por fallas de servicios de terceros que no controla (internet, el celular del cliente, Google Wallet, Apple Wallet o los proveedores de nube), ni por el mal uso de la plataforma. Los controles del toque NFC y del código QR (un sello al día por tarjeta con la etiqueta, tiempo mínimo entre visitas, límite de intentos y, si el negocio lo activa, estar en el local) reducen los abusos, pero no son infalibles.",
         ],
       },
       {
