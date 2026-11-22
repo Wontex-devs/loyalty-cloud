@@ -103,7 +103,7 @@ export default function HistoryPage() {
         customerId: customerOfCard.get(v.cardId)?.id,
         staffId: v.staffId,
         detail:
-          [v.source === "manual" ? "A mano" : v.source === "nfc" ? "Por NFC" : "", v.reason ? `Motivo: ${v.reason}` : v.bonusStamps ? `+${v.bonusStamps} por promoción` : ""]
+          [v.source === "manual" ? "A mano" : v.source === "nfc" ? "Por NFC" : v.source === "demo" ? "Sello de prueba (demo)" : "", v.reason ? `Motivo: ${v.reason}` : v.bonusStamps ? `+${v.bonusStamps} por promoción` : ""]
             .filter(Boolean)
             .join(" · ") || undefined,
       })),

@@ -9,6 +9,7 @@ const PORTADA_ACTUALIZADA = "2026-11-11";
 export default function sitemap(): MetadataRoute.Sitemap {
   return [
     { url: `${SITE_URL}/`, lastModified: PORTADA_ACTUALIZADA },
+    { url: `${SITE_URL}/demo`, lastModified: "2026-11-22" },
     ...PAGINAS.map((p) => ({ url: `${SITE_URL}/${p.ruta}`, lastModified: p.actualizado })),
   ];
 }

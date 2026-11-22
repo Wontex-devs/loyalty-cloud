@@ -1572,5 +1572,68 @@ console.log("\nRecordatorios automáticos (migración 43)");
   await db.query("update public.businesses set wallet_notifications = $2 where id = $1", [A, { ...base, near: true }]);
 }
 
+console.log("\nDemo: sello de prueba (migración 44)");
+{
+  const tokA = (await joinProgram("negocio-a", "+573177770001", "Demo No")).rows?.[0]?.public_token;
+  // Una prueba anterior dejó a B con el freno de inscripciones masivas: esas inscripciones pasan a ayer.
+  await db.query("update public.customers set created_at = now() - interval '1 day' where business_id = $1 and created_at > now() - interval '1 hour'", [B]);
+  const tokB = (await joinProgram("negocio-b", "+573177770002", "Demo Sí")).rows?.[0]?.public_token;
+  const cardB = (await db.query("select id from public.loyalty_cards where public_token = $1", [tokB])).rows[0].id;
+  const sello = (tok, key) => asService("select public.demo_add_stamp($1, $2) r", [tok, key]);
+  // Las visitas no se pueden modificar (registro inmutable): solo para la prueba se apaga ese bloqueo un momento.
+  const atrasar = async (sql, params) => {
+    await db.query("set session_replication_role = replica");
+    try {
+      await db.query(sql, params);
+    } finally {
+      await db.query("set session_replication_role = origin");
+    }
+  };
+
+  let r = await sello(tokB, "demo-0001");
+  check("demo: un comercio que no es demo no acepta sellos de prueba", expectError(r, "NOT_DEMO"), r);
+  r = await sello(tokA, "demo-0002");
+  check("demo: tampoco en otro comercio normal", expectError(r, "NOT_DEMO"), r);
+  r = await as(U.ownerB, "update public.businesses set is_demo = true where id = $1", [B]);
+  check("demo: el dueño no puede marcar su comercio como demo", !r.ok || r.affected === 0, r);
+  r = await as(null, "select public.demo_add_stamp($1, 'demo-0003')", [tokB]);
+  check("demo: no se llama con la clave pública", !r.ok, r);
+  r = await as(U.ownerB, "select public.demo_add_stamp($1, 'demo-0003')", [tokB]);
+  check("demo: ni desde el panel", !r.ok, r);
+
+  await db.query("update public.loyalty_programs set min_minutes_between_visits = 60 where business_id = $1", [B]);
+  await db.query("update public.businesses set is_demo = true where id = $1", [B]);
+  r = await sello(tokB, "demo-0004");
+  const v1 = (await db.query("select source from public.visits where card_id = $1 and kind = 'visit'", [cardB])).rows;
+  check("demo: suma el sello de prueba (origen «demo»)", r.ok && r.rows[0].r.current_stamps === 1 && v1.length === 1 && v1[0].source === "demo", { r, v1 });
+  r = await sello(tokB, "demo-0005");
+  check("demo: freno de 10 segundos entre sellos", expectError(r, "DEMO_TOO_FAST"), r);
+  r = await sello(tokB, "demo-0004");
+  check("demo: un reintento con la misma clave no suma otro", !r.ok && /DUPLICATE_REQUEST/.test(r.error), r);
+  // El programa B pide 60 minutos entre visitas: la demo no lo usa, solo su freno de 10 segundos.
+  let premio = null;
+  for (let i = 0; i < 4; i++) {
+    await atrasar("update public.visits set created_at = created_at - interval '20 seconds' where card_id = $1", [cardB]);
+    r = await sello(tokB, `demo-01${i}0`);
+    if (!r.ok) break;
+    premio = r.rows[0].r.reward_id ?? premio;
+  }
+  const c = (await db.query("select current_stamps, status from public.loyalty_cards where id = $1", [cardB])).rows[0];
+  check("demo: con 5 sellos de prueba se gana el premio (sin esperar los 60 minutos del programa)", r.ok && premio && c.current_stamps === 0 && c.status === "reward_available", { r, c });
+
+  await db.query(`insert into public.visits (business_id, card_id, kind, delta, idempotency_key, source, created_at)
+    select $1, $2, 'visit', 1, 'demo-masivo-' || g, 'demo', now() - interval '1 hour' from generate_series(1, 30) g`, [B, cardB]);
+  await atrasar("update public.visits set created_at = created_at - interval '20 seconds' where card_id = $1 and created_at > now() - interval '1 minute'", [cardB]);
+  r = await sello(tokB, "demo-0099");
+  check("demo: máximo 30 sellos de prueba al día", expectError(r, "DEMO_DAILY_LIMIT"), r);
+
+  const tokB2 = (await joinProgram("negocio-b", "+573177770003", "Visita Normal")).rows?.[0]?.public_token;
+  const cardB2 = (await db.query("select id from public.loyalty_cards where public_token = $1", [tokB2])).rows[0].id;
+  r = await as(U.ownerB, "select * from public.register_visit($1, 'staff-demo-1', null)", [cardB2]);
+  const r2 = await as(U.ownerB, "select * from public.register_visit($1, 'staff-demo-2', null)", [cardB2]);
+  check("demo: las visitas normales siguen respetando el tiempo mínimo del programa", r.ok && expectError(r2, "TOO_SOON"), { r, r2 });
+  await db.query("update public.businesses set is_demo = false where id = $1", [B]);
+}
+
 console.log(`\n${passed} correctas, ${failed} fallidas\n`);
 process.exit(failed ? 1 : 0);

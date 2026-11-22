@@ -25,3 +25,6 @@ export const EMPRESA = {
 
 /** WhatsApp de ventas: solo dígitos, con indicativo. */
 export const SALES_WHATSAPP = (process.env.NEXT_PUBLIC_SALES_WHATSAPP || "573138939222").replace(/\D/g, "");
+
+/** Comercio de la demo para vender (/demo): sus tarjetas tienen el botón «Sumar un sello de prueba». */
+export const DEMO_SLUG = process.env.NEXT_PUBLIC_DEMO_SLUG || "lazo";

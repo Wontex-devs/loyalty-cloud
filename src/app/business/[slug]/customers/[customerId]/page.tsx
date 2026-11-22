@@ -262,7 +262,7 @@ export default function CustomerDetailPage() {
                     <div className="min-w-0 flex-1 text-sm">
                       <p className={cn("font-medium", reverted && "text-muted line-through")}>
                         {t.type === "visit" &&
-                          `Visita registrada (+${1 + (t.visit!.bonusStamps ?? 0)})${t.visit!.bonusStamps ? " · promoción" : ""}${t.visit!.source === "manual" ? " · a mano" : t.visit!.source === "nfc" ? " · por NFC" : ""}`}
+                          `Visita registrada (+${1 + (t.visit!.bonusStamps ?? 0)})${t.visit!.bonusStamps ? " · promoción" : ""}${t.visit!.source === "manual" ? " · a mano" : t.visit!.source === "nfc" ? " · por NFC" : t.visit!.source === "demo" ? " · de prueba (demo)" : ""}`}
                         {t.type === "reversal" && "Visita revertida (−1)"}
                         {t.type === "reward" && (t.reward!.kind === "birthday" ? `🎂 Regalo de cumpleaños: ${t.reward!.name}` : `Recompensa obtenida: ${t.reward!.name}`)}
                         {t.type === "redemption" && "Recompensa canjeada"}
