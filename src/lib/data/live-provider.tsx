@@ -159,9 +159,13 @@ export function LiveProvider({ snapshot, children }: { snapshot: DataState; chil
       getStats: getBusinessStatsAction,
       exportCustomers: exportCustomersAction,
 
-      updateProgram: (programId, patch) => {
+      updateProgram: async (programId, patch) => {
         setState((s) => ({ ...s, programs: s.programs.map((p) => (p.id === programId ? { ...p, ...patch } : p)) }));
-        run(updateProgramAction(programId, patch));
+        const res = await updateProgramAction(programId, patch).catch(() => ({ ok: false as const, message: "No hay conexión. Intenta de nuevo." }));
+        if (!res.ok) setToast(res.message);
+        // Si falló, el refresco devuelve la página a lo que de verdad quedó guardado.
+        startTransition(() => router.refresh());
+        return res.ok ? { ok: true as const } : { ok: false as const, message: res.message };
       },
 
       // Los selectores de color disparan muchos cambios: se agrupan antes de guardar.

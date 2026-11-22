@@ -74,6 +74,18 @@ export const programSchema = z.object({
 });
 export type ProgramInput = z.infer<typeof programSchema>;
 
+/**
+ * Cambios del programa que llegan al servidor. El panel envía «sin regalo de cumpleaños» y
+ * «sin vencimiento» como null (no como texto vacío o 0): se aceptan y se guardan vacíos.
+ */
+export const programPatchSchema = programSchema
+  .partial()
+  .extend({
+    birthdayReward: z.string().trim().max(80, "Máximo 80 caracteres").nullable().optional(),
+    rewardExpiryDays: z.coerce.number().int().min(0).max(365).nullable().optional(),
+    active: z.boolean().optional(),
+  });
+
 const hex = z.string().regex(/^#[0-9a-fA-F]{6}$/, "Color hexadecimal no válido");
 export const brandingSchema = z.object({
   logoText: z.string().trim().min(1).max(3),

@@ -82,7 +82,8 @@ export interface DataApi {
   setBusinessPlan: (businessId: string, planId: string) => Promise<OpResult>;
   getStats: (businessId: string, days: number) => Promise<{ ok: true; stats: BusinessStats } | { ok: false; message: string }>;
   exportCustomers: (businessId: string) => Promise<{ ok: true; csv: string } | { ok: false; message: string }>;
-  updateProgram: (programId: string, patch: Partial<LoyaltyProgram>) => void;
+  /** Guarda en el servidor; si falla, la página vuelve a los datos guardados y muestra el error. */
+  updateProgram: (programId: string, patch: Partial<LoyaltyProgram>) => Promise<{ ok: true } | { ok: false; message: string }>;
   updateBranding: (businessId: string, patch: Partial<BusinessBranding>) => void;
   /** Guarda varios cambios de marca de una vez y espera la respuesta (botón «Guardar cambios»). */
   saveBranding: (businessId: string, patch: Partial<BusinessBranding>, imagenes?: ImagenesMarca) => Promise<OpResult>;
