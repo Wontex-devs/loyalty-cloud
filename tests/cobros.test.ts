@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { diasHasta, estadoCobro, fechaCorta, hoyColombia, sumarMeses, textoVencimiento } from "../src/lib/domain/cobros.ts";
+import { avisoCobro, diasHasta, estadoCobro, fechaCorta, hoyColombia, sumarMeses, textoVencimiento } from "../src/lib/domain/cobros.ts";
 
 test("estado del cobro según la fecha «pagado hasta»", () => {
   const hoy = "2026-11-19";
@@ -38,4 +38,29 @@ test("la fecha se muestra sin correrse un día y hoy es en hora de Colombia", ()
   assert.equal(fechaCorta(null), "—");
   // 3 a. m. en UTC del 20 de noviembre todavía es 19 de noviembre en Colombia.
   assert.equal(hoyColombia(new Date("2026-11-20T03:00:00Z")), "2026-11-19");
+});
+
+test("aviso de cobro en el panel del dueño", () => {
+  const hoy = "2026-11-22";
+  const b = { mesGratisPendiente: false, planId: "plan_pro" };
+  assert.equal(avisoCobro({ ...b, pagadoHasta: "2026-12-10" }, hoy), null, "al día: sin aviso");
+  assert.equal(avisoCobro({ ...b, pagadoHasta: null }, hoy), null, "sin fecha: sin aviso");
+
+  const pronto = avisoCobro({ ...b, pagadoHasta: "2026-11-25" }, hoy);
+  assert.equal(pronto?.tono, "warning");
+  assert.match(pronto!.titulo, /^Tu plan vence el 25 de nov/);
+  assert.equal(avisoCobro({ ...b, pagadoHasta: "2026-11-22" }, hoy)?.titulo, "Tu plan vence hoy");
+  assert.equal(avisoCobro({ ...b, pagadoHasta: "2026-11-23" }, hoy)?.titulo, "Tu plan vence mañana");
+
+  const vencido = avisoCobro({ ...b, pagadoHasta: "2026-11-19" }, hoy);
+  assert.equal(vencido?.tono, "danger");
+  assert.equal(vencido?.titulo, "Tu plan venció hace 3 días");
+  assert.equal(avisoCobro({ ...b, pagadoHasta: "2026-11-21" }, hoy)?.titulo, "Tu plan venció ayer");
+
+  // Comercio nuevo del Starter: invitación con la promoción, no un «vencido».
+  const nuevo = avisoCobro({ pagadoHasta: "2026-11-20", mesGratisPendiente: true, planId: "plan_starter" }, hoy);
+  assert.equal(nuevo?.tono, "info");
+  assert.match(nuevo!.texto, /primer mes y el segundo es gratis/);
+  // La clave cambia de un día a otro (el aviso vuelve a salir al día siguiente).
+  assert.notEqual(avisoCobro({ ...b, pagadoHasta: "2026-11-19" }, "2026-11-23")?.clave, vencido?.clave);
 });

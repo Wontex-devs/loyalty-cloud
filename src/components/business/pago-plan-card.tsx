@@ -80,7 +80,7 @@ export function PagoPlanCard({ businessId }: { businessId: string }) {
   };
 
   return (
-    <Card>
+    <Card id="plan" className="scroll-mt-6">
       <CardHeader title={`Plan ${estado.planNombre}`} description={`${formatMoney(estado.precioMensual)} al mes, con IVA incluido`} />
       <div className="space-y-4 p-5 text-sm">
         {regreso && (
