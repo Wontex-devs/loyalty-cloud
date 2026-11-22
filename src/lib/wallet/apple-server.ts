@@ -15,7 +15,7 @@ import { passFromCard } from "./pass";
 import { businessPassData } from "./places-server";
 
 /** Mensajes del comercio que se muestran al reverso del pase (no los de cada visita). */
-const MESSAGE_KINDS = ["campaign", "birthday", "winback"];
+const MESSAGE_KINDS = ["campaign", "birthday", "winback", "almost"];
 const MESSAGE_DAYS = 30;
 
 export const appOrigin = (req?: Request) => (process.env.NEXT_PUBLIC_APP_URL ?? (req ? new URL(req.url).origin : "")).replace(/\/$/, "");

@@ -132,3 +132,31 @@ test("el pase de Google lleva el código QR de la tarjeta", () => {
   assert.deepEqual(o.barcode, { type: "QR_CODE", value: "482910473365", alternateText: "4829 1047 3365" });
   assert.equal("barcode" in loyaltyObject(cfg, passFromCard(card, origin)), false);
 });
+
+test("recordatorios: «te falta poco» y mensaje propio de «te extrañamos»", () => {
+  const v = { businessName: "Selah", required: 8, rewardName: "café gratis", firstName: "Ana" };
+  const casi = dailyNotice("almost", { ...v, stamps: 7 });
+  assert.equal(casi.kind, "almost");
+  assert.equal(casi.title, "Te falta 1 sello en Selah");
+  assert.match(casi.body, /Hola Ana, estás muy cerca de tu café gratis/);
+  assert.equal(dailyNotice("almost", { ...v, stamps: 6 }).title, "Te faltan 2 sellos en Selah");
+
+  // El texto sugerido no cambia lo que ya se enviaba.
+  assert.equal(dailyNotice("winback", { ...v, stamps: 5 }).body, "Hola Ana, hace rato no te vemos. Llevas 5 de 8 sellos para tu café gratis. ¡Te esperamos!");
+  assert.equal(dailyNotice("winback", { ...v, stamps: 0 }).body, "Hola Ana, hace rato no te vemos. ¡Te esperamos!");
+  // Mensaje propio con variables; sin sellos, {progreso} desaparece sin dejar espacios raros.
+  const propio = "¡{nombre}! En {comercio} te guardamos un postre. {progreso}";
+  assert.equal(dailyNotice("winback", { ...v, stamps: 3, message: propio }).body, "¡Ana! En Selah te guardamos un postre. Llevas 3 de 8 sellos para tu café gratis.");
+  assert.equal(dailyNotice("winback", { ...v, stamps: 0, message: propio }).body, "¡Ana! En Selah te guardamos un postre.");
+  assert.equal(dailyNotice("winback", { ...v, stamps: 0, message: "  " }).body, "Hola Ana, hace rato no te vemos. ¡Te esperamos!");
+
+  // Ajustes: valores por defecto y límites.
+  const d = walletSettings({});
+  assert.equal(d.almost, true);
+  assert.equal(d.almostDays, 10);
+  assert.equal(d.winbackText, "");
+  assert.equal(walletSettings({ almostDays: 2 }).almostDays, 10);
+  assert.equal(walletSettings({ almostDays: 20, almost: false }).almost, false);
+  assert.equal(walletSettings({ winbackText: "hey" }).winbackText, "");
+  assert.equal(walletSettings({ winbackText: " Vuelve pronto " }).winbackText, "Vuelve pronto");
+});

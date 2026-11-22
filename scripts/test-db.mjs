@@ -691,6 +691,8 @@ console.log("\nEtapa 12 · Avisos en la billetera");
   r = await as(null, "select * from public.wallet_daily_candidates()");
   check("ni con la clave pública", !r.ok, r);
   await db.query("update public.loyalty_cards set last_visit_at = now() - interval '40 days' where id = $1", [ana.card_id]);
+  // La campaña de arriba fue hace más de una semana (máximo un recordatorio por semana, migración 43).
+  await db.query("update public.wallet_notifications set created_at = now() - interval '8 days' where card_id = $1 and kind = 'campaign'", [ana.card_id]);
   r = await asService("select * from public.wallet_daily_candidates()");
   const mine = (r.rows ?? []).filter((x) => [ana.card_id, sin.card_id, blo.card_id].includes(x.card_id));
   check("cumpleaños de hoy, solo con permiso de mensajes", mine.some((x) => x.kind === "birthday" && x.card_id === ana.card_id) && !mine.some((x) => x.card_id === sin.card_id), mine);
@@ -1513,6 +1515,61 @@ console.log("\nDatos de demostración");
   check("pago en línea: el dueño ve sus órdenes de pago", q.ok && q.rows.length === 3, q);
   q = await as(U.ownerB, "select reference from public.online_payments where business_id = $1", [tienda]);
   check("pago en línea: otro comercio no ve esas órdenes", q.ok && q.rows.length === 0, q);
+}
+
+console.log("\nRecordatorios automáticos (migración 43)");
+{
+  const join = async (name, phone) => {
+    const r = await asService("select * from public.join_program('negocio-a', $1, $2, null, true, true)", [name, phone]);
+    if (!r.ok) throw new Error(r.error);
+    return (await db.query("select c.id card_id, c.public_token from public.loyalty_cards c where c.public_token = $1", [r.rows[0].public_token])).rows[0];
+  };
+  const req = (await db.query("select p.stamps_required n from public.loyalty_programs p join public.businesses b on b.id = p.business_id where b.id = $1 limit 1", [A])).rows[0].n;
+  const cerca = await join("Carla Cerca", "+573165559001");
+  const lejos = await join("Luis Lejos", "+573165559002");
+  await db.query("update public.loyalty_cards set current_stamps = $2, last_visit_at = now() - interval '12 days' where id = $1", [cerca.card_id, req - 1]);
+  await db.query("update public.loyalty_cards set current_stamps = 1, last_visit_at = now() - interval '12 days' where id = $1", [lejos.card_id]);
+  const base = { stamp: true, near: true, reward: true, birthday: true, winback: true, winbackDays: 45 };
+  await db.query("update public.businesses set wallet_notifications = $2 where id = $1", [A, base]);
+  const candidatos = async (card) => (await asService("select * from public.wallet_daily_candidates() where card_id = $1", [card])).rows ?? [];
+
+  let r = await candidatos(cerca.card_id);
+  check("«te falta poco» viene activo por defecto: a 1 sello y 12 días sin venir", r.length === 1 && r[0].kind === "almost" && r[0].first_name === "Carla", r);
+  r = await candidatos(lejos.card_id);
+  check("«te falta poco» no le llega a quien no lleva ni la mitad de la tarjeta", r.length === 0, r);
+
+  r = await as(U.adminA, "select public.update_wallet_settings($1, $2)", [A, { ...base, almost: true, almostDays: 3 }]);
+  check("«te falta poco» con menos de 5 días → rechazado", expectError(r, "INVALID_WALLET_SETTINGS"), r);
+  r = await as(U.adminA, "select public.update_wallet_settings($1, $2)", [A, { ...base, winbackText: "hey" }]);
+  check("mensaje de «te extrañamos» muy corto → rechazado", expectError(r, "INVALID_WALLET_SETTINGS"), r);
+  r = await as(U.adminA, "select public.update_wallet_settings($1, $2)", [A, { ...base, almost: "si" }]);
+  check("«te falta poco» que no es sí/no → rechazado", expectError(r, "INVALID_WALLET_SETTINGS"), r);
+  r = await as(U.adminA, "select public.update_wallet_settings($1, $2)", [A, { ...base, almost: true, almostDays: 15, winbackText: "Hola {nombre}, vuelve a {comercio}. {progreso}" }]);
+  check("el administrador guarda los recordatorios", r.ok, r);
+  r = await candidatos(cerca.card_id);
+  check("respeta los días configurados (15: a los 12 días aún no)", r.length === 0, r);
+
+  await db.query("update public.businesses set wallet_notifications = $2 where id = $1", [A, { ...base, almost: false }]);
+  await db.query("update public.loyalty_cards set last_visit_at = now() - interval '20 days' where id = $1", [cerca.card_id]);
+  r = await candidatos(cerca.card_id);
+  check("con «te falta poco» apagado no se envía", r.length === 0, r);
+
+  await db.query("update public.businesses set wallet_notifications = $2 where id = $1", [A, { ...base, winbackDays: 14, winbackText: "Hola {nombre}, vuelve. {progreso}" }]);
+  r = await candidatos(cerca.card_id);
+  check("si ya toca «te extrañamos», va ese con el mensaje propio (y no los dos)", r.length === 1 && r[0].kind === "winback" && r[0].message === "Hola {nombre}, vuelve. {progreso}", r);
+
+  await db.query("insert into public.wallet_notifications (business_id, card_id, kind, ref, title, body, created_at) values ($1, $2, 'campaign', 'campaign:prueba-43', 'Hola', 'Hola', now() - interval '2 days')", [A, cerca.card_id]);
+  r = await candidatos(cerca.card_id);
+  check("máximo un recordatorio por semana: con una campaña hace 2 días, nada", r.length === 0, r);
+  await db.query("update public.wallet_notifications set created_at = now() - interval '8 days' where ref = 'campaign:prueba-43'");
+  r = await candidatos(cerca.card_id);
+  check("pasada la semana vuelve a tocar", r.length === 1 && r[0].kind === "winback", r);
+
+  r = await asService("insert into public.wallet_notifications (business_id, card_id, kind, ref, title, body) values ($1, $2, 'almost', 'almost:x', 'a', 'b')", [A, lejos.card_id]);
+  check("el registro admite el tipo «te falta poco»", r.ok, r);
+  r = await as(U.ownerA, "select * from public.wallet_daily_candidates()");
+  check("el proceso diario sigue sin poder llamarse desde el panel", !r.ok, r);
+  await db.query("update public.businesses set wallet_notifications = $2 where id = $1", [A, { ...base, near: true }]);
 }
 
 console.log(`\n${passed} correctas, ${failed} fallidas\n`);

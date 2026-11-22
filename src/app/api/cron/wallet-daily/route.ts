@@ -1,7 +1,7 @@
 import { timingSafeEqual } from "node:crypto";
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { googleWalletConfig } from "@/lib/wallet/config";
+import { appleWalletConfig, googleWalletConfig } from "@/lib/wallet/config";
 import { dailyNotice } from "@/lib/wallet/messages";
 import { deliverNotices, queueNotices } from "@/lib/wallet/notify";
 
@@ -17,13 +17,14 @@ function authorized(req: Request) {
 }
 
 /**
- * Proceso diario (vercel.json → crons): cumpleaños del día y "te extrañamos".
+ * Proceso diario (vercel.json → crons): cumpleaños del día, "te extrañamos" y "te falta poco".
  * Solo a clientes que aceptaron mensajes; cada aviso se registra una vez, así que
  * ejecutarlo de nuevo el mismo día no repite nada.
  */
 export async function GET(req: Request) {
   if (!authorized(req)) return NextResponse.json({ ok: false }, { status: 401 });
-  if (!googleWalletConfig()) return NextResponse.json({ ok: true, skipped: "wallet-disabled" });
+  // Basta con una de las dos billeteras: el aviso llega por Google Wallet o al pase de Apple.
+  if (!googleWalletConfig() && !appleWalletConfig()) return NextResponse.json({ ok: true, skipped: "wallet-disabled" });
 
   const { data, error } = await createAdminClient().rpc("wallet_daily_candidates");
   if (error) {
@@ -34,13 +35,14 @@ export async function GET(req: Request) {
     business_id: string;
     card_id: string;
     public_token: string;
-    kind: "birthday" | "winback";
+    kind: "birthday" | "winback" | "almost";
     ref: string;
     first_name: string;
     business_name: string;
     current_stamps: number;
     stamps_required: number;
     reward_name: string;
+    message: string | null;
   };
   const rows = (data ?? []) as Row[];
   const queued = await queueNotices(
@@ -55,6 +57,7 @@ export async function GET(req: Request) {
         stamps: r.current_stamps,
         required: r.stamps_required,
         rewardName: r.reward_name,
+        message: r.message,
       }),
     })),
   );
