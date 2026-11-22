@@ -51,7 +51,7 @@ test("colores en el formato rgb() que exige Apple", () => {
   assert.equal(rgb("rojo", "rgb(0, 0, 0)"), "rgb(0, 0, 0)");
 });
 
-test("el pase muestra sellos arriba, miembro, desde cuándo y progreso, sin código de barras", () => {
+test("el pase muestra sellos arriba, el nombre del miembro y el progreso al reverso", () => {
   const j = passJson(base, passFromCard(card, origin), origin);
   assert.equal(j.serialNumber, card.token);
   assert.equal(j.passTypeIdentifier, base.passTypeId);
@@ -60,8 +60,8 @@ test("el pase muestra sellos arriba, miembro, desde cuándo y progreso, sin cód
   assert.deepEqual(j.storeCard.headerFields.map((f) => [f.label, f.value]), [["SELLOS", "6 / 9"]]);
   // El premio y el hilo de sellos van dibujados en la franja.
   assert.equal(j.storeCard.primaryFields.length, 0);
-  // El frente es solo la tarjeta: sin datos del miembro ni frase de progreso.
-  assert.equal(j.storeCard.secondaryFields.length, 0);
+  // Debajo de la franja va el nombre del cliente; sin frase de progreso en el frente.
+  assert.deepEqual(j.storeCard.secondaryFields.map((f) => [f.label, f.value]), [["MIEMBRO", "Sofía Martínez"]]);
   assert.equal(j.storeCard.auxiliaryFields.length, 0);
   // Fondo rosado claro: texto casi negro y etiquetas con el color del comercio.
   assert.equal(j.foregroundColor, "rgb(22, 19, 15)");
