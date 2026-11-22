@@ -185,7 +185,7 @@ export function LiveProvider({ snapshot, children }: { snapshot: DataState; chil
 
       // Guardado con botón: se espera la respuesta y solo entonces se refleja en el panel.
       // Las imágenes pendientes se suben primero; si algo falla, se borran y no cambia nada.
-      saveBranding: async (businessId, patch, imagenes = {}) => {
+      saveBranding: async (businessId, patch, imagenes = {}, letra) => {
         const bucket = createClient().storage.from("brand-assets");
         const prefix = bucket.getPublicUrl(`${businessId}/`).data.publicUrl;
         const actual = state.businesses.find((b) => b.id === businessId)?.branding;
@@ -209,10 +209,32 @@ export function LiveProvider({ snapshot, children }: { snapshot: DataState; chil
           subidos.push(path);
           completo[campo] = bucket.getPublicUrl(path).data.publicUrl;
         }
+        // Letra propia: se sube su archivo (la vista previa usaba una dirección local «blob:»).
+        if (letra === null) {
+          completo.fontUrl = "";
+          completo.fontName = "";
+        } else if (letra) {
+          const path = `${businessId}/letra-${Date.now()}.${letra.extension}`;
+          const tipo = { ttf: "font/ttf", otf: "font/otf", woff: "font/woff" }[letra.extension];
+          const up = await bucket.upload(path, letra.archivo, { contentType: tipo, cacheControl: "31536000" });
+          if (up.error) {
+            if (subidos.length) await bucket.remove(subidos);
+            return { ok: false as const, message: "No se pudo subir la letra. Tus cambios siguen aquí: intenta de nuevo." };
+          }
+          subidos.push(path);
+          completo.fontUrl = bucket.getPublicUrl(path).data.publicUrl;
+          completo.fontName = letra.nombre;
+        } else if (completo.fontUrl?.startsWith("blob:")) {
+          delete completo.fontUrl;
+        }
         const res = await updateBrandingAction(businessId, completo);
         if (!res.ok) {
           if (subidos.length) await bucket.remove(subidos);
           return res;
+        }
+        // La letra vieja se borra del almacenamiento si se cambió o se quitó.
+        if (letra !== undefined && actual?.fontUrl?.startsWith(prefix) && actual.fontUrl !== completo.fontUrl) {
+          await bucket.remove([actual.fontUrl.slice(prefix.length - businessId.length - 1)]);
         }
         // Se borran del almacenamiento las imágenes viejas que ya no usa ningún campo (el sello puede ser el mismo logo).
         if (actual) {
@@ -225,7 +247,7 @@ export function LiveProvider({ snapshot, children }: { snapshot: DataState; chil
           ...s,
           businesses: s.businesses.map((b) => (b.id === businessId ? { ...b, branding: { ...b.branding, ...completo } } : b)),
         }));
-        if (subidos.length || Object.keys(imagenes).length) startTransition(() => router.refresh());
+        if (subidos.length || Object.keys(imagenes).length || letra !== undefined) startTransition(() => router.refresh());
         return { ok: true as const };
       },
 

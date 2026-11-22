@@ -38,6 +38,8 @@ export const CARD_FONT_STYLES: Record<CardFont, { label: string; className: stri
   redondeada: { label: "Redondeada", className: "font-[family-name:var(--font-card-redondeada)] font-bold tracking-[0.04em]", upper: true },
   impacto: { label: "Impacto", className: "font-[family-name:var(--font-card-impacto)] tracking-[0.08em]", upper: true },
   geometrica: { label: "Geométrica", className: "font-[family-name:var(--font-card-geometrica)] font-semibold tracking-[0.08em]", upper: true },
+  // La letra que subió el comercio: la carga <FuenteMarca> en la página (variable --font-marca-propia).
+  propia: { label: "Tu letra", className: "font-[family-name:var(--font-marca-propia)]", upper: false },
 };
 
 /**
@@ -93,4 +95,17 @@ export function BrandMark({
       {branding.logoText}
     </span>
   );
+}
+
+/**
+ * Carga la letra propia del comercio en la página: define la familia y la variable
+ * --font-marca-propia que usa la clase de «Tu letra». Sin letra propia no hace nada.
+ */
+export function FuenteMarca({ branding }: { branding: Pick<BusinessBranding, "font" | "fontUrl"> }) {
+  const url = branding.fontUrl;
+  // Dirección pública de su carpeta o, en el editor, la vista previa local («blob:») del archivo elegido.
+  if (!url || !/^(https:\/\/|blob:https?:\/\/)[^\s"'()<>]+$/.test(url)) return null;
+  const formato = url.endsWith(".otf") ? "opentype" : url.endsWith(".woff") ? "woff" : url.endsWith(".ttf") ? "truetype" : "";
+  const src = formato ? `url("${url}") format("${formato}")` : `url("${url}")`;
+  return <style>{`@font-face{font-family:"LazoLetraPropia";src:${src};font-display:swap}:root{--font-marca-propia:"LazoLetraPropia",ui-serif,serif}`}</style>;
 }

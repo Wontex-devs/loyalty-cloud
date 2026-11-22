@@ -22,7 +22,7 @@ export async function GET(_req: Request, { params }: Ctx) {
   const upper = (CARD_FONT_STYLES[font] ?? CARD_FONT_STYLES.serif).upper;
   const strip = { branding: b, stamps: Math.min(card.stamps, required), required, monogram: card.business.name, upper, ...stripReward(card) };
   const png = await imagenEnCache(["google-strip", font, strip], async () =>
-    Buffer.from(await passStrip(strip, 1032, 336, { fonts: await walletFonts(b.font) }).arrayBuffer()),
+    Buffer.from(await passStrip(strip, 1032, 336, { fonts: await walletFonts(b.font, b.fontUrl) }).arrayBuffer()),
   );
   return new Response(new Uint8Array(png), {
     // La dirección cambia cuando cambia la imagen (`v`), así que se puede guardar un día entero.

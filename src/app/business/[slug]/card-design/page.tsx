@@ -9,8 +9,8 @@ import { LoyaltyCardView } from "@/components/loyalty/loyalty-card";
 import { contrast, readableOn } from "@/lib/domain/card-palette";
 import { ColorPicker } from "@/components/ui/color-picker";
 import { PassInfoCard } from "@/components/business/pass-info-card";
-import { BrandMark, brandCase, brandFont, CARD_FONT_STYLES, FILLED_STAMP_ICONS, STAMP_ICON_COMPONENTS, STAMP_ICON_LABELS, StampMark } from "@/components/loyalty/brand-mark";
-import { useData, type CampoImagenMarca, type ImagenesMarca } from "@/lib/data/store";
+import { BrandMark, brandCase, brandFont, CARD_FONT_STYLES, FuenteMarca, FILLED_STAMP_ICONS, STAMP_ICON_COMPONENTS, STAMP_ICON_LABELS, StampMark } from "@/components/loyalty/brand-mark";
+import { useData, type CampoImagenMarca, type ImagenesMarca, type LetraPendiente } from "@/lib/data/store";
 import { prepareIlustracion, prepareLogo } from "@/lib/brand-image";
 import type { ResultadoFondo } from "@/lib/domain/quitar-fondo";
 import { can } from "@/lib/domain/permissions";
@@ -55,7 +55,11 @@ export default function CardDesignPage() {
   const [resultado, setResultado] = useState<{ ok: boolean; texto: string } | null>(null);
   // Imágenes elegidas pero aún sin guardar: `blob` es lo que se subirá (null = quitarla) y `vista`, su vista previa local.
   const [imagenes, setImagenes] = useState<Partial<Record<CampoImagenMarca, { blob: Blob | null; vista: string }>>>({});
-  const hayCambios = Object.keys(borrador).length > 0 || Object.keys(imagenes).length > 0;
+  // Letra propia elegida y aún sin subir (undefined = sin cambios; null = quitarla).
+  const [letra, setLetra] = useState<LetraPendiente | undefined>(undefined);
+  const [letraError, setLetraError] = useState<string | null>(null);
+  const letraRef = useRef<HTMLInputElement>(null);
+  const hayCambios = Object.keys(borrador).length > 0 || Object.keys(imagenes).length > 0 || letra !== undefined;
   const sinCampo = <T extends object>(objeto: T, campo: keyof T) => {
     const copia = { ...objeto };
     delete copia[campo];
@@ -92,11 +96,12 @@ export default function CardDesignPage() {
     setGuardando(true);
     setResultado(null);
     const pendientes: ImagenesMarca = Object.fromEntries(Object.entries(imagenes).map(([campo, i]) => [campo, i.blob]));
-    const res = await saveBranding(business.id, borrador, pendientes).catch(() => ({ ok: false as const, message: "No hay conexión. Tus cambios siguen aquí: intenta de nuevo." }));
+    const res = await saveBranding(business.id, borrador, pendientes, letra).catch(() => ({ ok: false as const, message: "No hay conexión. Tus cambios siguen aquí: intenta de nuevo." }));
     setGuardando(false);
     if (res.ok) {
       setBorrador({});
       soltarImagenes();
+      setLetra(undefined);
       setResultado({ ok: true, texto: "Cambios guardados. Ya se ven en todas las tarjetas." });
     } else setResultado({ ok: false, texto: res.message });
   };
@@ -107,6 +112,26 @@ export default function CardDesignPage() {
     window.addEventListener("beforeunload", avisar);
     return () => window.removeEventListener("beforeunload", avisar);
   }, [hayCambios]);
+  /** Elige un archivo de letra: se revisa y se ve de una vez en la vista previa; se sube al guardar. */
+  const elegirLetra = async (file: File | null) => {
+    setLetraError(null);
+    if (!file) {
+      setLetra(business.branding.fontUrl ? null : undefined);
+      if (b.fontUrl?.startsWith("blob:")) URL.revokeObjectURL(b.fontUrl);
+      cambiar({ font: (business.branding.font === "propia" ? "serif" : business.branding.font) ?? "serif", fontUrl: "", fontName: "" });
+      return;
+    }
+    const extension = file.name.toLowerCase().match(/\.(ttf|otf|woff)$/)?.[1] as "ttf" | "otf" | "woff" | undefined;
+    if (!extension) return setLetraError("Sube la letra en formato TTF, OTF o WOFF (WOFF2 no sirve para el pase de Wallet).");
+    if (file.size > 2_097_152) return setLetraError("El archivo pesa más de 2 MB. Usa solo el estilo que vas a usar (por ejemplo, «Bold»).");
+    const firma = new Uint8Array(await file.slice(0, 4).arrayBuffer());
+    const valida = [[0, 1, 0, 0], [0x4f, 0x54, 0x54, 0x4f], [0x77, 0x4f, 0x46, 0x46], [0x74, 0x72, 0x75, 0x65]].some((f) => f.every((x, i) => firma[i] === x));
+    if (!valida) return setLetraError("Ese archivo no parece una letra. Revisa que sea el archivo .ttf u .otf de la tipografía.");
+    const nombre = file.name.replace(/\.(ttf|otf|woff)$/i, "").replace(/[\n\r"<>]/g, "").replace(/[-_]+/g, " ").trim().slice(0, 40) || "Mi letra";
+    if (b.fontUrl?.startsWith("blob:")) URL.revokeObjectURL(b.fontUrl);
+    setLetra({ archivo: file, extension, nombre });
+    cambiar({ font: "propia", fontUrl: URL.createObjectURL(file), fontName: nombre });
+  };
   const fileRef = useRef<HTMLInputElement>(null);
   const stampRef = useRef<HTMLInputElement>(null);
   const ilustracionRef = useRef<HTMLInputElement>(null);
@@ -199,6 +224,7 @@ export default function CardDesignPage() {
 
   return (
     <RequirePermission allowed={!!membership && can(membership, "business.branding.edit")}>
+      <FuenteMarca branding={b} />
       <PageHeader
         title="Tarjeta, QR y NFC"
         description="Lo que ves en la vista previa es lo que tus clientes guardan en la billetera de su celular. Prueba los cambios aquí, imágenes incluidas: nada llega a las tarjetas de tus clientes hasta que pulses «Guardar cambios»."
@@ -425,6 +451,51 @@ export default function CardDesignPage() {
                       </button>
                     );
                   })}
+                  {b.fontUrl && (
+                    <button
+                      type="button"
+                      onClick={() => cambiar({ font: "propia" })}
+                      aria-pressed={b.font === "propia"}
+                      className={cn(
+                        "flex min-w-0 flex-col items-start gap-1 rounded-xl border px-3 py-2.5 text-left transition",
+                        b.font === "propia" ? "border-ink shadow-card" : "border-line hover:border-line-strong",
+                      )}
+                    >
+                      <span className={cn("w-full truncate text-lg leading-tight", brandFont({ font: "propia" }))}>{business.name}</span>
+                      <span className="w-full truncate text-[11px] text-muted">Tu letra · {b.fontName || "propia"}</span>
+                    </button>
+                  )}
+                </div>
+                <div className="flex flex-col gap-2 rounded-xl border border-dashed border-line-strong p-3 sm:flex-row sm:items-center">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium">{b.fontUrl ? "Tu propia letra" : "Sube tu propia letra"}</p>
+                    <p className="text-xs text-muted">
+                      Archivo <strong className="font-medium text-ink-2">.ttf</strong> u <strong className="font-medium text-ink-2">.otf</strong> de hasta 2 MB. Se usa en la tarjeta, el pase de Wallet, la página de
+                      registro y el QR de inscripción. Asegúrate de tener permiso para usar esa letra en tu marca.
+                    </p>
+                    {letraError && <p className="mt-1 text-sm text-danger">{letraError}</p>}
+                  </div>
+                  <div className="flex gap-2">
+                    <input
+                      ref={letraRef}
+                      type="file"
+                      accept=".ttf,.otf,.woff,font/ttf,font/otf,font/woff"
+                      className="hidden"
+                      onChange={(e) => {
+                        const f = e.target.files?.[0];
+                        e.target.value = "";
+                        if (f) void elegirLetra(f);
+                      }}
+                    />
+                    <Button variant="secondary" size="sm" type="button" onClick={() => letraRef.current?.click()}>
+                      <ImageUp className="size-4" /> {b.fontUrl ? "Cambiar letra" : "Subir mi letra"}
+                    </Button>
+                    {b.fontUrl && (
+                      <Button variant="ghost" size="sm" type="button" onClick={() => void elegirLetra(null)} aria-label="Quitar mi letra">
+                        <Trash2 className="size-4" />
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -450,7 +521,7 @@ export default function CardDesignPage() {
                 <div className="rounded-xl bg-white p-3">
                   <QRCodeSVG value={joinUrl || `https://${PUBLIC_HOST_LABEL}/join/${business.slug}`} size={132} />
                 </div>
-                <p className="mt-3 text-center font-serif text-sm tracking-[0.15em] uppercase" style={{ color: b.cardForeground }}>
+                <p className={cn("mt-3 text-center text-sm tracking-[0.15em]", brandCase(b), brandFont(b))} style={{ color: b.cardForeground }}>
                   Únete a {program.name}
                 </p>
               </div>

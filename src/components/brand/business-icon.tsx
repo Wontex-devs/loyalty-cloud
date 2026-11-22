@@ -57,7 +57,7 @@ export function businessIcon(business: IconBusiness | null, size: number, opts: 
  * del sistema que Apple pone junto al logo.
  */
 export function businessWordmark(
-  business: IconBusiness & { branding: IconBusiness["branding"] & { font?: string } },
+  business: IconBusiness & { branding: IconBusiness["branding"] & { font?: string; fontUrl?: string } },
   width: number,
   height: number,
   opts: { color: string; upper: boolean; fonts?: { name: string; data: ArrayBuffer; weight: 400 | 500 | 600 | 700; style: "normal" }[] },

@@ -248,6 +248,27 @@ check("empleado no puede subir logos", !r.ok, r);
 r = await as(U.ownerA, "insert into storage.objects (bucket_id, name) values ('brand-assets', 'sin-carpeta.webp')");
 check("archivo fuera de una carpeta de comercio es rechazado", !r.ok, r);
 
+// Letra propia (migración 42): un archivo de letra de su carpeta y su nombre.
+{
+  const letraA = logoA.replace(/logo-1[^/]*$/, "letra-1.ttf");
+  let rl = await as(U.ownerA, "select public.update_business_profile($1, null, null, null, null, $2::jsonb)", [A, JSON.stringify({ font: "propia", fontUrl: letraA, fontName: "Mi Letra Bonita" })]);
+  check("el dueño sube su propia letra (TTF de su carpeta) y la elige", rl.ok, rl);
+  rl = await as(U.ownerA, "select public.update_business_profile($1, null, null, null, null, $2::jsonb)", [A, JSON.stringify({ fontUrl: letraA.replace(".ttf", ".otf") })]);
+  check("también acepta OTF", rl.ok, rl);
+  rl = await as(U.ownerA, "select public.update_business_profile($1, null, null, null, null, $2::jsonb)", [A, JSON.stringify({ fontUrl: letraA.replace(".ttf", ".png") })]);
+  check("una imagen no sirve como letra", expectError(rl, "INVALID_BRANDING"), rl);
+  rl = await as(U.ownerA, "select public.update_business_profile($1, null, null, null, null, $2::jsonb)", [A, JSON.stringify({ fontUrl: logoB.replace(/logo-1[^/]*$/, "letra-1.ttf") })]);
+  check("la letra de otro comercio se rechaza", expectError(rl, "INVALID_BRANDING"), rl);
+  rl = await as(U.ownerA, "select public.update_business_profile($1, null, null, null, null, $2::jsonb)", [A, JSON.stringify({ fontName: 'x"><script>' })]);
+  check("el nombre de la letra no admite comillas ni etiquetas", expectError(rl, "INVALID_BRANDING"), rl);
+  rl = await as(U.staffA, "select public.update_business_profile($1, null, null, null, null, $2::jsonb)", [A, JSON.stringify({ fontUrl: letraA })]);
+  check("un empleado no cambia la letra", expectError(rl, "FORBIDDEN"), rl);
+  rl = await as(U.ownerA, "select public.update_business_profile($1, null, null, null, null, $2::jsonb)", [A, JSON.stringify({ font: "serif", fontUrl: "", fontName: "" })]);
+  check("la letra propia se puede quitar", rl.ok, rl);
+  rl = await as(U.ownerA, "insert into storage.objects (bucket_id, name) values ('brand-assets', $1)", [`${A}/letra-2.ttf`]);
+  check("el dueño sube un archivo de letra a su carpeta", rl.ok, rl);
+}
+
 // Etapa 27: estilos premium de la tarjeta.
 for (const cardStyle of ["noche", "cristal", "negro", "marfil", "clasico"]) {
   r = await as(U.ownerA, "select public.update_business_profile($1, null, null, null, null, $2::jsonb)", [A, JSON.stringify({ cardStyle })]);

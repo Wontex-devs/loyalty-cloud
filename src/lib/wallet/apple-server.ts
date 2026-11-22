@@ -41,7 +41,7 @@ async function passImages(business: Parameters<typeof businessWordmark>[0], stri
   const font = (business.branding.font ?? "serif") as keyof typeof CARD_FONT_STYLES;
   // Las letras solo se cargan si de verdad hay que dibujar algo (una sola vez, compartida).
   let letras: ReturnType<typeof walletFonts> | null = null;
-  const fonts = () => (letras ??= walletFonts(font));
+  const fonts = () => (letras ??= walletFonts(font, business.branding.fontUrl));
   const color = cardTheme({ cardBackground: business.branding.cardBackground, cardForeground: business.branding.cardForeground }).text;
   const upper = (CARD_FONT_STYLES[font] ?? CARD_FONT_STYLES.serif).upper;
   // De qué depende cada dibujo: si nada de esto cambia, se usa la imagen guardada (ver imagenes-cache.ts).
