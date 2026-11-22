@@ -11,11 +11,18 @@ export const DEFAULT_WALLET_SETTINGS: WalletSettings = {
   birthday: true,
   winback: true,
   winbackDays: 45,
+  winbackText: "",
+  almost: true,
+  almostDays: 10,
   nearbyText: "¡Hola {nombre}! Estás cerca de {comercio}. {progreso}",
 };
 
 export const NEARBY_TEXT_MIN = 5;
 export const NEARBY_TEXT_MAX = 120;
+export const WINBACK_TEXT_MIN = 5;
+export const WINBACK_TEXT_MAX = 200;
+/** Mensaje de "te extrañamos" cuando el comercio no escribe el suyo. */
+export const WINBACK_TEXT_DEFAULT = "Hola {nombre}, hace rato no te vemos. {progreso} ¡Te esperamos!";
 
 export const WALLET_NOTICE_LABELS: Record<WalletNoticeKind, string> = {
   stamp: "Sello nuevo",
@@ -23,6 +30,7 @@ export const WALLET_NOTICE_LABELS: Record<WalletNoticeKind, string> = {
   reward: "Premio listo",
   birthday: "Cumpleaños",
   winback: "Te extrañamos",
+  almost: "Te falta poco",
   campaign: "Campaña",
 };
 
@@ -37,6 +45,8 @@ export function walletSettings(raw: unknown): WalletSettings {
   const s = (raw && typeof raw === "object" ? raw : {}) as Partial<WalletSettings>;
   const bool = (v: unknown, d: boolean) => (typeof v === "boolean" ? v : d);
   const days = Number(s.winbackDays);
+  const almostDays = Number(s.almostDays);
+  const winbackText = typeof s.winbackText === "string" ? s.winbackText.trim() : "";
   return {
     stamp: bool(s.stamp, true),
     near: bool(s.near, true),
@@ -44,6 +54,9 @@ export function walletSettings(raw: unknown): WalletSettings {
     birthday: bool(s.birthday, true),
     winback: bool(s.winback, true),
     winbackDays: Number.isInteger(days) && days >= 14 && days <= 180 ? days : 45,
+    winbackText: winbackText.length >= WINBACK_TEXT_MIN && winbackText.length <= WINBACK_TEXT_MAX ? winbackText : "",
+    almost: bool(s.almost, true),
+    almostDays: Number.isInteger(almostDays) && almostDays >= 5 && almostDays <= 60 ? almostDays : 10,
     nearbyText:
       typeof s.nearbyText === "string" && s.nearbyText.trim().length >= NEARBY_TEXT_MIN && s.nearbyText.trim().length <= NEARBY_TEXT_MAX
         ? s.nearbyText.trim()
@@ -94,16 +107,32 @@ export function visitNotice(
   };
 }
 
-/** Avisos del proceso diario. */
+/** Progreso para los recordatorios: «Llevas 3 de 8 sellos para tu café.» (vacío sin sellos). */
+export const reminderProgress = (v: { stamps: number; required: number; rewardName: string }) =>
+  v.stamps > 0 ? `Llevas ${v.stamps} de ${v.required} sellos para tu ${v.rewardName}.` : "";
+
+/** Avisos del proceso diario. `message`: texto propio del comercio para «te extrañamos». */
 export function dailyNotice(
-  kind: "birthday" | "winback",
-  v: { firstName: string; businessName: string; stamps: number; required: number; rewardName: string },
+  kind: "birthday" | "winback" | "almost",
+  v: { firstName: string; businessName: string; stamps: number; required: number; rewardName: string; message?: string | null },
 ): Notice {
   if (kind === "birthday") {
     return { kind, title: `¡Feliz cumpleaños, ${v.firstName}!`, body: `En ${v.businessName} queremos celebrarlo contigo. Te esperamos este mes.` };
   }
-  const progress = v.stamps > 0 ? ` Llevas ${v.stamps} de ${v.required} sellos para tu ${v.rewardName}.` : "";
-  return { kind, title: `Te extrañamos en ${v.businessName}`, body: `Hola ${v.firstName}, hace rato no te vemos.${progress} ¡Te esperamos!` };
+  if (kind === "almost") {
+    const left = Math.max(v.required - v.stamps, 1);
+    return {
+      kind,
+      title: left === 1 ? `Te falta 1 sello en ${v.businessName}` : `Te faltan ${left} sellos en ${v.businessName}`,
+      body: `Hola ${v.firstName}, estás muy cerca de tu ${v.rewardName}. ¡Ven y complétala!`,
+    };
+  }
+  const body = nearbyMessage(v.message?.trim() || WINBACK_TEXT_DEFAULT, {
+    nombre: v.firstName,
+    comercio: v.businessName,
+    progreso: reminderProgress(v),
+  });
+  return { kind, title: `Te extrañamos en ${v.businessName}`, body };
 }
 
 /** Reemplaza {nombre} por el primer nombre (igual que la base de datos en las campañas). */

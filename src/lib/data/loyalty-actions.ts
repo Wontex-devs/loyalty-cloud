@@ -322,6 +322,12 @@ const walletSettingsInput = z.object({
   birthday: z.boolean(),
   winback: z.boolean(),
   winbackDays: z.number().int().min(14, "Mínimo 14 días.").max(180, "Máximo 180 días."),
+  winbackText: z.union([
+    z.literal(""),
+    z.string().trim().min(5, "El mensaje de «Te extrañamos» necesita al menos 5 caracteres.").max(200, "El mensaje de «Te extrañamos» admite máximo 200 caracteres."),
+  ]),
+  almost: z.boolean(),
+  almostDays: z.number().int().min(5, "«Te falta poco»: mínimo 5 días.").max(60, "«Te falta poco»: máximo 60 días."),
   nearbyText: z
     .string()
     .trim()
@@ -334,7 +340,10 @@ export async function updateWalletSettingsAction(businessId: string, settings: W
   if (!parsed.success) return { ok: false, message: parsed.error.issues[0]?.message ?? "Revisa los ajustes." };
   if (!z.uuid().safeParse(businessId).success) return { ok: false, message: "Datos no válidos." };
   const supabase = await createClient();
-  const { error } = await supabase.rpc("update_wallet_settings", { p_business_id: businessId, p_settings: parsed.data });
+  // Sin mensaje propio no se guarda la clave (la base de datos pide 5 caracteres o más).
+  const { winbackText, ...rest } = parsed.data;
+  const p_settings = winbackText ? { ...rest, winbackText } : rest;
+  const { error } = await supabase.rpc("update_wallet_settings", { p_business_id: businessId, p_settings });
   if (error) return { ok: false, message: dbErrorMessage(error) };
   // El mensaje de cercanía va dentro del pase de Apple: se actualizan los pases guardados.
   scheduleBusinessWalletSync(businessId);

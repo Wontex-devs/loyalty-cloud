@@ -107,11 +107,17 @@ export interface WalletSettings {
   winback: boolean;
   /** Días sin venir para enviar "te extrañamos" (14–180). */
   winbackDays: number;
+  /** Mensaje propio de "te extrañamos" ({nombre}, {comercio}, {progreso}). Vacío = el sugerido. */
+  winbackText: string;
+  /** "Te falta poco": a 1 o 2 sellos del premio y unos días sin venir. */
+  almost: boolean;
+  /** Días sin venir para "te falta poco" (5–60). */
+  almostDays: number;
   /** Texto en la pantalla bloqueada del iPhone cerca de una sede: {nombre}, {comercio}, {progreso}. */
   nearbyText: string;
 }
 
-export type WalletNoticeKind = "stamp" | "near" | "reward" | "birthday" | "winback" | "campaign";
+export type WalletNoticeKind = "stamp" | "near" | "reward" | "birthday" | "winback" | "almost" | "campaign";
 
 /** Un aviso enviado (o intentado) a la billetera de un cliente. */
 export interface WalletNotice {

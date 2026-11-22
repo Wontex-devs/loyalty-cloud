@@ -1,10 +1,21 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { BellRing, Check, MapPin, Send, Wallet } from "lucide-react";
+import { BellRing, Check, HeartHandshake, MapPin, Send, Wallet } from "lucide-react";
 import { useScope } from "@/components/business/business-shell";
 import { useData } from "@/lib/data/store";
-import { DEFAULT_WALLET_SETTINGS, NEARBY_TEXT_MAX, NEARBY_TEXT_MIN, WALLET_NOTICE_LABELS, nearbyMessage, walletSettings } from "@/lib/wallet/messages";
+import {
+  DEFAULT_WALLET_SETTINGS,
+  NEARBY_TEXT_MAX,
+  NEARBY_TEXT_MIN,
+  WALLET_NOTICE_LABELS,
+  WINBACK_TEXT_DEFAULT,
+  WINBACK_TEXT_MAX,
+  WINBACK_TEXT_MIN,
+  dailyNotice,
+  nearbyMessage,
+  walletSettings,
+} from "@/lib/wallet/messages";
 import type { WalletSettings } from "@/lib/domain/types";
 import { Badge, Button, Card, CardHeader, Field, Input, Switch, Textarea } from "@/components/ui";
 import { formatRelative } from "@/lib/utils";
@@ -76,11 +87,12 @@ export function WalletCampaignCard({
   );
 }
 
-const AUTO: { key: keyof Omit<WalletSettings, "winbackDays" | "nearbyText">; label: string; hint: string }[] = [
+const AUTO: { key: "stamp" | "near" | "reward" | "birthday" | "winback" | "almost"; label: string; hint: string }[] = [
   { key: "stamp", label: "Sello nuevo", hint: "Al registrar cada visita: «Vas 6 de 8»." },
   { key: "near", label: "Te falta 1", hint: "Cuando queda un sello para el premio." },
   { key: "reward", label: "Premio listo", hint: "Al completar la tarjeta o recibir el regalo de cumpleaños." },
   { key: "birthday", label: "Cumpleaños", hint: "El día de su cumpleaños. Solo a quien aceptó mensajes." },
+  { key: "almost", label: "Te falta poco", hint: "Recordatorio a quien está a 1 o 2 sellos del premio y lleva unos días sin venir. Solo a quien aceptó mensajes." },
   { key: "winback", label: "Te extrañamos", hint: "Cuando lleva varios días sin venir. Solo a quien aceptó mensajes." },
 ];
 
@@ -119,6 +131,19 @@ export function WalletSettingsCard() {
           </li>
         ))}
         <li className="flex items-center gap-3 px-5 py-3">
+          <p className="flex-1 text-sm">Días sin venir para «Te falta poco» <span className="text-xs text-muted">(de 5 a 60)</span></p>
+          <NumberInput
+            min={5}
+            max={60}
+            soloAlSalir
+            className="w-20"
+            aria-label="Días sin venir para «Te falta poco» (de 5 a 60)"
+            value={draft.almostDays}
+            disabled={!draft.almost}
+            onValueChange={(n) => void save({ ...draft, almostDays: n })}
+          />
+        </li>
+        <li className="flex items-center gap-3 px-5 py-3">
           <p className="flex-1 text-sm">Días sin venir para «Te extrañamos» <span className="text-xs text-muted">(de 14 a 180)</span></p>
           <NumberInput
             min={14}
@@ -131,9 +156,117 @@ export function WalletSettingsCard() {
             onValueChange={(n) => void save({ ...draft, winbackDays: n })}
           />
         </li>
+        <WinbackMessage value={draft.winbackText} disabled={!draft.winback} busy={busy} onSave={(winbackText) => save({ ...draft, winbackText })} />
         <NearbyMessage value={draft.nearbyText} busy={busy} onSave={(nearbyText) => save({ ...draft, nearbyText })} />
       </ul>
+      <ReminderResults />
     </Card>
+  );
+}
+
+/** Mensaje propio de «Te extrañamos», con vista previa. Vacío = el texto sugerido. */
+function WinbackMessage({ value, disabled, busy, onSave }: { value: string; disabled: boolean; busy: boolean; onSave: (text: string) => Promise<void> }) {
+  const { business, program } = useScope();
+  const actual = value || WINBACK_TEXT_DEFAULT;
+  const [text, setText] = useState(actual);
+  useEffect(() => setText(value || WINBACK_TEXT_DEFAULT), [value]);
+  const len = text.trim().length;
+  const valid = len >= WINBACK_TEXT_MIN && len <= WINBACK_TEXT_MAX;
+  const changed = text.trim() !== actual;
+  const required = program?.stampsRequired ?? 8;
+  const preview = dailyNotice("winback", {
+    firstName: "María",
+    businessName: business.name,
+    stamps: Math.max(required - 3, 1),
+    required,
+    rewardName: program?.rewardName ?? "premio",
+    message: valid ? text : actual,
+  });
+  // Lo que se guarda: vacío si es igual al sugerido (así, si mejora el sugerido, le llega a todos).
+  const guardar = () => onSave(text.trim() === WINBACK_TEXT_DEFAULT ? "" : text.trim());
+
+  return (
+    <li className={disabled ? "px-5 py-4 opacity-60" : "px-5 py-4"}>
+      <div className="flex items-start gap-3">
+        <HeartHandshake className="mt-0.5 size-4 shrink-0 text-muted" />
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-medium">Mensaje de «Te extrañamos»</p>
+          <p className="text-xs text-muted">Escríbelo como le hablarías a tu cliente. Puedes ofrecer algo para que vuelva.</p>
+        </div>
+      </div>
+      <Field label="Mensaje" className="mt-3" hint={`${len}/${WINBACK_TEXT_MAX}`}>
+        <Textarea value={text} maxLength={WINBACK_TEXT_MAX} disabled={disabled} className="min-h-20" onChange={(e) => setText(e.target.value)} />
+      </Field>
+      <div className="mt-2 flex flex-wrap gap-1.5">
+        {VARIABLES.map((v) => (
+          <button
+            key={v.token}
+            type="button"
+            title={v.hint}
+            disabled={disabled}
+            className="rounded-full border border-line px-2 py-0.5 text-xs text-muted hover:bg-black/5 disabled:opacity-50"
+            onClick={() => setText((t) => (t.length + v.token.length <= WINBACK_TEXT_MAX ? `${t.trimEnd()} ${v.token}` : t))}
+          >
+            + {v.token}
+          </button>
+        ))}
+      </div>
+      <div className="mt-3 rounded-2xl bg-[#1c1c1e] p-3 text-white" aria-label="Vista previa del aviso en el celular">
+        <p className="text-[11px] tracking-wide text-white/60 uppercase">{business.name} · Así se verá</p>
+        <p className="mt-1 text-sm font-semibold leading-snug">{preview.title}</p>
+        <p className="text-sm leading-snug text-white/90">{preview.body}</p>
+      </div>
+      {!valid && len > 0 && <p className="mt-2 text-xs text-danger">Escribe entre {WINBACK_TEXT_MIN} y {WINBACK_TEXT_MAX} caracteres.</p>}
+      <div className="mt-3 flex flex-wrap items-center justify-end gap-2">
+        {text.trim() !== WINBACK_TEXT_DEFAULT && (
+          <Button type="button" size="sm" variant="ghost" disabled={busy || disabled} onClick={() => setText(WINBACK_TEXT_DEFAULT)}>
+            Usar el texto sugerido
+          </Button>
+        )}
+        <Button type="button" size="sm" disabled={busy || disabled || !valid || !changed} onClick={() => void guardar()}>
+          Guardar mensaje
+        </Button>
+      </div>
+    </li>
+  );
+}
+
+const DIAS_RESULTADOS = 90;
+
+/** ¿Sirven los recordatorios? Cuántos se enviaron y cuántos de esos clientes volvieron después. */
+function ReminderResults() {
+  const { walletNotices, visits } = useScope();
+  const desde = Date.now() - DIAS_RESULTADOS * 86_400_000;
+  const enviados = walletNotices.filter(
+    (n) => (n.kind === "winback" || n.kind === "almost") && n.status === "sent" && new Date(n.createdAt).getTime() >= desde,
+  );
+  const volvieron = enviados.filter((n) => {
+    const t = new Date(n.createdAt).getTime();
+    return visits.some((v) => v.cardId === n.cardId && v.kind === "visit" && new Date(v.createdAt).getTime() > t);
+  }).length;
+
+  return (
+    <div className="border-t border-line px-5 py-4">
+      <p className="text-sm font-medium">Resultados de los recordatorios</p>
+      {enviados.length === 0 ? (
+        <p className="mt-1 text-xs text-muted">
+          Aún no se ha enviado ninguno. Salen solos cada mañana a quien cumpla la condición; aquí verás cuántos clientes volvieron gracias a ellos.
+        </p>
+      ) : (
+        <div className="mt-2 grid grid-cols-2 gap-3">
+          <div className="rounded-xl bg-black/[0.03] p-3">
+            <p className="text-2xl font-semibold">{enviados.length}</p>
+            <p className="text-xs text-muted">recordatorios enviados (últimos {DIAS_RESULTADOS} días)</p>
+          </div>
+          <div className="rounded-xl bg-black/[0.03] p-3">
+            <p className="text-2xl font-semibold text-success">{volvieron}</p>
+            <p className="text-xs text-muted">
+              {volvieron === 1 ? "cliente volvió" : "clientes volvieron"} después del aviso ({Math.round((volvieron / enviados.length) * 100)}%)
+            </p>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
 
