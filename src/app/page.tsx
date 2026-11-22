@@ -29,20 +29,20 @@ export const metadata: Metadata = {
 };
 
 const whatsappLink = (text: string) => `https://wa.me/${SALES_WHATSAPP}?text=${encodeURIComponent(text)}`;
-const whatsappHref = whatsappLink(`Hola, quiero mi primer mes gratis del plan Starter de ${PLATFORM_NAME}.`);
+const whatsappHref = whatsappLink(`Hola, quiero el plan Starter de ${PLATFORM_NAME} con el segundo mes gratis.`);
 
 const h2 = `${poster} text-balance text-4xl leading-[1.02] sm:text-6xl`;
 const btn = "inline-flex h-14 items-center justify-center gap-2.5 rounded-lg px-6 text-base font-semibold transition-transform duration-150 ease-out hover:-translate-y-0.5 active:scale-[0.97]";
 
 const PLANS = [
-  { name: "Starter", who: "Para un local que empieza", lines: ["300 clientes", "2 personas del equipo", "1 sede"], price: "$79.990", chip: "Primer mes gratis", cta: "Quiero mi primer mes gratis", freeMonth: true },
+  { name: "Starter", who: "Para un local que empieza", lines: ["300 clientes", "2 personas del equipo", "1 sede"], price: "$79.990", chip: "2.º mes gratis", cta: "Quiero el Starter", freeMonth: true },
   { name: "Pro", who: "Para el negocio que ya tiene movimiento", lines: ["1.000 clientes", "10 personas del equipo", "Sedes ilimitadas"], price: "$139.990", chip: "Recomendado", cta: "Quiero este plan", featured: true },
   { name: "Business", who: "Para cadenas y negocios grandes", lines: ["Clientes a tu medida", "Equipo a tu medida", "Sedes a tu medida"], price: "A medida", cta: "Hablemos de tu negocio", custom: true },
 ];
 
 const FAQ = [
   { q: "¿Qué es Lazo?", a: "Lazo es una plataforma colombiana de tarjetas de fidelización digitales para negocios locales. Cada negocio tiene su tarjeta de sellos con su marca, sus clientes la guardan en la billetera del celular (Apple Wallet en iPhone, Google Wallet en Android) y suman sellos acercando el celular a una etiqueta NFC del mostrador y escribiendo su número de celular. El dueño ve en un panel quién vuelve, quién dejó de venir y a quién avisarle." },
-  { q: "¿Cómo funciona el primer mes gratis?", a: "Aplica al plan Starter. Te dejamos la tarjeta lista con tu marca y la usas un mes sin pagar. Si decides seguir, pagas $79.990 al mes, con IVA incluido." },
+  { q: "¿Cómo funciona el segundo mes gratis?", a: "Aplica al plan Starter. Pagas el primer mes ($79.990, con IVA incluido), te dejamos la tarjeta lista con tu marca y el segundo mes es gratis. Desde el tercer mes pagas $79.990 al mes, sin permanencia." },
   { q: "¿Los precios incluyen IVA? ¿Hay permanencia?", a: "Sí, los precios ya incluyen el IVA. Se paga mes a mes y no hay permanencia mínima: puedes cancelar cuando quieras escribiéndonos por WhatsApp o a info@wontex-devs.com, y no se cobra el mes siguiente." },
   { q: "¿Mis clientes tienen que descargar algo?", a: "No. Tu cliente crea su tarjeta escaneando el QR de tu negocio, desde el navegador del celular. Luego la guarda con un botón en la billetera que ya trae su celular: Apple Wallet en iPhone o Google Wallet en Android. No instala ninguna app." },
   { q: "¿Necesito comprar algún equipo?", a: "No necesitas lector ni datáfono. Basta una etiqueta NFC adhesiva (tipo NTAG213 o NTAG215), que se pega en el mostrador y se activa desde tu panel. El QR solo se usa una vez, para que tu cliente cree su tarjeta; lo pones en un cartel en la caja." },
@@ -61,7 +61,7 @@ function Punch({ bg, hole }: { bg: string; hole: string }) {
 function WhatsAppButton({ className }: { className: string }) {
   return (
     <a href={whatsappHref} target="_blank" rel="noopener" className={`${btn} ${className}`}>
-      <MessageCircle className="size-5" /> Quiero mi primer mes gratis
+      <MessageCircle className="size-5" /> Quiero el segundo mes gratis
     </a>
   );
 }
@@ -136,7 +136,7 @@ function datosEstructurados() {
         description: descripcion,
         publisher: { "@id": id("organizacion") },
         offers: [
-          plan("Starter", 79990, "Para un local que empieza: 300 clientes, 2 personas del equipo y 1 sede. Primer mes gratis."),
+          plan("Starter", 79990, "Para un local que empieza: 300 clientes, 2 personas del equipo y 1 sede. Pagas el primer mes y el segundo es gratis."),
           plan("Pro", 139990, "Para el negocio que ya tiene movimiento: 1.000 clientes, 10 personas del equipo y sedes ilimitadas."),
         ],
       },
@@ -180,7 +180,7 @@ export default function Home() {
             </div>
             <WalletPhone />
             <p className={`${poster} absolute -right-2 top-[70%] flex size-28 lg:-right-12 rotate-12 items-center justify-center rounded-full bg-sun p-3 text-center text-[17px] leading-[1.05] text-coal shadow-[0_14px_28px_-12px_rgb(6_10_36/0.6)] sm:size-36 sm:text-2xl`}>
-              Starter: primer mes gratis
+              Starter: 2.º mes gratis
             </p>
           </div>
         </section>

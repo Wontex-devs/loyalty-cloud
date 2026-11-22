@@ -148,8 +148,8 @@ export function passJson(cfg: Pick<AppleWalletConfig, "passTypeId" | "teamId" | 
       headerFields: [{ key: "stamps", label: "SELLOS", value: `${p.stamps} / ${p.program.stampsRequired}`, textAlignment: "PKTextAlignmentRight" }],
       // La franja (strip.png) muestra el premio y el hilo de sellos: encima no va texto.
       primaryFields: [],
-      // El frente es solo la tarjeta: sin datos del miembro. El progreso está al reverso.
-      secondaryFields: [],
+      // Debajo de la franja, el nombre del cliente (como en la tarjeta web). El progreso está al reverso.
+      secondaryFields: p.customerName.trim() ? [{ key: "member", label: "MIEMBRO", value: p.customerName.trim() }] : [],
       auxiliaryFields: [],
       backFields: back,
     },

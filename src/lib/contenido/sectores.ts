@@ -6,7 +6,7 @@ export const SECTORES: Pagina[] = [
     tipo: "sector",
     titulo: "Tarjeta de fidelización para barberías con sellos digitales",
     descripcion:
-      "Tarjeta de sellos para barbería con tu marca: el cliente la guarda en el celular, suma sellos con el celular y tú ves quién dejó de venir. Primer mes gratis.",
+      "Tarjeta de sellos para barbería con tu marca: el cliente la guarda en el celular, suma sellos con el celular y tú ves quién dejó de venir. Segundo mes gratis.",
     antetitulo: "Para barberías",
     h1: "Tarjeta de fidelización para barberías",
     resumen:
@@ -86,11 +86,11 @@ export const SECTORES: Pagina[] = [
       {
         titulo: "¿Cuánto cuesta y qué plan me conviene?",
         parrafos: [
-          "Los planes son mensuales, con IVA incluido, sin permanencia y con pago mes a mes. Una barbería con un solo local y dos barberos suele quedar bien en el Starter, que además tiene el primer mes gratis para que pruebes con tus clientes de verdad.",
+          "Los planes son mensuales, con IVA incluido, sin permanencia y con pago mes a mes. Una barbería con un solo local y dos barberos suele quedar bien en el Starter, en el que pagas el primer mes y el segundo es gratis, para que pruebes con tus clientes de verdad.",
         ],
         tabla: [
           ["Plan", "Precio al mes", "Incluye"],
-          ["Starter", "$79.990", "300 clientes, 2 personas del equipo, 1 sede, primer mes gratis"],
+          ["Starter", "$79.990", "300 clientes, 2 personas del equipo, 1 sede, segundo mes gratis"],
           ["Pro", "$139.990", "1.000 clientes, 10 personas del equipo, sedes ilimitadas"],
           ["Business", "A medida", "Para cadenas o necesidades especiales"],
         ],
@@ -126,7 +126,7 @@ export const SECTORES: Pagina[] = [
     tipo: "sector",
     titulo: "Tarjeta de fidelización para cafeterías con sellos digitales",
     descripcion:
-      "Tarjeta de sellos para café con la marca de tu cafetería: el cliente suma un sello cada vez que viene y tú ves quién volvió. Primer mes gratis.",
+      "Tarjeta de sellos para café con la marca de tu cafetería: el cliente suma un sello cada vez que viene y tú ves quién volvió. Segundo mes gratis.",
     antetitulo: "Para cafeterías",
     h1: "Tarjeta de fidelización para cafeterías",
     resumen:
@@ -206,11 +206,11 @@ export const SECTORES: Pagina[] = [
       {
         titulo: "¿Cuánto cuesta y cuál plan elegir?",
         parrafos: [
-          "Los planes son mensuales, con IVA incluido y sin permanencia. Una cafetería pequeña con un solo local suele empezar en el Starter, que tiene el primer mes gratis para probar con tus clientes habituales.",
+          "Los planes son mensuales, con IVA incluido y sin permanencia. Una cafetería pequeña con un solo local suele empezar en el Starter, en el que pagas el primer mes y el segundo es gratis, para probar con tus clientes habituales.",
         ],
         tabla: [
           ["Plan", "Precio al mes", "Incluye"],
-          ["Starter", "$79.990", "300 clientes, 2 personas del equipo, 1 sede, primer mes gratis"],
+          ["Starter", "$79.990", "300 clientes, 2 personas del equipo, 1 sede, segundo mes gratis"],
           ["Pro", "$139.990", "1.000 clientes, 10 personas del equipo, sedes ilimitadas"],
           ["Business", "A medida", "Para cadenas o necesidades especiales"],
         ],
@@ -326,11 +326,11 @@ export const SECTORES: Pagina[] = [
       {
         titulo: "¿Cuánto cuesta y cuál plan me conviene?",
         parrafos: [
-          "Los planes son mensuales, con IVA incluido, sin permanencia y con pago mes a mes. Un estudio pequeño suele empezar en el Starter, que tiene el primer mes gratis; un salón con varias estilistas o sedes mira el Pro.",
+          "Los planes son mensuales, con IVA incluido, sin permanencia y con pago mes a mes. Un estudio pequeño suele empezar en el Starter, en el que pagas el primer mes y el segundo es gratis; un salón con varias estilistas o sedes mira el Pro.",
         ],
         tabla: [
           ["Plan", "Precio al mes", "Incluye"],
-          ["Starter", "$79.990", "300 clientes, 2 personas del equipo, 1 sede, primer mes gratis"],
+          ["Starter", "$79.990", "300 clientes, 2 personas del equipo, 1 sede, segundo mes gratis"],
           ["Pro", "$139.990", "1.000 clientes, 10 personas del equipo, sedes ilimitadas"],
           ["Business", "A medida", "Para cadenas o necesidades especiales"],
         ],

@@ -13,8 +13,8 @@ Cómo funciona:
 
 Planes, en pesos colombianos, al mes, con IVA incluido, pago mensual y sin permanencia:
 
-- Starter: $79.990. Hasta 100 clientes, 2 personas del equipo y 1 sede. Primer mes gratis.
-- Pro: $139.990. Hasta 300 clientes, 10 personas del equipo y 3 sedes.
+- Starter: $79.990. Hasta 300 clientes, 2 personas del equipo y 1 sede. Pagas el primer mes y el segundo es gratis.
+- Pro: $139.990. Hasta 1.000 clientes, 10 personas del equipo y sedes ilimitadas.
 - Business: a medida, para cadenas y varias sedes.
 
 ## Páginas

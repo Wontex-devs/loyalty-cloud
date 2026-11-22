@@ -62,12 +62,12 @@ export const GUIAS: Pagina[] = [
       {
         titulo: "¿Cuánto cuesta una tarjeta de fidelización digital con Lazo?",
         parrafos: [
-          "Lazo tiene planes mensuales con el IVA incluido, sin permanencia y con pago mensual. El plan Starter cuesta $79.990 al mes e incluye 300 clientes, 2 personas del equipo y 1 sede, con el primer mes gratis.",
+          "Lazo tiene planes mensuales con el IVA incluido, sin permanencia y con pago mensual. El plan Starter cuesta $79.990 al mes e incluye 300 clientes, 2 personas del equipo y 1 sede; pagas el primer mes y el segundo es gratis.",
           "El plan Pro cuesta $139.990 al mes e incluye 1.000 clientes, 10 personas del equipo y sedes ilimitadas. Para cadenas o negocios con más clientes, el plan Business se arma a la medida de tu negocio.",
         ],
         tabla: [
           ["Plan", "Precio al mes (IVA incluido)", "Clientes", "Equipo", "Sedes"],
-          ["Starter", "$79.990 (primer mes gratis)", "300", "2 personas", "1"],
+          ["Starter", "$79.990 (2.º mes gratis)", "300", "2 personas", "1"],
           ["Pro", "$139.990", "1.000", "10 personas", "Ilimitadas"],
           ["Business", "A medida", "A medida", "A medida", "A medida"],
         ],
@@ -101,7 +101,7 @@ export const GUIAS: Pagina[] = [
       },
       {
         q: "¿Cómo empiezo?",
-        a: "Escríbenos por WhatsApp al 313 893 9222 o a info@wontex-devs.com. Con el plan Starter, el primer mes es gratis y no hay permanencia.",
+        a: "Escríbenos por WhatsApp al 313 893 9222 o a info@wontex-devs.com. Con el plan Starter pagas el primer mes, el segundo es gratis y no hay permanencia.",
       },
       {
         q: "¿Puedo usar mi logo y mis colores?",
@@ -201,7 +201,7 @@ export const GUIAS: Pagina[] = [
       {
         titulo: "¿Qué tengo que comprar para empezar?",
         parrafos: [
-          "Solo una etiqueta NFC adhesiva, tipo NTAG213 o NTAG215, y un cartel con el QR para la caja. No necesitas lector ni datáfono. El plan Starter cuesta $79.990 al mes con el IVA incluido, sin permanencia y con el primer mes gratis.",
+          "Solo una etiqueta NFC adhesiva, tipo NTAG213 o NTAG215, y un cartel con el QR para la caja. No necesitas lector ni datáfono. El plan Starter cuesta $79.990 al mes con el IVA incluido, sin permanencia y con el segundo mes gratis.",
         ],
       },
     ],
