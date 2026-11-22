@@ -10,7 +10,7 @@ import type { Business, CardStatus, LoyaltyProgram } from "@/lib/domain/types";
 export interface LoyaltyCardViewProps {
   business: Pick<Business, "name" | "branding">;
   program: Pick<LoyaltyProgram, "name" | "stampsRequired" | "rewardName">;
-  /** Ya no se muestra en la tarjeta (solo conteo, premio y sellos). */
+  /** Nombre del cliente: va debajo de los sellos, como en el pase de Wallet. */
   customerName?: string;
   stamps: number;
   status: CardStatus;
@@ -28,7 +28,7 @@ export interface LoyaltyCardViewProps {
 
 /**
  * La tarjeta de fidelización, con la misma forma que el pase de Apple Wallet: logo y conteo
- * arriba y la franja con el premio y el hilo de sellos. Nada más: sin datos del miembro ni código QR.
+ * arriba, la franja con el premio y el hilo de sellos, el nombre del miembro y el código QR.
  * Lo que se ve aquí es lo que el cliente guarda en su billetera: solo usa lo que Wallet permite
  * (dos colores planos, la letra de la marca dentro de la franja y el orden fijo de las piezas).
  * Se usa en la tarjeta pública, la vista previa del panel y la portada.
@@ -36,6 +36,7 @@ export interface LoyaltyCardViewProps {
 export function LoyaltyCardView({
   business,
   program,
+  customerName,
   stamps,
   status,
   rewardsAvailable,
@@ -86,6 +87,16 @@ export function LoyaltyCardView({
         rewardReady={ready}
         highlightLastStamp={highlightLastStamp}
       />
+
+      {/* El nombre del cliente, como el campo «MIEMBRO» del pase */}
+      {customerName?.trim() && (
+        <div className={cn("pt-3", pad)}>
+          <p className={label} style={{ color: c.passLabel }}>
+            Miembro
+          </p>
+          <p className="truncate text-[16px] leading-snug">{customerName.trim()}</p>
+        </div>
+      )}
 
       {scanCode ? (
         <div className={cn("pt-4", pad, compact ? "pb-4" : "pb-5")}>
