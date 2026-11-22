@@ -132,29 +132,33 @@ export function WalletSettingsCard() {
         ))}
         <li className="flex items-center gap-3 px-5 py-3">
           <p className="flex-1 text-sm">Días sin venir para «Te falta poco» <span className="text-xs text-muted">(de 5 a 60)</span></p>
-          <NumberInput
-            min={5}
-            max={60}
-            soloAlSalir
-            className="w-20"
-            aria-label="Días sin venir para «Te falta poco» (de 5 a 60)"
-            value={draft.almostDays}
-            disabled={!draft.almost}
-            onValueChange={(n) => void save({ ...draft, almostDays: n })}
-          />
+          <div className="w-20 shrink-0">
+            <NumberInput
+              min={5}
+              max={60}
+              soloAlSalir
+              className="w-full"
+              aria-label="Días sin venir para «Te falta poco» (de 5 a 60)"
+              value={draft.almostDays}
+              disabled={!draft.almost}
+              onValueChange={(n) => void save({ ...draft, almostDays: n })}
+            />
+          </div>
         </li>
         <li className="flex items-center gap-3 px-5 py-3">
           <p className="flex-1 text-sm">Días sin venir para «Te extrañamos» <span className="text-xs text-muted">(de 14 a 180)</span></p>
-          <NumberInput
-            min={14}
-            max={180}
-            soloAlSalir
-            className="w-20"
-            aria-label="Días sin venir para «Te extrañamos» (de 14 a 180)"
-            value={draft.winbackDays}
-            disabled={!draft.winback}
-            onValueChange={(n) => void save({ ...draft, winbackDays: n })}
-          />
+          <div className="w-20 shrink-0">
+            <NumberInput
+              min={14}
+              max={180}
+              soloAlSalir
+              className="w-full"
+              aria-label="Días sin venir para «Te extrañamos» (de 14 a 180)"
+              value={draft.winbackDays}
+              disabled={!draft.winback}
+              onValueChange={(n) => void save({ ...draft, winbackDays: n })}
+            />
+          </div>
         </li>
         <WinbackMessage value={draft.winbackText} disabled={!draft.winback} busy={busy} onSave={(winbackText) => save({ ...draft, winbackText })} />
         <NearbyMessage value={draft.nearbyText} busy={busy} onSave={(nearbyText) => save({ ...draft, nearbyText })} />
