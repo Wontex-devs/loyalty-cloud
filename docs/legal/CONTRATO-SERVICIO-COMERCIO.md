@@ -18,7 +18,7 @@ El Proveedor da al Comercio acceso a la plataforma Lazo, que permite: (a) crear 
 
 | Plan | Incluye | Precio mensual |
 |---|---|---|
-| Starter | 100 clientes, 2 personas del equipo, 1 sede. **Primer mes gratis.** | $79.990 |
+| Starter | 100 clientes, 2 personas del equipo, 1 sede. **Se paga el primer mes y el segundo es gratis.** | $79.990 |
 | Pro | 300 clientes, 10 personas del equipo, 3 sedes | $139.990 |
 | Business | A la medida | `[valor acordado]` |
 
@@ -26,7 +26,7 @@ El plan contratado es: `[Starter / Pro / Business]`.
 
 - Los precios están en pesos colombianos (COP) e incluyen IVA, como se publica en la página. **Decisión:** confirmar con el contador.
 - El pago es `[mensual anticipado]`, dentro de los `[5]` días siguientes a la factura electrónica, por `[transferencia / enlace de pago]`.
-- El primer mes gratis del plan Starter comienza en la fecha de activación. Si el Comercio no cancela antes de que termine, se factura el siguiente mes.
+- En el plan Starter el Comercio paga el primer mes y el segundo es gratis. El mes gratis comienza cuando termina el primer mes pagado. Si el Comercio no cancela antes de que termine el mes gratis, se factura el tercer mes.
 - Si el Comercio supera los límites de su plan, el Proveedor le avisará y podrá proponer un plan superior. No se cobra de forma automática un plan mayor sin su aceptación.
 - **Decisión:** reajuste anual del precio `[según el IPC / con aviso de 30 días]`.
 - La mora de más de `[10]` días permite suspender el servicio (cláusula 10), sin borrar los datos.

@@ -168,7 +168,7 @@ export function PaginaContenido({ pagina: p }: { pagina: Pagina }) {
         {p.tipo !== "legal" && (
           <aside className="mt-16 rounded-2xl bg-sun p-7 sm:p-10">
             <p className={`${poster} text-3xl leading-[1.05] sm:text-4xl`}>¿Quieres tu tarjeta de sellos digital?</p>
-            <p className="mt-3 text-lg leading-relaxed">Te la dejamos lista con tu logo. El plan Starter tiene el primer mes gratis, IVA incluido y sin permanencia.</p>
+            <p className="mt-3 text-lg leading-relaxed">Te la dejamos lista con tu logo. En el plan Starter pagas el primer mes y el segundo es gratis, con IVA incluido y sin permanencia.</p>
             <div className="mt-6 flex flex-col gap-3 sm:flex-row">
               <a
                 href={whatsapp}

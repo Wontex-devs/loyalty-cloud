@@ -137,14 +137,14 @@ export const LEGAL: Pagina[] = [
         titulo: "¿Cuánto cuesta y cómo se paga?",
         tabla: [
           ["Plan", "Incluye", "Precio al mes"],
-          ["Starter", "100 clientes, 2 personas del equipo, 1 sede. Primer mes gratis", "$79.990"],
+          ["Starter", "100 clientes, 2 personas del equipo, 1 sede. Segundo mes gratis", "$79.990"],
           ["Pro", "300 clientes, 10 personas del equipo, 3 sedes", "$139.990"],
           ["Business", "A la medida", "Se cotiza"],
         ],
         lista: [
           "Precios en pesos colombianos, con IVA incluido.",
           "El pago es mensual. No hay permanencia mínima.",
-          "El primer mes gratis del plan Starter empieza el día de la activación. Si no cancelas antes de que termine, se cobra el mes siguiente.",
+          "En el plan Starter pagas el primer mes y el segundo es gratis. El mes gratis empieza cuando termina el primer mes pagado. Si no cancelas antes de que termine el mes gratis, se cobra el tercer mes.",
           "Si superas los límites de tu plan, te avisamos y te proponemos uno mayor. Nunca te cambiamos de plan sin tu aceptación.",
         ],
       },
