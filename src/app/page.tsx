@@ -29,13 +29,15 @@ export const metadata: Metadata = {
 };
 
 const whatsappLink = (text: string) => `https://wa.me/${SALES_WHATSAPP}?text=${encodeURIComponent(text)}`;
-const whatsappHref = whatsappLink(`Hola, quiero el plan Starter de ${PLATFORM_NAME} con el segundo mes gratis.`);
+/** La promoción del plan Starter, igual en el sello, la etiqueta del plan y los botones. */
+const PROMO = "Paga el primer mes de Starter y el segundo es gratis";
+const whatsappHref = whatsappLink(`Hola, quiero la promoción de ${PLATFORM_NAME}: pagar el primer mes de Starter y el segundo gratis.`);
 
 const h2 = `${poster} text-balance text-4xl leading-[1.02] sm:text-6xl`;
-const btn = "inline-flex h-14 items-center justify-center gap-2.5 rounded-lg px-6 text-base font-semibold transition-transform duration-150 ease-out hover:-translate-y-0.5 active:scale-[0.97]";
+const btn = "inline-flex min-h-14 items-center justify-center gap-2.5 rounded-lg px-6 py-3 text-center leading-snug text-base font-semibold transition-transform duration-150 ease-out hover:-translate-y-0.5 active:scale-[0.97]";
 
 const PLANS = [
-  { name: "Starter", who: "Para un local que empieza", lines: ["300 clientes", "2 personas del equipo", "1 sede"], price: "$79.990", chip: "2.º mes gratis", cta: "Quiero el Starter", freeMonth: true },
+  { name: "Starter", who: "Para un local que empieza", lines: ["300 clientes", "2 personas del equipo", "1 sede"], price: "$79.990", chip: PROMO, cta: PROMO, freeMonth: true },
   { name: "Pro", who: "Para el negocio que ya tiene movimiento", lines: ["1.000 clientes", "10 personas del equipo", "Sedes ilimitadas"], price: "$139.990", chip: "Recomendado", cta: "Quiero este plan", featured: true },
   { name: "Business", who: "Para cadenas y negocios grandes", lines: ["Clientes a tu medida", "Equipo a tu medida", "Sedes a tu medida"], price: "A medida", cta: "Hablemos de tu negocio", custom: true },
 ];
@@ -61,7 +63,7 @@ function Punch({ bg, hole }: { bg: string; hole: string }) {
 function WhatsAppButton({ className }: { className: string }) {
   return (
     <a href={whatsappHref} target="_blank" rel="noopener" className={`${btn} ${className}`}>
-      <MessageCircle className="size-5" /> Quiero el segundo mes gratis
+      <MessageCircle className="size-5 shrink-0" /> {PROMO}
     </a>
   );
 }
@@ -179,8 +181,8 @@ export default function Home() {
               <NudoDibujo />
             </div>
             <WalletPhone />
-            <p className={`${poster} absolute -right-2 top-[70%] flex size-28 lg:-right-12 rotate-12 items-center justify-center rounded-full bg-sun p-3 text-center text-[17px] leading-[1.05] text-coal shadow-[0_14px_28px_-12px_rgb(6_10_36/0.6)] sm:size-36 sm:text-2xl`}>
-              Starter: 2.º mes gratis
+            <p className={`${poster} absolute -right-2 top-[66%] flex size-32 lg:-right-14 rotate-12 items-center justify-center rounded-full bg-sun p-4 text-center text-[13px] leading-[1.08] text-coal shadow-[0_14px_28px_-12px_rgb(6_10_36/0.6)] sm:size-44 sm:p-5 sm:text-[18px]`}>
+              {PROMO}
             </p>
           </div>
         </section>
@@ -313,7 +315,7 @@ export default function Home() {
                     backgroundRepeat: "repeat-x",
                   }}
                 />
-                <div className="flex items-center justify-between gap-3">
+                <div className={p.freeMonth ? "flex flex-col items-start gap-2" : "flex items-center justify-between gap-3"}>
                   <h3 className={`${poster} text-4xl`}>{p.name}</h3>
                   <span className={`rounded-lg px-3 py-1.5 text-sm font-semibold ${p.freeMonth ? "bg-sun text-coal" : p.featured ? "bg-white/15 text-white" : "invisible"}`}>
                     {p.chip}
@@ -332,7 +334,7 @@ export default function Home() {
                     href={p.freeMonth ? whatsappHref : whatsappLink(`Hola, quiero saber más del plan ${p.name} de ${PLATFORM_NAME}.`)}
                     target="_blank"
                     rel="noopener"
-                    className={`mt-5 flex h-12 items-center justify-center rounded-lg px-4 font-semibold transition-transform duration-150 ease-out hover:-translate-y-0.5 active:scale-[0.97] ${
+                    className={`mt-5 flex min-h-12 items-center justify-center rounded-lg px-4 py-2 text-center leading-snug font-semibold transition-transform duration-150 ease-out hover:-translate-y-0.5 active:scale-[0.97] ${
                       p.featured ? "bg-sun text-coal" : "border-2 border-coal text-coal"
                     }`}
                   >
