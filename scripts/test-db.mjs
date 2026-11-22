@@ -481,7 +481,7 @@ console.log("\nLímites de plan y sedes");
   check("con el cupo de clientes lleno no hay nuevas inscripciones → PLAN_LIMIT_CUSTOMERS", expectError(r, "PLAN_LIMIT_CUSTOMERS"), r);
   r = await joinProgram("negocio-a", "+573001112233", "Ana Prueba");
   check("con el cupo lleno las clientas existentes siguen recuperando su tarjeta", r.ok && r.rows[0]?.existing === true, r);
-  await db.query("update public.plans set max_customers = 300 where id = 'plan_pro'");
+  await db.query("update public.plans set max_customers = 1000 where id = 'plan_pro'");
 
   r = await as(U.ownerA, "select public.set_business_plan($1, 'plan_business')", [A]);
   check("un comercio no cambia su propio plan", expectError(r, "FORBIDDEN"), r);
@@ -1195,10 +1195,11 @@ console.log("\nPanel de la plataforma: usuarios, roles y suspensión");
 
 console.log("\nPlanes comerciales");
 {
-  const p = (await db.query("select id, price_monthly::int price, max_customers from public.plans order by id")).rows;
+  const p = (await db.query("select id, price_monthly::int price, max_customers, max_locations, features from public.plans order by id")).rows;
   const by = Object.fromEntries(p.map((x) => [x.id, x]));
-  check("Starter: $79.990 y 100 clientes", by.plan_starter.price === 79990 && by.plan_starter.max_customers === 100, by.plan_starter);
-  check("Pro: $139.990 y 300 clientes", by.plan_pro.price === 139990 && by.plan_pro.max_customers === 300, by.plan_pro);
+  check("Starter: $79.990, 300 clientes y 1 sede", by.plan_starter.price === 79990 && by.plan_starter.max_customers === 300 && by.plan_starter.max_locations === 1, by.plan_starter);
+  check("Pro: $139.990, 1.000 clientes y sedes sin límite", by.plan_pro.price === 139990 && by.plan_pro.max_customers === 1000 && by.plan_pro.max_locations === null, by.plan_pro);
+  check("las características que ve el dueño dicen lo mismo", by.plan_starter.features.includes("Hasta 300 clientes") && by.plan_pro.features.includes("Hasta 1.000 clientes") && by.plan_pro.features.includes("Sedes ilimitadas"), p);
 }
 
 console.log("\nDatos de demostración");

@@ -35,9 +35,9 @@ const h2 = `${poster} text-balance text-4xl leading-[1.02] sm:text-6xl`;
 const btn = "inline-flex h-14 items-center justify-center gap-2.5 rounded-lg px-6 text-base font-semibold transition-transform duration-150 ease-out hover:-translate-y-0.5 active:scale-[0.97]";
 
 const PLANS = [
-  { name: "Starter", who: "Para un local que empieza", lines: ["100 clientes", "2 personas del equipo", "1 sede"], price: "$79.990", chip: "2.º mes gratis", cta: "Quiero el Starter", freeMonth: true },
-  { name: "Pro", who: "Para el negocio que ya tiene movimiento", lines: ["300 clientes", "10 personas del equipo", "3 sedes"], price: "$139.990", chip: "Recomendado", cta: "Quiero este plan", featured: true },
-  { name: "Business", who: "Para cadenas y varias sedes", lines: ["Clientes a tu medida", "Equipo a tu medida", "Sedes a tu medida"], price: "A medida", cta: "Hablemos de tu negocio", custom: true },
+  { name: "Starter", who: "Para un local que empieza", lines: ["300 clientes", "2 personas del equipo", "1 sede"], price: "$79.990", chip: "2.º mes gratis", cta: "Quiero el Starter", freeMonth: true },
+  { name: "Pro", who: "Para el negocio que ya tiene movimiento", lines: ["1.000 clientes", "10 personas del equipo", "Sedes ilimitadas"], price: "$139.990", chip: "Recomendado", cta: "Quiero este plan", featured: true },
+  { name: "Business", who: "Para cadenas y negocios grandes", lines: ["Clientes a tu medida", "Equipo a tu medida", "Sedes a tu medida"], price: "A medida", cta: "Hablemos de tu negocio", custom: true },
 ];
 
 const FAQ = [
@@ -51,7 +51,7 @@ const FAQ = [
   { q: "¿Se pueden hacer trampas con los sellos?", a: "Hay varios frenos. Entre dos sellos debe pasar un tiempo mínimo que tú eliges, y el sistema bloquea los toques repetidos. Cada sello queda registrado con fecha y hora, y puedes anularlo desde el historial. Si sospechas que alguien copió la etiqueta, la cambias desde tu panel y la anterior deja de funcionar." },
   { q: "¿Quién ve los datos de mis clientes?", a: "Los datos de tus clientes son de tu negocio. Lazo los guarda solo para operar tu tarjeta, como encargado según la Ley 1581 de 2012, y no los vende ni los comparte con otros negocios. Tus clientes aceptan la política de datos al inscribirse, pueden dejar de recibir avisos desde su tarjeta y pedirte que borres sus datos." },
   { q: "¿La tarjeta de lealtad queda en Apple Wallet y en Google Wallet?", a: "Sí. En iPhone queda en Apple Wallet y en Android en Google Wallet, con tu logo, tus colores y los sellos al día: cada sello nuevo se actualiza solo en la billetera del cliente." },
-  { q: "¿Funciona con varias sedes?", a: "Sí. El plan Starter incluye una sede, el Pro hasta tres y el Business las que necesites. Cada persona de tu equipo tiene su propio usuario." },
+  { q: "¿Funciona con varias sedes?", a: "Sí. El plan Starter incluye una sede; el Pro y el Business, todas las que necesites. Cada persona de tu equipo tiene su propio usuario." },
 ];
 
 function Punch({ bg, hole }: { bg: string; hole: string }) {
@@ -136,8 +136,8 @@ function datosEstructurados() {
         description: descripcion,
         publisher: { "@id": id("organizacion") },
         offers: [
-          plan("Starter", 79990, "Para un local que empieza: 100 clientes, 2 personas del equipo y 1 sede. Pagas el primer mes y el segundo es gratis."),
-          plan("Pro", 139990, "Para el negocio que ya tiene movimiento: 300 clientes, 10 personas del equipo y 3 sedes."),
+          plan("Starter", 79990, "Para un local que empieza: 300 clientes, 2 personas del equipo y 1 sede. Pagas el primer mes y el segundo es gratis."),
+          plan("Pro", 139990, "Para el negocio que ya tiene movimiento: 1.000 clientes, 10 personas del equipo y sedes ilimitadas."),
         ],
       },
       {

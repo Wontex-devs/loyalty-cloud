@@ -62,13 +62,13 @@ export const GUIAS: Pagina[] = [
       {
         titulo: "¿Cuánto cuesta una tarjeta de fidelización digital con Lazo?",
         parrafos: [
-          "Lazo tiene planes mensuales con el IVA incluido, sin permanencia y con pago mensual. El plan Starter cuesta $79.990 al mes e incluye 100 clientes, 2 personas del equipo y 1 sede; pagas el primer mes y el segundo es gratis.",
-          "El plan Pro cuesta $139.990 al mes e incluye 300 clientes, 10 personas del equipo y 3 sedes. Para cadenas o negocios con más sedes, el plan Business se arma a la medida de tu negocio.",
+          "Lazo tiene planes mensuales con el IVA incluido, sin permanencia y con pago mensual. El plan Starter cuesta $79.990 al mes e incluye 300 clientes, 2 personas del equipo y 1 sede; pagas el primer mes y el segundo es gratis.",
+          "El plan Pro cuesta $139.990 al mes e incluye 1.000 clientes, 10 personas del equipo y sedes ilimitadas. Para cadenas o negocios con más clientes, el plan Business se arma a la medida de tu negocio.",
         ],
         tabla: [
           ["Plan", "Precio al mes (IVA incluido)", "Clientes", "Equipo", "Sedes"],
-          ["Starter", "$79.990 (2.º mes gratis)", "100", "2 personas", "1"],
-          ["Pro", "$139.990", "300", "10 personas", "3"],
+          ["Starter", "$79.990 (2.º mes gratis)", "300", "2 personas", "1"],
+          ["Pro", "$139.990", "1.000", "10 personas", "Ilimitadas"],
           ["Business", "A medida", "A medida", "A medida", "A medida"],
         ],
       },
@@ -97,7 +97,7 @@ export const GUIAS: Pagina[] = [
     preguntas: [
       {
         q: "¿Una tarjeta de fidelización digital sirve para un negocio pequeño?",
-        a: "Sí. Está pensada para negocios locales con clientes que repiten, como barberías, cafeterías, panaderías o salones. El plan Starter cubre hasta 100 clientes y una sede.",
+        a: "Sí. Está pensada para negocios locales con clientes que repiten, como barberías, cafeterías, panaderías o salones. El plan Starter cubre hasta 300 clientes y una sede.",
       },
       {
         q: "¿Cómo empiezo?",
