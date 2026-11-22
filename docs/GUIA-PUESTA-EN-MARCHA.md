@@ -19,8 +19,7 @@ Una página para dejar el programa listo antes del primer cliente: unos 30 minut
 - **Logo:** cuadrado de al menos 512 × 512 px, con el logo centrado. La imagen llena el círculo y las esquinas se recortan en redondo; deja un poco de espacio alrededor.
 - **Ilustración de la franja:** un dibujo de al menos 600 px (PNG o JPG). Al subirla se le quita el fondo automáticamente; si la prefieres con fondo, desmarca «Quitar el fondo automáticamente» antes de subirla.
 - **Sello:** cuadrado de al menos 256 × 256 px, PNG con fondo transparente.
-- **Colores, tipografía e iniciales:** se prueban en la vista previa y solo llegan a las tarjetas cuando pulsas **Guardar cambios**. Con «Descartar» vuelves a lo que tenías.
-- **Logo, ilustración y sello:** se guardan en el momento de subirlos.
+- **Nada cambia hasta que guardes:** colores, tipografía, iniciales, logo, ilustración y sello se prueban en la vista previa y solo llegan a las tarjetas cuando pulsas **Guardar cambios**. Con «Descartar» vuelves a lo que tenías.
 
 ## 4. Equipo (opcional) — *Más opciones → Empleados*
 - Invita a quien atiende en caja.
@@ -40,7 +39,7 @@ Una página para dejar el programa listo antes del primer cliente: unos 30 minut
 
 ### Con la etiqueta NFC del mostrador — *Tarjeta, QR y NFC → Sellar con el celular (NFC)*
 1. El equipo de Lazo te entrega **en persona** la etiqueta NFC ya grabada para tu comercio.
-2. Activa «Permitir sellar con el toque del celular».
+2. Activa «Permitir sellar con el toque del celular». Los ajustes de esta sección se aplican al pulsar **Guardar ajustes**.
 3. Deja **«Sellos por día con el toque» en 1**: así nadie puede sumar varias veces el mismo día aunque guarde el enlace.
 4. Si quieres más control, activa «Exigir estar en el local para sumar con el toque». Necesita que tu sede tenga ubicación; el celular del cliente pedirá permiso para compartirla en ese momento y no se guarda.
 5. Pon la etiqueta en el mostrador, visible y al alcance del cliente.
