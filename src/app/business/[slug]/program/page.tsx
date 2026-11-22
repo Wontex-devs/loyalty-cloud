@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Check } from "lucide-react";
+import { Check, Loader2 } from "lucide-react";
 import { useScope, RequirePermission } from "@/components/business/business-shell";
 import { LoyaltyCardView } from "@/components/loyalty/loyalty-card";
 import { useData } from "@/lib/data/store";
@@ -31,6 +31,8 @@ export default function ProgramPage() {
   );
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   if (!program || !form) return null;
   const set = <K extends keyof ProgramInput>(k: K, v: ProgramInput[K]) => {
@@ -38,7 +40,7 @@ export default function ProgramPage() {
     setSaved(false);
   };
 
-  const save = (e: React.FormEvent) => {
+  const save = async (e: React.FormEvent) => {
     e.preventDefault();
     const parsed = programSchema.safeParse(form);
     if (!parsed.success) {
@@ -50,8 +52,13 @@ export default function ProgramPage() {
       return;
     }
     setErrors({});
-    updateProgram(program.id, { ...parsed.data, rewardExpiryDays: parsed.data.rewardExpiryDays || null, birthdayReward: parsed.data.birthdayReward || null });
-    setSaved(true);
+    setSaving(true);
+    setSaveError(null);
+    const res = await updateProgram(program.id, { ...parsed.data, rewardExpiryDays: parsed.data.rewardExpiryDays || null, birthdayReward: parsed.data.birthdayReward || null });
+    setSaving(false);
+    // «Cambios guardados» solo cuando el servidor lo confirmó.
+    if (res.ok) setSaved(true);
+    else setSaveError(res.message);
   };
 
   const stampsChanged = form.stampsRequired !== program.stampsRequired;
@@ -140,7 +147,10 @@ export default function ProgramPage() {
                 <Check className="size-4" /> Cambios guardados
               </span>
             )}
-            <Button type="submit">Guardar cambios</Button>
+            {saveError && <span className="text-sm text-danger">No se guardó: {saveError}</span>}
+            <Button type="submit" disabled={saving}>
+              {saving && <Loader2 className="size-4 animate-spin" />} Guardar cambios
+            </Button>
           </div>
         </form>
 

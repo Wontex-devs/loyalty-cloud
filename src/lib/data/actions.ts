@@ -11,7 +11,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { brandingSchema, businessSchema, businessSettingsSchema, programSchema, staffInviteSchema, type BusinessSettingsInput } from "@/lib/domain/schemas";
+import { brandingSchema, businessSchema, businessSettingsSchema, programPatchSchema, staffInviteSchema, type BusinessSettingsInput } from "@/lib/domain/schemas";
 import { getSession, homePathFor } from "./queries";
 import { esSuperadmin } from "@/lib/domain/acceso";
 import { dbErrorMessage } from "./errors";
@@ -89,7 +89,7 @@ export async function goHome() {
 
 /* ---------- Comercio ---------- */
 
-const programPatch = programSchema.partial().extend({ active: z.boolean().optional() });
+const programPatch = programPatchSchema;
 
 export async function updateProgramAction(programId: string, patch: Partial<LoyaltyProgram>): Promise<ActionResult> {
   const parsed = programPatch.safeParse(patch);
