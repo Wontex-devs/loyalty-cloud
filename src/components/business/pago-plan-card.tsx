@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { CheckCircle2, CreditCard, Gift, Loader2, XCircle } from "lucide-react";
 import { Badge, Button, Card, CardHeader, Select } from "@/components/ui";
-import { estadoPagoAction, iniciarPagoAction, type EstadoPago } from "@/lib/data/pagos-actions";
+import { confirmarRegresoAction, estadoPagoAction, iniciarPagoAction, type EstadoPago } from "@/lib/data/pagos-actions";
 import { ESTADOS_COBRO, estadoCobro, fechaCorta, hoyColombia, sumarMeses, textoVencimiento } from "@/lib/domain/cobros";
 import { formatMoney } from "@/lib/utils";
 
@@ -11,8 +11,8 @@ const MESES = [1, 3, 6, 12];
 
 /**
  * «Plan y pago» en la configuración del comercio: hasta cuándo está pagado y el botón para pagar
- * en línea con Wompi (PSE, Nequi, tarjeta…). Al volver de Wompi muestra si el pago quedó aprobado:
- * la confirmación llega al servidor por el aviso de Wompi, así que se espera unos segundos.
+ * en línea (Mercado Pago o Wompi). Al volver muestra si el pago quedó aprobado: la confirmación
+ * llega al servidor consultando a la pasarela, así que puede tardar unos segundos.
  */
 export function PagoPlanCard({ businessId }: { businessId: string }) {
   const [estado, setEstado] = useState<EstadoPago | null>(null);
@@ -30,8 +30,14 @@ export function PagoPlanCard({ businessId }: { businessId: string }) {
 
   useEffect(() => {
     void cargar();
-    const ref = new URLSearchParams(window.location.search).get("pago");
-    if (ref?.startsWith("lazo-")) setRegreso(ref);
+    const q = new URLSearchParams(window.location.search);
+    const ref = q.get("pago");
+    if (ref?.startsWith("lazo-")) {
+      setRegreso(ref);
+      // Mercado Pago agrega payment_id al volver: se confirma de una vez (consultando su API).
+      const pid = q.get("payment_id") ?? q.get("collection_id");
+      if (pid && pid !== "null") void confirmarRegresoAction(pid).then(() => cargar());
+    }
   }, [cargar]);
 
   // Al volver de Wompi: se consulta cada 3 s, hasta 90 s, hasta que la orden tenga su estado final.
@@ -81,7 +87,7 @@ export function PagoPlanCard({ businessId }: { businessId: string }) {
           <div className="flex items-start gap-2 rounded-lg bg-canvas px-3 py-2.5">
             {!orden || orden.estado === "PENDING" ? (
               <>
-                <Loader2 className="mt-0.5 size-4 shrink-0 animate-spin" /> Estamos confirmando tu pago con Wompi…
+                <Loader2 className="mt-0.5 size-4 shrink-0 animate-spin" /> Estamos confirmando tu pago…
               </>
             ) : orden.estado === "APPROVED" ? (
               <>
@@ -128,9 +134,13 @@ export function PagoPlanCard({ businessId }: { businessId: string }) {
               {conMesGratis && " (con el mes gratis)"}.
             </p>
             <Button onClick={pagar} disabled={yendo} className="w-full">
-              {yendo ? <Loader2 className="size-4 animate-spin" /> : <CreditCard className="size-4" />} Pagar con Wompi
+              {yendo ? <Loader2 className="size-4 animate-spin" /> : <CreditCard className="size-4" />} {estado.pasarela === "mercadopago" ? "Pagar con Mercado Pago" : "Pagar con Wompi"}
             </Button>
-            <p className="text-xs text-muted">PSE, Nequi, Bancolombia o tarjeta. El pago se hace en la página segura de Wompi.</p>
+            <p className="text-xs text-muted">
+              {estado.pasarela === "mercadopago"
+                ? "PSE, tarjeta débito o crédito y Efecty. El pago se hace en la página segura de Mercado Pago."
+                : "PSE, Nequi, Bancolombia o tarjeta. El pago se hace en la página segura de Wompi."}
+            </p>
             {estado.pruebas && <p className="text-xs text-warning">Modo de pruebas: los pagos no se cobran de verdad.</p>}
           </>
         ) : (

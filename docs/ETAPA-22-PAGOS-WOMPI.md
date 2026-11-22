@@ -1,4 +1,34 @@
-# Etapa 22 · Pago del plan en línea con Wompi
+# Etapa 22 · Pago del plan en línea (Mercado Pago o Wompi)
+
+> **Pasarela en uso: Mercado Pago.** El registro de comercios de Wompi estaba caído (noviembre de 2026),
+> así que se agregó Mercado Pago. Si están las variables de Mercado Pago, el panel usa Mercado Pago;
+> si no, usa Wompi. La parte de la base de datos (órdenes, una sola confirmación, mes gratis) es la misma.
+
+## Mercado Pago: para encenderlo (lo hace la dueña de la cuenta)
+
+1. **Entra a [mercadopago.com.co](https://www.mercadopago.com.co)** con tu cuenta. Sirve la de Mercado Libre; si no tienes, créala.
+2. **Ve a [mercadopago.com.co/developers/panel](https://www.mercadopago.com.co/developers/panel) → *Crear aplicación*:**
+   - nombre: **Lazo**;
+   - tipo: **Pagos online**;
+   - producto: **Checkout Pro**.
+3. **Dentro de la aplicación → *Credenciales de producción*.** Copia el **Access Token** (empieza por `APP_USR-`).
+4. **En la aplicación → *Webhooks* → *Configurar notificaciones*:**
+   - URL de producción: `https://lazo.wontex-devs.com/api/pagos/mercadopago`;
+   - evento: **Pagos**;
+   - guarda y copia la **clave secreta** que aparece.
+5. **En Vercel → loyalty-cloud → *Settings* → *Environment Variables* (Production), crea:**
+   - `MERCADOPAGO_ACCESS_TOKEN` = el Access Token;
+   - `MERCADOPAGO_WEBHOOK_SECRET` = la clave secreta del webhook.
+6. **Avisa a Claude.** Hace el *Redeploy* y comprueba que la tarjeta diga «Pagar con Mercado Pago».
+
+Cómo se confirma un pago:
+- Al volver de Mercado Pago, o cuando llega su aviso, el servidor **consulta el pago en la API de Mercado Pago** con el Access Token (`GET /v1/payments/{id}`).
+- Solo lo registra si está aprobado, con la referencia y el valor exactos de la orden. Los parámetros de la URL o del aviso no bastan por sí solos.
+- Si está la clave del webhook, además se revisa la firma `x-signature`.
+
+---
+
+# Wompi (alternativa)
 
 El comercio paga su plan desde **Configuración → Plan {nombre}** con el botón **«Pagar con Wompi»**. Puede pagar con PSE, Nequi, Bancolombia o tarjeta.
 El pago se registra solo en el control de cobros. Si es el primer pago de un comercio nuevo en Starter, se suma el segundo mes gratis.

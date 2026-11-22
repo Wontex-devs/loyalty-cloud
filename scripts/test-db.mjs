@@ -1477,7 +1477,7 @@ console.log("\nDatos de demostración");
   const tras = (await db.query("select to_char(paid_until, 'YYYY-MM-DD') d, free_month_pending p from public.business_billing where business_id = $1", [tienda])).rows[0];
   check("pago en línea: el primer pago del Starter suma el segundo mes gratis", tras.d === esperado && tras.p === false, tras);
   const pago = (await db.query("select amount, months, free_months, note, created_by from public.business_payments where business_id = $1", [tienda])).rows;
-  check("pago en línea: queda en el historial con nota de Wompi y quién pagó", pago.length === 1 && pago[0].amount === precio && pago[0].free_months === 1 && /Wompi · tx-3/.test(pago[0].note) && pago[0].created_by === dueno, pago);
+  check("pago en línea: queda en el historial con nota de Wompi y quién pagó", pago.length === 1 && pago[0].amount === precio && pago[0].free_months === 1 && /^Pago en línea · tx-3$/.test(pago[0].note) && pago[0].created_by === dueno, pago);
   q = await asService("select public.confirm_online_payment($1, 'tx-3', 'APPROVED', $2) r", [orden3.reference, orden3.amount_cents]);
   const pagos = (await db.query("select count(*)::int n from public.business_payments where business_id = $1", [tienda])).rows[0].n;
   check("pago en línea: si Wompi repite el aviso, no se cobra dos veces", q.ok && q.rows[0].r === "already" && pagos === 1, { q, pagos });
