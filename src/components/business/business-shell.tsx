@@ -4,6 +4,7 @@ import { createContext, useContext } from "react";
 import Link from "next/link";
 import {
   BarChart3,
+  FileText,
   CreditCard,
   ExternalLink,
   Gift,
@@ -64,6 +65,7 @@ export function BusinessShell({ slug, children }: { slug: string; children: Reac
     ...(can(m, "staff.manage")
       ? [
           { href: `${base}/staff`, label: "Empleados", icon: UserCog },
+          { href: `${base}/reporte`, label: "Reporte del mes", icon: FileText },
           { href: `${base}/analytics`, label: "Estadísticas", icon: BarChart3 },
         ]
       : []),

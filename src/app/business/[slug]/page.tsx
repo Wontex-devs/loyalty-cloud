@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowUpRight, Gift, Megaphone, QrCode, Repeat, Sparkles, Users, CalendarCheck } from "lucide-react";
+import { ArrowUpRight, Gift, Megaphone, QrCode, Repeat, Sparkles, Users, CalendarCheck, FileText } from "lucide-react";
 import { useData } from "@/lib/data/store";
 import { nombreParaSaludo } from "@/lib/domain/nombre";
 import { onboardingSteps } from "@/components/business/onboarding";
@@ -60,6 +60,13 @@ export default function BusinessDashboard() {
       <PageHeader
         title={supportView ? business.name : saludo ? `Hola, ${saludo}` : "Hola"}
         description={`Así va ${program?.name ?? "tu programa"} en los últimos 30 días.`}
+        actions={
+          can(m, "staff.manage") ? (
+            <Link href={`${base}/reporte`} className="inline-flex items-center gap-1.5 text-sm font-medium text-cobalt hover:underline">
+              <FileText className="size-4" /> Ver reporte del mes
+            </Link>
+          ) : undefined
+        }
       />
 
       {/* Lo que el dueño hace a diario, a un toque. */}
