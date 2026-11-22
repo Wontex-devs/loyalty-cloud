@@ -50,7 +50,8 @@ export interface LocationInput {
 export const STAMP_ICONS = ["check", "heart", "star", "sparkles", "flower", "gem", "crown", "scissors", "coffee"] as const;
 export type StampIcon = (typeof STAMP_ICONS)[number];
 export const CARD_FONTS = ["serif", "sans", "elegante", "manuscrita", "redondeada", "impacto", "geometrica"] as const;
-export type CardFont = (typeof CARD_FONTS)[number];
+/** Las letras que trae Lazo y «propia»: la que subió el comercio (branding.fontUrl). */
+export type CardFont = (typeof CARD_FONTS)[number] | "propia";
 export type { CardStyle } from "./card-palette";
 import type { CardStyle } from "./card-palette";
 
@@ -66,6 +67,10 @@ export interface BusinessBranding {
   /** Ilustración de la franja (PNG transparente, misma carpeta). Si existe, reemplaza a la inicial de fondo. */
   illustrationUrl?: string;
   font?: CardFont;
+  /** Letra propia del comercio (TTF, OTF o WOFF en su carpeta de Storage). Se usa con font = "propia". */
+  fontUrl?: string;
+  /** Nombre de la letra propia, para mostrarlo en el panel. */
+  fontName?: string;
   /** Estilo de la tarjeta: clásico (por defecto), noche y oro, cristal o negro mate. */
   cardStyle?: CardStyle;
   primary: string; // color de marca

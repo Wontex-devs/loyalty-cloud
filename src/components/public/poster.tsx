@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import { Printer } from "lucide-react";
 import type { BusinessBranding } from "@/lib/domain/types";
-import { BrandMark, brandCase, brandFont } from "@/components/loyalty/brand-mark";
+import { BrandMark, brandCase, brandFont, FuenteMarca } from "@/components/loyalty/brand-mark";
 import { cn } from "@/lib/utils";
 
 interface PosterProps {
@@ -32,6 +32,7 @@ export function Poster({ slug, business, program }: PosterProps) {
         style={{ background: b.cardBackground, color: b.cardForeground }}
       >
         <div>
+          <FuenteMarca branding={b} />
           <BrandMark branding={b} className={`mx-auto size-[22mm] rounded-full text-[9mm] ${brandFont(b)}`} style={{ background: b.cardForeground, color: b.cardBackground }} />
           <p className={cn("mt-[6mm] text-[13mm] leading-none", brandCase(b), brandFont(b, "tracking-[0.12em]"))}>{business.name}</p>
           {program.name.trim().toLowerCase() !== business.name.trim().toLowerCase() && (
@@ -40,7 +41,7 @@ export function Poster({ slug, business, program }: PosterProps) {
         </div>
 
         <div>
-          <p className="font-serif text-[10mm] leading-tight">Escanea y únete</p>
+          <p className={cn("text-[10mm] leading-tight", brandFont(b))}>Escanea y únete</p>
           <div className="mx-auto mt-[6mm] w-fit rounded-[6mm] bg-white p-[6mm]">
             {url && <QRCodeSVG value={url} size={720} level="M" style={{ width: "80mm", height: "80mm" }} />}
           </div>

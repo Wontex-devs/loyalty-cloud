@@ -1,6 +1,6 @@
 "use client";
 
-import { BrandMark, brandCase, brandFont } from "./brand-mark";
+import { BrandMark, brandCase, brandFont, FuenteMarca } from "./brand-mark";
 import { HiloStrip } from "./hilo-strip";
 import { CodigoQr } from "./codigo-qr";
 import { cn } from "@/lib/utils";
@@ -58,6 +58,7 @@ export function LoyaltyCardView({
 
   return (
     <div className={cn("relative mx-auto w-full max-w-[440px] overflow-hidden rounded-[18px]", plano ? "border-2 border-coal" : "shadow-pop", className)} style={{ background: c.bg, color: c.text }}>
+      <FuenteMarca branding={b} />
       {/* Fila superior: es lo que asoma cuando las tarjetas están apiladas en Wallet */}
       <div className={cn("flex items-center justify-between gap-3 pt-4 pb-3", pad)}>
         <div className="flex min-w-0 items-center gap-2.5">

@@ -86,7 +86,7 @@ export interface DataApi {
   updateProgram: (programId: string, patch: Partial<LoyaltyProgram>) => Promise<{ ok: true } | { ok: false; message: string }>;
   updateBranding: (businessId: string, patch: Partial<BusinessBranding>) => void;
   /** Guarda varios cambios de marca de una vez y espera la respuesta (botón «Guardar cambios»). */
-  saveBranding: (businessId: string, patch: Partial<BusinessBranding>, imagenes?: ImagenesMarca) => Promise<OpResult>;
+  saveBranding: (businessId: string, patch: Partial<BusinessBranding>, imagenes?: ImagenesMarca, letra?: LetraPendiente) => Promise<OpResult>;
   /** Sube (o quita, con null) el logotipo del comercio. */
   setLogo: (businessId: string, file: File | null) => Promise<OpResult>;
   setCover: (businessId: string, file: File | null) => Promise<OpResult>;
@@ -101,6 +101,8 @@ export interface DataApi {
 /** Imágenes de marca pendientes de guardar: ya preparadas (PNG) para subir, o null para quitarlas. */
 export type CampoImagenMarca = "logoUrl" | "stampUrl" | "illustrationUrl";
 export type ImagenesMarca = Partial<Record<CampoImagenMarca, Blob | null>>;
+/** Letra propia elegida en el editor y aún sin subir (null = quitarla). */
+export type LetraPendiente = { archivo: Blob; extension: "ttf" | "otf" | "woff"; nombre: string } | null;
 
 export const DataContext = createContext<DataApi | null>(null);
 

@@ -14,6 +14,8 @@ const FAMILIES: Record<CardFont, { family: string; weight: number }> = {
   redondeada: { family: "Nunito", weight: 700 },
   impacto: { family: "Bebas Neue", weight: 400 },
   geometrica: { family: "Montserrat", weight: 600 },
+  // Si la letra propia no se puede cargar, la imagen usa la clásica.
+  propia: { family: "Cormorant Garamond", weight: 500 },
 };
 
 /** Letra fina para títulos y etiquetas de la franja. */
@@ -62,11 +64,38 @@ function load(family: string, weight: number) {
   return p;
 }
 
-/** Letra del nombre del comercio ("Marca") y letra de títulos ("Titulo") para la imagen. */
-export async function walletFonts(font: CardFont | undefined): Promise<ImageFont[]> {
+/** Letra propia del comercio (su archivo en Storage): se descarga una vez y queda en memoria. */
+function loadPropia(url: string) {
+  let p = cache.get(url);
+  if (!p) {
+    p = fetch(url, { cache: "force-cache", next: { revalidate: MES } })
+      .then(async (r) => {
+        if (!r.ok) return null;
+        const data = await r.arrayBuffer();
+        // La imagen entiende TTF, OTF y WOFF (no WOFF2); se revisa la firma del archivo.
+        const firma = new Uint8Array(data.slice(0, 4));
+        const ok = [[0, 1, 0, 0], [0x4f, 0x54, 0x54, 0x4f], [0x77, 0x4f, 0x46, 0x46], [0x74, 0x72, 0x75, 0x65]].some((f) => f.every((b, i) => firma[i] === b));
+        return ok && data.byteLength <= 2_097_152 ? data : null;
+      })
+      .catch(() => null)
+      .then((d) => {
+        if (!d) cache.delete(url);
+        return d;
+      });
+    cache.set(url, p);
+  }
+  return p;
+}
+
+/**
+ * Letra del nombre del comercio ("Marca") y letra de títulos ("Titulo") para la imagen.
+ * Con letra propia ("propia" + fontUrl), «Marca» es el archivo que subió el comercio.
+ */
+export async function walletFonts(font: CardFont | undefined, fontUrl?: string): Promise<ImageFont[]> {
   const brand = FAMILIES[font ?? "serif"] ?? FAMILIES.serif;
+  const propia = font === "propia" && fontUrl?.startsWith("https://") ? fontUrl : null;
   const [b, t, r, m, sb] = await Promise.all([
-    load(brand.family, brand.weight),
+    propia ? loadPropia(propia).then((d) => d ?? load(brand.family, brand.weight)) : load(brand.family, brand.weight),
     load(TITLE.family, TITLE.weight),
     load("Inter", 400),
     load("Inter", 500),
