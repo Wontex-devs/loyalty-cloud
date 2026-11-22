@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Ban, BellOff, Cake, MessageCircle, CheckCircle2, Copy, ExternalLink, Gift, Loader2, Mail, Phone, Plus, RotateCcw, ShieldCheck, Stamp, Trash2, Undo2, UserX } from "lucide-react";
 import { useScope } from "@/components/business/business-shell";
@@ -26,7 +26,11 @@ const MONTHS = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", 
 export default function CustomerDetailPage() {
   const { customerId } = useParams<{ customerId: string }>();
   const scope = useScope();
-  const { reverseVisit, redeemReward, setCardBlocked, anonymizeCustomer, revokeMarketingConsent, registerManualVisit } = useData();
+  const { reverseVisit, redeemReward, setCardBlocked, anonymizeCustomer, adminDeleteCustomer, revokeMarketingConsent, registerManualVisit, state } = useData();
+  const router = useRouter();
+  // Solo el superadministrador (dentro del comercio en modo edición) puede eliminar un cliente por completo.
+  const esSuperadmin = state.supportView?.modo === "edit";
+  const [confirmTotal, setConfirmTotal] = useState("");
   const { business, program, customers, cards, visits, rewards, redemptions, membership, profiles, locations } = scope;
   const [reversing, setReversing] = useState<string | null>(null);
   const [reason, setReason] = useState("");
@@ -389,6 +393,9 @@ export default function CustomerDetailPage() {
                 Para atender una solicitud de supresión (Ley 1581). Se borran su nombre, celular, correo y cumpleaños, y su tarjeta deja de
                 funcionar. Las visitas quedan en tus estadísticas sin datos personales. No se puede deshacer.
               </p>
+              <p className="mt-2 rounded-lg bg-warning-bg px-3 py-2 text-warning">
+                Este cliente <strong className="font-semibold">sigue ocupando un cupo</strong> de tu plan aunque elimines sus datos.
+              </p>
               <label className="mt-3 block text-xs text-muted">
                 Escribe <span className="font-semibold text-ink">ELIMINAR</span> para confirmar
                 <Input value={confirmDelete} onChange={(e) => setConfirmDelete(e.target.value)} className="mt-1 h-9" />
@@ -404,6 +411,31 @@ export default function CustomerDetailPage() {
                 }}
               >
                 {busy === "anonymize" ? <Loader2 className="size-3.5 animate-spin" /> : <Trash2 className="size-3.5" />} Eliminar datos
+              </Button>
+            </Card>
+          )}
+          {esSuperadmin && (
+            <Card className="border-danger/40 p-5 text-sm">
+              <p className="font-semibold text-danger">Eliminar por completo · superadministrador</p>
+              <p className="mt-1 text-muted">
+                Borra el cliente, su tarjeta, sus visitas, premios y contactos, y <strong className="font-semibold text-ink">libera su cupo</strong> del
+                plan. El comercio no puede hacerlo. Queda constancia en su historial. No se puede deshacer.
+              </p>
+              <label className="mt-3 block text-xs text-muted">
+                Escribe <span className="font-semibold text-ink">BORRAR TODO</span> para confirmar
+                <Input value={confirmTotal} onChange={(e) => setConfirmTotal(e.target.value)} className="mt-1 h-9" />
+              </label>
+              <Button
+                className="mt-3"
+                size="sm"
+                variant="danger"
+                disabled={confirmTotal.trim().toUpperCase() !== "BORRAR TODO" || busy === "delete-total"}
+                onClick={async () => {
+                  const ok = await run("delete-total", () => adminDeleteCustomer(customer.id), "Cliente eliminado por completo.");
+                  if (ok) router.push(`/business/${business.slug}/customers`);
+                }}
+              >
+                {busy === "delete-total" ? <Loader2 className="size-3.5 animate-spin" /> : <Trash2 className="size-3.5" />} Eliminar por completo
               </Button>
             </Card>
           )}
