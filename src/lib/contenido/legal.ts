@@ -137,8 +137,8 @@ export const LEGAL: Pagina[] = [
         titulo: "¿Cuánto cuesta y cómo se paga?",
         tabla: [
           ["Plan", "Incluye", "Precio al mes"],
-          ["Starter", "100 clientes, 2 personas del equipo, 1 sede. Primer mes gratis", "$79.990"],
-          ["Pro", "300 clientes, 10 personas del equipo, 3 sedes", "$139.990"],
+          ["Starter", "300 clientes, 2 personas del equipo, 1 sede. Primer mes gratis", "$79.990"],
+          ["Pro", "1.000 clientes, 10 personas del equipo, sedes ilimitadas", "$139.990"],
           ["Business", "A la medida", "Se cotiza"],
         ],
         lista: [

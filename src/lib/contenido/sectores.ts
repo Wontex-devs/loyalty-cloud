@@ -80,7 +80,7 @@ export const SECTORES: Pagina[] = [
         titulo: "¿Y si tengo varios barberos o más de una sede?",
         parrafos: [
           "Cada persona de tu equipo entra al panel con su propio usuario y con los permisos que tú le des: unos solo canjean premios, otros también ven los clientes y las estadísticas. Así nadie usa la cuenta del dueño y sabes quién canjeó cada premio.",
-          "Eso sí, ten en cuenta el límite de cada plan: el Starter incluye una sede y dos personas del equipo; el Pro, hasta tres sedes y diez personas.",
+          "Eso sí, ten en cuenta el límite de cada plan: el Starter incluye una sede y dos personas del equipo; el Pro, todas las sedes que necesites y diez personas.",
         ],
       },
       {
@@ -90,8 +90,8 @@ export const SECTORES: Pagina[] = [
         ],
         tabla: [
           ["Plan", "Precio al mes", "Incluye"],
-          ["Starter", "$79.990", "100 clientes, 2 personas del equipo, 1 sede, primer mes gratis"],
-          ["Pro", "$139.990", "300 clientes, 10 personas del equipo, 3 sedes"],
+          ["Starter", "$79.990", "300 clientes, 2 personas del equipo, 1 sede, primer mes gratis"],
+          ["Pro", "$139.990", "1.000 clientes, 10 personas del equipo, sedes ilimitadas"],
           ["Business", "A medida", "Para cadenas o necesidades especiales"],
         ],
       },
@@ -200,7 +200,7 @@ export const SECTORES: Pagina[] = [
         titulo: "¿Y si mi cafetería tiene varios baristas o varias sedes?",
         parrafos: [
           "Cada persona de tu equipo entra al panel con su propio usuario y con los permisos que tú le des: unos solo canjean premios, otros también ven los clientes y las estadísticas. Así nadie usa la cuenta del dueño y sabes quién canjeó cada premio.",
-          "El Starter cubre una sede y dos personas del equipo. Si tienes más turnos o hasta tres sedes, el plan Pro es el que sigue.",
+          "El Starter cubre una sede y dos personas del equipo. Si tienes más turnos o más de una sede, el plan Pro es el que sigue.",
         ],
       },
       {
@@ -210,8 +210,8 @@ export const SECTORES: Pagina[] = [
         ],
         tabla: [
           ["Plan", "Precio al mes", "Incluye"],
-          ["Starter", "$79.990", "100 clientes, 2 personas del equipo, 1 sede, primer mes gratis"],
-          ["Pro", "$139.990", "300 clientes, 10 personas del equipo, 3 sedes"],
+          ["Starter", "$79.990", "300 clientes, 2 personas del equipo, 1 sede, primer mes gratis"],
+          ["Pro", "$139.990", "1.000 clientes, 10 personas del equipo, sedes ilimitadas"],
           ["Business", "A medida", "Para cadenas o necesidades especiales"],
         ],
       },
@@ -320,7 +320,7 @@ export const SECTORES: Pagina[] = [
         titulo: "¿Y si tengo varias estilistas, manicuristas o más de una sede?",
         parrafos: [
           "Cada persona de tu equipo entra al panel con su propio usuario y con los permisos que tú le des: unos solo canjean premios, otros también ven los clientes y las estadísticas. Así nadie usa la cuenta del dueño y sabes quién canjeó cada premio.",
-          "El Starter incluye una sede y dos personas del equipo; el Pro llega hasta tres sedes y diez personas. Piensa en cuántas personas atienden en tu salón antes de elegir.",
+          "El Starter incluye una sede y dos personas del equipo; el Pro incluye todas las sedes que necesites y diez personas. Piensa en cuántas personas atienden en tu salón antes de elegir.",
         ],
       },
       {
@@ -330,8 +330,8 @@ export const SECTORES: Pagina[] = [
         ],
         tabla: [
           ["Plan", "Precio al mes", "Incluye"],
-          ["Starter", "$79.990", "100 clientes, 2 personas del equipo, 1 sede, primer mes gratis"],
-          ["Pro", "$139.990", "300 clientes, 10 personas del equipo, 3 sedes"],
+          ["Starter", "$79.990", "300 clientes, 2 personas del equipo, 1 sede, primer mes gratis"],
+          ["Pro", "$139.990", "1.000 clientes, 10 personas del equipo, sedes ilimitadas"],
           ["Business", "A medida", "Para cadenas o necesidades especiales"],
         ],
       },

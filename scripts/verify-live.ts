@@ -242,7 +242,7 @@ console.log("\nEtapa 7 · promociones, cumpleaños y contactos");
 console.log("\nEtapa 8 · planes y sedes");
 {
   const { data: plans } = await owner.from("plans").select("id, max_locations");
-  check("los planes tienen límite de sedes", plans?.find((p) => p.id === "plan_starter")?.max_locations === 1 && plans?.find((p) => p.id === "plan_pro")?.max_locations === 3, plans);
+  check("los planes tienen límite de sedes", plans?.find((p) => p.id === "plan_starter")?.max_locations === 1 && plans?.find((p) => p.id === "plan_pro")?.max_locations === null, plans);
   const { data: biz } = await owner.from("businesses").select("id").eq("slug", "beautyclub").single();
   const { error: sl } = await staff.from("locations").insert({ business_id: biz!.id, name: "Intrusa" });
   check("una empleada no crea sedes", !!sl, sl?.message);
