@@ -84,7 +84,7 @@ export function progressText(p: WalletPass) {
 /** Versión de la imagen de sellos: cambia con cada sello y con el diseño de la tarjeta. */
 export function stripVersion(p: Pick<WalletPass, "stamps" | "program" | "business" | "rewardsAvailable">) {
   const design = [
-    "hilo-1",
+    "hilo-2",
     p.business.background,
     p.business.foreground,
     p.business.stampIcon ?? "",

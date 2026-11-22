@@ -54,7 +54,8 @@ export function hilo(required: number, width: number, height: number): Hilo {
 
   const masLarga = Math.max(...filas);
   const paso = (derecha - izquierda) / Math.max(masLarga - 1, 1);
-  const r = Math.min((dosFilas ? 9.5 : 13) * k, paso * 0.36);
+  // Sellos grandes: ocupan buena parte del paso entre uno y otro (sin tocarse).
+  const r = Math.min((dosFilas ? 11 : 17) * k, paso * 0.43);
   const rPremio = r + (dosFilas ? 2 : 3) * k;
 
   const sellos: HiloSello[] = [];
