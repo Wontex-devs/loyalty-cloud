@@ -171,7 +171,7 @@ export default function Home() {
             </p>
             <div className="mt-9 flex flex-col gap-3 sm:flex-row">
               <WhatsAppButton className="bg-sun text-coal" />
-              <a href="#como-funciona" className={`${btn} border-2 border-white/60 text-white`}>Ver cómo funciona</a>
+              <Link href="/demo" className={`${btn} border-2 border-white/60 text-white`}>Pruébalo en tu celular</Link>
             </div>
             <p className="mt-5 text-[15px] text-white/80">Tu cliente se inscribe con un QR, guarda la tarjeta en Apple Wallet o Google Wallet y suma sellos acercando el celular a una etiqueta NFC y escribiendo su número.</p>
           </div>

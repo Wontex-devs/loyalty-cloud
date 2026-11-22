@@ -9,6 +9,8 @@ import { WalletButtons } from "./wallet-buttons";
 import { LazoLogo } from "@/components/brand/lazo-logo";
 import { formatDate, formatRelative } from "@/lib/utils";
 import { recordarTarjetaAction } from "@/lib/data/nfc-actions";
+import { DEMO_SLUG } from "@/lib/config";
+import { DemoSello } from "./demo-sello";
 import type { BusinessBranding, CardStatus } from "@/lib/domain/types";
 
 /** Datos que necesita la tarjeta pública. Coincide con lo que devuelve get_public_card. */
@@ -168,7 +170,9 @@ export function CardScreen({
           <InstallCard color={b.cardForeground} />
         )}
 
-        {data.status !== "blocked" && (
+        {data.status !== "blocked" && data.business.slug === DEMO_SLUG && <DemoSello token={data.token} />}
+
+        {data.status !== "blocked" && data.business.slug !== DEMO_SLUG && (
           <div className="mt-4 flex items-center gap-3 rounded-2xl bg-white p-4 text-sm shadow-card">
             <Nfc className="size-6 shrink-0" style={{ color: b.cardForeground }} aria-hidden />
             <p>
