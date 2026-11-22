@@ -1435,5 +1435,64 @@ console.log("\nDatos de demostración");
   check("cobros: al eliminar un comercio se borran sus datos de cobro", resto === 0, resto);
 }
 
+// ---------- Pago del plan en línea (Wompi) ----------
+{
+  console.log("\nPago del plan en línea (Wompi)");
+  // Comercio nuevo en Starter: su dueño es ownerA (se agrega como propietario).
+  const tienda = (await db.query(`insert into public.businesses (slug, name, category, city, plan_id)
+    values ('pago-linea', 'Pago Línea', 'Café', 'Cali', 'plan_starter') returning id`)).rows[0].id;
+  const dueno = "00000000-0000-0000-0000-0000000000d1";
+  const empleado = "00000000-0000-0000-0000-0000000000d2";
+  await db.query("insert into auth.users (id, email, raw_user_meta_data) values ($1, 'pago-dueno@test.local', '{}'), ($2, 'pago-empleado@test.local', '{}') on conflict do nothing", [dueno, empleado]);
+  await db.query("insert into public.business_memberships (business_id, profile_id, role, active) values ($1, $2, 'owner', true), ($1, $3, 'staff', true)", [tienda, dueno, empleado]);
+  const precio = (await db.query("select price_monthly from public.plans where id = 'plan_starter'")).rows[0].price_monthly;
+
+  let q = await as(empleado, "select * from public.start_online_payment($1, 1)", [tienda]);
+  check("pago en línea: un empleado no puede iniciar el pago del plan", expectError(q, "FORBIDDEN"), q);
+  q = await as(U.ownerB, "select * from public.start_online_payment($1, 1)", [tienda]);
+  check("pago en línea: el dueño de otro comercio no puede pagar por este", expectError(q, "FORBIDDEN"), q);
+  q = await as(dueno, "select * from public.start_online_payment($1, 13)", [tienda]);
+  check("pago en línea: no más de 12 meses", expectError(q, "INVALID_INPUT"), q);
+  q = await as(dueno, "select * from public.start_online_payment($1, 1)", [tienda]);
+  const orden = q.rows?.[0];
+  check("pago en línea: el dueño inicia el pago y el valor sale del plan (en centavos)", q.ok && Number(orden.amount_cents) === precio * 100 && /^lazo-[a-z0-9]+$/.test(orden.reference), q);
+
+  q = await as(dueno, "select public.confirm_online_payment($1, 'tx-1', 'APPROVED', $2)", [orden.reference, orden.amount_cents]);
+  check("pago en línea: nadie con sesión confirma pagos (solo el servidor)", !q.ok, q);
+  q = await as(dueno, "insert into public.online_payments (reference, business_id, months, amount_cents) values ('lazo-trampa-0001', $1, 12, 100)", [tienda]);
+  check("pago en línea: nadie crea órdenes directamente en la tabla", !q.ok, q);
+
+  q = await asService("select public.confirm_online_payment($1, 'tx-1', 'APPROVED', $2) r", [orden.reference, Number(orden.amount_cents) - 100]);
+  check("pago en línea: si el valor no coincide no se aplica", q.ok && q.rows[0].r === "mismatch", q);
+  q = await as(dueno, "select * from public.start_online_payment($1, 1)", [tienda]);
+  const orden2 = q.rows[0];
+  const hoy = (await db.query("select (now() at time zone 'America/Bogota')::date d")).rows[0].d;
+  q = await asService("select public.confirm_online_payment($1, 'tx-2', 'DECLINED', $2) r", [orden2.reference, orden2.amount_cents]);
+  check("pago en línea: un pago rechazado solo cambia el estado", q.ok && q.rows[0].r === "updated", q);
+  q = await as(dueno, "select * from public.start_online_payment($1, 1)", [tienda]);
+  const orden3 = q.rows[0];
+  q = await asService("select public.confirm_online_payment($1, 'tx-3', 'APPROVED', $2) r", [orden3.reference, orden3.amount_cents]);
+  check("pago en línea: un pago aprobado se registra", q.ok && q.rows[0].r === "applied", q);
+  const esperado = (await db.query("select to_char(($1::date + interval '2 months'), 'YYYY-MM-DD') d", [hoy])).rows[0].d;
+  const tras = (await db.query("select to_char(paid_until, 'YYYY-MM-DD') d, free_month_pending p from public.business_billing where business_id = $1", [tienda])).rows[0];
+  check("pago en línea: el primer pago del Starter suma el segundo mes gratis", tras.d === esperado && tras.p === false, tras);
+  const pago = (await db.query("select amount, months, free_months, note, created_by from public.business_payments where business_id = $1", [tienda])).rows;
+  check("pago en línea: queda en el historial con nota de Wompi y quién pagó", pago.length === 1 && pago[0].amount === precio && pago[0].free_months === 1 && /Wompi · tx-3/.test(pago[0].note) && pago[0].created_by === dueno, pago);
+  q = await asService("select public.confirm_online_payment($1, 'tx-3', 'APPROVED', $2) r", [orden3.reference, orden3.amount_cents]);
+  const pagos = (await db.query("select count(*)::int n from public.business_payments where business_id = $1", [tienda])).rows[0].n;
+  check("pago en línea: si Wompi repite el aviso, no se cobra dos veces", q.ok && q.rows[0].r === "already" && pagos === 1, { q, pagos });
+  q = await asService("select public.confirm_online_payment('lazo-noexiste123', 'tx-9', 'APPROVED', 100) r");
+  check("pago en línea: una referencia desconocida se ignora", q.ok && q.rows[0].r === "unknown", q);
+
+  q = await as(dueno, "select * from public.my_billing($1)", [tienda]);
+  check("pago en línea: el dueño ve su fecha de pago y su plan", q.ok && q.rows.length === 1 && q.rows[0].plan_id === "plan_starter", q);
+  q = await as(empleado, "select * from public.my_billing($1)", [tienda]);
+  check("pago en línea: un empleado no ve el cobro", q.ok && q.rows.length === 0, q);
+  q = await as(dueno, "select reference, status from public.online_payments where business_id = $1", [tienda]);
+  check("pago en línea: el dueño ve sus órdenes de pago", q.ok && q.rows.length === 3, q);
+  q = await as(U.ownerB, "select reference from public.online_payments where business_id = $1", [tienda]);
+  check("pago en línea: otro comercio no ve esas órdenes", q.ok && q.rows.length === 0, q);
+}
+
 console.log(`\n${passed} correctas, ${failed} fallidas\n`);
 process.exit(failed ? 1 : 0);
