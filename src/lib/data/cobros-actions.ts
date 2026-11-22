@@ -15,24 +15,34 @@ export interface PagoComercio {
   amount: number;
   paidOn: string;
   months: number;
+  /** Meses gratis que trajo este pago (el segundo mes gratis del plan Starter). */
+  freeMonths: number;
   paidUntil: string;
   note: string | null;
   createdAt: string;
 }
 
-const AVISO_SIN_MIGRACION = "Falta aplicar en la base de datos la actualización de cobros (migración 0036).";
+const AVISO_SIN_MIGRACION = "Falta aplicar en la base de datos la actualización de cobros (migraciones 0036 y 0039).";
 const faltaMigracion = (e: { code?: string; message?: string }) =>
   e.code === "42P01" || e.code === "PGRST205" || /business_billing|business_payments/.test(e.message ?? "");
 
-/** «Pagado hasta» de cada comercio: { id del comercio: "AAAA-MM-DD" }. */
-export async function cargarCobrosAction(): Promise<{ fechas: Record<string, string>; aviso: string | null }> {
+/**
+ * «Pagado hasta» de cada comercio: { id del comercio: "AAAA-MM-DD" } y los que tienen pendiente
+ * el mes gratis de bienvenida (comercios nuevos: el primer pago del Starter suma un mes gratis).
+ */
+export async function cargarCobrosAction(): Promise<{ fechas: Record<string, string>; mesGratis: Record<string, boolean>; aviso: string | null }> {
   const supabase = await createClient();
-  const { data, error } = await supabase.from("business_billing").select("business_id, paid_until");
+  const { data, error } = await supabase.from("business_billing").select("business_id, paid_until, free_month_pending");
   if (error) {
     console.error("[cobros] fechas", error.message);
-    return { fechas: {}, aviso: faltaMigracion(error) ? AVISO_SIN_MIGRACION : "No se pudieron cargar las fechas de pago." };
+    const aviso = faltaMigracion(error) || /free_month_pending/.test(error.message ?? "") ? AVISO_SIN_MIGRACION : "No se pudieron cargar las fechas de pago.";
+    return { fechas: {}, mesGratis: {}, aviso };
   }
-  return { fechas: Object.fromEntries((data ?? []).map((r) => [r.business_id as string, r.paid_until as string])), aviso: null };
+  return {
+    fechas: Object.fromEntries((data ?? []).map((r) => [r.business_id as string, r.paid_until as string])),
+    mesGratis: Object.fromEntries((data ?? []).map((r) => [r.business_id as string, r.free_month_pending === true])),
+    aviso: null,
+  };
 }
 
 export async function pagosDelComercioAction(businessId: string): Promise<PagoComercio[]> {
@@ -40,7 +50,7 @@ export async function pagosDelComercioAction(businessId: string): Promise<PagoCo
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("business_payments")
-    .select("id, amount, paid_on, months, paid_until, note, created_at")
+    .select("id, amount, paid_on, months, free_months, paid_until, note, created_at")
     .eq("business_id", businessId)
     .order("created_at", { ascending: false })
     .limit(50);
@@ -50,6 +60,7 @@ export async function pagosDelComercioAction(businessId: string): Promise<PagoCo
     amount: Number(r.amount),
     paidOn: r.paid_on as string,
     months: Number(r.months),
+    freeMonths: Number(r.free_months ?? 0),
     paidUntil: r.paid_until as string,
     note: (r.note as string) ?? null,
     createdAt: r.created_at as string,

@@ -186,7 +186,7 @@ export default function AdminBusinessDetail() {
         </Card>
       </div>
 
-      <TarjetaCobros businessId={b.id} nombre={b.name} precioPlan={plan.priceMonthly} />
+      <TarjetaCobros businessId={b.id} nombre={b.name} precioPlan={plan.priceMonthly} planId={b.planId} />
 
       {puedeEditar && <DeleteBusiness businessId={b.id} slug={b.slug} nombre={b.name} />}
     </>

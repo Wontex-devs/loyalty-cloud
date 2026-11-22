@@ -1369,8 +1369,8 @@ console.log("\nDatos de demostración");
   const fecha = async (id) => (await db.query("select to_char(paid_until, 'YYYY-MM-DD') d from public.business_billing where business_id = $1", [id])).rows[0]?.d;
   const nuevo = (await db.query(`insert into public.businesses (slug, name, category, city, plan_id)
     values ('cobro-nuevo', 'Cobro Nuevo', 'Café', 'Cali', 'plan_starter') returning id`)).rows[0].id;
-  const esperado = (await db.query("select to_char(((now() at time zone 'America/Bogota')::date + interval '1 month'), 'YYYY-MM-DD') d")).rows[0].d;
-  check("cobros: un comercio nuevo queda pagado hasta un mes después (mes gratis)", (await fecha(nuevo)) === esperado, await fecha(nuevo));
+  const hoy = (await db.query("select to_char((now() at time zone 'America/Bogota')::date, 'YYYY-MM-DD') d")).rows[0].d;
+  check("cobros: un comercio nuevo empieza sin meses pagados (por cobrar desde hoy)", (await fecha(nuevo)) === hoy, await fecha(nuevo));
   check("cobros: los comercios que ya existían también tienen fecha", !!(await fecha(A)) && !!(await fecha(B)));
 
   let q = await as(U.ownerA, "select * from public.business_billing where business_id = $1", [A]);
@@ -1388,6 +1388,11 @@ console.log("\nDatos de demostración");
   q = await as(U.super, "select public.register_business_payment($1, 79990, current_date, 13, null)", [A]);
   check("cobros: no se aceptan más de 12 meses por pago", expectError(q, "INVALID_INPUT"), q);
 
+  // Estas pruebas son del ciclo normal (sin el mes gratis del Starter): el comercio A pasa al plan Pro.
+  const planA = (await db.query("select plan_id from public.businesses where id = $1", [A])).rows[0].plan_id;
+  await db.query("update public.businesses set plan_id = 'plan_pro' where id = $1", [A]);
+  // A se creó en la prueba (como comercio nuevo): se marca como uno que ya existía, sin mes gratis pendiente.
+  await db.query("update public.business_billing set free_month_pending = false where business_id = $1", [A]);
   await db.query("update public.business_billing set paid_until = '2026-01-31' where business_id = $1", [A]);
   q = await as(U.super, "select to_char(public.register_business_payment($1, 79990, '2026-02-05', 1, '  Transferencia  '), 'YYYY-MM-DD') d", [A]);
   check("cobros: el pago avanza desde la fecha anterior, no desde hoy (31 ene → 28 feb)", q.ok && q.rows[0].d === "2026-02-28", q);
@@ -1398,12 +1403,32 @@ console.log("\nDatos de demostración");
   const aud = (await db.query("select count(*)::int n from public.audit_logs where business_id = $1 and action = 'billing.payment_registered'", [A])).rows[0].n;
   check("cobros: los pagos quedan en la auditoría", aud === 2, aud);
 
+  await db.query("update public.businesses set plan_id = $2 where id = $1", [A, planA]);
   q = await as(U.super, "select public.set_business_paid_until($1, '2026-12-15', 'ok')", [A]);
   check("cobros: corregir la fecha exige un motivo", expectError(q, "INVALID_INPUT"), q);
   q = await as(U.super, "select public.set_business_paid_until($1, '2026-12-15', 'Acuerdo con el dueño')", [A]);
   check("cobros: el superadministrador corrige la fecha con motivo", q.ok && (await fecha(A)) === "2026-12-15", q);
   const audFecha = (await db.query("select metadata->>'reason' r from public.audit_logs where business_id = $1 and action = 'billing.paid_until_changed'", [A])).rows[0]?.r;
   check("cobros: la corrección queda en la auditoría con su motivo", audFecha === "Acuerdo con el dueño", audFecha);
+
+  check("cobros: los comercios que ya existían no reciben otro mes gratis", (await db.query("select free_month_pending p from public.business_billing where business_id = $1", [A])).rows[0].p === false);
+  // Oferta Starter: pagas el primer mes y el segundo es gratis. Comercio aparte (sus pagos quedan en la auditoría).
+  const oferta = (await db.query(`insert into public.businesses (slug, name, category, city, plan_id)
+    values ('cobro-oferta', 'Cobro Oferta', 'Café', 'Cali', 'plan_starter') returning id`)).rows[0].id;
+  await db.query("update public.business_billing set paid_until = '2026-03-01' where business_id = $1", [oferta]);
+  q = await as(U.super, "select to_char(public.register_business_payment($1, 79990, '2026-03-10', 1, null), 'YYYY-MM-DD') d", [oferta]);
+  check("cobros: el primer pago del Starter suma el mes gratis, desde el día en que pagó (10 mar → 10 may)", q.ok && q.rows[0].d === "2026-05-10", q);
+  q = await as(U.super, "select to_char(public.register_business_payment($1, 79990, '2026-05-08', 1, null), 'YYYY-MM-DD') d", [oferta]);
+  check("cobros: el segundo pago ya no trae mes gratis (10 may → 10 jun)", q.ok && q.rows[0].d === "2026-06-10", q);
+  const gratis = (await db.query("select free_months from public.business_payments where business_id = $1 order by created_at", [oferta])).rows.map((r) => r.free_months);
+  check("cobros: el historial marca el mes gratis solo en el primer pago", JSON.stringify(gratis) === "[1,0]", gratis);
+  const audGratis = (await db.query("select metadata->>'free_months' g from public.audit_logs where business_id = $1 and action = 'billing.payment_registered' order by created_at limit 1", [oferta])).rows[0]?.g;
+  check("cobros: el mes gratis queda en la auditoría", audGratis === "1", audGratis);
+  const pro = (await db.query(`insert into public.businesses (slug, name, category, city, plan_id)
+    values ('cobro-pro', 'Cobro Pro', 'Café', 'Cali', 'plan_pro') returning id`)).rows[0].id;
+  await db.query("update public.business_billing set paid_until = '2026-03-01' where business_id = $1", [pro]);
+  q = await as(U.super, "select to_char(public.register_business_payment($1, 139990, '2026-03-01', 1, null), 'YYYY-MM-DD') d", [pro]);
+  check("cobros: el plan Pro no tiene mes gratis (1 mar → 1 abr)", q.ok && q.rows[0].d === "2026-04-01", q);
 
   await db.query("delete from public.businesses where id = $1", [nuevo]);
   const resto = (await db.query("select count(*)::int n from public.business_billing where business_id = $1", [nuevo])).rows[0].n;

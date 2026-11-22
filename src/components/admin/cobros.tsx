@@ -18,18 +18,20 @@ import { Aviso, Modal, usePuedeEditar } from "./piezas";
 /** Fechas «pagado hasta» de todos los comercios (solo el equipo de la plataforma las ve). */
 export function useCobros() {
   const [fechas, setFechas] = useState<Record<string, string>>({});
+  const [mesGratis, setMesGratis] = useState<Record<string, boolean>>({});
   const [aviso, setAviso] = useState<string | null>(null);
   const [cargando, setCargando] = useState(true);
   const recargar = useCallback(async () => {
-    const r = await cargarCobrosAction().catch(() => ({ fechas: {}, aviso: "No se pudieron cargar las fechas de pago." }));
+    const r = await cargarCobrosAction().catch(() => ({ fechas: {}, mesGratis: {}, aviso: "No se pudieron cargar las fechas de pago." }));
     setFechas(r.fechas);
+    setMesGratis(r.mesGratis);
     setAviso(r.aviso);
     setCargando(false);
   }, []);
   useEffect(() => {
     void recargar();
   }, [recargar]);
-  return { fechas, aviso, cargando, recargar };
+  return { fechas, mesGratis, aviso, cargando, recargar };
 }
 
 export function EtiquetaCobro({ pagadoHasta }: { pagadoHasta?: string }) {
@@ -45,9 +47,11 @@ export function EtiquetaCobro({ pagadoHasta }: { pagadoHasta?: string }) {
 }
 
 /** Tarjeta de cobros en el detalle de un comercio: estado, registrar pago, corregir fecha e historial. */
-export function TarjetaCobros({ businessId, nombre, precioPlan }: { businessId: string; nombre: string; precioPlan: number }) {
+export function TarjetaCobros({ businessId, nombre, precioPlan, planId }: { businessId: string; nombre: string; precioPlan: number; planId: string }) {
   const puedeEditar = usePuedeEditar();
-  const { fechas, aviso, cargando, recargar } = useCobros();
+  const { fechas, mesGratis, aviso, cargando, recargar } = useCobros();
+  // Oferta Starter: el primer pago de un comercio nuevo trae el segundo mes gratis.
+  const conMesGratis = !!mesGratis[businessId] && planId === "plan_starter";
   const [pagos, setPagos] = useState<PagoComercio[]>([]);
   const [modal, setModal] = useState<"pago" | "fecha" | null>(null);
   const cerrar = useCallback(() => setModal(null), []);
@@ -95,6 +99,9 @@ export function TarjetaCobros({ businessId, nombre, precioPlan }: { businessId: 
               <p className="text-lg font-semibold">{fechaCorta(pagadoHasta)}</p>
             </div>
             <EtiquetaCobro pagadoHasta={pagadoHasta} />
+            {conMesGratis && (
+              <Badge tone="brand">Primer pago: el segundo mes es gratis</Badge>
+            )}
           </div>
         )}
       </div>
@@ -106,7 +113,8 @@ export function TarjetaCobros({ businessId, nombre, precioPlan }: { businessId: 
               <li key={p.id} className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 px-5 py-3 text-sm">
                 <span className="font-medium tabular">{formatMoney(p.amount)}</span>
                 <span className="text-muted">
-                  Pagó el {fechaCorta(p.paidOn)} · {p.months} {p.months === 1 ? "mes" : "meses"} · hasta {fechaCorta(p.paidUntil)}
+                  Pagó el {fechaCorta(p.paidOn)} · {p.months} {p.months === 1 ? "mes" : "meses"}
+                  {p.freeMonths > 0 && ` + ${p.freeMonths} ${p.freeMonths === 1 ? "mes gratis" : "meses gratis"}`} · hasta {fechaCorta(p.paidUntil)}
                 </span>
                 {p.note && <span className="w-full text-xs text-muted">{p.note}</span>}
               </li>
@@ -116,7 +124,9 @@ export function TarjetaCobros({ businessId, nombre, precioPlan }: { businessId: 
       )}
 
       <Modal abierto={modal === "pago"} onCerrar={cerrar} titulo={`Registrar pago de ${nombre}`} descripcion="La fecha «pagado hasta» avanza los meses pagados, desde la fecha actual de vencimiento.">
-        {modal === "pago" && <FormularioPago businessId={businessId} pagadoHasta={pagadoHasta} precioPlan={precioPlan} onListo={alGuardar} onCancelar={cerrar} />}
+        {modal === "pago" && (
+          <FormularioPago businessId={businessId} pagadoHasta={pagadoHasta} precioPlan={precioPlan} conMesGratis={conMesGratis} onListo={alGuardar} onCancelar={cerrar} />
+        )}
       </Modal>
       <Modal abierto={modal === "fecha"} onCerrar={cerrar} titulo={`Cambiar fecha de ${nombre}`} descripcion="Para corregir un error o dar días extra. Queda en la auditoría con el motivo.">
         {modal === "fecha" && <FormularioFecha businessId={businessId} pagadoHasta={pagadoHasta} onListo={alGuardar} onCancelar={cerrar} />}
@@ -129,12 +139,14 @@ function FormularioPago({
   businessId,
   pagadoHasta,
   precioPlan,
+  conMesGratis,
   onListo,
   onCancelar,
 }: {
   businessId: string;
   pagadoHasta?: string;
   precioPlan: number;
+  conMesGratis: boolean;
   onListo: () => void;
   onCancelar: () => void;
 }) {
@@ -144,7 +156,9 @@ function FormularioPago({
   const [nota, setNota] = useState("");
   const [guardando, setGuardando] = useState(false);
   const [aviso, setAviso] = useState<{ ok: boolean; texto: string } | null>(null);
-  const nuevaFecha = sumarMeses(pagadoHasta ?? hoyColombia(), meses);
+  // Igual que la base de datos: con el mes gratis, cuenta desde el día en que pagó si es posterior.
+  const desde = pagadoHasta ?? hoyColombia();
+  const nuevaFecha = conMesGratis ? sumarMeses(fecha > desde ? fecha : desde, meses + 1) : sumarMeses(desde, meses);
 
   return (
     <form
@@ -182,6 +196,7 @@ function FormularioPago({
         </Field>
       </div>
       <p className="rounded-lg bg-canvas px-3 py-2 text-[13px]">
+        {conMesGratis && <>Es su primer pago del plan Starter: se suma <strong>1 mes gratis</strong>. </>}
         Quedará pagado hasta el <strong>{fechaCorta(nuevaFecha)}</strong>.
       </p>
       <Aviso aviso={aviso} />

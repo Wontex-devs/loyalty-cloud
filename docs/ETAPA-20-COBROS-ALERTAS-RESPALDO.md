@@ -4,8 +4,13 @@
 
 Sin pago en línea todavía: Lazo cobra por transferencia y aquí se lleva la cuenta.
 
-- Cada comercio tiene una fecha **«pagado hasta»**. Al crearlo es un mes después (el mes gratis).
-  Los comercios que ya existían quedaron con su fecha de alta + 1 mes: corríjala si no coincide.
+- Cada comercio tiene una fecha **«pagado hasta»**. Desde la migración 0039 (oferta «pagas el primer
+  mes y el segundo es gratis»), un comercio nuevo empieza **sin meses pagados**: su fecha es el día en
+  que se crea y aparece por cobrar hasta que pague.
+- **Primer pago de un comercio nuevo en el plan Starter:** se suma solo **1 mes gratis** además de los
+  meses pagados, contando desde el día en que pagó. El formulario lo avisa, el historial lo marca
+  («+ 1 mes gratis») y queda en la auditoría. Se usa una sola vez; los pagos siguientes son normales.
+- Los comercios creados antes de la 0039 ya tuvieron su mes gratis con la oferta anterior: no reciben otro.
 - **Establecimientos** muestra la columna **Pago** (Al día / Por vencer / Vencido) y el filtro
   **Por cobrar** (vencidos y los que vencen en 5 días o menos, primero los más atrasados). Si hay
   vencidos, aparece un aviso rojo arriba.
