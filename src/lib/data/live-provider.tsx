@@ -7,7 +7,8 @@
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { X } from "lucide-react";
-import { DataContext, type DataApi, type DataState } from "@/lib/data/store";
+import { DataContext, type CampoImagenMarca, type DataApi, type DataState } from "@/lib/data/store";
+import type { BusinessBranding } from "@/lib/domain/types";
 import { createClient } from "@/lib/supabase/client";
 import { prepareCover, prepareIlustracion, prepareLogo } from "@/lib/brand-image";
 import type { ResultadoFondo } from "@/lib/domain/quitar-fondo";
@@ -179,13 +180,48 @@ export function LiveProvider({ snapshot, children }: { snapshot: DataState; chil
       },
 
       // Guardado con botón: se espera la respuesta y solo entonces se refleja en el panel.
-      saveBranding: async (businessId, patch) => {
-        const res = await updateBrandingAction(businessId, patch);
-        if (!res.ok) return res;
+      // Las imágenes pendientes se suben primero; si algo falla, se borran y no cambia nada.
+      saveBranding: async (businessId, patch, imagenes = {}) => {
+        const bucket = createClient().storage.from("brand-assets");
+        const prefix = bucket.getPublicUrl(`${businessId}/`).data.publicUrl;
+        const actual = state.businesses.find((b) => b.id === businessId)?.branding;
+        const nombres = { logoUrl: "logo", stampUrl: "sello", illustrationUrl: "ilustracion" } as const;
+        const campos = Object.keys(nombres) as CampoImagenMarca[];
+        const subidos: string[] = [];
+        const completo: Partial<BusinessBranding> = { ...patch };
+        for (const campo of campos) {
+          const blob = imagenes[campo];
+          if (blob === undefined) continue;
+          if (blob === null) {
+            completo[campo] = "";
+            continue;
+          }
+          const path = `${businessId}/${nombres[campo]}-${Date.now()}.png`;
+          const up = await bucket.upload(path, blob, { contentType: blob.type, cacheControl: "31536000" });
+          if (up.error) {
+            if (subidos.length) await bucket.remove(subidos);
+            return { ok: false as const, message: "No se pudo subir una de las imágenes. Tus cambios siguen aquí: intenta de nuevo." };
+          }
+          subidos.push(path);
+          completo[campo] = bucket.getPublicUrl(path).data.publicUrl;
+        }
+        const res = await updateBrandingAction(businessId, completo);
+        if (!res.ok) {
+          if (subidos.length) await bucket.remove(subidos);
+          return res;
+        }
+        // Se borran del almacenamiento las imágenes viejas que ya no usa ningún campo (el sello puede ser el mismo logo).
+        if (actual) {
+          const nuevo = { ...actual, ...completo };
+          const enUso = new Set(campos.map((c) => nuevo[c] ?? ""));
+          const viejas = [...new Set(campos.map((c) => actual[c] ?? ""))].filter((u) => u.startsWith(prefix) && !enUso.has(u));
+          if (viejas.length) await bucket.remove(viejas.map((u) => u.slice(prefix.length - businessId.length - 1)));
+        }
         setState((s) => ({
           ...s,
-          businesses: s.businesses.map((b) => (b.id === businessId ? { ...b, branding: { ...b.branding, ...patch } } : b)),
+          businesses: s.businesses.map((b) => (b.id === businessId ? { ...b, branding: { ...b.branding, ...completo } } : b)),
         }));
+        if (subidos.length || Object.keys(imagenes).length) startTransition(() => router.refresh());
         return { ok: true as const };
       },
 

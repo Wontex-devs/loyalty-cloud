@@ -32,6 +32,9 @@ export function NfcCard({ businessId, slug }: { businessId: string; slug: string
   const [ajustes, setAjustes] = useState<NfcSettings | null>(null);
   const [espera, setEspera] = useState(120);
   const [porDia, setPorDia] = useState(1);
+  // Los interruptores también son borrador: nada cambia hasta pulsar «Guardar ajustes».
+  const [encendido, setEncendido] = useState(false);
+  const [exigir, setExigir] = useState(false);
   const [cargando, setCargando] = useState(true);
   const [guardando, setGuardando] = useState(false);
   const [aviso, setAviso] = useState<{ ok: boolean; texto: string } | null>(null);
@@ -43,6 +46,13 @@ export function NfcCard({ businessId, slug }: { businessId: string; slug: string
 
   useEffect(() => setOrigen(window.location.origin), []);
 
+  const mostrar = (s: NfcSettings) => {
+    setEspera(s.minMinutes);
+    setPorDia(s.maxPerDay);
+    setEncendido(s.enabled);
+    setExigir(s.requireLocation);
+  };
+
   useEffect(() => {
     let vivo = true;
     void getNfcSettingsAction(businessId).then((r) => {
@@ -50,8 +60,7 @@ export function NfcCard({ businessId, slug }: { businessId: string; slug: string
       setCargando(false);
       if (r.ok) {
         setAjustes(r.settings);
-        setEspera(r.settings.minMinutes);
-        setPorDia(r.settings.maxPerDay);
+        mostrar(r.settings);
       } else setAviso({ ok: false, texto: r.message });
     });
     return () => {
@@ -59,15 +68,22 @@ export function NfcCard({ businessId, slug }: { businessId: string; slug: string
     };
   }, [businessId]);
 
-  const guardar = async (enabled: boolean, rotar = false, exigirUbicacion?: boolean) => {
+  const hayCambios =
+    !!ajustes && (encendido !== ajustes.enabled || exigir !== ajustes.requireLocation || espera !== ajustes.minMinutes || porDia !== ajustes.maxPerDay);
+
+  /** Guarda el borrador. Al cambiar el secreto (`rotar`) se conservan los ajustes ya guardados, no el borrador. */
+  const guardar = async (rotar = false) => {
+    if (!ajustes) return;
     setGuardando(true);
     setAviso(null);
-    const r = await setNfcSettingsAction(businessId, enabled, espera, rotar, { maxPerDay: porDia, requireLocation: exigirUbicacion });
+    const r = rotar
+      ? await setNfcSettingsAction(businessId, ajustes.enabled, ajustes.minMinutes, true, { maxPerDay: ajustes.maxPerDay })
+      : await setNfcSettingsAction(businessId, encendido, espera, false, { maxPerDay: porDia, requireLocation: exigir });
     setGuardando(false);
     if (r.ok) {
       setAjustes(r.settings);
-      setPorDia(r.settings.maxPerDay);
-      setAviso({ ok: true, texto: rotar ? "Listo: las etiquetas viejas dejaron de funcionar. Escribe la nueva." : "Guardado." });
+      if (!rotar) mostrar(r.settings);
+      setAviso({ ok: true, texto: rotar ? "Listo: las etiquetas viejas dejaron de funcionar. Escribe la nueva." : "Ajustes guardados." });
     } else setAviso({ ok: false, texto: r.message });
   };
 
@@ -119,38 +135,28 @@ export function NfcCard({ businessId, slug }: { businessId: string; slug: string
             <div className="flex items-center justify-between gap-4">
               <div>
                 <p className="font-medium">Permitir sellar con el toque</p>
-                <p className={cn("text-xs", ajustes.enabled ? "text-success" : "text-muted")}>
-                  {ajustes.enabled ? "Encendido: cada toque en la etiqueta suma un sello." : "Apagado, la etiqueta no registra nada."}
+                <p className={cn("text-xs", encendido ? "text-success" : "text-muted")}>
+                  {encendido ? "Encendido: cada toque en la etiqueta suma un sello." : "Apagado, la etiqueta no registra nada."}
                 </p>
               </div>
-              <Switch checked={ajustes.enabled} onChange={(v) => void guardar(v)} label="Permitir sellar con el toque del celular" />
+              <Switch checked={encendido} onChange={setEncendido} label="Permitir sellar con el toque del celular" />
             </div>
 
             <Field label="Tiempo mínimo entre toques" hint="Evita que alguien sume sellos sin comprar. Siempre se respeta también el tiempo mínimo de tu programa.">
-              <div className="flex gap-2">
-                <Select value={espera} onChange={(e) => setEspera(Number(e.target.value))}>
-                  {ESPERAS.map((o) => (
-                    <option key={o.value} value={o.value}>
-                      {o.label}
-                    </option>
-                  ))}
-                </Select>
-                <Button variant="secondary" onClick={() => void guardar(ajustes.enabled)} disabled={guardando || espera === ajustes.minMinutes}>
-                  Guardar
-                </Button>
-              </div>
+              <Select value={espera} onChange={(e) => setEspera(Number(e.target.value))}>
+                {ESPERAS.map((o) => (
+                  <option key={o.value} value={o.value}>
+                    {o.label}
+                  </option>
+                ))}
+              </Select>
             </Field>
 
             <Field
               label="Sellos por día con el toque"
               hint="Cuántos sellos puede sumar una misma tarjeta en un día con la etiqueta. Con 1, quien guarde el enlace no puede sumar varias veces el mismo día."
             >
-              <div className="flex gap-2">
-                <NumberInput value={porDia} min={1} max={20} onValueChange={setPorDia} className="max-w-24" aria-label="Sellos por día con el toque" />
-                <Button variant="secondary" onClick={() => void guardar(ajustes.enabled)} disabled={guardando || porDia === ajustes.maxPerDay}>
-                  Guardar
-                </Button>
-              </div>
+              <NumberInput value={porDia} min={1} max={20} onValueChange={setPorDia} className="max-w-24" aria-label="Sellos por día con el toque" />
             </Field>
 
             <div className="flex items-start justify-between gap-4">
@@ -162,11 +168,17 @@ export function NfcCard({ businessId, slug }: { businessId: string; slug: string
                     : "Para activarlo, primero guarda la ubicación de al menos una sede (en Sedes)."}
                 </p>
               </div>
-              <Switch
-                checked={ajustes.requireLocation}
-                onChange={(v) => void guardar(ajustes.enabled, false, v)}
-                label="Exigir estar en el local para sumar con el toque"
-              />
+              <Switch checked={exigir} onChange={setExigir} label="Exigir estar en el local para sumar con el toque" />
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2 rounded-lg border border-line bg-canvas px-3 py-2">
+              <p className="mr-auto text-xs text-muted">{hayCambios ? "Tienes cambios sin guardar en el toque NFC." : "Los ajustes del toque están guardados."}</p>
+              <Button variant="ghost" size="sm" onClick={() => mostrar(ajustes)} disabled={guardando || !hayCambios}>
+                Descartar
+              </Button>
+              <Button size="sm" onClick={() => void guardar()} disabled={guardando || !hayCambios}>
+                {guardando ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />} Guardar ajustes
+              </Button>
             </div>
 
             <p className="rounded-lg border border-line bg-canvas px-3 py-2 text-xs text-muted">
@@ -191,7 +203,7 @@ export function NfcCard({ businessId, slug }: { businessId: string; slug: string
                       variant="ghost"
                       size="sm"
                       onClick={() => {
-                        if (window.confirm("Las etiquetas que ya escribiste dejarán de funcionar y tendrás que escribir una nueva. ¿Continuar?")) void guardar(ajustes.enabled, true);
+                        if (window.confirm("Las etiquetas que ya escribiste dejarán de funcionar y tendrás que escribir una nueva. ¿Continuar?")) void guardar(true);
                       }}
                       disabled={guardando}
                     >

@@ -85,7 +85,7 @@ export interface DataApi {
   updateProgram: (programId: string, patch: Partial<LoyaltyProgram>) => void;
   updateBranding: (businessId: string, patch: Partial<BusinessBranding>) => void;
   /** Guarda varios cambios de marca de una vez y espera la respuesta (botón «Guardar cambios»). */
-  saveBranding: (businessId: string, patch: Partial<BusinessBranding>) => Promise<OpResult>;
+  saveBranding: (businessId: string, patch: Partial<BusinessBranding>, imagenes?: ImagenesMarca) => Promise<OpResult>;
   /** Sube (o quita, con null) el logotipo del comercio. */
   setLogo: (businessId: string, file: File | null) => Promise<OpResult>;
   setCover: (businessId: string, file: File | null) => Promise<OpResult>;
@@ -96,6 +96,10 @@ export interface DataApi {
   inviteStaff: (businessId: string, input: { fullName: string; email: string; role: BusinessRole; canRedeem: boolean }) => void;
   toggleMembership: (membershipId: string, patch: Partial<BusinessMembership>) => void;
 }
+
+/** Imágenes de marca pendientes de guardar: ya preparadas (PNG) para subir, o null para quitarlas. */
+export type CampoImagenMarca = "logoUrl" | "stampUrl" | "illustrationUrl";
+export type ImagenesMarca = Partial<Record<CampoImagenMarca, Blob | null>>;
 
 export const DataContext = createContext<DataApi | null>(null);
 

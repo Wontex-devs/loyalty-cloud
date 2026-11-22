@@ -10,7 +10,9 @@ import { contrast, readableOn } from "@/lib/domain/card-palette";
 import { ColorPicker } from "@/components/ui/color-picker";
 import { PassInfoCard } from "@/components/business/pass-info-card";
 import { BrandMark, brandCase, brandFont, CARD_FONT_STYLES, FILLED_STAMP_ICONS, STAMP_ICON_COMPONENTS, STAMP_ICON_LABELS, StampMark } from "@/components/loyalty/brand-mark";
-import { useData } from "@/lib/data/store";
+import { useData, type CampoImagenMarca, type ImagenesMarca } from "@/lib/data/store";
+import { prepareIlustracion, prepareLogo } from "@/lib/brand-image";
+import type { ResultadoFondo } from "@/lib/domain/quitar-fondo";
 import { can } from "@/lib/domain/permissions";
 import { PUBLIC_HOST_LABEL } from "@/lib/config";
 import { CARD_FONTS, STAMP_ICONS, type BusinessBranding, type CardStatus } from "@/lib/domain/types";
@@ -46,12 +48,35 @@ function twoColors(color1: string, color2: string): Partial<BusinessBranding> {
 
 export default function CardDesignPage() {
   const { business, program, membership } = useScope();
-  const { saveBranding, setLogo, setStamp, setIllustration } = useData();
+  const { saveBranding } = useData();
   // Borrador: los cambios se ven en la vista previa, pero solo llegan a las tarjetas al pulsar «Guardar cambios».
   const [borrador, setBorrador] = useState<Partial<BusinessBranding>>({});
   const [guardando, setGuardando] = useState(false);
   const [resultado, setResultado] = useState<{ ok: boolean; texto: string } | null>(null);
-  const hayCambios = Object.keys(borrador).length > 0;
+  // Imágenes elegidas pero aún sin guardar: `blob` es lo que se subirá (null = quitarla) y `vista`, su vista previa local.
+  const [imagenes, setImagenes] = useState<Partial<Record<CampoImagenMarca, { blob: Blob | null; vista: string }>>>({});
+  const hayCambios = Object.keys(borrador).length > 0 || Object.keys(imagenes).length > 0;
+  const sinCampo = <T extends object>(objeto: T, campo: keyof T) => {
+    const copia = { ...objeto };
+    delete copia[campo];
+    return copia;
+  };
+  const ponerImagen = (campo: CampoImagenMarca, blob: Blob | null) => {
+    setResultado(null);
+    setImagenes((actual) => {
+      const anterior = actual[campo];
+      if (anterior?.vista) URL.revokeObjectURL(anterior.vista);
+      // Quitar una imagen que no estaba guardada no es un cambio.
+      if (!blob && !business.branding[campo]) return sinCampo(actual, campo);
+      return { ...actual, [campo]: { blob, vista: blob ? URL.createObjectURL(blob) : "" } };
+    });
+    // Una imagen elegida para el sello reemplaza a «Usar mi logo».
+    if (campo === "stampUrl") setBorrador((actual) => sinCampo(actual, "stampUrl"));
+  };
+  const soltarImagenes = () => {
+    for (const i of Object.values(imagenes)) if (i.vista) URL.revokeObjectURL(i.vista);
+    setImagenes({});
+  };
   const cambiar = (patch: Partial<BusinessBranding>) => {
     setResultado(null);
     setBorrador((actual) => {
@@ -66,10 +91,12 @@ export default function CardDesignPage() {
   const guardarCambios = async () => {
     setGuardando(true);
     setResultado(null);
-    const res = await saveBranding(business.id, borrador).catch(() => ({ ok: false as const, message: "No hay conexión. Tus cambios siguen aquí: intenta de nuevo." }));
+    const pendientes: ImagenesMarca = Object.fromEntries(Object.entries(imagenes).map(([campo, i]) => [campo, i.blob]));
+    const res = await saveBranding(business.id, borrador, pendientes).catch(() => ({ ok: false as const, message: "No hay conexión. Tus cambios siguen aquí: intenta de nuevo." }));
     setGuardando(false);
     if (res.ok) {
       setBorrador({});
+      soltarImagenes();
       setResultado({ ok: true, texto: "Cambios guardados. Ya se ven en todas las tarjetas." });
     } else setResultado({ ok: false, texto: res.message });
   };
@@ -88,36 +115,73 @@ export default function CardDesignPage() {
   const [ilustracionAviso, setIlustracionAviso] = useState<string | null>(null);
   // Quitar el fondo al subir: encendido por defecto; cada quien lo puede apagar para subirla con fondo.
   const [quitarFondo, setQuitarFondo] = useState(true);
+  const mensajeDe = (e: unknown) => (e instanceof Error ? e.message : "No se pudo cargar la imagen.");
+  // Las imágenes se preparan aquí (recorte, tamaño, fondo) y se ven en la vista previa; se suben al guardar.
   const changeIlustracion = async (file: File | null) => {
-    setIlustracionBusy(true);
     setIlustracionError(null);
     setIlustracionAviso(null);
-    const res = await setIllustration(business.id, file, { quitarFondo });
+    if (!file) return ponerImagen("illustrationUrl", null);
+    setIlustracionBusy(true);
+    try {
+      const fondo: { valor: ResultadoFondo | null } = { valor: null };
+      const blob = await prepareIlustracion(file, 600, { quitarFondo, alTerminar: (r) => (fondo.valor = r) });
+      ponerImagen("illustrationUrl", blob);
+      if (quitarFondo && fondo.valor === "quitado") setIlustracionAviso("Le quitamos el fondo a tu imagen.");
+      else if (quitarFondo && fondo.valor === "fondo-no-liso") setIlustracionAviso("No encontramos un fondo liso para quitar (pasa con fotos): queda tal cual.");
+    } catch (e) {
+      setIlustracionError(mensajeDe(e));
+    }
     setIlustracionBusy(false);
-    if (!res.ok) setIlustracionError(res.message);
-    else if (res.aviso) setIlustracionAviso(res.aviso);
   };
   const [stampBusy, setStampBusy] = useState(false);
   const [stampError, setStampError] = useState<string | null>(null);
   const [logoBusy, setLogoBusy] = useState(false);
   const [logoError, setLogoError] = useState<string | null>(null);
   const changeLogo = async (file: File | null) => {
-    setLogoBusy(true);
     setLogoError(null);
-    const res = await setLogo(business.id, file);
+    if (!file) return ponerImagen("logoUrl", null);
+    setLogoBusy(true);
+    try {
+      ponerImagen("logoUrl", await prepareLogo(file, 512));
+    } catch (e) {
+      setLogoError(mensajeDe(e));
+    }
     setLogoBusy(false);
-    if (!res.ok) setLogoError(res.message);
   };
+  // El sello se ve pequeño (un círculo de la tarjeta): 256 px bastan.
   const changeStamp = async (file: File | null) => {
-    setStampBusy(true);
     setStampError(null);
-    const res = await setStamp(business.id, file);
+    if (!file) return ponerImagen("stampUrl", null);
+    setStampBusy(true);
+    try {
+      ponerImagen("stampUrl", await prepareLogo(file, 256));
+    } catch (e) {
+      setStampError(mensajeDe(e));
+    }
     setStampBusy(false);
-    if (!res.ok) setStampError(res.message);
+  };
+  const descartar = () => {
+    setBorrador({});
+    soltarImagenes();
+    setResultado(null);
+    setLogoError(null);
+    setStampError(null);
+    setIlustracionError(null);
+    setIlustracionAviso(null);
+  };
+  // «Usar mi logo» como sello solo aplica al logo ya guardado: uno recién elegido todavía no tiene dirección.
+  const logoGuardado = imagenes.logoUrl ? "" : (business.branding.logoUrl ?? "");
+  const usarLogoComoSello = () => {
+    setImagenes((actual) => {
+      if (actual.stampUrl?.vista) URL.revokeObjectURL(actual.stampUrl.vista);
+      return sinCampo(actual, "stampUrl");
+    });
+    cambiar({ stampUrl: logoGuardado });
   };
   const [previewState, setPreviewState] = useState<CardStatus>("active");
   const [hoy] = useState(() => new Date().toISOString());
-  const b = { ...business.branding, ...borrador };
+  const vistas = Object.fromEntries(Object.entries(imagenes).map(([campo, i]) => [campo, i.vista])) as Partial<BusinessBranding>;
+  const b = { ...business.branding, ...borrador, ...vistas };
   const negocioConBorrador = { ...business, branding: b };
   const [joinUrl, setJoinUrl] = useState("");
   useEffect(() => setJoinUrl(`${window.location.origin}/join/${business.slug}`), [business.slug]);
@@ -137,7 +201,7 @@ export default function CardDesignPage() {
     <RequirePermission allowed={!!membership && can(membership, "business.branding.edit")}>
       <PageHeader
         title="Tarjeta, QR y NFC"
-        description="Lo que ves en la vista previa es lo que tus clientes guardan en la billetera de su celular. Prueba los cambios aquí y pulsa «Guardar cambios» para aplicarlos a todas las tarjetas. Las imágenes (logo, ilustración y sello) se guardan al subirlas."
+        description="Lo que ves en la vista previa es lo que tus clientes guardan en la billetera de su celular. Prueba los cambios aquí, imágenes incluidas: nada llega a las tarjetas de tus clientes hasta que pulses «Guardar cambios»."
       />
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_400px]">
@@ -207,8 +271,8 @@ export default function CardDesignPage() {
                     Quitar el fondo automáticamente
                     <span className="block text-xs text-muted">
                       {quitarFondo
-                        ? "Al subirla, borramos el fondo liso (blanco o de un solo color) y queda transparente."
-                        : "Se sube tal cual, con su fondo."}
+                        ? "Al elegirla, borramos el fondo liso (blanco o de un solo color) y queda transparente."
+                        : "Se usa tal cual, con su fondo."}
                     </span>
                   </span>
                 </label>
@@ -298,8 +362,8 @@ export default function CardDesignPage() {
                     <Button variant="secondary" size="sm" onClick={() => stampRef.current?.click()} disabled={stampBusy}>
                       {stampBusy ? <Loader2 className="size-4 animate-spin" /> : <ImageUp className="size-4" />} {b.stampUrl ? "Cambiar sello" : "Subir mi sello"}
                     </Button>
-                    {b.logoUrl && b.stampUrl !== b.logoUrl && (
-                      <Button variant="secondary" size="sm" onClick={() => cambiar({ stampUrl: b.logoUrl })} disabled={stampBusy}>
+                    {logoGuardado && b.stampUrl !== logoGuardado && (
+                      <Button variant="secondary" size="sm" onClick={usarLogoComoSello} disabled={stampBusy}>
                         Usar mi logo
                       </Button>
                     )}
@@ -445,10 +509,7 @@ export default function CardDesignPage() {
         resultado={resultado}
         pendiente="Tienes cambios sin guardar. Todavía no se ven en las tarjetas de tus clientes."
         onGuardar={() => void guardarCambios()}
-        onDescartar={() => {
-          setBorrador({});
-          setResultado(null);
-        }}
+        onDescartar={descartar}
       />
     </RequirePermission>
   );
