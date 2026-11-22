@@ -502,12 +502,13 @@ export default function CardDesignPage() {
         </div>
       </div>
 
-      {/* Barra de guardado: aparece cuando hay cambios sin guardar o un resultado que mostrar. */}
+      {/* Barra de guardado: siempre a la vista; los botones se encienden cuando hay cambios sin guardar. */}
       <BarraGuardar
         hayCambios={hayCambios}
         guardando={guardando}
         resultado={resultado}
         pendiente="Tienes cambios sin guardar. Todavía no se ven en las tarjetas de tus clientes."
+        sinCambios="No has cambiado nada. Lo que cambies se aplica solo al pulsar «Guardar cambios»."
         onGuardar={() => void guardarCambios()}
         onDescartar={descartar}
       />
