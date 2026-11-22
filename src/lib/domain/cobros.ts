@@ -73,3 +73,50 @@ export function sumarMeses(fecha: string, meses: number): string {
 export function prioridadCobro(pagadoHasta: string | null | undefined, hoy = hoyColombia()): number {
   return esFecha(pagadoHasta) ? diasHasta(pagadoHasta, hoy) : Number.POSITIVE_INFINITY;
 }
+
+export interface AvisoCobro {
+  tono: "info" | "warning" | "danger";
+  titulo: string;
+  texto: string;
+  /** Clave para «no mostrar más hoy» (cambia cada día y con cada estado). */
+  clave: string;
+}
+
+/**
+ * Aviso de cobro para el panel del dueño (null si está al día).
+ *  * Comercio nuevo del Starter que aún no paga: invitación con la promoción (no un «vencido»).
+ *  * Por vencer (5 días o menos): aviso amarillo con la fecha.
+ *  * Vencido: aviso rojo con los días de atraso.
+ */
+export function avisoCobro(
+  b: { pagadoHasta: string | null | undefined; mesGratisPendiente: boolean; planId: string },
+  hoy = hoyColombia(),
+): AvisoCobro | null {
+  const estado = estadoCobro(b.pagadoHasta, hoy);
+  if (estado === "al-dia" || estado === "sin-dato") return null;
+  const clave = `${hoy}:${estado}:${b.pagadoHasta}`;
+  if (b.mesGratisPendiente && b.planId === "plan_starter") {
+    return {
+      tono: "info",
+      titulo: "Activa tu plan Starter",
+      texto: "Paga el primer mes y el segundo es gratis. Tus clientes siguen sumando sellos sin interrupción.",
+      clave,
+    };
+  }
+  const fecha = fechaCorta(b.pagadoHasta);
+  if (estado === "por-vencer") {
+    const cuando = textoVencimiento(b.pagadoHasta, hoy).replace(/^Vence /, "");
+    return {
+      tono: "warning",
+      titulo: `Tu plan vence ${cuando === "hoy" || cuando === "mañana" ? cuando : `el ${fecha}`}`,
+      texto: `Está pagado hasta el ${fecha}. Págalo a tiempo para que tus clientes sigan sumando sellos sin interrupción.`,
+      clave,
+    };
+  }
+  return {
+    tono: "danger",
+    titulo: `Tu plan venció ${textoVencimiento(b.pagadoHasta, hoy).replace(/^Venció /, "")}`,
+    texto: `Estaba pagado hasta el ${fecha}. Ponte al día para seguir usando Lazo con tus clientes.`,
+    clave,
+  };
+}

@@ -28,6 +28,7 @@ import { can } from "@/lib/domain/permissions";
 import { ROLE_LABELS } from "@/lib/domain/permissions";
 import { Avatar, ButtonLink, EmptyState } from "@/components/ui";
 import { AlertTriangle, Eye, Lock, PencilLine } from "lucide-react";
+import { AvisoCobroBanner } from "./aviso-cobro";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 import { MiNombre } from "./mi-nombre";
 import { faltaNombre } from "@/lib/domain/nombre";
@@ -178,6 +179,10 @@ export function BusinessShell({ slug, children }: { slug: string; children: Reac
                 <button className="rounded-md border border-warning/40 px-2.5 py-1 text-xs font-medium hover:bg-warning/10">Salir del modo soporte</button>
               </form>
             </div>
+          )}
+          {/* Aviso de cobro: solo dueños y administradores (no en modo soporte). */}
+          {!supportView && (membership.role === "owner" || membership.role === "admin") && (
+            <AvisoCobroBanner businessId={business.id} businessName={business.name} slug={business.slug} />
           )}
           {business.status === "suspended" && (
             <div className="mb-6 flex items-center gap-2 rounded-lg border border-danger/20 bg-danger-bg px-4 py-3 text-sm text-danger">
