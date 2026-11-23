@@ -7,6 +7,7 @@ import { useData } from "@/lib/data/store";
 import { can } from "@/lib/domain/permissions";
 import { findCardByScanCodeAction, premiosDeTarjetaAction } from "@/lib/data/loyalty-actions";
 import { codigoLegible, esCodigoTarjeta, limpiarCodigo } from "@/lib/domain/code128";
+import { codigoDeLectura } from "@/lib/domain/enlace-sello";
 import { Button, Card, Input, PageHeader, Select } from "@/components/ui";
 import { cn } from "@/lib/utils";
 
@@ -25,6 +26,8 @@ type Lector = { stop: () => void };
  * y quien atiende lo escanea con la cámara de su celular. Se suma el sello con las reglas de siempre.
  * Si la cámara no lo lee, se puede escribir el número que aparece debajo del código.
  * También lee el código de barras de las tarjetas guardadas antes del cambio a QR.
+ * El QR lleva un enlace (…/sello/número): si se escanea con la cámara normal del celular, ese enlace
+ * abre esta página con ?codigo=número y el sello se suma solo, una vez.
  */
 export default function EscanearPage() {
   const { business, program, membership, locations } = useScope();
@@ -40,6 +43,8 @@ export default function EscanearPage() {
   const lector = useRef<Lector | null>(null);
   const ocupado = useRef(false);
   const ultimo = useRef<{ codigo: string; en: number; clave: string }>({ codigo: "", en: 0, clave: "" });
+  const [sedeLista, setSedeLista] = useState(false);
+  const desdeEnlace = useRef(false);
 
   // Cada celular suele quedarse en la misma sede.
   useEffect(() => {
@@ -48,6 +53,7 @@ export default function EscanearPage() {
       if (guardada && sedes.some((l) => l.id === guardada)) setSede(guardada);
       else if (sedes.length === 1) setSede(sedes[0].id);
     } catch {}
+    setSedeLista(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [business.id, sedes.length]);
 
@@ -61,7 +67,8 @@ export default function EscanearPage() {
 
   const sumar = useCallback(
     async (leido: string, manual = false) => {
-      const codigo = limpiarCodigo(leido);
+      // Acepta el enlace del QR nuevo, el número solo del QR anterior y el número escrito a mano.
+      const codigo = codigoDeLectura(leido);
       if (ocupado.current) return;
       const repetido = codigo === ultimo.current.codigo && Date.now() - ultimo.current.en < 60_000;
       // La cámara lee el mismo código varias veces por segundo: durante un minuto solo cuenta una vez
@@ -143,6 +150,17 @@ export default function EscanearPage() {
   };
 
   useEffect(() => apagar, [apagar]);
+
+  // Llegó desde el enlace del QR (cámara normal del celular): suma el sello una sola vez y limpia la dirección,
+  // para que recargar la página no lo vuelva a sumar. Espera a saber la sede guardada en este celular.
+  useEffect(() => {
+    if (desdeEnlace.current || !sedeLista || !puede || !program) return;
+    const codigo = new URLSearchParams(window.location.search).get("codigo");
+    if (!codigo) return;
+    desdeEnlace.current = true;
+    window.history.replaceState(window.history.state, "", window.location.pathname);
+    void sumar(codigo, true);
+  }, [sedeLista, puede, program, sumar]);
 
   if (!program) return null;
   if (!puede) return <PageHeader title="Escanear tarjeta" description="Tu usuario no puede registrar visitas." />;

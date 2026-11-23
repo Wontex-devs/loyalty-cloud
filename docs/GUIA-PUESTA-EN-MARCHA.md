@@ -34,7 +34,7 @@ Una página para dejar el programa listo antes del primer cliente: unos 30 minut
 
 ### Con el código QR de la tarjeta — *Escanear tarjeta*
 1. El cliente muestra el código QR de su tarjeta (en el celular o en la billetera).
-2. Quien atiende abre *Escanear tarjeta* en el panel y apunta la cámara.
+2. Quien atiende abre *Escanear tarjeta* en el panel y apunta la cámara. También sirve la cámara normal del celular: abre el enlace del código y, si tienes la sesión del negocio abierta, suma el sello solo.
 3. Aparece **«¡Sello registrado!»**. Si el cliente ya completó sus sellos, ahí mismo sale **Canjear ahora**.
 
 ### Con la etiqueta NFC del mostrador — *Tarjeta, QR y NFC → Sellar con el celular (NFC)*

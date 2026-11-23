@@ -8,6 +8,7 @@ import { passTheme, progressText, type WalletPass } from "./pass.ts";
 import { appleInfoFields } from "./pass-info.ts";
 import { DEFAULT_WALLET_SETTINGS, nearbyMessage } from "./messages.ts";
 import { codigoLegible, esCodigoTarjeta } from "../domain/code128.ts";
+import { contenidoQrPase } from "../domain/enlace-sello.ts";
 import type { WalletSettings } from "../domain/types.ts";
 
 export interface AppleWalletConfig {
@@ -135,9 +136,9 @@ export function passJson(cfg: Pick<AppleWalletConfig, "passTypeId" | "teamId" | 
     ...(p.active ? {} : { voided: true }),
     ...updates,
     // Código QR al pie del pase: el comercio lo escanea con la cámara del panel para sumar el sello.
-    // Solo lleva los 12 dígitos: sale con cuadros grandes y se lee más rápido que un código de barras.
+    // Lleva un enlace con el número: así también lo abre la cámara normal del celular de quien atiende.
     ...(p.scanCode && esCodigoTarjeta(p.scanCode)
-      ? { barcodes: [{ format: "PKBarcodeFormatQR", message: p.scanCode, messageEncoding: "iso-8859-1", altText: codigoLegible(p.scanCode) }] }
+      ? { barcodes: [{ format: "PKBarcodeFormatQR", message: contenidoQrPase(p.scanCode, p.cardUrl), messageEncoding: "iso-8859-1", altText: codigoLegible(p.scanCode) }] }
       : {}),
     // Hasta 10 sedes: cerca de una, la tarjeta aparece en la pantalla bloqueada.
     ...(p.places?.length && p.active
