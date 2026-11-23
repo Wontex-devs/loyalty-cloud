@@ -101,7 +101,7 @@ export const GUIAS: Pagina[] = [
       },
       {
         q: "¿Cómo empiezo?",
-        a: "Escríbenos por WhatsApp al 313 893 9222 o a info@wontex-devs.com. Con el plan Starter pagas el primer mes, el segundo es gratis y no hay permanencia.",
+        a: "Escríbenos por WhatsApp al 310 549 9537 o a info@wontex-devs.com. Con el plan Starter pagas el primer mes, el segundo es gratis y no hay permanencia.",
       },
       {
         q: "¿Puedo usar mi logo y mis colores?",
