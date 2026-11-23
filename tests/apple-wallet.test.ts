@@ -174,7 +174,7 @@ test("la plataforma avisa 60 días antes de que venza el certificado de Apple", 
 
 test("el pase lleva el código QR de la tarjeta, con el número legible debajo", () => {
   const j = passJson(base, passFromCard({ ...card, scanCode: "482910473365" }, origin), origin) as { barcodes?: { format: string; message: string; altText: string }[] };
-  assert.deepEqual(j.barcodes, [{ format: "PKBarcodeFormatQR", message: "482910473365", messageEncoding: "iso-8859-1", altText: "4829 1047 3365" }]);
+  assert.deepEqual(j.barcodes, [{ format: "PKBarcodeFormatQR", message: "https://lazo.ejemplo.com/sello/482910473365", messageEncoding: "iso-8859-1", altText: "4829 1047 3365" }]);
   // Sin número (o con uno raro) no se dibuja nada.
   assert.equal("barcodes" in passJson(base, passFromCard({ ...card, scanCode: "abc" }, origin), origin), false);
 });

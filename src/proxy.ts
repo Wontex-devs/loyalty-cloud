@@ -41,5 +41,5 @@ export async function proxy(request: NextRequest) {
  * del cliente, la inscripción y el toque NFC pagaban un arranque extra del servidor sin necesitarlo.
  */
 export const config = {
-  matcher: ["/admin/:path*", "/business/:path*", "/account/:path*", "/login", "/start", "/auth/:path*"],
+  matcher: ["/admin/:path*", "/business/:path*", "/account/:path*", "/sello/:path*", "/login", "/start", "/auth/:path*"],
 };

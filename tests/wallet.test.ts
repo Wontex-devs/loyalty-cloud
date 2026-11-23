@@ -129,7 +129,7 @@ test("la clase del pase lleva la foto de fondo solo si el comercio tiene una", (
 
 test("el pase de Google lleva el código QR de la tarjeta", () => {
   const o = loyaltyObject(cfg, passFromCard({ ...card, scanCode: "482910473365" }, origin)) as { barcode?: unknown };
-  assert.deepEqual(o.barcode, { type: "QR_CODE", value: "482910473365", alternateText: "4829 1047 3365" });
+  assert.deepEqual(o.barcode, { type: "QR_CODE", value: "https://ejemplo.vercel.app/sello/482910473365", alternateText: "4829 1047 3365" });
   assert.equal("barcode" in loyaltyObject(cfg, passFromCard(card, origin)), false);
 });
 
