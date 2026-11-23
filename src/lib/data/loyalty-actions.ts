@@ -450,6 +450,19 @@ export async function anonymizeCustomerAction(customerId: string): Promise<OpAct
   return { ok: true };
 }
 
+/**
+ * Elimina un cliente por completo (tarjeta, visitas, premios y contactos) y libera su cupo del plan.
+ * Solo el superadministrador: el comercio solo puede eliminar los datos, y ese cliente sigue ocupando cupo.
+ */
+export async function adminDeleteCustomerAction(customerId: string): Promise<OpActionResult> {
+  if (!z.uuid().safeParse(customerId).success) return { ok: false, message: "Cliente no válido." };
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("admin_delete_customer", { p_customer_id: customerId });
+  if (error) return { ok: false, message: dbErrorMessage(error) };
+  revalidatePath("/business", "layout");
+  return { ok: true };
+}
+
 export async function revokeMarketingConsentAction(customerId: string): Promise<OpActionResult> {
   if (!z.uuid().safeParse(customerId).success) return { ok: false, message: "Cliente no válida." };
   const supabase = await createClient();

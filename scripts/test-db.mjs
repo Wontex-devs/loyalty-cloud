@@ -1635,5 +1635,59 @@ console.log("\nDemo: sello de prueba (migración 44)");
   await db.query("update public.businesses set is_demo = false where id = $1", [B]);
 }
 
+console.log("\nCupo de clientes y borrado total (migración 45)");
+{
+  await db.query("insert into public.plans (id, name, price_monthly, max_customers, max_staff) values ('plan_cupo2', 'Cupo 2', 1000, 2, 2)");
+  const C = (await db.query(`insert into public.businesses (slug, name, category, city, plan_id, status)
+    values ('negocio-cupo', 'Negocio Cupo', 'Café', 'Cali', 'plan_cupo2', 'active') returning id`)).rows[0].id;
+  await db.query("insert into public.loyalty_programs (business_id, name, stamps_required, reward_name, min_minutes_between_visits) values ($1, 'Club C', 5, 'Café', 0)", [C]);
+  await db.query("insert into public.business_memberships (business_id, profile_id, role, can_redeem) values ($1, $2, 'owner', true), ($1, $3, 'admin', true)", [C, U.ownerB, U.adminA]);
+  const inscribir = (phone, name) => joinProgram("negocio-cupo", phone, name);
+  const t1 = (await inscribir("+573188880001", "Uno Cupo")).rows?.[0]?.public_token;
+  const t2 = (await inscribir("+573188880002", "Dos Cupo")).rows?.[0]?.public_token;
+  let r = await inscribir("+573188880003", "Tres Cupo");
+  check("cupo: con el plan lleno no se inscribe nadie más", expectError(r, "PLAN_LIMIT_CUSTOMERS"), r);
+
+  const cliente = async (tok) => (await db.query("select cu.id, c.id card_id from public.loyalty_cards c join public.customers cu on cu.id = c.customer_id where c.public_token = $1", [tok])).rows[0];
+  const uno = await cliente(t1);
+  const dos = await cliente(t2);
+  await as(U.ownerB, "select * from public.register_visit($1, 'cupo-visita-1', null)", [uno.card_id]);
+  await as(U.ownerB, "select * from public.register_visit($1, 'cupo-visita-2', null)", [dos.card_id]);
+
+  r = await as(U.ownerB, "select public.anonymize_customer($1)", [uno.id]);
+  check("cupo: el dueño puede eliminar los datos de un cliente", r.ok, r);
+  r = await inscribir("+573188880003", "Tres Cupo");
+  check("cupo: eliminar los datos NO libera el cupo", expectError(r, "PLAN_LIMIT_CUSTOMERS"), r);
+  r = await inscribir("+573188880001", "Uno Otra Vez");
+  check("cupo: ni volver a inscribir al mismo cliente con su número", expectError(r, "PLAN_LIMIT_CUSTOMERS"), r);
+
+  for (const [quien, u] of [["el dueño", U.ownerB], ["un administrador", U.adminA], ["otro comercio", U.ownerA]]) {
+    r = await as(u, "select public.admin_delete_customer($1)", [dos.id]);
+    check(`borrado total: ${quien} no puede eliminar un cliente por completo`, expectError(r, "FORBIDDEN"), r);
+  }
+  r = await as(null, "select public.admin_delete_customer($1)", [dos.id]);
+  check("borrado total: ni con la clave pública", !r.ok, r);
+  r = await as(U.ownerB, "with x as (select set_config('lazo.eliminando_cliente', $1::text, true) v) delete from public.visits where card_id = $2 and exists (select 1 from x)", [dos.id, dos.card_id]);
+  const quedan = (await db.query("select count(*)::int n from public.visits where card_id = $1", [dos.card_id])).rows[0].n;
+  check("borrado total: activar el permiso a mano no deja borrar visitas", quedan === 1, { r, quedan });
+
+  r = await as(U.super, "select public.admin_delete_customer($1)", [dos.id]);
+  const resto = (await db.query(`select
+      (select count(*)::int from public.customers where id = $1) cu,
+      (select count(*)::int from public.loyalty_cards where id = $2) ca,
+      (select count(*)::int from public.visits where card_id = $2) vi,
+      (select count(*)::int from public.visits where card_id = $3) vi_otro`, [dos.id, dos.card_id, uno.card_id])).rows[0];
+  check("borrado total: el superadministrador elimina el cliente, su tarjeta y sus visitas", r.ok && resto.cu === 0 && resto.ca === 0 && resto.vi === 0, { r, resto });
+  check("borrado total: las visitas de los demás clientes no se tocan", resto.vi_otro === 1, resto);
+  const aud = (await db.query("select metadata from public.audit_logs where action = 'platform.customer_deleted' and entity_id = $1", [dos.id])).rows;
+  check("borrado total: queda en el historial del comercio, sin datos personales", aud.length === 1 && aud[0].metadata.visits === 1 && !JSON.stringify(aud[0].metadata).includes("Dos"), aud);
+  r = await inscribir("+573188880003", "Tres Cupo");
+  check("borrado total: libera el cupo", r.ok && !!r.rows?.[0]?.public_token, r);
+  r = await as(U.super, "select public.admin_delete_customer($1)", [uno.id]);
+  check("borrado total: también sirve para un cliente con los datos ya eliminados", r.ok, r);
+  r = await as(U.ownerB, "delete from public.visits where card_id = $1", [uno.card_id]);
+  check("el historial sigue sin poderse borrar desde el panel", !r.ok || r.affected === 0, r);
+}
+
 console.log(`\n${passed} correctas, ${failed} fallidas\n`);
 process.exit(failed ? 1 : 0);

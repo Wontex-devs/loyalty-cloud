@@ -69,6 +69,8 @@ export interface DataApi {
   setCardBlocked: (cardId: string, blocked: boolean) => Promise<OpResult>;
   /** Supresión: borra los datos personales de la clienta y bloquea su tarjeta (solo propietario). */
   anonymizeCustomer: (customerId: string) => Promise<OpResult>;
+  /** Solo superadministrador: borra el cliente por completo y libera su cupo. */
+  adminDeleteCustomer: (customerId: string) => Promise<OpResult>;
   revokeMarketingConsent: (customerId: string) => Promise<OpResult>;
   /** Baja de mensajes desde la tarjeta pública (por token). */
   unsubscribeMarketing: (token: string) => Promise<boolean>;
