@@ -39,7 +39,7 @@ export function HiloStrip({
   const lista = rewardReady || stamps >= required;
   const upper = brandCase(branding) === "uppercase";
   const linea = alpha(c.accent, 0.55);
-  const premio = ajustePremio(rewardName, upper);
+  const premio = ajustePremio(rewardName, upper, h.texto.compacto);
 
   return (
     <div className="relative w-full overflow-hidden" style={{ aspectRatio: `${W} / ${H}`, containerType: "inline-size", background: c.bg, color: c.text }}>
@@ -63,12 +63,12 @@ export function HiloStrip({
       )}
 
       {/* El premio, protagonista */}
-      <p className="absolute font-medium uppercase" style={{ left: px(20), top: py(16), fontSize: cqw(11.5), letterSpacing: "0.19em", lineHeight: 1.2, color: c.passLabel }}>
+      <p className="absolute font-medium uppercase" style={{ left: px(20), top: py(h.texto.etiqueta), fontSize: cqw(11.5), letterSpacing: "0.19em", lineHeight: 1.2, color: c.passLabel }}>
         {lista ? "Recompensa lista" : "Próxima recompensa"}
       </p>
       <p
         className={cn("absolute", premio.lines === 1 && "whitespace-nowrap", brandFont(branding), upper && "uppercase")}
-        style={{ left: px(20), top: py(33), width: px(W - 40), fontSize: cqw(premio.size), lineHeight: 1.15, letterSpacing: upper ? "0.05em" : undefined }}
+        style={{ left: px(20), top: py(h.texto.nombre), width: px(W - 40), fontSize: cqw(premio.size), lineHeight: 1.15, letterSpacing: upper ? "0.05em" : undefined }}
       >
         {premio.text}
       </p>
@@ -116,7 +116,7 @@ export function HiloStrip({
               {ganado && (
                 <StampMark
                   branding={branding}
-                  className={cn(branding.stampUrl ? "size-[90%]" : "size-[56%]", highlightLastStamp && s.index === stamps - 1 && "animate-stamp")}
+                  className={cn(branding.stampUrl ? "size-[90%]" : "size-[62%]", highlightLastStamp && s.index === stamps - 1 && "animate-stamp")}
                 />
               )}
             </li>

@@ -1,7 +1,7 @@
 // Pruebas de «el hilo»: la composición de sellos que comparten la tarjeta web y el pase de Wallet.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { ajustePremio, hilo, HILO_MAX_UNA_FILA } from "../src/lib/domain/hilo.ts";
+import { ajustePremio, hilo, HILO_MAX_UNA_FILA, ILUSTRACION } from "../src/lib/domain/hilo.ts";
 import { memberSinceText } from "../src/lib/wallet/pass.ts";
 
 const W = 375;
@@ -16,9 +16,17 @@ test("todos los sellos caben en la franja, sin tocarse, para 2 a 30 sellos", () 
     for (const s of h.sellos) {
       const borde = s.premio ? h.aro : s.r;
       assert.ok(s.x - borde >= 0 && s.x + borde <= W, `${n}: el sello ${s.index} se sale a lo ancho`);
-      // Bajo el texto del premio (que termina hacia y = 62) y dentro de la franja.
-      assert.ok(s.y - borde >= 62 && s.y + borde <= H, `${n}: el sello ${s.index} se sale a lo alto (${s.y}, ${borde})`);
+      // Bajo el texto del premio (termina hacia y = 62, o y = 51 cuando va compacto) y dentro de la franja.
+      const techo = h.texto.compacto ? 51 : 62;
+      assert.ok(s.y - borde >= techo && s.y + borde <= H, `${n}: el sello ${s.index} se sale a lo alto (${s.y}, ${borde})`);
       assert.ok(s.r >= 5, `${n}: sello demasiado pequeño (${s.r})`);
+    }
+    // El aro del premio no toca ningún sello, y la ilustración del comercio (arriba a la derecha) tampoco.
+    const premio = h.sellos.at(-1)!;
+    for (const s of h.sellos.slice(0, -1)) {
+      assert.ok(Math.hypot(s.x - premio.x, s.y - premio.y) > s.r + h.aro, `${n}: el sello ${s.index} toca el aro del premio`);
+      const tocaIlustracion = s.x + s.r > ILUSTRACION.x && s.y - s.r < ILUSTRACION.y + ILUSTRACION.alto;
+      assert.ok(!tocaIlustracion, `${n}: el sello ${s.index} queda bajo la ilustración`);
     }
     for (let i = 0; i < h.sellos.length; i++) {
       for (let j = i + 1; j < h.sellos.length; j++) {
@@ -30,10 +38,27 @@ test("todos los sellos caben en la franja, sin tocarse, para 2 a 30 sellos", () 
   }
 });
 
-test("hasta 12 sellos van en una fila; con más, en dos", () => {
+test("hasta 7 sellos van en una hilera; con más, en dos y el texto del premio se compacta", () => {
   assert.equal(hilo(HILO_MAX_UNA_FILA, W, H).hilos.length, 1);
   assert.equal(hilo(HILO_MAX_UNA_FILA + 1, W, H).hilos.length, 2);
   assert.equal(new Set(hilo(30, W, H).sellos.map((s) => Math.round(s.y / 20))).size >= 2, true);
+  assert.equal(hilo(HILO_MAX_UNA_FILA, W, H).texto.compacto, false);
+  assert.equal(hilo(HILO_MAX_UNA_FILA + 1, W, H).texto.compacto, true);
+  // Los sellos siguen siendo grandes (no diminutos) hasta 16.
+  for (let n = 2; n <= 16; n++) assert.ok(hilo(n, W, H).sellos[0].r >= 16, `${n}: sellos pequeños`);
+});
+
+test("en dos hileras los sellos quedan en columnas y el premio, grande, cierra a la derecha", () => {
+  for (const n of [8, 9, 10, 11, 13, 16, 29]) {
+    const h = hilo(n, W, H);
+    const comunes = h.sellos.filter((s) => !s.premio);
+    const arriba = new Set(comunes.filter((s) => s.y < 96).map((s) => s.x));
+    const abajo = comunes.filter((s) => s.y >= 96);
+    assert.ok(abajo.length > 0, `${n}: no hay segunda hilera`);
+    assert.ok(abajo.every((s) => arriba.has(s.x)), `${n}: la fila de abajo no está en columnas`);
+    assert.equal(h.sellos.at(-1)?.x, Math.max(...h.sellos.map((s) => s.x)), `${n}: el premio no cierra la franja`);
+    assert.ok(h.sellos.at(-1)!.r > comunes[0].r, `${n}: el premio no es el más grande`);
+  }
 });
 
 test("la misma composición a otra escala (imagen de Google Wallet)", () => {
@@ -51,6 +76,11 @@ test("el nombre del premio va grande si es corto y en dos líneas si es largo", 
   assert.equal(largo.text, "Un tratamiento capilar completo con masaje");
   // Dos líneas de letra 13 terminan antes de donde empiezan los sellos (y = 62 es el límite que se prueba arriba).
   assert.ok(33 + largo.size * 1.15 * 2 <= 64);
+  // Compacto (dos hileras): termina antes de y = 51.
+  const corto = ajustePremio("Café gratis", false, true);
+  assert.ok(25 + corto.size * 1.15 <= 51);
+  const largoC = ajustePremio("Un tratamiento capilar completo con masaje", true, true);
+  assert.ok(25 + largoC.size * 1.15 * largoC.lines <= 51);
   const enorme = ajustePremio("x".repeat(300));
   assert.equal(enorme.lines, 2);
   assert.ok(enorme.text.endsWith("…") && enorme.text.length < 120);
