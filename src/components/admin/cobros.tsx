@@ -71,7 +71,7 @@ export function TarjetaCobros({ businessId, nombre, precioPlan, planId }: { busi
     <Card className="mt-4">
       <CardHeader
         title="Cobros"
-        description="Solo lo ve el equipo de Lazo. Nada se suspende solo: si no paga, decides tú."
+        description="Solo lo ve el equipo de Lazo. A los 5 días de vencido se pausa el panel del dueño hasta que pague; sus clientes siguen con sus tarjetas."
         action={
           puedeEditar && !aviso ? (
             <div className="flex flex-wrap justify-end gap-2">
