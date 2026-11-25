@@ -42,7 +42,7 @@ export function passStrip(
   const ilustracion = branding.illustrationUrl?.startsWith("https://") ? branding.illustrationUrl : null;
   const h = hilo(required, width, height);
   const lista = !!rewardReady || stamps >= required;
-  const premio = ajustePremio(rewardName, upper);
+  const premio = ajustePremio(rewardName, upper, h.texto.compacto);
   const inicial = (monogram ?? "").trim().slice(0, 1).toUpperCase();
   const linea = alpha(c.accent, 0.55);
 
@@ -89,14 +89,14 @@ export function passStrip(
         )}
 
         {/* El premio, protagonista */}
-        <div style={{ position: "absolute", left: pad, top: 16 * k, display: "flex", fontSize: 11.5 * k, fontWeight: 500, letterSpacing: 2.2 * k, color: c.passLabel }}>
+        <div style={{ position: "absolute", left: pad, top: h.texto.etiqueta * k, display: "flex", fontSize: 11.5 * k, fontWeight: 500, letterSpacing: 2.2 * k, color: c.passLabel }}>
           {lista ? "RECOMPENSA LISTA" : "PRÓXIMA RECOMPENSA"}
         </div>
         <div
           style={{
             position: "absolute",
             left: pad,
-            top: 33 * k,
+            top: h.texto.nombre * k,
             width: width - pad * 2,
             display: "flex",
             fontFamily: marca,
@@ -155,7 +155,7 @@ export function passStrip(
                   // eslint-disable-next-line @next/next/no-img-element, jsx-a11y/alt-text
                   <img src={stampUrl} width={s.r * 1.8} height={s.r * 1.8} style={{ borderRadius: s.r, background: "#ffffff", objectFit: "contain", padding: s.r * 0.16 }} />
                 ) : (
-                  <Icon name={branding.stampIcon ?? "check"} size={s.r * 1.1} color={c.onAccent} />
+                  <Icon name={branding.stampIcon ?? "check"} size={s.r * 1.24} color={c.onAccent} />
                 ))}
             </div>
           );

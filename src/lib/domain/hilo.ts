@@ -1,7 +1,7 @@
 /**
  * «El hilo»: la composición de los sellos en la franja de la tarjeta.
- * Un hilo fino cruza la franja y enhebra los sellos sobre una curva suave; el último es el
- * premio, más grande y con un aro alrededor (el lazo).
+ * Los sellos van en una hilera (o en dos, si son muchos) enhebrados por un hilo fino; al final,
+ * a la derecha, el premio grande, con un aro alrededor, y el hilo se curva hasta abrazarlo (el lazo).
  *
  * La usan la tarjeta web y la imagen del pase de Apple y Google Wallet, para que se vean igual.
  * Todo se calcula sobre una franja de `width` × `height`; la de Apple mide 375 × 144 puntos.
@@ -20,64 +20,73 @@ export interface HiloSello {
 
 export interface Hilo {
   sellos: HiloSello[];
-  /** Trazos del hilo (atributo `d` de un <path> de SVG): uno por fila. */
+  /** Trazos del hilo (atributo `d` de un <path> de SVG): uno por hilera. */
   hilos: string[];
   /** Radio del aro alrededor del premio. */
   aro: number;
   /** Grosor recomendado del hilo y de los bordes. */
   trazo: number;
+  /**
+   * Dónde va el texto del premio (en puntos de una franja de 144 de alto). Con dos hileras de
+   * sellos el texto sube y se achica para dejarles espacio.
+   */
+  texto: TextoPremio;
 }
 
-/** Con más sellos que estos, van en dos filas para que no queden diminutos. */
+export interface TextoPremio {
+  /** Arriba de «PRÓXIMA RECOMPENSA». */
+  etiqueta: number;
+  /** Arriba del nombre del premio. */
+  nombre: number;
+  compacto: boolean;
+}
+
+const TEXTO_NORMAL: TextoPremio = { etiqueta: 16, nombre: 33, compacto: false };
+const TEXTO_COMPACTO: TextoPremio = { etiqueta: 11, nombre: 25, compacto: true };
+
 /**
  * Dónde va la ilustración del comercio en la franja de 375 × 144 (en lugar de la inicial de fondo):
- * arriba a la derecha, sobre el hilo, sin tocar los sellos. Se ve tenue para no
+ * arriba a la derecha, encima del premio, sin tocar los sellos. Se ve tenue para no
  * competir con el premio ni con los sellos.
  */
-export const ILUSTRACION = { x: 258, y: 4, ancho: 110, alto: 80, opacidad: 0.4 } as const;
+export const ILUSTRACION = { x: 262, y: 2, ancho: 106, alto: 52, opacidad: 0.4 } as const;
 
-export const HILO_MAX_UNA_FILA = 12;
+/** Con más sellos que estos (contando el premio), van en dos hileras para que no queden diminutos. */
+export const HILO_MAX_UNA_FILA = 7;
 
 const n1 = (v: number) => Math.round(v * 10) / 10;
 
 export function hilo(required: number, width: number, height: number): Hilo {
   const total = Math.max(2, Math.floor(required));
   const k = height / 144;
-  const izquierda = 34 * k;
-  const derecha = width - 37 * k;
+  const ancho = width / k; // todo se calcula en puntos de una franja de 144 de alto
+  const n = total - 1; // sellos antes del premio
   const dosFilas = total > HILO_MAX_UNA_FILA;
-  const filas = dosFilas ? [Math.ceil(total / 2), Math.floor(total / 2)] : [total];
-  const bases = dosFilas ? [88 * k, 122 * k] : [106 * k];
-  const amplitud = (dosFilas ? 4 : 11) * k;
-  // La curva sube un poco en el centro de la franja.
-  const curva = (x: number, base: number) => base - amplitud * Math.sin((Math.PI * (x - 10 * k)) / (width - 20 * k));
-
-  const masLarga = Math.max(...filas);
-  const paso = (derecha - izquierda) / Math.max(masLarga - 1, 1);
-  // Sellos grandes: ocupan buena parte del paso entre uno y otro (sin tocarse).
-  const r = Math.min((dosFilas ? 11 : 17) * k, paso * 0.43);
-  const rPremio = r + (dosFilas ? 2 : 3) * k;
+  // Con dos hileras el texto del premio sube (TEXTO_COMPACTO) y las hileras se reparten el resto.
+  const ys = dosFilas ? [74, 117] : [104];
+  // El premio, grande, a la derecha; con dos hileras queda entre las dos.
+  const R = 27;
+  const cx = ancho - 55;
+  const cy = dosFilas ? (ys[0] + ys[1]) / 2 : 104;
+  const porFila = Math.ceil(n / ys.length);
+  const izq = dosFilas ? 20 : 24;
+  const der = cx - R - (dosFilas ? 22 : 26);
+  const paso = (der - izq) / Math.max(porFila - 1, 1);
+  const r = Math.min(dosFilas ? 18 : 19, paso * 0.45);
 
   const sellos: HiloSello[] = [];
   const hilos: string[] = [];
   let index = 0;
-  filas.forEach((cuantos, fila) => {
-    const base = bases[fila];
-    const pasoFila = (derecha - izquierda) / Math.max(cuantos - 1, 1);
-    for (let i = 0; i < cuantos; i++) {
-      const x = cuantos === 1 ? derecha : izquierda + i * pasoFila;
-      const premio = index === total - 1;
-      sellos.push({ index, x: n1(x), y: n1(curva(x, base)), r: n1(premio ? rPremio : r), premio });
-      index++;
-    }
-    // El hilo entra por el borde izquierdo y llega hasta el último sello de la fila.
-    let d = `M0 ${n1(curva(0, base))}`;
-    for (let x = 4 * k; x < derecha; x += 4 * k) d += ` L${n1(x)} ${n1(curva(x, base))}`;
-    d += ` L${n1(derecha)} ${n1(curva(derecha, base))}`;
-    hilos.push(d);
+  ys.forEach((y, f) => {
+    // Las dos hileras usan el mismo paso: los sellos quedan en columnas.
+    const cuantos = f === 0 ? porFila : n - porFila;
+    for (let i = 0; i < cuantos; i++) sellos.push({ index: index++, x: n1((izq + i * paso) * k), y: n1(y * k), r: n1(r * k), premio: false });
+    // El hilo entra por el borde izquierdo, enhebra la hilera y se curva hacia el premio.
+    const fin = cy + (y - cy) * 0.35;
+    hilos.push(`M0 ${n1(y * k)} L${n1(der * k)} ${n1(y * k)} Q${n1((cx - R - 6) * k)} ${n1(y * k)} ${n1((cx - R - 4) * k)} ${n1(fin * k)}`);
   });
-
-  return { sellos, hilos, aro: n1(rPremio + 4.5 * k), trazo: Math.max(1, n1(k)) };
+  sellos.push({ index, x: n1(cx * k), y: n1(cy * k), r: n1(R * k), premio: true });
+  return { sellos, hilos, aro: n1((R + 5) * k), trazo: Math.max(1, n1(k)), texto: dosFilas ? TEXTO_COMPACTO : TEXTO_NORMAL };
 }
 
 export interface AjustePremio {
@@ -92,14 +101,15 @@ export interface AjustePremio {
  * Cómo escribir el nombre del premio para que quepa en la franja: grande en una línea si es
  * corto; si es largo, más pequeño y en dos líneas. Nunca se sale ni tapa los sellos.
  */
-export function ajustePremio(nombre: string, upper = false): AjustePremio {
+export function ajustePremio(nombre: string, upper = false, compacto = false): AjustePremio {
   const text = nombre.trim().replace(/\s+/g, " ");
   const ancho = 335; // 375 menos los márgenes
   // Ancho medio de una letra respecto a su tamaño (las mayúsculas espaciadas ocupan más).
   const porLetra = upper ? 0.74 : 0.54;
   const unaLinea = Math.floor(ancho / (Math.max(text.length, 1) * porLetra));
-  if (unaLinea >= 16) return { size: Math.min(24, unaLinea), lines: 1, text };
-  const size = 13;
+  // Con dos hileras de sellos el nombre va más pequeño para dejarles espacio.
+  if (unaLinea >= (compacto ? 13 : 16)) return { size: Math.min(compacto ? 18 : 24, unaLinea), lines: 1, text };
+  const size = compacto ? 11 : 13;
   const caben = Math.floor(ancho / (size * porLetra)) * 2 - 2;
   return { size, lines: 2, text: text.length > caben ? `${text.slice(0, caben - 1).trimEnd()}…` : text };
 }
