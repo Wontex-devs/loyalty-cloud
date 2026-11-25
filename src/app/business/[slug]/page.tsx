@@ -5,6 +5,7 @@ import { ArrowUpRight, Gift, Megaphone, QrCode, Repeat, Sparkles, Users, Calenda
 import { useData } from "@/lib/data/store";
 import { nombreParaSaludo } from "@/lib/domain/nombre";
 import { onboardingSteps } from "@/components/business/onboarding";
+import { ProximoPago } from "@/components/business/proximo-pago";
 import { useScope, RequirePermission } from "@/components/business/business-shell";
 import { BarChart, dailySeries } from "@/components/business/charts";
 import { Avatar, Badge, Card, CardHeader, PageHeader, Progress, StatCard } from "@/components/ui";
@@ -94,6 +95,9 @@ export default function BusinessDashboard() {
             </Link>
           ))}
       </div>
+
+      {/* El cobro del plan, siempre a la vista del dueño (los empleados no lo ven). */}
+      {can(m, "settings.edit") && <ProximoPago businessId={business.id} businessName={business.name} slug={business.slug} />}
 
       {!setup.complete && (
         <Link
