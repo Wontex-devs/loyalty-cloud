@@ -10,7 +10,7 @@ import { formatMoney } from "@/lib/utils";
 const MESES = [1, 3, 6, 12];
 
 /**
- * «Plan y pago» en la configuración del comercio: hasta cuándo está pagado y el botón para pagar
+ * «Pago del plan» (Más opciones → Pago del plan): hasta cuándo está pagado y el botón para pagar
  * en línea (Mercado Pago o Wompi). Al volver muestra si el pago quedó aprobado: la confirmación
  * llega al servidor consultando a la pasarela, así que puede tardar unos segundos.
  */

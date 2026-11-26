@@ -30,7 +30,7 @@ Cómo se confirma un pago:
 
 # Wompi (alternativa)
 
-El comercio paga su plan desde **Configuración → Plan {nombre}** con el botón **«Pagar con Wompi»**. Puede pagar con PSE, Nequi, Bancolombia o tarjeta.
+El comercio paga su plan desde **Más opciones → Pago del plan** con el botón **«Pagar con Wompi»**. Puede pagar con PSE, Nequi, Bancolombia o tarjeta.
 El pago se registra solo en el control de cobros. Si es el primer pago de un comercio nuevo en Starter, se suma el segundo mes gratis.
 
 ## Cómo funciona

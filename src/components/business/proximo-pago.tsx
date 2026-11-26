@@ -66,7 +66,7 @@ export function ProximoPagoVista({
         </p>
       </div>
       {estado.disponible ? (
-        <ButtonLink href={`/business/${slug}/settings#plan`} size="sm" variant={urgente ? "primary" : "secondary"} className="w-full sm:w-auto">
+        <ButtonLink href={`/business/${slug}/pago`} size="sm" variant={urgente ? "primary" : "secondary"} className="w-full sm:w-auto">
           <CreditCard className="size-4" /> Pagar ahora
         </ButtonLink>
       ) : (

@@ -87,7 +87,7 @@ export async function iniciarPagoAction(businessId: string, meses: number): Prom
   const orden = (data ?? [])[0] as { reference: string; amount_cents: number; months: number } | undefined;
   if (!orden) return { ok: false, message: "No se pudo iniciar el pago." };
   const origin = (process.env.NEXT_PUBLIC_APP_URL ?? "").replace(/\/$/, "");
-  const regreso = `${origin}/business/${biz.slug}/settings?pago=${orden.reference}`;
+  const regreso = `${origin}/business/${biz.slug}/pago?pago=${orden.reference}`;
   const email = user.user?.email ?? undefined;
 
   if (mp) {

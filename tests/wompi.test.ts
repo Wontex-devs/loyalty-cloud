@@ -11,14 +11,14 @@ test("firma de integridad: el ejemplo de la documentación de Wompi", () => {
 });
 
 test("enlace de pago: lleva la llave pública, el valor, la referencia, la firma y el regreso", () => {
-  const u = new URL(checkoutUrl({ publicKey: "pub_test_abc", integritySecret: "test_integrity_x" }, { reference: "lazo-123abc45", amountInCents: 7999000, redirectUrl: "https://lazo.ejemplo.com/business/x/settings?pago=1", email: "a@b.co" }));
+  const u = new URL(checkoutUrl({ publicKey: "pub_test_abc", integritySecret: "test_integrity_x" }, { reference: "lazo-123abc45", amountInCents: 7999000, redirectUrl: "https://lazo.ejemplo.com/business/x/pago?pago=1", email: "a@b.co" }));
   assert.equal(u.origin + u.pathname, "https://checkout.wompi.co/p/");
   assert.equal(u.searchParams.get("public-key"), "pub_test_abc");
   assert.equal(u.searchParams.get("currency"), "COP");
   assert.equal(u.searchParams.get("amount-in-cents"), "7999000");
   assert.equal(u.searchParams.get("reference"), "lazo-123abc45");
   assert.equal(u.searchParams.get("signature:integrity"), integritySignature("lazo-123abc45", 7999000, "COP", "test_integrity_x"));
-  assert.equal(u.searchParams.get("redirect-url"), "https://lazo.ejemplo.com/business/x/settings?pago=1");
+  assert.equal(u.searchParams.get("redirect-url"), "https://lazo.ejemplo.com/business/x/pago?pago=1");
   assert.equal(u.searchParams.get("customer-data:email"), "a@b.co");
 });
 

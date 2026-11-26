@@ -10,7 +10,6 @@ import type { BusinessSettingsInput } from "@/lib/domain/schemas";
 import { PUBLIC_HOST_LABEL } from "@/lib/config";
 import { Badge, Button, ButtonLink, Card, CardHeader, Field, Input, PageHeader, Select } from "@/components/ui";
 import { LocationsCard } from "@/components/business/locations-card";
-import { PagoPlanCard } from "@/components/business/pago-plan-card";
 
 const TIMEZONES = ["America/Bogota", "America/Mexico_City", "America/Lima", "America/Santiago", "America/Argentina/Buenos_Aires", "Europe/Madrid"];
 
@@ -126,7 +125,6 @@ export default function SettingsPage() {
         </div>
 
         <div className="space-y-4">
-          <PagoPlanCard businessId={business.id} />
           <Card className="p-5 text-sm">
             <p className="font-semibold">Auditoría</p>
             <p className="mt-1 text-muted">El registro completo de acciones está en Historial → Auditoría.</p>

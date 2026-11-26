@@ -5,10 +5,10 @@ import { createHmac } from "node:crypto";
 import { centavos, estadoOrden, idValido, mercadoPagoConfig, preferenceBody, verifySignature } from "../src/lib/pagos/mercadopago.ts";
 
 test("preferencia: valor en pesos, referencia de la orden, regreso y aviso", () => {
-  const b = preferenceBody({ reference: "lazo-abc12345", amount: 79990, title: "Lazo · 1 mes", returnUrl: "https://x.co/business/a/settings?pago=lazo-abc12345", notificationUrl: "https://x.co/api/pagos/mercadopago", email: "a@b.co" });
+  const b = preferenceBody({ reference: "lazo-abc12345", amount: 79990, title: "Lazo · 1 mes", returnUrl: "https://x.co/business/a/pago?pago=lazo-abc12345", notificationUrl: "https://x.co/api/pagos/mercadopago", email: "a@b.co" });
   assert.deepEqual(b.items, [{ id: "lazo-abc12345", title: "Lazo · 1 mes", quantity: 1, currency_id: "COP", unit_price: 79990 }]);
   assert.equal(b.external_reference, "lazo-abc12345");
-  assert.equal(b.back_urls.success, "https://x.co/business/a/settings?pago=lazo-abc12345");
+  assert.equal(b.back_urls.success, "https://x.co/business/a/pago?pago=lazo-abc12345");
   assert.equal(b.auto_return, "approved");
   assert.equal(b.notification_url, "https://x.co/api/pagos/mercadopago");
   assert.deepEqual(b.payer, { email: "a@b.co" });
