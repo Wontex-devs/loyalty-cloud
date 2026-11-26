@@ -9,7 +9,7 @@ import { BrandMark } from "@/components/loyalty/brand-mark";
 import type { InicioSesion, UsuarioPanel } from "@/lib/data/admin-queries";
 import { estadoCuenta, nombreAccion } from "@/lib/domain/acceso";
 import { Badge, ButtonLink, Card, CardHeader, PageHeader, StatCard, Table, Td, Th } from "@/components/ui";
-import { formatMoney, formatNumber, formatRelative } from "@/lib/utils";
+import { formatMoney, formatNumber, formatRelative, ultimosMeses } from "@/lib/utils";
 import { usePuedeEditar } from "./piezas";
 import { InvitarUsuario } from "./invitar-usuario";
 
@@ -56,12 +56,7 @@ export function Resumen({ usuarios, inicios, aviso }: { usuarios: UsuarioPanel[]
   if (suspendidos) alertas.push({ tono: "info", texto: `${suspendidos} ${suspendidos === 1 ? "cuenta suspendida" : "cuentas suspendidas"}.`, href: "/admin/users" });
 
   // ---- Crecimiento por mes (últimos 6) ----
-  const meses = Array.from({ length: 6 }, (_, i) => {
-    const d = new Date();
-    d.setDate(1);
-    d.setMonth(d.getMonth() - (5 - i));
-    return { clave: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`, nombre: new Intl.DateTimeFormat("es-CO", { month: "short" }).format(d) };
-  });
+  const meses = ultimosMeses(6, new Date(ahora));
   const porMes = (fechas: string[]) => meses.map((m) => fechas.filter((f) => f.startsWith(m.clave)).length);
   const usuariosMes = porMes(usuarios.map((u) => u.createdAt));
   const comerciosMes = porMes(state.businesses.map((b) => b.createdAt));

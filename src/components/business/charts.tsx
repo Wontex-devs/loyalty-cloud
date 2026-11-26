@@ -1,28 +1,8 @@
 "use client";
 
-import { cn } from "@/lib/utils";
+import { cn, type SeriesPoint } from "@/lib/utils";
 
-export interface SeriesPoint {
-  label: string;
-  value: number;
-}
-
-/** Serie diaria de los últimos `days` días a partir de fechas ISO. */
-export function dailySeries(dates: string[], days: number, now = new Date()): SeriesPoint[] {
-  const start = new Date(now);
-  start.setHours(0, 0, 0, 0);
-  start.setDate(start.getDate() - (days - 1));
-  const buckets = new Array(days).fill(0);
-  for (const iso of dates) {
-    const idx = Math.floor((new Date(iso).getTime() - start.getTime()) / 86400000);
-    if (idx >= 0 && idx < days) buckets[idx]++;
-  }
-  const fmt = new Intl.DateTimeFormat("es-CO", { day: "numeric", month: "short" });
-  return buckets.map((value, i) => ({
-    label: fmt.format(new Date(start.getTime() + i * 86400000)),
-    value,
-  }));
-}
+export { dailySeries, type SeriesPoint } from "@/lib/utils";
 
 /** Gráfico de barras minimalista de una sola serie (color de marca). */
 export function BarChart({ data, height = 180, className }: { data: SeriesPoint[]; height?: number; className?: string }) {

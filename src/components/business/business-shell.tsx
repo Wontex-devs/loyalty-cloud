@@ -33,6 +33,7 @@ import { SignOutButton } from "@/components/auth/sign-out-button";
 import { MiNombre } from "./mi-nombre";
 import { faltaNombre } from "@/lib/domain/nombre";
 import { BrandMark } from "@/components/loyalty/brand-mark";
+import { ZONA_HORARIA } from "@/lib/utils";
 
 const ScopeCtx = createContext<BusinessScope | null>(null);
 
@@ -173,7 +174,7 @@ export function BusinessShell({ slug, children }: { slug: string; children: Reac
               <Eye className="size-4 shrink-0" />
               <span className="flex-1">
                 <strong>Modo soporte: solo lectura.</strong> Ves el panel como {business.name}; no se puede cambiar nada. Vence a las{" "}
-                {new Date(supportView.expiresAt).toLocaleTimeString("es-CO", { hour: "numeric", minute: "2-digit" })}.
+                {new Date(supportView.expiresAt).toLocaleTimeString("es-CO", { hour: "numeric", minute: "2-digit", timeZone: ZONA_HORARIA })}.
               </span>
               <form action={endSupportSessionAction.bind(null, business.id)}>
                 <button className="rounded-md border border-warning/40 px-2.5 py-1 text-xs font-medium hover:bg-warning/10">Salir del modo soporte</button>
