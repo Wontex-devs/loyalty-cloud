@@ -1,7 +1,7 @@
 // Pruebas de «el hilo»: la composición de sellos que comparten la tarjeta web y el pase de Wallet.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { ajustePremio, hilo, HILO_MAX_UNA_FILA, ILUSTRACION, MARCA_LAZO } from "../src/lib/domain/hilo.ts";
+import { ajustePremio, anchoTextoPremio, hilo, HILO_MAX_UNA_FILA, ILUSTRACION, MARCA_LAZO } from "../src/lib/domain/hilo.ts";
 import { memberSinceText } from "../src/lib/wallet/pass.ts";
 
 const W = 375;
@@ -21,12 +21,10 @@ test("todos los sellos caben en la franja, sin tocarse, para 2 a 30 sellos", () 
       assert.ok(s.y - borde >= techo && s.y + borde <= H, `${n}: el sello ${s.index} se sale a lo alto (${s.y}, ${borde})`);
       assert.ok(s.r >= 5, `${n}: sello demasiado pequeño (${s.r})`);
     }
-    // El aro del premio no toca ningún sello, y la ilustración del comercio (arriba a la derecha) tampoco.
+    // El aro del premio no toca ningún sello.
     const premio = h.sellos.at(-1)!;
     for (const s of h.sellos.slice(0, -1)) {
       assert.ok(Math.hypot(s.x - premio.x, s.y - premio.y) > s.r + h.aro, `${n}: el sello ${s.index} toca el aro del premio`);
-      const tocaIlustracion = s.x + s.r > ILUSTRACION.x && s.y - s.r < ILUSTRACION.y + ILUSTRACION.alto;
-      assert.ok(!tocaIlustracion, `${n}: el sello ${s.index} queda bajo la ilustración`);
     }
     for (let i = 0; i < h.sellos.length; i++) {
       for (let j = i + 1; j < h.sellos.length; j++) {
@@ -61,17 +59,34 @@ test("en dos hileras los sellos quedan en columnas y el premio, grande, cierra a
   }
 });
 
-test("el logo de Lazo (arriba a la derecha) no toca ningún sello ni el texto del premio", () => {
+test("el logo de Lazo (abajo a la derecha) no toca ningún sello ni el aro del premio", () => {
+  // Caja del logo: la letra y el aro, de `alto` de alto.
   const izq = W - MARCA_LAZO.derecha - MARCA_LAZO.ancho;
-  const abajo = MARCA_LAZO.y + MARCA_LAZO.alto + 2;
+  const der = W - MARCA_LAZO.derecha;
+  const arriba = MARCA_LAZO.y;
+  const abajo = MARCA_LAZO.y + MARCA_LAZO.alto;
+  assert.ok(abajo <= H - 2, "el logo se sale por abajo");
   for (let n = 2; n <= 30; n++) {
     const h = hilo(n, W, H);
     for (const s of h.sellos) {
-      const borde = s.premio ? h.aro : s.r;
-      assert.ok(s.y - borde > abajo || s.x + borde < izq, `${n}: el sello ${s.index} toca el logo`);
+      const borde = s.premio ? h.aro + h.trazo : s.r;
+      // Distancia del centro del círculo al rectángulo del logo.
+      const dx = Math.max(izq - s.x, 0, s.x - der);
+      const dy = Math.max(arriba - s.y, 0, s.y - abajo);
+      assert.ok(Math.hypot(dx, dy) > borde, `${n}: el sello ${s.index} toca el logo`);
     }
-    assert.ok(h.texto.nombre > abajo, `${n}: el nombre del premio toca el logo`);
   }
+});
+
+test("con ilustración, el nombre del premio no pasa por debajo de ella", () => {
+  assert.equal(anchoTextoPremio(W, false), 335);
+  assert.ok(20 + anchoTextoPremio(W, true) <= ILUSTRACION.x - 8);
+  // En la franja de Google (más ancha), la ilustración va pegada a la derecha y el texto también le deja espacio.
+  const anchoGoogle = 1032 / (336 / 144);
+  assert.ok(20 + anchoTextoPremio(anchoGoogle, true) <= anchoGoogle - (375 - ILUSTRACION.x) - 8);
+  // Un nombre largo se achica o pasa a dos líneas para caber en ese espacio.
+  const largo = ajustePremio("Tratamiento capilar completo", true, false, anchoTextoPremio(W, true));
+  assert.ok(largo.lines === 2 || largo.size * largo.text.length * 0.74 <= anchoTextoPremio(W, true));
 });
 
 test("la misma composición a otra escala (imagen de Google Wallet)", () => {

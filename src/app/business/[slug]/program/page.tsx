@@ -6,7 +6,7 @@ import { useScope, RequirePermission } from "@/components/business/business-shel
 import { LoyaltyCardView } from "@/components/loyalty/loyalty-card";
 import { useData } from "@/lib/data/store";
 import { can } from "@/lib/domain/permissions";
-import { programSchema, type ProgramInput } from "@/lib/domain/schemas";
+import { programSchema, SELLOS_MAX, SELLOS_MIN, type ProgramInput } from "@/lib/domain/schemas";
 import { Badge, Button, Card, CardHeader, Field, Input, PageHeader, Switch, Textarea } from "@/components/ui";
 import { NumberInput } from "@/components/ui/number-input";
 
@@ -100,7 +100,7 @@ export default function ProgramPage() {
                 error={errors.stampsRequired}
                 hint={stampsChanged ? `Se aplicará a ${cards.length} tarjetas; los sellos actuales se conservan.` : "Entre 2 y 30."}
               >
-                <NumberInput min={2} max={30} value={form.stampsRequired} onValueChange={(n) => set("stampsRequired", n)} />
+                <NumberInput min={SELLOS_MIN} max={SELLOS_MAX} value={form.stampsRequired} onValueChange={(n) => set("stampsRequired", n)} />
               </Field>
               <Field label="Tiempo mínimo entre visitas (min)" hint="Evita registros dobles por error. De 0 a 1440 (un día)." error={errors.minMinutesBetweenVisits}>
                 <NumberInput min={0} max={1440} value={form.minMinutesBetweenVisits} onValueChange={(n) => set("minMinutesBetweenVisits", n)} />
@@ -158,7 +158,7 @@ export default function ProgramPage() {
           <p className="mb-2 text-xs font-medium tracking-wide text-muted uppercase">Vista previa</p>
           <LoyaltyCardView
             business={business}
-            program={{ name: form.name, stampsRequired: Math.max(2, Math.min(30, form.stampsRequired || 2)), rewardName: form.rewardName }}
+            program={{ name: form.name, stampsRequired: Math.max(SELLOS_MIN, Math.min(SELLOS_MAX, form.stampsRequired || SELLOS_MIN)), rewardName: form.rewardName }}
             customerName="Nombre del cliente"
             stamps={Math.min(3, form.stampsRequired)}
             status="active"

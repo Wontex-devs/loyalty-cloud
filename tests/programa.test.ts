@@ -27,3 +27,11 @@ test("sigue rechazando datos inválidos", () => {
   assert.equal(programPatchSchema.safeParse({ ...base, birthdayReward: "x".repeat(81) }).success, false);
   assert.equal(programPatchSchema.safeParse({ ...base, rewardName: "x" }).success, false);
 });
+
+test("una tarjeta tiene de 2 a 15 sellos", async () => {
+  const { programPatchSchema, SELLOS_MAX } = await import("../src/lib/domain/schemas.ts");
+  assert.equal(SELLOS_MAX, 15);
+  assert.equal(programPatchSchema.safeParse({ stampsRequired: 15 }).success, true);
+  assert.equal(programPatchSchema.safeParse({ stampsRequired: 16 }).success, false);
+  assert.equal(programPatchSchema.safeParse({ stampsRequired: 1 }).success, false);
+});

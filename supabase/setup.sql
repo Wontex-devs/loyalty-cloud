@@ -1,5 +1,5 @@
 -- Generado por npm run db:bundle. No editar: cambia las migraciones y vuelve a generarlo.
--- Incluye: 20261101000001_schema.sql, 20261101000002_rls.sql, 20261101000003_functions.sql, 20261101000004_reference_data.sql, 20261101000005_public_business.sql, 20261101000006_business_stats.sql, 20261101000007_pilot.sql, 20261101000008_customer_experience.sql, 20261101000009_promotions_birthdays.sql, 20261101000010_plans_locations.sql, 20261101000011_brand_assets.sql, 20261101000012_privacy_abuse.sql, 20261101000013_wallet_notifications.sql, 20261101000014_plan_prices.sql, 20261101000015_nfc_checkin.sql, 20261101000016_plan_prices_v2.sql, 20261101000017_eliminar_comercio.sql, 20261101000018_foto_tarjeta.sql, 20261101000019_panel_usuarios.sql, 20261101000020_apple_wallet.sql, 20261101000021_soporte_comercio.sql, 20261101000022_sello_propio_y_letras.sql, 20261101000023_visita_manual.sql, 20261101000024_nombre_aparte.sql, 20261101000025_sede_ubicacion.sql, 20261101000026_mensaje_cercania.sql, 20261101000027_estilo_tarjeta.sql, 20261101000027_superadmin_edita_comercio.sql, 20261101000028_estilo_marfil.sql, 20261101000029_reverso_pase.sql, 20261101000030_qr_tarjeta.sql, 20261101000031_eliminar_comercio_con_sedes.sql, 20261101000032_sello_cafe.sql, 20261101000033_ilustracion_franja.sql, 20261101000034_codigo_barras.sql, 20261101000035_toque_por_celular.sql, 20261101000036_control_cobros.sql, 20261101000037_nfc_limite_diario_y_ubicacion.sql, 20261101000038_limites_planes.sql, 20261101000039_segundo_mes_gratis.sql, 20261101000040_pagos_en_linea.sql, 20261101000041_pago_en_linea_cualquier_pasarela.sql, 20261101000042_letra_propia.sql, 20261101000043_recordatorios.sql, 20261101000044_demo.sql, 20261101000045_eliminar_cliente_superadmin.sql, 20261101000046_sello_sin_qr.sql
+-- Incluye: 20261101000001_schema.sql, 20261101000002_rls.sql, 20261101000003_functions.sql, 20261101000004_reference_data.sql, 20261101000005_public_business.sql, 20261101000006_business_stats.sql, 20261101000007_pilot.sql, 20261101000008_customer_experience.sql, 20261101000009_promotions_birthdays.sql, 20261101000010_plans_locations.sql, 20261101000011_brand_assets.sql, 20261101000012_privacy_abuse.sql, 20261101000013_wallet_notifications.sql, 20261101000014_plan_prices.sql, 20261101000015_nfc_checkin.sql, 20261101000016_plan_prices_v2.sql, 20261101000017_eliminar_comercio.sql, 20261101000018_foto_tarjeta.sql, 20261101000019_panel_usuarios.sql, 20261101000020_apple_wallet.sql, 20261101000021_soporte_comercio.sql, 20261101000022_sello_propio_y_letras.sql, 20261101000023_visita_manual.sql, 20261101000024_nombre_aparte.sql, 20261101000025_sede_ubicacion.sql, 20261101000026_mensaje_cercania.sql, 20261101000027_estilo_tarjeta.sql, 20261101000027_superadmin_edita_comercio.sql, 20261101000028_estilo_marfil.sql, 20261101000029_reverso_pase.sql, 20261101000030_qr_tarjeta.sql, 20261101000031_eliminar_comercio_con_sedes.sql, 20261101000032_sello_cafe.sql, 20261101000033_ilustracion_franja.sql, 20261101000034_codigo_barras.sql, 20261101000035_toque_por_celular.sql, 20261101000036_control_cobros.sql, 20261101000037_nfc_limite_diario_y_ubicacion.sql, 20261101000038_limites_planes.sql, 20261101000039_segundo_mes_gratis.sql, 20261101000040_pagos_en_linea.sql, 20261101000041_pago_en_linea_cualquier_pasarela.sql, 20261101000042_letra_propia.sql, 20261101000043_recordatorios.sql, 20261101000044_demo.sql, 20261101000045_eliminar_cliente_superadmin.sql, 20261101000046_sello_sin_qr.sql, 20261101000047_maximo_15_sellos.sql
 begin;
 
 -- >>> 20261101000001_schema.sql
@@ -6284,5 +6284,18 @@ revoke all on function private.tiene_sede_con_ubicacion(uuid) from public, anon,
 revoke all on function private.metros_entre(double precision, double precision, double precision, double precision) from public, anon, authenticated;
 revoke all on function private.create_business_billing() from public, anon, authenticated;
 revoke all on function private.customer_first_name() from public, anon, authenticated;
+
+-- >>> 20261101000047_maximo_15_sellos.sql
+-- =====================================================================
+-- Máximo 15 sellos por tarjeta (antes 30).
+--  * Con más sellos la tarjeta pierde gracia y los sellos se ven pequeños en la Wallet.
+--  * Ningún programa en producción tenía más de 15 al aplicar esta migración (revisado el
+--    26-nov-2026: 10, 5 y 5). Si alguno tuviera más, la migración falla y no cambia nada.
+--  * El panel y el servidor ya limitan a 15; esto lo asegura también en la base de datos.
+-- =====================================================================
+
+alter table public.loyalty_programs drop constraint if exists loyalty_programs_stamps_required_check;
+alter table public.loyalty_programs add constraint loyalty_programs_stamps_required_check
+  check (stamps_required between 2 and 15);
 
 commit;

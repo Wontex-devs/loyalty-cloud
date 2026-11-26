@@ -1,6 +1,6 @@
 import { ImageResponse } from "next/og";
 import { alpha, cardTheme } from "@/lib/domain/card-palette";
-import { ajustePremio, hilo, ILUSTRACION, MARCA_LAZO } from "@/lib/domain/hilo";
+import { ajustePremio, anchoTextoPremio, hilo, ILUSTRACION, MARCA_LAZO } from "@/lib/domain/hilo";
 import { ARO_LAZO } from "./lazo-logo";
 import type { BusinessBranding } from "@/lib/domain/types";
 import { Icon } from "./stamp-icons";
@@ -43,7 +43,8 @@ export function passStrip(
   const ilustracion = branding.illustrationUrl?.startsWith("https://") ? branding.illustrationUrl : null;
   const h = hilo(required, width, height);
   const lista = !!rewardReady || stamps >= required;
-  const premio = ajustePremio(rewardName, upper, h.texto.compacto);
+  const espacioTexto = anchoTextoPremio(width / k, !!ilustracion);
+  const premio = ajustePremio(rewardName, upper, h.texto.compacto, espacioTexto);
   const inicial = (monogram ?? "").trim().slice(0, 1).toUpperCase();
   const linea = alpha(c.accent, 0.55);
 
@@ -120,7 +121,7 @@ export function passStrip(
             position: "absolute",
             left: pad,
             top: h.texto.nombre * k,
-            width: width - pad * 2,
+            width: espacioTexto * k,
             display: "flex",
             fontFamily: marca,
             fontSize: premio.size * k,

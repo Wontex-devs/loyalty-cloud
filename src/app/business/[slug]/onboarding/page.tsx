@@ -12,6 +12,7 @@ import type { BusinessBranding } from "@/lib/domain/types";
 import { Button, ButtonLink, Card, Field, Input, PageHeader, Progress } from "@/components/ui";
 import { cn } from "@/lib/utils";
 import { NumberInput } from "@/components/ui/number-input";
+import { SELLOS_MAX, SELLOS_MIN } from "@/lib/domain/schemas";
 
 const PRESETS: { name: string; colors: Partial<BusinessBranding> }[] = [
   { name: "Rosa empolvado", colors: { cardBackground: "#EBCFCB", cardForeground: "#1A1416", primary: "#1A1416", primaryForeground: "#FFFFFF", accent: "#D8A7A7" } },
@@ -69,7 +70,7 @@ export default function OnboardingPage() {
   const saveProgram = () => {
     if (!program) return;
     if (prog.rewardName.trim().length < 2) return setError("Escribe la recompensa, por ejemplo «Manicura gratis».");
-    if (prog.stampsRequired < 2 || prog.stampsRequired > 30) return setError("Las visitas deben estar entre 2 y 30.");
+    if (prog.stampsRequired < SELLOS_MIN || prog.stampsRequired > SELLOS_MAX) return setError(`Las visitas deben estar entre ${SELLOS_MIN} y ${SELLOS_MAX}.`);
     if (prog.welcomeStamps >= prog.stampsRequired) return setError("Los sellos de regalo deben ser menos que las visitas.");
     updateProgram(program.id, { stampsRequired: prog.stampsRequired, rewardName: prog.rewardName.trim(), welcomeStamps: prog.welcomeStamps });
     next("program");
@@ -142,7 +143,7 @@ export default function OnboardingPage() {
                   {s.id === "program" && (
                     <div className="grid gap-4 sm:grid-cols-3">
                       <Field label="Visitas para el premio">
-                        <NumberInput min={2} max={30} value={prog.stampsRequired} onValueChange={(n) => setProg({ ...prog, stampsRequired: n })} />
+                        <NumberInput min={SELLOS_MIN} max={SELLOS_MAX} value={prog.stampsRequired} onValueChange={(n) => setProg({ ...prog, stampsRequired: n })} />
                       </Field>
                       <Field label="Recompensa" className="sm:col-span-2">
                         <Input placeholder="Ej.: Manicura gratis" value={prog.rewardName} onChange={(e) => setProg({ ...prog, rewardName: e.target.value })} />
@@ -233,7 +234,7 @@ export default function OnboardingPage() {
           <p className="mb-2 text-xs font-medium tracking-wide text-muted uppercase">Así verán su tarjeta</p>
           <LoyaltyCardView
             business={{ ...business, branding: { ...business.branding, logoText: logo || business.branding.logoText } }}
-            program={{ name: business.name, stampsRequired: Math.max(2, Math.min(30, prog.stampsRequired || 2)), rewardName: prog.rewardName || "Tu recompensa" }}
+            program={{ name: business.name, stampsRequired: Math.max(SELLOS_MIN, Math.min(SELLOS_MAX, prog.stampsRequired || SELLOS_MIN)), rewardName: prog.rewardName || "Tu recompensa" }}
             customerName="Nombre del cliente"
             stamps={Math.min(prog.welcomeStamps, prog.stampsRequired - 1)}
             status="active"
