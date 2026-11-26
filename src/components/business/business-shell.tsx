@@ -18,6 +18,7 @@ import {
   Tag,
   UserCog,
   Users,
+  Wallet,
 } from "lucide-react";
 import { onboardingSteps } from "./onboarding";
 import { AppShell, type NavSection } from "@/components/layout/app-shell";
@@ -64,7 +65,6 @@ export function BusinessShell({ slug, children }: { slug: string; children: Reac
   // Solo lo del día a día a la vista; lo demás queda en «Más opciones».
   const masOpciones = [
     ...(can(m, "analytics.read") ? [{ href: `${base}/history`, label: "Historial", icon: History }] : []),
-    ...(can(m, "program.edit") ? [{ href: `${base}/promotions`, label: "Promociones", icon: Tag }] : []),
     ...(can(m, "staff.manage")
       ? [
           { href: `${base}/staff`, label: "Empleados", icon: UserCog },
@@ -72,7 +72,12 @@ export function BusinessShell({ slug, children }: { slug: string; children: Reac
           { href: `${base}/analytics`, label: "Estadísticas", icon: BarChart3 },
         ]
       : []),
-    ...(can(m, "settings.edit") ? [{ href: `${base}/settings`, label: "Configuración", icon: Settings }] : []),
+    ...(can(m, "settings.edit")
+      ? [
+          { href: `${base}/pago`, label: "Pago del plan", icon: Wallet },
+          { href: `${base}/settings`, label: "Configuración", icon: Settings },
+        ]
+      : []),
   ];
 
   const sections: NavSection[] = [
@@ -93,6 +98,7 @@ export function BusinessShell({ slug, children }: { slug: string; children: Reac
               { href: `${base}/card-design`, label: "Tarjeta, QR y NFC", icon: CreditCard },
               { href: `${base}/program`, label: "Sellos y premio", icon: Sparkles },
               { href: `${base}/campaigns`, label: "Notificaciones", icon: Megaphone },
+              { href: `${base}/promotions`, label: "Promociones", icon: Tag },
             ],
           },
         ]

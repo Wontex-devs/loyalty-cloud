@@ -96,7 +96,7 @@ export function AvisoCobroVista({
       </div>
       <div className="flex items-center gap-1.5">
         {enLinea ? (
-          <ButtonLink href={`/business/${slug}/settings#plan`} size="sm" variant={aviso.tono === "danger" ? "primary" : "secondary"}>
+          <ButtonLink href={`/business/${slug}/pago`} size="sm" variant={aviso.tono === "danger" ? "primary" : "secondary"}>
             Pagar ahora
           </ButtonLink>
         ) : (

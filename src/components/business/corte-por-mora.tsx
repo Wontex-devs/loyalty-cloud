@@ -10,7 +10,7 @@ import { SALES_WHATSAPP } from "@/lib/config";
 import { PagoPlanCard } from "./pago-plan-card";
 
 /** Secciones que siguen abiertas con el panel bloqueado: sumar sellos y la página a la que vuelve el pago. */
-const SIEMPRE_ABIERTAS = ["/escanear", "/settings"];
+const SIEMPRE_ABIERTAS = ["/escanear", "/pago"];
 
 /**
  * Corte por mora: pasados los días de gracia, el dueño o administrador ve la pantalla de pago en
