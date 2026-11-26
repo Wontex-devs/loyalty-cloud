@@ -1,5 +1,5 @@
 -- Generado por npm run db:bundle. No editar: cambia las migraciones y vuelve a generarlo.
--- Incluye: 20261101000001_schema.sql, 20261101000002_rls.sql, 20261101000003_functions.sql, 20261101000004_reference_data.sql, 20261101000005_public_business.sql, 20261101000006_business_stats.sql, 20261101000007_pilot.sql, 20261101000008_customer_experience.sql, 20261101000009_promotions_birthdays.sql, 20261101000010_plans_locations.sql, 20261101000011_brand_assets.sql, 20261101000012_privacy_abuse.sql, 20261101000013_wallet_notifications.sql, 20261101000014_plan_prices.sql, 20261101000015_nfc_checkin.sql, 20261101000016_plan_prices_v2.sql, 20261101000017_eliminar_comercio.sql, 20261101000018_foto_tarjeta.sql, 20261101000019_panel_usuarios.sql, 20261101000020_apple_wallet.sql, 20261101000021_soporte_comercio.sql, 20261101000022_sello_propio_y_letras.sql, 20261101000023_visita_manual.sql, 20261101000024_nombre_aparte.sql, 20261101000025_sede_ubicacion.sql, 20261101000026_mensaje_cercania.sql, 20261101000027_estilo_tarjeta.sql, 20261101000027_superadmin_edita_comercio.sql, 20261101000028_estilo_marfil.sql, 20261101000029_reverso_pase.sql, 20261101000030_qr_tarjeta.sql, 20261101000031_eliminar_comercio_con_sedes.sql, 20261101000032_sello_cafe.sql, 20261101000033_ilustracion_franja.sql, 20261101000034_codigo_barras.sql, 20261101000035_toque_por_celular.sql, 20261101000036_control_cobros.sql, 20261101000037_nfc_limite_diario_y_ubicacion.sql, 20261101000038_limites_planes.sql
+-- Incluye: 20261101000001_schema.sql, 20261101000002_rls.sql, 20261101000003_functions.sql, 20261101000004_reference_data.sql, 20261101000005_public_business.sql, 20261101000006_business_stats.sql, 20261101000007_pilot.sql, 20261101000008_customer_experience.sql, 20261101000009_promotions_birthdays.sql, 20261101000010_plans_locations.sql, 20261101000011_brand_assets.sql, 20261101000012_privacy_abuse.sql, 20261101000013_wallet_notifications.sql, 20261101000014_plan_prices.sql, 20261101000015_nfc_checkin.sql, 20261101000016_plan_prices_v2.sql, 20261101000017_eliminar_comercio.sql, 20261101000018_foto_tarjeta.sql, 20261101000019_panel_usuarios.sql, 20261101000020_apple_wallet.sql, 20261101000021_soporte_comercio.sql, 20261101000022_sello_propio_y_letras.sql, 20261101000023_visita_manual.sql, 20261101000024_nombre_aparte.sql, 20261101000025_sede_ubicacion.sql, 20261101000026_mensaje_cercania.sql, 20261101000027_estilo_tarjeta.sql, 20261101000027_superadmin_edita_comercio.sql, 20261101000028_estilo_marfil.sql, 20261101000029_reverso_pase.sql, 20261101000030_qr_tarjeta.sql, 20261101000031_eliminar_comercio_con_sedes.sql, 20261101000032_sello_cafe.sql, 20261101000033_ilustracion_franja.sql, 20261101000034_codigo_barras.sql, 20261101000035_toque_por_celular.sql, 20261101000036_control_cobros.sql, 20261101000037_nfc_limite_diario_y_ubicacion.sql, 20261101000038_limites_planes.sql, 20261101000039_segundo_mes_gratis.sql, 20261101000040_pagos_en_linea.sql, 20261101000041_pago_en_linea_cualquier_pasarela.sql, 20261101000042_letra_propia.sql, 20261101000043_recordatorios.sql, 20261101000044_demo.sql, 20261101000045_eliminar_cliente_superadmin.sql, 20261101000046_sello_sin_qr.sql
 begin;
 
 -- >>> 20261101000001_schema.sql
@@ -5306,5 +5306,983 @@ set max_customers = 1000,
     max_locations = null,
     features = array['3 programas', 'Hasta 1.000 clientes', '10 empleados', 'Sedes ilimitadas']
 where id = 'plan_pro';
+
+-- >>> 20261101000039_segundo_mes_gratis.sql
+-- =====================================================================
+-- Control de cobros con la nueva oferta del plan Starter:
+-- «pagas el primer mes y el segundo es gratis».
+--  * Un comercio nuevo empieza sin meses pagados: «pagado hasta» es el día en que se crea
+--    (aparece por cobrar hasta que pague el primer mes).
+--  * Cada comercio nuevo queda con el mes gratis pendiente (business_billing.free_month_pending).
+--    El primer pago que se le registre estando en el plan Starter suma, además de los meses pagados,
+--    ese mes gratis, y lo marca como usado. Queda en el historial (free_months) y en la auditoría.
+--  * Ese primer pago cuenta desde la fecha en que pagó si es posterior a «pagado hasta»:
+--    así no pierde días por haber pagado unos días después de crearse.
+--  * Los comercios que ya existían no cambian: ya tuvieron su mes gratis con la oferta anterior.
+-- =====================================================================
+
+alter table public.business_payments
+  add column if not exists free_months integer not null default 0 check (free_months between 0 and 12);
+-- Los existentes quedan en false: su mes gratis ya se dio al crearlos.
+alter table public.business_billing
+  add column if not exists free_month_pending boolean not null default false;
+
+-- Comercio nuevo: sin meses pagados todavía.
+create or replace function private.create_business_billing()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  insert into public.business_billing (business_id, paid_until, free_month_pending)
+  values (new.id, (now() at time zone 'America/Bogota')::date, true)
+  on conflict (business_id) do nothing;
+  return new;
+end;
+$$;
+
+create or replace function public.register_business_payment(
+  p_business_id uuid,
+  p_amount integer,
+  p_paid_on date,
+  p_months integer,
+  p_note text default null
+)
+returns date
+language plpgsql
+volatile security definer
+set search_path = ''
+as $$
+declare
+  v_antes date;
+  v_desde date;
+  v_hasta date;
+  v_gratis integer := 0;
+  v_pendiente boolean := false;
+begin
+  if not private.is_superadmin() then raise exception 'FORBIDDEN'; end if;
+  if p_amount is null or p_amount < 0 or p_months is null or p_months not between 1 and 12 or p_paid_on is null then
+    raise exception 'INVALID_INPUT';
+  end if;
+  select paid_until, free_month_pending into v_antes, v_pendiente from public.business_billing where business_id = p_business_id for update;
+  if not found then
+    if not exists (select 1 from public.businesses where id = p_business_id) then raise exception 'BUSINESS_NOT_FOUND'; end if;
+    v_antes := (now() at time zone 'America/Bogota')::date;
+    insert into public.business_billing (business_id, paid_until) values (p_business_id, v_antes);
+  end if;
+
+  -- Plan Starter con el mes gratis pendiente: este pago trae el segundo mes gratis.
+  if coalesce(v_pendiente, false) and exists (select 1 from public.businesses where id = p_business_id and plan_id = 'plan_starter') then
+    v_gratis := 1;
+  end if;
+  -- La fecha avanza desde «pagado hasta» (no desde hoy) para que el ciclo no se corra si pagan tarde;
+  -- solo el primer pago de un comercio nuevo cuenta desde el día en que pagó, si es posterior.
+  v_desde := case when coalesce(v_pendiente, false) then greatest(v_antes, p_paid_on) else v_antes end;
+  v_hasta := (v_desde + make_interval(months => p_months + v_gratis))::date;
+
+  -- El primer pago cierra la oferta: aunque no fuera Starter, ya no queda pendiente.
+  update public.business_billing set paid_until = v_hasta, free_month_pending = false where business_id = p_business_id;
+  insert into public.business_payments (business_id, amount, paid_on, months, free_months, paid_until, note, created_by)
+  values (p_business_id, p_amount, p_paid_on, p_months, v_gratis, v_hasta, nullif(trim(coalesce(p_note, '')), ''), auth.uid());
+  perform private.audit(p_business_id, 'billing.payment_registered', 'business', p_business_id::text,
+                        jsonb_build_object('amount', p_amount, 'months', p_months, 'free_months', v_gratis,
+                                           'paid_on', p_paid_on, 'from', v_antes, 'to', v_hasta));
+  return v_hasta;
+end;
+$$;
+
+revoke all on function public.register_business_payment(uuid, integer, date, integer, text) from public, anon, authenticated;
+grant execute on function public.register_business_payment(uuid, integer, date, integer, text) to authenticated;
+
+-- >>> 20261101000040_pagos_en_linea.sql
+-- =====================================================================
+-- Pago del plan en línea con Wompi (PSE, Nequi, tarjeta…).
+--  * El dueño o administrador del comercio inicia el pago desde su panel: se crea una
+--    «orden» (online_payments) con su referencia única, los meses y el valor según su plan.
+--  * Wompi avisa al servidor cuando la transacción termina. El servidor verifica la firma del
+--    aviso y llama a confirm_online_payment (solo con la clave del servidor): si quedó
+--    APROBADA y el valor coincide, se registra el pago igual que si lo hiciera el
+--    superadministrador (misma lógica, incluido el segundo mes gratis del Starter).
+--  * Cada orden se aplica una sola vez, aunque Wompi repita el aviso.
+--  * El comercio ve su fecha «pagado hasta» y sus órdenes; nunca el resto de cobros.
+-- =====================================================================
+
+-- ---------- La lógica de registrar un pago, compartida ----------
+-- Antes vivía dentro de register_business_payment (migración 0039). Ahora la usan
+-- el superadministrador (pago manual) y la confirmación de Wompi.
+create or replace function private.apply_business_payment(
+  p_business_id uuid,
+  p_amount integer,
+  p_paid_on date,
+  p_months integer,
+  p_note text,
+  p_created_by uuid
+)
+returns date
+language plpgsql
+volatile security definer
+set search_path = ''
+as $$
+declare
+  v_antes date;
+  v_desde date;
+  v_hasta date;
+  v_gratis integer := 0;
+  v_pendiente boolean := false;
+begin
+  if p_amount is null or p_amount < 0 or p_months is null or p_months not between 1 and 12 or p_paid_on is null then
+    raise exception 'INVALID_INPUT';
+  end if;
+  select paid_until, free_month_pending into v_antes, v_pendiente from public.business_billing where business_id = p_business_id for update;
+  if not found then
+    if not exists (select 1 from public.businesses where id = p_business_id) then raise exception 'BUSINESS_NOT_FOUND'; end if;
+    v_antes := (now() at time zone 'America/Bogota')::date;
+    insert into public.business_billing (business_id, paid_until) values (p_business_id, v_antes);
+  end if;
+
+  -- Plan Starter con el mes gratis pendiente: este pago trae el segundo mes gratis.
+  if coalesce(v_pendiente, false) and exists (select 1 from public.businesses where id = p_business_id and plan_id = 'plan_starter') then
+    v_gratis := 1;
+  end if;
+  -- La fecha avanza desde «pagado hasta» (no desde hoy) para que el ciclo no se corra si pagan tarde;
+  -- solo el primer pago de un comercio nuevo cuenta desde el día en que pagó, si es posterior.
+  v_desde := case when coalesce(v_pendiente, false) then greatest(v_antes, p_paid_on) else v_antes end;
+  v_hasta := (v_desde + make_interval(months => p_months + v_gratis))::date;
+
+  update public.business_billing set paid_until = v_hasta, free_month_pending = false where business_id = p_business_id;
+  insert into public.business_payments (business_id, amount, paid_on, months, free_months, paid_until, note, created_by)
+  values (p_business_id, p_amount, p_paid_on, p_months, v_gratis, v_hasta, nullif(trim(coalesce(p_note, '')), ''), p_created_by);
+  perform private.audit(p_business_id, 'billing.payment_registered', 'business', p_business_id::text,
+                        jsonb_build_object('amount', p_amount, 'months', p_months, 'free_months', v_gratis,
+                                           'paid_on', p_paid_on, 'from', v_antes, 'to', v_hasta,
+                                           'note', nullif(trim(coalesce(p_note, '')), '')));
+  return v_hasta;
+end;
+$$;
+revoke all on function private.apply_business_payment(uuid, integer, date, integer, text, uuid) from public, anon, authenticated;
+
+-- Pago manual del superadministrador: igual que antes, ahora sobre la lógica compartida.
+create or replace function public.register_business_payment(
+  p_business_id uuid,
+  p_amount integer,
+  p_paid_on date,
+  p_months integer,
+  p_note text default null
+)
+returns date
+language plpgsql
+volatile security definer
+set search_path = ''
+as $$
+begin
+  if not private.is_superadmin() then raise exception 'FORBIDDEN'; end if;
+  return private.apply_business_payment(p_business_id, p_amount, p_paid_on, p_months, p_note, auth.uid());
+end;
+$$;
+revoke all on function public.register_business_payment(uuid, integer, date, integer, text) from public, anon, authenticated;
+grant execute on function public.register_business_payment(uuid, integer, date, integer, text) to authenticated;
+
+-- ---------- Órdenes de pago en línea ----------
+create table if not exists public.online_payments (
+  reference      text primary key check (reference ~ '^lazo-[a-z0-9-]{8,60}$'),
+  business_id    uuid not null references public.businesses (id) on delete cascade,
+  months         integer not null check (months between 1 and 12),
+  amount_cents   bigint not null check (amount_cents > 0),
+  status         text not null default 'PENDING' check (status in ('PENDING', 'APPROVED', 'DECLINED', 'VOIDED', 'ERROR')),
+  transaction_id text unique,
+  created_by     uuid references public.profiles (id) on delete set null,
+  created_at     timestamptz not null default now(),
+  updated_at     timestamptz not null default now(),
+  applied_at     timestamptz
+);
+create index if not exists online_payments_business_idx on public.online_payments (business_id, created_at desc);
+drop trigger if exists online_payments_updated_at on public.online_payments;
+create trigger online_payments_updated_at before update on public.online_payments
+  for each row execute function private.touch_updated_at();
+
+alter table public.online_payments enable row level security;
+drop policy if exists online_payments_read on public.online_payments;
+create policy online_payments_read on public.online_payments for select to authenticated
+  using (private.has_role(business_id, '{owner,admin}') or private.is_platform_reader());
+revoke all on public.online_payments from anon, authenticated;
+grant select on public.online_payments to authenticated;
+
+-- El dueño (o administrador) inicia un pago: el valor lo pone la base de datos según el plan.
+create or replace function public.start_online_payment(p_business_id uuid, p_months integer)
+returns table (reference text, amount_cents bigint, months integer)
+language plpgsql
+volatile security definer
+set search_path = ''
+as $$
+declare
+  v_precio integer;
+  v_ref text;
+begin
+  if not private.has_role(p_business_id, '{owner,admin}') then raise exception 'FORBIDDEN'; end if;
+  if p_months is null or p_months not between 1 and 12 then raise exception 'INVALID_INPUT'; end if;
+  select p.price_monthly into v_precio
+  from public.businesses b join public.plans p on p.id = b.plan_id
+  where b.id = p_business_id;
+  if v_precio is null or v_precio <= 0 then raise exception 'PLAN_WITHOUT_PRICE'; end if;
+  v_ref := 'lazo-' || replace(gen_random_uuid()::text, '-', '');
+  insert into public.online_payments (reference, business_id, months, amount_cents, created_by)
+  values (v_ref, p_business_id, p_months, v_precio::bigint * p_months * 100, auth.uid());
+  perform private.audit(p_business_id, 'billing.online_payment_started', 'business', p_business_id::text,
+                        jsonb_build_object('reference', v_ref, 'months', p_months, 'amount_cents', v_precio::bigint * p_months * 100));
+  return query select v_ref, v_precio::bigint * p_months * 100, p_months;
+end;
+$$;
+revoke all on function public.start_online_payment(uuid, integer) from public, anon, authenticated;
+grant execute on function public.start_online_payment(uuid, integer) to authenticated;
+
+-- Aviso de Wompi (ya verificado por el servidor). Solo con la clave del servidor.
+-- Devuelve 'applied' (pago registrado ahora), 'already' (ya se había aplicado), 'updated'
+-- (otro estado), 'unknown' (referencia que no existe) o 'mismatch' (el valor no coincide).
+create or replace function public.confirm_online_payment(
+  p_reference text,
+  p_transaction_id text,
+  p_status text,
+  p_amount_cents bigint
+)
+returns text
+language plpgsql
+volatile security definer
+set search_path = ''
+as $$
+declare
+  o public.online_payments%rowtype;
+  v_hasta date;
+begin
+  select * into o from public.online_payments where reference = p_reference for update;
+  if not found then return 'unknown'; end if;
+  if o.applied_at is not null then return 'already'; end if;
+  if p_status not in ('PENDING', 'APPROVED', 'DECLINED', 'VOIDED', 'ERROR') then raise exception 'INVALID_INPUT'; end if;
+
+  if p_status = 'APPROVED' then
+    if p_amount_cents is distinct from o.amount_cents then
+      update public.online_payments set status = 'ERROR', transaction_id = coalesce(p_transaction_id, transaction_id) where reference = p_reference;
+      perform private.audit(o.business_id, 'billing.online_payment_mismatch', 'business', o.business_id::text,
+                            jsonb_build_object('reference', p_reference, 'expected', o.amount_cents, 'received', p_amount_cents, 'transaction', p_transaction_id));
+      return 'mismatch';
+    end if;
+    v_hasta := private.apply_business_payment(
+      o.business_id, (o.amount_cents / 100)::integer, (now() at time zone 'America/Bogota')::date, o.months,
+      'Pago en línea Wompi · ' || coalesce(p_transaction_id, p_reference), o.created_by);
+    update public.online_payments set status = 'APPROVED', transaction_id = p_transaction_id, applied_at = now() where reference = p_reference;
+    return 'applied';
+  end if;
+
+  update public.online_payments set status = p_status, transaction_id = coalesce(p_transaction_id, transaction_id) where reference = p_reference;
+  return 'updated';
+end;
+$$;
+revoke all on function public.confirm_online_payment(text, text, text, bigint) from public, anon, authenticated;
+grant execute on function public.confirm_online_payment(text, text, text, bigint) to service_role;
+
+-- Lo que el comercio ve de su cobro: fecha «pagado hasta», si tiene el mes gratis pendiente y el precio.
+create or replace function public.my_billing(p_business_id uuid)
+returns table (paid_until date, free_month_pending boolean, plan_id text, plan_name text, price_monthly integer)
+language sql
+stable security definer
+set search_path = ''
+as $$
+  select bb.paid_until, bb.free_month_pending, p.id, p.name, p.price_monthly
+  from public.businesses b
+  join public.plans p on p.id = b.plan_id
+  left join public.business_billing bb on bb.business_id = b.id
+  where b.id = p_business_id
+    and (private.has_role(p_business_id, '{owner,admin}') or private.is_platform_reader());
+$$;
+revoke all on function public.my_billing(uuid) from public, anon, authenticated;
+grant execute on function public.my_billing(uuid) to authenticated;
+
+-- >>> 20261101000041_pago_en_linea_cualquier_pasarela.sql
+-- =====================================================================
+-- Pago en línea con cualquier pasarela (Mercado Pago o Wompi).
+--  * Solo cambia la nota con la que queda el pago en el historial de cobros:
+--    «Pago en línea · <transacción>» (antes decía «Wompi»). La transacción ya indica la
+--    pasarela: las de Mercado Pago empiezan por «mp-».
+--  * Nada más cambia: sigue siendo solo para el servidor, una sola vez y con el valor exacto.
+-- =====================================================================
+
+create or replace function public.confirm_online_payment(
+  p_reference text,
+  p_transaction_id text,
+  p_status text,
+  p_amount_cents bigint
+)
+returns text
+language plpgsql
+volatile security definer
+set search_path = ''
+as $$
+declare
+  o public.online_payments%rowtype;
+  v_hasta date;
+begin
+  select * into o from public.online_payments where reference = p_reference for update;
+  if not found then return 'unknown'; end if;
+  if o.applied_at is not null then return 'already'; end if;
+  if p_status not in ('PENDING', 'APPROVED', 'DECLINED', 'VOIDED', 'ERROR') then raise exception 'INVALID_INPUT'; end if;
+
+  if p_status = 'APPROVED' then
+    if p_amount_cents is distinct from o.amount_cents then
+      update public.online_payments set status = 'ERROR', transaction_id = coalesce(p_transaction_id, transaction_id) where reference = p_reference;
+      perform private.audit(o.business_id, 'billing.online_payment_mismatch', 'business', o.business_id::text,
+                            jsonb_build_object('reference', p_reference, 'expected', o.amount_cents, 'received', p_amount_cents, 'transaction', p_transaction_id));
+      return 'mismatch';
+    end if;
+    v_hasta := private.apply_business_payment(
+      o.business_id, (o.amount_cents / 100)::integer, (now() at time zone 'America/Bogota')::date, o.months,
+      'Pago en línea · ' || coalesce(p_transaction_id, p_reference), o.created_by);
+    update public.online_payments set status = 'APPROVED', transaction_id = p_transaction_id, applied_at = now() where reference = p_reference;
+    return 'applied';
+  end if;
+
+  update public.online_payments set status = p_status, transaction_id = coalesce(p_transaction_id, transaction_id) where reference = p_reference;
+  return 'updated';
+end;
+$$;
+revoke all on function public.confirm_online_payment(text, text, text, bigint) from public, anon, authenticated;
+grant execute on function public.confirm_online_payment(text, text, text, bigint) to service_role;
+
+-- >>> 20261101000042_letra_propia.sql
+-- =====================================================================
+-- Letra propia del comercio: sube su tipografía (TTF, OTF o WOFF) y se usa en la tarjeta,
+-- el pase de Wallet, la página de registro y el QR de inscripción.
+--  * branding admite 'font' = 'propia', 'fontUrl' (archivo de su carpeta en Storage) y
+--    'fontName' (cómo se llama, para mostrarlo en el panel).
+--  * El almacenamiento de marca acepta archivos de letra y hasta 2 MB (las letras pesan más
+--    que un logo).
+--  * Solo cambian la validación de update_business_profile y el almacenamiento; no toca datos.
+-- =====================================================================
+
+update storage.buckets
+set file_size_limit = 2097152,
+    allowed_mime_types = array['image/png', 'image/webp', 'image/jpeg', 'font/ttf', 'font/otf', 'font/woff']
+where id = 'brand-assets';
+
+create or replace function public.update_business_profile(
+  p_business_id uuid,
+  p_name text,
+  p_category text,
+  p_city text,
+  p_timezone text,
+  p_branding jsonb
+)
+returns void
+language plpgsql
+volatile security definer
+set search_path = ''
+as $$
+declare
+  k text;
+  v text;
+begin
+  if not (private.has_role(p_business_id, '{owner,admin}') or private.is_superadmin()) then
+    raise exception 'FORBIDDEN';
+  end if;
+  if p_branding is not null then
+    for k in select jsonb_object_keys(p_branding) loop
+      v := p_branding ->> k;
+      if k = 'logoText' then
+        if v is null or length(trim(v)) not between 1 and 3 then raise exception 'INVALID_BRANDING'; end if;
+      elsif k in ('logoUrl', 'coverUrl', 'stampUrl', 'illustrationUrl') then
+        -- Vacío = quitar la imagen. Si no, solo una imagen de su propia carpeta en Storage.
+        if v is null or (v <> '' and v !~ ('^https://[a-z0-9-]+\.supabase\.co/storage/v1/object/public/brand-assets/'
+                                           || p_business_id::text || '/[A-Za-z0-9._-]+$')) then
+          raise exception 'INVALID_BRANDING';
+        end if;
+      elsif k = 'fontUrl' then
+        -- Letra propia: vacío = quitarla; si no, un archivo de letra (TTF, OTF o WOFF) de su carpeta.
+        if v is null or (v <> '' and v !~ ('^https://[a-z0-9-]+\.supabase\.co/storage/v1/object/public/brand-assets/'
+                                           || p_business_id::text || '/[A-Za-z0-9._-]+\.(ttf|otf|woff)$')) then
+          raise exception 'INVALID_BRANDING';
+        end if;
+      elsif k = 'fontName' then
+        -- Nombre de la letra para mostrar en el panel (sin saltos de línea ni comillas).
+        if v is null or length(trim(v)) > 40 or v ~ '[\n\r"<>]' then raise exception 'INVALID_BRANDING'; end if;
+      elsif k = 'stampIcon' then
+        if v is null or v not in ('check', 'heart', 'star', 'sparkles', 'flower', 'gem', 'crown', 'scissors', 'coffee') then
+          raise exception 'INVALID_BRANDING';
+        end if;
+      elsif k = 'font' then
+        if v is null or v not in ('serif', 'sans', 'elegante', 'manuscrita', 'redondeada', 'impacto', 'geometrica', 'propia') then
+          raise exception 'INVALID_BRANDING';
+        end if;
+      elsif k = 'cardStyle' then
+        if v is null or v not in ('clasico', 'noche', 'cristal', 'negro', 'marfil') then
+          raise exception 'INVALID_BRANDING';
+        end if;
+      elsif k = 'passQr' then
+        -- Código QR en la tarjeta y en el pase: solo verdadero o falso.
+        if jsonb_typeof(p_branding -> k) is distinct from 'boolean' then raise exception 'INVALID_BRANDING'; end if;
+      elsif k in ('primary', 'primaryForeground', 'accent', 'cardBackground', 'cardForeground') then
+        if v is null or v !~ '^#[0-9a-fA-F]{6}$' then raise exception 'INVALID_BRANDING'; end if;
+      else
+        raise exception 'INVALID_BRANDING';
+      end if;
+    end loop;
+  end if;
+
+  update public.businesses
+  set name     = coalesce(nullif(trim(p_name), ''), name),
+      category = coalesce(nullif(trim(p_category), ''), category),
+      city     = coalesce(nullif(trim(p_city), ''), city),
+      timezone = coalesce(nullif(trim(p_timezone), ''), timezone),
+      branding = case when p_branding is null then branding else branding || p_branding end
+  where id = p_business_id;
+
+  perform private.audit(p_business_id, 'business.updated', 'business', p_business_id::text,
+                        jsonb_build_object('branding_changed', p_branding is not null));
+end;
+$$;
+
+-- >>> 20261101000043_recordatorios.sql
+-- =====================================================================
+-- Recordatorios automáticos para que los clientes vuelvan.
+--  * «Te falta poco»: a quien está a 1 o 2 sellos del premio (con al menos la mitad de la tarjeta
+--    hecha) y lleva unos días sin venir
+--    (almost = activo, almostDays = días sin venir, de 5 a 60; por defecto 10).
+--  * «Te extrañamos» con mensaje propio del comercio (winbackText, opcional):
+--    {nombre}, {comercio} y {progreso} se cambian al enviarlo.
+--  * Nunca más de un recordatorio (campaña, te extrañamos o te falta poco) por cliente a la
+--    semana: así no se cansa nadie.
+--  * Igual que antes: solo a quien aceptó mensajes, con la tarjeta activa, y cada aviso se
+--    registra una sola vez por ausencia (no se repite aunque el proceso corra otra vez).
+-- =====================================================================
+
+-- ---------- Ajustes: claves nuevas (opcionales: sin ellas se usan los valores por defecto) ----------
+create or replace function private.valid_wallet_settings(s jsonb)
+returns boolean
+language sql
+immutable
+set search_path = ''
+as $$
+  select jsonb_typeof(s) = 'object'
+    and not exists (select 1 from jsonb_object_keys(s) k
+                    where k not in ('stamp', 'near', 'reward', 'birthday', 'winback', 'winbackDays', 'nearbyText',
+                                    'winbackText', 'almost', 'almostDays'))
+    and jsonb_typeof(s -> 'stamp') = 'boolean'
+    and jsonb_typeof(s -> 'near') = 'boolean'
+    and jsonb_typeof(s -> 'reward') = 'boolean'
+    and jsonb_typeof(s -> 'birthday') = 'boolean'
+    and jsonb_typeof(s -> 'winback') = 'boolean'
+    and jsonb_typeof(s -> 'winbackDays') = 'number'
+    and (s ->> 'winbackDays') ~ '^[0-9]+$'
+    and (s ->> 'winbackDays')::int between 14 and 180
+    and (not (s ? 'nearbyText')
+         or (jsonb_typeof(s -> 'nearbyText') = 'string'
+             and length(btrim(s ->> 'nearbyText')) between 5 and 120))
+    and (not (s ? 'winbackText')
+         or (jsonb_typeof(s -> 'winbackText') = 'string'
+             and length(btrim(s ->> 'winbackText')) between 5 and 200))
+    and (not (s ? 'almost') or jsonb_typeof(s -> 'almost') = 'boolean')
+    and (not (s ? 'almostDays')
+         or (jsonb_typeof(s -> 'almostDays') = 'number'
+             and (s ->> 'almostDays') ~ '^[0-9]+$'
+             and (s ->> 'almostDays')::int between 5 and 60));
+$$;
+
+-- ---------- Registro de avisos: nuevo tipo «almost» (te falta poco) ----------
+alter table public.wallet_notifications drop constraint if exists wallet_notifications_kind_check;
+alter table public.wallet_notifications add constraint wallet_notifications_kind_check
+  check (kind in ('stamp', 'near', 'reward', 'birthday', 'winback', 'almost', 'campaign'));
+
+-- ---------- Candidatos del proceso diario ----------
+-- Cambia lo que devuelve (se agrega el mensaje propio), por eso se borra y se crea de nuevo.
+drop function if exists public.wallet_daily_candidates(timestamptz);
+create function public.wallet_daily_candidates(p_now timestamptz default now())
+returns table (business_id uuid, card_id uuid, public_token text, kind text, ref text,
+               first_name text, business_name text, current_stamps integer, stamps_required integer, reward_name text,
+               message text)
+language sql
+stable security definer
+set search_path = ''
+as $$
+  with base as (
+    select b.id as business_id, b.name as business_name, b.wallet_notifications as s,
+           (p_now at time zone b.timezone) as local_now,
+           c.id as card_id, c.public_token, c.current_stamps, c.last_visit_at,
+           cu.full_name, cu.first_name, cu.birth_month, cu.birth_day,
+           p.stamps_required, p.reward_name,
+           -- ¿Ya recibió un recordatorio esta semana? (campaña, te extrañamos o te falta poco)
+           exists (select 1 from public.wallet_notifications n
+                   where n.card_id = c.id and n.kind in ('campaign', 'winback', 'almost')
+                     and n.created_at > p_now - interval '7 days') as reciente
+    from public.businesses b
+    join public.loyalty_cards c on c.business_id = b.id
+    join public.customers cu on cu.id = c.customer_id
+    join public.loyalty_programs p on p.id = c.program_id
+    where b.status <> 'suspended'
+      and c.status <> 'blocked'
+      and cu.marketing_consent
+      and cu.anonymized_at is null
+  ),
+  dias as (
+    select base.*,
+           (s ->> 'winbackDays')::int as winback_days,
+           coalesce((s ->> 'almostDays')::int, 10) as almost_days,
+           coalesce((s ->> 'almost')::boolean, true) as almost_on,
+           coalesce(split_part(trim(full_name), ' ', 1), '') as primer_nombre
+    from base
+  )
+  select business_id, card_id, public_token, 'birthday', 'birthday:' || extract(year from local_now)::int,
+         coalesce(nullif(btrim(first_name), ''), primer_nombre), business_name, current_stamps, stamps_required, reward_name,
+         null::text
+  from dias
+  where (s ->> 'birthday')::boolean
+    and birth_month = extract(month from local_now)::int
+    and coalesce(birth_day, 1) = extract(day from local_now)::int
+  union all
+  select business_id, card_id, public_token, 'winback', 'winback:' || to_char(last_visit_at, 'YYYYMMDDHH24MISS'),
+         coalesce(nullif(btrim(first_name), ''), primer_nombre), business_name, current_stamps, stamps_required, reward_name,
+         nullif(btrim(s ->> 'winbackText'), '')
+  from dias
+  where (s ->> 'winback')::boolean
+    and not reciente
+    and last_visit_at is not null
+    and last_visit_at < p_now - make_interval(days => winback_days)
+    -- Solo quienes se enfriaron hace poco: al activar el aviso no se escribe a clientes de hace años.
+    and last_visit_at > p_now - make_interval(days => winback_days + 30)
+  union all
+  -- Te falta poco: a 1 o 2 sellos del premio y unos días sin venir (antes de «te extrañamos»).
+  select business_id, card_id, public_token, 'almost', 'almost:' || to_char(last_visit_at, 'YYYYMMDDHH24MISS'),
+         coalesce(nullif(btrim(first_name), ''), primer_nombre), business_name, current_stamps, stamps_required, reward_name,
+         null::text
+  from dias
+  where almost_on
+    and not reciente
+    and current_stamps > 0
+    and stamps_required - current_stamps between 1 and 2
+    and current_stamps * 2 >= stamps_required   -- y con al menos la mitad de la tarjeta hecha
+    and last_visit_at is not null
+    and last_visit_at < p_now - make_interval(days => almost_days)
+    and last_visit_at > p_now - make_interval(days => almost_days + 30)
+    -- Si ya toca «te extrañamos», ese tiene prioridad.
+    and not ((s ->> 'winback')::boolean and last_visit_at < p_now - make_interval(days => winback_days));
+$$;
+revoke all on function public.wallet_daily_candidates(timestamptz) from public, anon, authenticated;
+grant execute on function public.wallet_daily_candidates(timestamptz) to service_role;
+
+-- >>> 20261101000044_demo.sql
+-- =====================================================================
+-- Demo para vender: un comercio marcado como «demo» (LAZO) deja que quien tiene su tarjeta se
+-- sume un sello de prueba desde la tarjeta, sin empleado. Así el dueño de un negocio ve en su
+-- propio celular cómo llega el sello y el aviso a la billetera.
+--  * Solo en comercios con is_demo (se marca a mano; nadie lo puede cambiar desde el panel).
+--  * Frenos: un sello cada 10 segundos por tarjeta y máximo 30 sellos de prueba al día.
+--  * Los sellos de prueba quedan como visitas con origen 'demo' (se ven así en el historial).
+--  * Solo la llama el servidor (service_role), con la tarjeta del enlace.
+-- =====================================================================
+
+alter table public.businesses add column if not exists is_demo boolean not null default false;
+update public.businesses set is_demo = true where slug = 'lazo';
+
+alter table public.visits drop constraint if exists visits_source_check;
+alter table public.visits add constraint visits_source_check check (source in ('staff', 'nfc', 'manual', 'demo'));
+
+-- record_visit: igual que en la migración 0015, salvo que la demo no usa el tiempo mínimo del programa.
+create or replace function private.record_visit(
+  p_card_id uuid,
+  p_idempotency_key text,
+  p_location_id uuid,
+  p_staff uuid,
+  p_source text,
+  p_min_minutes integer
+)
+returns jsonb
+language plpgsql
+volatile security definer
+set search_path = ''
+as $$
+declare
+  v_card     public.loyalty_cards;
+  v_program  public.loyalty_programs;
+  v_status   public.business_status;
+  v_visit_id uuid;
+  v_reward_id uuid;
+  v_stamps   integer;
+  v_promo    public.promotions;
+  v_bonus    integer := 0;
+  v_tz       text;
+  v_local    timestamp;
+  v_customer public.customers;
+  v_bday_id  uuid;
+begin
+  -- Bloqueo de fila: serializa visitas concurrentes sobre la misma tarjeta.
+  select * into v_card from public.loyalty_cards where id = p_card_id for update;
+  if not found then raise exception 'CARD_NOT_FOUND'; end if;
+
+  select status, timezone into v_status, v_tz from public.businesses where id = v_card.business_id;
+  v_local := now() at time zone v_tz;
+  if v_status = 'suspended' then raise exception 'BUSINESS_SUSPENDED'; end if;
+  if v_card.status = 'blocked' then raise exception 'CARD_BLOCKED'; end if;
+  -- La sede, si se indica, debe ser del mismo comercio y estar activa.
+  if p_location_id is not null and not exists (
+    select 1 from public.locations where id = p_location_id and business_id = v_card.business_id and active
+  ) then
+    raise exception 'INVALID_LOCATION';
+  end if;
+
+  if exists (select 1 from public.visits
+             where business_id = v_card.business_id and idempotency_key = p_idempotency_key) then
+    raise exception 'DUPLICATE_REQUEST';
+  end if;
+
+  select * into v_program from public.loyalty_programs where id = v_card.program_id;
+  if not v_program.active then raise exception 'PROGRAM_INACTIVE'; end if;
+
+  -- Los sellos de prueba de la demo usan su propio freno (demo_add_stamp), no el del programa.
+  if p_source <> 'demo'
+     and v_card.last_visit_at is not null
+     and greatest(v_program.min_minutes_between_visits, coalesce(p_min_minutes, 0)) > 0
+     and v_card.last_visit_at > now() - make_interval(mins => greatest(v_program.min_minutes_between_visits, coalesce(p_min_minutes, 0))) then
+    raise exception 'TOO_SOON';
+  end if;
+
+  -- Promoción vigente hoy (p. ej. doble sello): suma sellos extra en la misma visita.
+  select * into v_promo from private.active_promotion(v_card.business_id);
+  v_bonus := coalesce(v_promo.bonus_stamps, 0);
+
+  insert into public.visits (business_id, card_id, kind, delta, staff_id, idempotency_key, bonus_stamps, promotion_id, location_id, source)
+  values (v_card.business_id, v_card.id, 'visit', 1, p_staff, p_idempotency_key, v_bonus, v_promo.id, p_location_id, p_source)
+  returning id into v_visit_id;
+
+  v_stamps := v_card.current_stamps + 1 + v_bonus;
+  if v_stamps >= v_program.stamps_required then
+    -- Los sellos que sobran pasan al siguiente ciclo (como máximo hasta quedar a uno de la meta).
+    v_stamps := least(v_stamps - v_program.stamps_required, v_program.stamps_required - 1);
+    insert into public.rewards (business_id, card_id, program_id, source_visit_id, name, expires_at)
+    values (v_card.business_id, v_card.id, v_program.id, v_visit_id, v_program.reward_name,
+            case when v_program.reward_expiry_days is not null
+                 then now() + make_interval(days => v_program.reward_expiry_days) end)
+    returning id into v_reward_id;
+  end if;
+
+  -- Regalo de cumpleaños: en la primera visita del mes de cumpleaños, una vez al año.
+  select * into v_customer from public.customers where id = v_card.customer_id;
+  if v_program.birthday_reward is not null and v_customer.birth_month = extract(month from v_local)::int then
+    insert into public.rewards (business_id, card_id, program_id, name, kind, birthday_year, expires_at)
+    values (v_card.business_id, v_card.id, v_program.id, v_program.birthday_reward, 'birthday',
+            extract(year from v_local)::int, now() + interval '30 days')
+    on conflict (card_id, birthday_year) do nothing
+    returning id into v_bday_id;
+  end if;
+
+  update public.loyalty_cards
+  set current_stamps = v_stamps,
+      total_visits   = total_visits + 1,
+      last_visit_at  = now(),
+      status         = case when v_reward_id is not null or v_bday_id is not null then 'reward_available' else status end
+  where id = v_card.id;
+
+  perform private.audit(v_card.business_id, 'visit.created', 'visit', v_visit_id::text,
+                        jsonb_build_object('card_id', v_card.id, 'bonus_stamps', v_bonus, 'promotion_id', v_promo.id, 'source', p_source));
+  if v_bday_id is not null then
+    perform private.audit(v_card.business_id, 'reward.birthday', 'reward', v_bday_id::text,
+                          jsonb_build_object('card_id', v_card.id));
+  end if;
+  if v_reward_id is not null then
+    perform private.audit(v_card.business_id, 'reward.earned', 'reward', v_reward_id::text,
+                          jsonb_build_object('card_id', v_card.id));
+  end if;
+
+  return jsonb_build_object('visit_id', v_visit_id, 'reward_id', v_reward_id, 'current_stamps', v_stamps,
+                            'bonus_stamps', v_bonus, 'birthday_reward_id', v_bday_id);
+end;
+$$;
+
+
+create or replace function public.demo_add_stamp(p_card_token text, p_idempotency_key text)
+returns jsonb
+language plpgsql
+volatile security definer
+set search_path = ''
+as $$
+declare
+  v_card     public.loyalty_cards;
+  v_business public.businesses;
+  v_hoy      integer;
+  v_result   jsonb;
+begin
+  select * into v_card from public.loyalty_cards where public_token = p_card_token;
+  if not found then raise exception 'CARD_NOT_FOUND'; end if;
+  select * into v_business from public.businesses where id = v_card.business_id;
+  if not v_business.is_demo then raise exception 'NOT_DEMO'; end if;
+
+  -- Un reintento de la misma petición sigue de largo: record_visit lo reconoce por su clave.
+  if not exists (select 1 from public.visits where business_id = v_business.id and idempotency_key = p_idempotency_key) then
+    if exists (select 1 from public.visits where card_id = v_card.id and kind = 'visit' and created_at > now() - interval '10 seconds') then
+      raise exception 'DEMO_TOO_FAST';
+    end if;
+    select count(*) into v_hoy from public.visits
+    where card_id = v_card.id and kind = 'visit' and source = 'demo' and created_at > now() - interval '1 day';
+    if v_hoy >= 30 then raise exception 'DEMO_DAILY_LIMIT'; end if;
+  end if;
+
+  v_result := private.record_visit(v_card.id, p_idempotency_key, null, null, 'demo', 0);
+  return v_result || jsonb_build_object('card_id', v_card.id, 'business_id', v_business.id);
+end;
+$$;
+revoke all on function public.demo_add_stamp(text, text) from public, anon, authenticated;
+grant execute on function public.demo_add_stamp(text, text) to service_role;
+
+-- >>> 20261101000045_eliminar_cliente_superadmin.sql
+-- =====================================================================
+-- Cupo de clientes y borrado de clientes.
+--  * El comercio (propietario) puede eliminar los DATOS de un cliente (anonymize_customer): se borran
+--    nombre, celular, correo y cumpleaños, y la tarjeta deja de funcionar. El registro queda y SIGUE
+--    OCUPANDO CUPO del plan: así nadie borra clientes para hacerle espacio a otros.
+--  * Solo el superadministrador puede eliminar un cliente por completo (admin_delete_customer):
+--    se borran su tarjeta, visitas, premios, canjes y contactos, y se libera el cupo.
+--  * El historial (visitas, canjes, contactos) sigue sin poderse borrar por ninguna otra vía.
+-- =====================================================================
+
+-- El bloqueo del historial admite, además del borrado de un comercio completo, el borrado de un
+-- cliente completo hecho desde admin_delete_customer.
+create or replace function private.forbid_mutation()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+declare
+  actor_col text := tg_argv[0];
+  v_borrando text := current_setting('lazo.eliminando_comercio', true);
+  v_cliente  text := current_setting('lazo.eliminando_cliente', true);
+begin
+  if tg_op = 'UPDATE' and actor_col is not null
+     and (to_jsonb(new) ->> actor_col) is null
+     and (to_jsonb(new) - actor_col) = (to_jsonb(old) - actor_col) then
+    return new;
+  end if;
+  -- Borrado en cascada del comercio completo, solo desde admin_delete_business.
+  if tg_op = 'DELETE'
+     and coalesce(v_borrando, '') <> ''
+     and current_user not in ('anon', 'authenticated', 'service_role')
+     and (to_jsonb(old) ->> 'business_id') = v_borrando then
+    return old;
+  end if;
+  -- Borrado de un cliente completo, solo desde admin_delete_customer (la auditoría nunca se borra).
+  if tg_op = 'DELETE'
+     and tg_table_name <> 'audit_logs'
+     and coalesce(v_cliente, '') <> ''
+     and current_user not in ('anon', 'authenticated', 'service_role')
+     and ((to_jsonb(old) ->> 'customer_id') = v_cliente
+          or exists (select 1 from public.loyalty_cards c
+                     where c.id::text = (to_jsonb(old) ->> 'card_id') and c.customer_id::text = v_cliente)) then
+    return old;
+  end if;
+  raise exception 'IMMUTABLE_LEDGER: % no admite %', tg_table_name, tg_op
+    using errcode = 'P0001';
+end;
+$$;
+
+create or replace function public.admin_delete_customer(p_customer_id uuid)
+returns void
+language plpgsql
+volatile security definer
+set search_path = ''
+as $$
+declare
+  v_c       public.customers;
+  v_visitas integer;
+begin
+  if not private.is_superadmin() then raise exception 'FORBIDDEN' using errcode = 'P0001'; end if;
+  select * into v_c from public.customers where id = p_customer_id for update;
+  if not found then raise exception 'CUSTOMER_NOT_FOUND' using errcode = 'P0001'; end if;
+
+  select count(*) into v_visitas from public.visits v join public.loyalty_cards c on c.id = v.card_id where c.customer_id = v_c.id;
+  -- Queda constancia en el historial del comercio, sin datos personales.
+  perform private.audit(v_c.business_id, 'platform.customer_deleted', 'customer', v_c.id::text,
+                        jsonb_build_object('visits', v_visitas, 'anonymized', v_c.anonymized_at is not null));
+
+  perform set_config('lazo.eliminando_cliente', v_c.id::text, true);
+  -- Primero lo que depende de la tarjeta, de lo dependido a lo que depende.
+  delete from public.redemptions r using public.loyalty_cards c where r.card_id = c.id and c.customer_id = v_c.id;
+  delete from public.rewards r using public.loyalty_cards c where r.card_id = c.id and c.customer_id = v_c.id;
+  delete from public.visits v using public.loyalty_cards c where v.card_id = c.id and c.customer_id = v_c.id;
+  delete from public.customer_contacts where customer_id = v_c.id;
+  -- La tarjeta, sus avisos y sus pases se borran en cascada con el cliente.
+  delete from public.customers where id = v_c.id;
+  perform set_config('lazo.eliminando_cliente', '', true);
+end;
+$$;
+revoke all on function public.admin_delete_customer(uuid) from public, anon, authenticated;
+grant execute on function public.admin_delete_customer(uuid) to authenticated;
+
+-- >>> 20261101000046_sello_sin_qr.sql
+-- =====================================================================
+-- Sello sin QR (pedidos a domicilio o código que no se puede leer)
+--  * El motivo de una visita sumada a mano queda también en la visita misma (columna reason),
+--    no solo en la auditoría: así se ve en el historial y en la ficha del cliente.
+--    El motivo puede incluir el número de factura o de pedido (p. ej. «Pedido a domicilio · Factura FV-1234»).
+--  * record_visit recibe el motivo como parámetro opcional (las visitas ya no se pueden editar
+--    después de creadas). Todo lo demás es igual que en la migración 0044.
+--  * Compatible hacia atrás: register_manual_visit conserva sus parámetros.
+-- =====================================================================
+
+-- Se reemplaza por la versión con el motivo (mismo nombre, un parámetro opcional más).
+drop function if exists private.record_visit(uuid, text, uuid, uuid, text, integer);
+
+create or replace function private.record_visit(
+  p_card_id uuid,
+  p_idempotency_key text,
+  p_location_id uuid,
+  p_staff uuid,
+  p_source text,
+  p_min_minutes integer,
+  p_reason text default null
+)
+returns jsonb
+language plpgsql
+volatile security definer
+set search_path = ''
+as $$
+declare
+  v_card     public.loyalty_cards;
+  v_program  public.loyalty_programs;
+  v_status   public.business_status;
+  v_visit_id uuid;
+  v_reward_id uuid;
+  v_stamps   integer;
+  v_promo    public.promotions;
+  v_bonus    integer := 0;
+  v_tz       text;
+  v_local    timestamp;
+  v_customer public.customers;
+  v_bday_id  uuid;
+begin
+  -- Bloqueo de fila: serializa visitas concurrentes sobre la misma tarjeta.
+  select * into v_card from public.loyalty_cards where id = p_card_id for update;
+  if not found then raise exception 'CARD_NOT_FOUND'; end if;
+
+  select status, timezone into v_status, v_tz from public.businesses where id = v_card.business_id;
+  v_local := now() at time zone v_tz;
+  if v_status = 'suspended' then raise exception 'BUSINESS_SUSPENDED'; end if;
+  if v_card.status = 'blocked' then raise exception 'CARD_BLOCKED'; end if;
+  -- La sede, si se indica, debe ser del mismo comercio y estar activa.
+  if p_location_id is not null and not exists (
+    select 1 from public.locations where id = p_location_id and business_id = v_card.business_id and active
+  ) then
+    raise exception 'INVALID_LOCATION';
+  end if;
+
+  if exists (select 1 from public.visits
+             where business_id = v_card.business_id and idempotency_key = p_idempotency_key) then
+    raise exception 'DUPLICATE_REQUEST';
+  end if;
+
+  select * into v_program from public.loyalty_programs where id = v_card.program_id;
+  if not v_program.active then raise exception 'PROGRAM_INACTIVE'; end if;
+
+  -- Los sellos de prueba de la demo usan su propio freno (demo_add_stamp), no el del programa.
+  if p_source <> 'demo'
+     and v_card.last_visit_at is not null
+     and greatest(v_program.min_minutes_between_visits, coalesce(p_min_minutes, 0)) > 0
+     and v_card.last_visit_at > now() - make_interval(mins => greatest(v_program.min_minutes_between_visits, coalesce(p_min_minutes, 0))) then
+    raise exception 'TOO_SOON';
+  end if;
+
+  -- Promoción vigente hoy (p. ej. doble sello): suma sellos extra en la misma visita.
+  select * into v_promo from private.active_promotion(v_card.business_id);
+  v_bonus := coalesce(v_promo.bonus_stamps, 0);
+
+  insert into public.visits (business_id, card_id, kind, delta, staff_id, idempotency_key, bonus_stamps, promotion_id, location_id, source, reason)
+  values (v_card.business_id, v_card.id, 'visit', 1, p_staff, p_idempotency_key, v_bonus, v_promo.id, p_location_id, p_source,
+          nullif(left(btrim(coalesce(p_reason, '')), 200), ''))
+  returning id into v_visit_id;
+
+  v_stamps := v_card.current_stamps + 1 + v_bonus;
+  if v_stamps >= v_program.stamps_required then
+    -- Los sellos que sobran pasan al siguiente ciclo (como máximo hasta quedar a uno de la meta).
+    v_stamps := least(v_stamps - v_program.stamps_required, v_program.stamps_required - 1);
+    insert into public.rewards (business_id, card_id, program_id, source_visit_id, name, expires_at)
+    values (v_card.business_id, v_card.id, v_program.id, v_visit_id, v_program.reward_name,
+            case when v_program.reward_expiry_days is not null
+                 then now() + make_interval(days => v_program.reward_expiry_days) end)
+    returning id into v_reward_id;
+  end if;
+
+  -- Regalo de cumpleaños: en la primera visita del mes de cumpleaños, una vez al año.
+  select * into v_customer from public.customers where id = v_card.customer_id;
+  if v_program.birthday_reward is not null and v_customer.birth_month = extract(month from v_local)::int then
+    insert into public.rewards (business_id, card_id, program_id, name, kind, birthday_year, expires_at)
+    values (v_card.business_id, v_card.id, v_program.id, v_program.birthday_reward, 'birthday',
+            extract(year from v_local)::int, now() + interval '30 days')
+    on conflict (card_id, birthday_year) do nothing
+    returning id into v_bday_id;
+  end if;
+
+  update public.loyalty_cards
+  set current_stamps = v_stamps,
+      total_visits   = total_visits + 1,
+      last_visit_at  = now(),
+      status         = case when v_reward_id is not null or v_bday_id is not null then 'reward_available' else status end
+  where id = v_card.id;
+
+  perform private.audit(v_card.business_id, 'visit.created', 'visit', v_visit_id::text,
+                        jsonb_build_object('card_id', v_card.id, 'bonus_stamps', v_bonus, 'promotion_id', v_promo.id, 'source', p_source));
+  if v_bday_id is not null then
+    perform private.audit(v_card.business_id, 'reward.birthday', 'reward', v_bday_id::text,
+                          jsonb_build_object('card_id', v_card.id));
+  end if;
+  if v_reward_id is not null then
+    perform private.audit(v_card.business_id, 'reward.earned', 'reward', v_reward_id::text,
+                          jsonb_build_object('card_id', v_card.id));
+  end if;
+
+  return jsonb_build_object('visit_id', v_visit_id, 'reward_id', v_reward_id, 'current_stamps', v_stamps,
+                            'bonus_stamps', v_bonus, 'birthday_reward_id', v_bday_id);
+end;
+$$;
+
+create or replace function public.register_manual_visit(
+  p_card_id uuid,
+  p_idempotency_key text,
+  p_reason text,
+  p_location_id uuid default null
+)
+returns jsonb
+language plpgsql
+volatile security definer
+set search_path = ''
+as $$
+declare
+  v_business uuid;
+  v_reason   text := btrim(coalesce(p_reason, ''));
+  v_result   jsonb;
+begin
+  if auth.uid() is null then raise exception 'FORBIDDEN'; end if;
+  select business_id into v_business from public.loyalty_cards where id = p_card_id;
+  if not found then raise exception 'CARD_NOT_FOUND'; end if;
+  if not private.is_member(v_business) then raise exception 'FORBIDDEN'; end if;
+  if length(v_reason) < 5 then raise exception 'REASON_REQUIRED'; end if;
+
+  v_result := private.record_visit(p_card_id, p_idempotency_key, p_location_id, auth.uid(), 'manual', 0, v_reason);
+
+  perform private.audit(v_business, 'visit.manual', 'loyalty_card', p_card_id::text,
+    jsonb_build_object('reason', left(v_reason, 200), 'visit_id', v_result ->> 'visit_id'));
+  return v_result;
+end;
+$$;
+
+revoke all on function public.register_manual_visit(uuid, text, text, uuid) from public, anon;
+grant execute on function public.register_manual_visit(uuid, text, text, uuid) to authenticated;
+
+-- ---------------------------------------------------------------------
+-- Funciones internas cerradas. Las funciones de «private» creadas después de la migración 0002
+-- quedaban con el permiso por defecto de Postgres (cualquiera puede ejecutarlas). El esquema
+-- private no está expuesto en la API, pero se cierran por si acaso: solo las llaman otras
+-- funciones del sistema (security definer) o disparadores, nunca un usuario directamente.
+-- Las que usan las reglas de acceso (RLS) y las validaciones siguen abiertas, como deben.
+-- ---------------------------------------------------------------------
+revoke all on function private.record_visit(uuid, text, uuid, uuid, text, integer, text) from public, anon, authenticated;
+revoke all on function private.nfc_comprobar_ubicacion(private.business_nfc, double precision, double precision) from public, anon, authenticated;
+revoke all on function private.tiene_sede_con_ubicacion(uuid) from public, anon, authenticated;
+revoke all on function private.metros_entre(double precision, double precision, double precision, double precision) from public, anon, authenticated;
+revoke all on function private.create_business_billing() from public, anon, authenticated;
+revoke all on function private.customer_first_name() from public, anon, authenticated;
 
 commit;

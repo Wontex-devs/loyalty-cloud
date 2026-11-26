@@ -16,9 +16,8 @@ import { publicOrigin } from "@/lib/config";
 import { greetingName } from "@/lib/wallet/messages";
 import { cardMessage, whatsappUrl } from "@/lib/wallet/invite";
 import { useWalletStatus, WalletBadge, walletsOf } from "@/components/business/wallet-status";
+import { SelloSinQr } from "@/components/business/sello-sin-qr";
 
-/** Motivos frecuentes para sumar una visita a mano (se pueden editar). */
-const MOTIVOS_MANUAL = ["El toque NFC no funcionó", "El cliente no tenía el celular", "El celular del cliente estaba sin batería"];
 
 const MONTHS = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
 
@@ -26,7 +25,7 @@ const MONTHS = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", 
 export default function CustomerDetailPage() {
   const { customerId } = useParams<{ customerId: string }>();
   const scope = useScope();
-  const { reverseVisit, redeemReward, setCardBlocked, anonymizeCustomer, adminDeleteCustomer, revokeMarketingConsent, registerManualVisit, state } = useData();
+  const { reverseVisit, redeemReward, setCardBlocked, anonymizeCustomer, adminDeleteCustomer, revokeMarketingConsent, state } = useData();
   const router = useRouter();
   // Solo el superadministrador (dentro del comercio en modo edición) puede eliminar un cliente por completo.
   const esSuperadmin = state.supportView?.modo === "edit";
@@ -39,9 +38,7 @@ export default function CustomerDetailPage() {
   const [copied, setCopied] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState("");
   const [manualOpen, setManualOpen] = useState(false);
-  const [manualReason, setManualReason] = useState("");
   const activeLocations = locations.filter((l) => l.active);
-  const [manualLocation, setManualLocation] = useState("");
   const wallet = useWalletStatus(business.id);
 
   const customer = customers.find((c) => c.id === customerId);
@@ -65,7 +62,6 @@ export default function CustomerDetailPage() {
   const isOwner = membership?.role === "owner";
   const available = rewards.filter((r) => r.cardId === card.id && r.status === "available");
   const canAddVisit = !!membership && can(membership, "visits.create") && !anonymized && card.status !== "blocked";
-  const locationForVisit = manualLocation || (activeLocations.length === 1 ? activeLocations[0].id : "");
 
   const run = async (key: string, op: () => Promise<{ ok: boolean; message?: string }>, okText: string) => {
     setBusy(key);
@@ -80,20 +76,6 @@ export default function CustomerDetailPage() {
     ...rewards.filter((r) => r.cardId === card.id).map((r) => ({ type: "reward" as const, at: r.earnedAt, reward: r })),
     ...redemptions.filter((r) => r.cardId === card.id).map((r) => ({ type: "redemption" as const, at: r.createdAt, redemption: r })),
   ].sort((a, b) => b.at.localeCompare(a.at));
-
-  const submitManual = async () => {
-    const motivo = manualReason.trim();
-    if (motivo.length < 5) return;
-    if (activeLocations.length > 1 && !locationForVisit) return setMsg({ ok: false, text: "Elige la sede donde está el cliente." });
-    setBusy("manual");
-    const res = await registerManualVisit(card.id, crypto.randomUUID(), motivo, locationForVisit || undefined);
-    setBusy(null);
-    if (!res.ok) return setMsg({ ok: false, text: res.message });
-    const premio = res.data?.reward ? ` ¡Completó la tarjeta y ganó: ${program.rewardName}!` : "";
-    setMsg({ ok: true, text: `Visita sumada a mano. Quedó registrada con el motivo en el historial y la auditoría.${premio}` });
-    setManualOpen(false);
-    setManualReason("");
-  };
 
   const submitReverse = async () => {
     if (!reversing || reason.trim().length < 5) return;
@@ -135,7 +117,7 @@ export default function CustomerDetailPage() {
         {!anonymized && <div className="flex flex-wrap gap-2">
           {canAddVisit && (
             <Button variant="brand" onClick={() => setManualOpen((v) => !v)}>
-              <Plus className="size-4" /> Sumar visita
+              <Plus className="size-4" /> Sumar sello sin QR
             </Button>
           )}
           <Button
@@ -160,45 +142,19 @@ export default function CustomerDetailPage() {
       </div>
 
       {manualOpen && canAddVisit && (
-        <Card className="mb-4 space-y-3 p-4">
-          <div>
-            <p className="text-sm font-semibold">Sumar visita a mano</p>
-            <p className="text-xs text-muted">
-              Úsalo solo si el sello no se pudo sumar con el toque. Se aplican las mismas reglas de siempre y queda registrado con tu nombre y el motivo.
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-1.5">
-            {MOTIVOS_MANUAL.map((m) => (
-              <button
-                key={m}
-                type="button"
-                onClick={() => setManualReason(m)}
-                className={cn("rounded-full border px-2.5 py-1 text-xs", manualReason === m ? "border-ink bg-ink text-white" : "border-line text-ink-2 hover:border-line-strong")}
-              >
-                {m}
-              </button>
-            ))}
-          </div>
-          <Input value={manualReason} onChange={(e) => setManualReason(e.target.value)} maxLength={200} placeholder="Motivo (obligatorio)" aria-label="Motivo de la visita a mano" />
-          {activeLocations.length > 1 && (
-            <Select value={manualLocation} onChange={(e) => setManualLocation(e.target.value)} aria-label="Sede">
-              <option value="">Elige la sede donde está el cliente</option>
-              {activeLocations.map((l) => (
-                <option key={l.id} value={l.id}>
-                  {l.name}
-                </option>
-              ))}
-            </Select>
-          )}
-          <div className="flex gap-2">
-            <Button variant="brand" onClick={submitManual} disabled={manualReason.trim().length < 5 || busy === "manual"}>
-              {busy === "manual" ? <Loader2 className="size-4 animate-spin" /> : <Stamp className="size-4" />} Sumar 1 visita
-            </Button>
-            <Button variant="ghost" onClick={() => setManualOpen(false)}>
-              Cancelar
-            </Button>
-          </div>
-        </Card>
+        <div className="mb-4">
+          <SelloSinQr
+            cardId={card.id}
+            nombre={customer.fullName}
+            sedes={activeLocations}
+            onCancelar={() => setManualOpen(false)}
+            onListo={(res) => {
+              const premio = res.data?.reward ? ` ¡Completó la tarjeta y ganó: ${program.rewardName}!` : "";
+              setMsg({ ok: true, text: `Sello sumado sin QR. Quedó registrado con el motivo en el historial y la auditoría.${premio}` });
+              setManualOpen(false);
+            }}
+          />
+        </div>
       )}
 
       {msg && (
@@ -266,7 +222,7 @@ export default function CustomerDetailPage() {
                     <div className="min-w-0 flex-1 text-sm">
                       <p className={cn("font-medium", reverted && "text-muted line-through")}>
                         {t.type === "visit" &&
-                          `Visita registrada (+${1 + (t.visit!.bonusStamps ?? 0)})${t.visit!.bonusStamps ? " · promoción" : ""}${t.visit!.source === "manual" ? " · a mano" : t.visit!.source === "nfc" ? " · por NFC" : t.visit!.source === "demo" ? " · de prueba (demo)" : ""}`}
+                          `Visita registrada (+${1 + (t.visit!.bonusStamps ?? 0)})${t.visit!.bonusStamps ? " · promoción" : ""}${t.visit!.source === "manual" ? ` · sin QR${t.visit!.reason ? ` · ${t.visit!.reason}` : ""}` : t.visit!.source === "nfc" ? " · por NFC" : t.visit!.source === "demo" ? " · de prueba (demo)" : ""}`}
                         {t.type === "reversal" && "Visita revertida (−1)"}
                         {t.type === "reward" && (t.reward!.kind === "birthday" ? `🎂 Regalo de cumpleaños: ${t.reward!.name}` : `Recompensa obtenida: ${t.reward!.name}`)}
                         {t.type === "redemption" && "Recompensa canjeada"}
