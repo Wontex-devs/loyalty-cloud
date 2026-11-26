@@ -1,7 +1,7 @@
 // Pruebas de «el hilo»: la composición de sellos que comparten la tarjeta web y el pase de Wallet.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { ajustePremio, hilo, HILO_MAX_UNA_FILA, ILUSTRACION } from "../src/lib/domain/hilo.ts";
+import { ajustePremio, hilo, HILO_MAX_UNA_FILA, ILUSTRACION, MARCA_LAZO } from "../src/lib/domain/hilo.ts";
 import { memberSinceText } from "../src/lib/wallet/pass.ts";
 
 const W = 375;
@@ -58,6 +58,19 @@ test("en dos hileras los sellos quedan en columnas y el premio, grande, cierra a
     assert.ok(abajo.every((s) => arriba.has(s.x)), `${n}: la fila de abajo no está en columnas`);
     assert.equal(h.sellos.at(-1)?.x, Math.max(...h.sellos.map((s) => s.x)), `${n}: el premio no cierra la franja`);
     assert.ok(h.sellos.at(-1)!.r > comunes[0].r, `${n}: el premio no es el más grande`);
+  }
+});
+
+test("el logo de Lazo (arriba a la derecha) no toca ningún sello ni el texto del premio", () => {
+  const izq = W - MARCA_LAZO.derecha - MARCA_LAZO.ancho;
+  const abajo = MARCA_LAZO.y + MARCA_LAZO.alto + 2;
+  for (let n = 2; n <= 30; n++) {
+    const h = hilo(n, W, H);
+    for (const s of h.sellos) {
+      const borde = s.premio ? h.aro : s.r;
+      assert.ok(s.y - borde > abajo || s.x + borde < izq, `${n}: el sello ${s.index} toca el logo`);
+    }
+    assert.ok(h.texto.nombre > abajo, `${n}: el nombre del premio toca el logo`);
   }
 });
 

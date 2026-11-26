@@ -51,6 +51,13 @@ const TEXTO_COMPACTO: TextoPremio = { etiqueta: 11, nombre: 25, compacto: true }
  */
 export const ILUSTRACION = { x: 262, y: 2, ancho: 106, alto: 52, opacidad: 0.4 } as const;
 
+/**
+ * El logo de Lazo, pequeño y tenue, en la esquina de arriba a la derecha de la franja (375 × 144):
+ * `derecha` es la distancia al borde derecho (así queda en la esquina también en la franja de Google,
+ * que es más ancha), `alto` es el tamaño de la letra. Va en todas las tarjetas: web, Apple y Google.
+ */
+export const MARCA_LAZO = { derecha: 12, y: 8, alto: 10, ancho: 30, opacidad: 0.42 } as const;
+
 /** Con más sellos que estos (contando el premio), van en dos hileras para que no queden diminutos. */
 export const HILO_MAX_UNA_FILA = 7;
 

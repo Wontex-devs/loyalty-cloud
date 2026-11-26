@@ -1,6 +1,7 @@
 import { Gift } from "lucide-react";
 import { alpha, type CardTheme } from "@/lib/domain/card-palette";
-import { ajustePremio, hilo, ILUSTRACION } from "@/lib/domain/hilo";
+import { ajustePremio, hilo, ILUSTRACION, MARCA_LAZO } from "@/lib/domain/hilo";
+import { LazoLogo } from "@/components/brand/lazo-logo";
 import type { BusinessBranding } from "@/lib/domain/types";
 import { cn } from "@/lib/utils";
 import { brandCase, brandFont, StampMark } from "./brand-mark";
@@ -61,6 +62,12 @@ export function HiloStrip({
           {monogram.trim().slice(0, 1).toUpperCase()}
         </span>
       )}
+
+      {/* El logo de Lazo, pequeño y tenue, arriba a la derecha (igual que en el pase de Wallet) */}
+      <LazoLogo
+        className="pointer-events-none absolute select-none"
+        style={{ right: px(MARCA_LAZO.derecha), top: py(MARCA_LAZO.y), fontSize: cqw(MARCA_LAZO.alto), opacity: MARCA_LAZO.opacidad, color: c.text }}
+      />
 
       {/* El premio, protagonista */}
       <p className="absolute font-medium uppercase" style={{ left: px(20), top: py(h.texto.etiqueta), fontSize: cqw(11.5), letterSpacing: "0.19em", lineHeight: 1.2, color: c.passLabel }}>

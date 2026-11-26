@@ -1,6 +1,7 @@
 import { ImageResponse } from "next/og";
 import { alpha, cardTheme } from "@/lib/domain/card-palette";
-import { ajustePremio, hilo, ILUSTRACION } from "@/lib/domain/hilo";
+import { ajustePremio, hilo, ILUSTRACION, MARCA_LAZO } from "@/lib/domain/hilo";
+import { ARO_LAZO } from "./lazo-logo";
 import type { BusinessBranding } from "@/lib/domain/types";
 import { Icon } from "./stamp-icons";
 
@@ -87,6 +88,28 @@ export function passStrip(
             {inicial}
           </div>
         )}
+
+        {/* El logo de Lazo, pequeño y tenue, arriba a la derecha: «Laz» y el aro como «o» */}
+        <div
+          style={{
+            position: "absolute",
+            right: MARCA_LAZO.derecha * k,
+            top: MARCA_LAZO.y * k,
+            display: "flex",
+            alignItems: "flex-end",
+            fontSize: MARCA_LAZO.alto * k,
+            fontWeight: 600,
+            lineHeight: 1,
+            letterSpacing: -0.2 * k,
+            color: c.text,
+            opacity: MARCA_LAZO.opacidad,
+          }}
+        >
+          Laz
+          <svg width={MARCA_LAZO.alto * 0.94 * k} height={MARCA_LAZO.alto * k} viewBox="0 0 60 64" style={{ marginLeft: 0.3 * k, marginBottom: 0.05 * MARCA_LAZO.alto * k }}>
+            <path d={ARO_LAZO} fill="none" stroke={c.text} strokeWidth={10} strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </div>
 
         {/* El premio, protagonista */}
         <div style={{ position: "absolute", left: pad, top: h.texto.etiqueta * k, display: "flex", fontSize: 11.5 * k, fontWeight: 500, letterSpacing: 2.2 * k, color: c.passLabel }}>

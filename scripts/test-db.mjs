@@ -1689,5 +1689,35 @@ console.log("\nCupo de clientes y borrado total (migración 45)");
   check("el historial sigue sin poderse borrar desde el panel", !r.ok || r.affected === 0, r);
 }
 
+console.log("\nSello sin QR: el motivo queda en la visita (migración 46)");
+{
+  let r = await joinProgram("negocio-a", "+573001460001", "Domicilio Prueba");
+  const tok = r.rows?.[0]?.public_token;
+  const card = (await db.query("select id, current_stamps from public.loyalty_cards where public_token = $1", [tok])).rows[0];
+  r = await as(U.ownerA, "select public.register_manual_visit($1, 'sinqr-0001', 'Pedido a domicilio · Factura FV-1234') as res", [card.id]);
+  check("sin QR: el comercio suma el sello con el motivo y la factura", r.ok && r.rows[0].res?.current_stamps === card.current_stamps + 1, r);
+  r = await as(U.ownerA, "select reason, source from public.visits where card_id = $1 and kind = 'visit'", [card.id]);
+  check("sin QR: el motivo con la factura queda en la visita (se ve en el historial)", r.ok && r.rows.length === 1 && r.rows[0].reason === "Pedido a domicilio · Factura FV-1234" && r.rows[0].source === "manual", r);
+  r = await as(U.ownerA, "select count(*)::int n from public.visits where reason is not null and kind = 'visit' and source <> 'manual'");
+  check("sin QR: las visitas normales siguen sin motivo", r.ok && r.rows[0].n === 0, r);
+  r = await as(U.ownerA, "update public.visits set reason = 'cambiado' where card_id = $1", [card.id]);
+  check("sin QR: el motivo no se puede cambiar después", !r.ok, r);
+}
+
+console.log("\nFunciones internas: nadie las llama directamente");
+{
+  const card = (await db.query("select c.id from public.loyalty_cards c join public.businesses b on b.id = c.business_id where b.slug = 'negocio-a' limit 1")).rows[0];
+  for (const [quien, u] of [["un usuario de otro comercio", U.ownerB], ["el público", null]]) {
+    const r = await as(u, "select private.record_visit($1, 'directo-0001', null, null, 'staff', 0)", [card.id]);
+    check(`${quien} no puede sumar sellos llamando la función interna`, !r.ok, r);
+  }
+  const abiertas = (await db.query(`
+    select p.proname from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+    where n.nspname = 'private'
+      and has_function_privilege('authenticated', p.oid, 'execute')
+      and p.proname in ('record_visit', 'nfc_comprobar_ubicacion', 'tiene_sede_con_ubicacion', 'metros_entre', 'create_business_billing', 'customer_first_name')`)).rows.map((x) => x.proname);
+  check("las funciones internas (sellos, NFC, cobros) están cerradas a usuarios con sesión", abiertas.length === 0, abiertas);
+}
+
 console.log(`\n${passed} correctas, ${failed} fallidas\n`);
 process.exit(failed ? 1 : 0);

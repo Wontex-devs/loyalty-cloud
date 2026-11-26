@@ -10,6 +10,7 @@ import { codigoLegible, esCodigoTarjeta, limpiarCodigo } from "@/lib/domain/code
 import { codigoDeLectura } from "@/lib/domain/enlace-sello";
 import { Button, Card, Input, PageHeader, Select } from "@/components/ui";
 import { cn } from "@/lib/utils";
+import { BuscarSelloSinQr } from "@/components/business/buscar-sello-sin-qr";
 
 type Estado =
   | { tipo: "esperando" }
@@ -310,6 +311,8 @@ export default function EscanearPage() {
         </form>
         <p className="mt-2 text-xs text-muted">Es el número que aparece debajo del código QR, en la tarjeta del cliente.</p>
       </Card>
+
+      <BuscarSelloSinQr sede={sede} />
     </div>
   );
 }

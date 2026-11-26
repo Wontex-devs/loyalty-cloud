@@ -25,7 +25,7 @@ const AUDIT_LABELS: Record<string, string> = {
   "support.view_ended": "Soporte de Lazo salió del panel",
   "support.edit_started": "Un superadministrador de Lazo entró a editar el panel",
   "support.edit_ended": "El superadministrador de Lazo salió del modo edición",
-  "visit.manual": "Sumó una visita a mano",
+  "visit.manual": "Sumó un sello sin QR",
   "visit.created": "Registró una visita",
   "visit.reversed": "Revirtió una visita",
   "reward.earned": "Se emitió una recompensa",
@@ -103,7 +103,7 @@ export default function HistoryPage() {
         customerId: customerOfCard.get(v.cardId)?.id,
         staffId: v.staffId,
         detail:
-          [v.source === "manual" ? "A mano" : v.source === "nfc" ? "Por NFC" : v.source === "demo" ? "Sello de prueba (demo)" : "", v.reason ? `Motivo: ${v.reason}` : v.bonusStamps ? `+${v.bonusStamps} por promoción` : ""]
+          [v.source === "manual" ? "Sin QR" : v.source === "nfc" ? "Por NFC" : v.source === "demo" ? "Sello de prueba (demo)" : "", v.reason ? `Motivo: ${v.reason}` : v.bonusStamps ? `+${v.bonusStamps} por promoción` : ""]
             .filter(Boolean)
             .join(" · ") || undefined,
       })),
