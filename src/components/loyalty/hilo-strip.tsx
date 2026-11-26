@@ -1,6 +1,6 @@
 import { Gift } from "lucide-react";
 import { alpha, type CardTheme } from "@/lib/domain/card-palette";
-import { ajustePremio, hilo, ILUSTRACION, MARCA_LAZO } from "@/lib/domain/hilo";
+import { ajustePremio, anchoTextoPremio, hilo, ILUSTRACION, MARCA_LAZO } from "@/lib/domain/hilo";
 import { LazoLogo } from "@/components/brand/lazo-logo";
 import type { BusinessBranding } from "@/lib/domain/types";
 import { cn } from "@/lib/utils";
@@ -40,7 +40,8 @@ export function HiloStrip({
   const lista = rewardReady || stamps >= required;
   const upper = brandCase(branding) === "uppercase";
   const linea = alpha(c.accent, 0.55);
-  const premio = ajustePremio(rewardName, upper, h.texto.compacto);
+  const espacioTexto = anchoTextoPremio(W, !!branding.illustrationUrl);
+  const premio = ajustePremio(rewardName, upper, h.texto.compacto, espacioTexto);
 
   return (
     <div className="relative w-full overflow-hidden" style={{ aspectRatio: `${W} / ${H}`, containerType: "inline-size", background: c.bg, color: c.text }}>
@@ -75,7 +76,7 @@ export function HiloStrip({
       </p>
       <p
         className={cn("absolute", premio.lines === 1 && "whitespace-nowrap", brandFont(branding), upper && "uppercase")}
-        style={{ left: px(20), top: py(h.texto.nombre), width: px(W - 40), fontSize: cqw(premio.size), lineHeight: 1.15, letterSpacing: upper ? "0.05em" : undefined }}
+        style={{ left: px(20), top: py(h.texto.nombre), width: px(espacioTexto), fontSize: cqw(premio.size), lineHeight: 1.15, letterSpacing: upper ? "0.05em" : undefined }}
       >
         {premio.text}
       </p>

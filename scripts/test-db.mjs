@@ -1719,5 +1719,17 @@ console.log("\nFunciones internas: nadie las llama directamente");
   check("las funciones internas (sellos, NFC, cobros) están cerradas a usuarios con sesión", abiertas.length === 0, abiertas);
 }
 
+console.log("\nMáximo 15 sellos por tarjeta (migración 47)");
+{
+  const antes = (await db.query("select stamps_required, welcome_stamps from public.loyalty_programs where business_id = $1", [A])).rows[0];
+  let r = await as(U.ownerA, "update public.loyalty_programs set stamps_required = 16 where business_id = $1", [A]);
+  check("15 sellos: el dueño no puede poner 16", !r.ok, r);
+  r = await as(U.ownerA, "update public.loyalty_programs set stamps_required = 30 where business_id = $1", [A]);
+  check("15 sellos: ni 30, el máximo de antes", !r.ok, r);
+  r = await as(U.ownerA, "update public.loyalty_programs set stamps_required = 15 where business_id = $1", [A]);
+  check("15 sellos: 15 sí se puede", r.ok && r.affected === 1, r);
+  await db.query("update public.loyalty_programs set stamps_required = $2 where business_id = $1", [A, antes.stamps_required]);
+}
+
 console.log(`\n${passed} correctas, ${failed} fallidas\n`);
 process.exit(failed ? 1 : 0);

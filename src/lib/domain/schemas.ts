@@ -60,10 +60,14 @@ export const joinSchema = z.object({
 });
 export type JoinInput = z.infer<typeof joinSchema>;
 
+/** Sellos por tarjeta: de 2 a 15 (con más, la tarjeta pierde gracia y los sellos se ven pequeños). */
+export const SELLOS_MIN = 2;
+export const SELLOS_MAX = 15;
+
 export const programSchema = z.object({
   name: z.string().trim().min(2).max(60),
   description: z.string().trim().max(200),
-  stampsRequired: z.coerce.number().int().min(2, "Mínimo 2").max(30, "Máximo 30"),
+  stampsRequired: z.coerce.number().int().min(SELLOS_MIN, `Mínimo ${SELLOS_MIN}`).max(SELLOS_MAX, `Máximo ${SELLOS_MAX} sellos`),
   rewardName: z.string().trim().min(2).max(80),
   rewardDescription: z.string().trim().max(200),
   minMinutesBetweenVisits: z.coerce.number().int().min(0).max(1440),

@@ -46,17 +46,25 @@ const TEXTO_COMPACTO: TextoPremio = { etiqueta: 11, nombre: 25, compacto: true }
 
 /**
  * Dónde va la ilustración del comercio en la franja de 375 × 144 (en lugar de la inicial de fondo):
- * arriba a la derecha, encima del premio, sin tocar los sellos. Se ve tenue para no
- * competir con el premio ni con los sellos.
+ * grande, arriba a la derecha, como si se asomara detrás del premio (el premio y los sellos van
+ * encima). Pegada al borde derecho, también en la franja de Google, que es más ancha.
+ * El nombre del premio no pasa por debajo de ella (ver `anchoTextoPremio`).
  */
-export const ILUSTRACION = { x: 262, y: 2, ancho: 106, alto: 52, opacidad: 0.4 } as const;
+export const ILUSTRACION = { x: 236, y: 2, ancho: 136, alto: 94, opacidad: 0.95 } as const;
+
+/** Espacio para el nombre del premio, en puntos de una franja de 144 de alto y `ancho` de ancho. */
+export function anchoTextoPremio(ancho: number, conIlustracion: boolean) {
+  const margen = 20;
+  return conIlustracion ? ancho - (375 - ILUSTRACION.x) - margen - 10 : ancho - margen * 2;
+}
 
 /**
- * El logo de Lazo, pequeño y tenue, en la esquina de arriba a la derecha de la franja (375 × 144):
- * `derecha` es la distancia al borde derecho (así queda en la esquina también en la franja de Google,
- * que es más ancha), `alto` es el tamaño de la letra. Va en todas las tarjetas: web, Apple y Google.
+ * El logo de Lazo, pequeño y tenue, en la esquina de abajo a la derecha de la franja (375 × 144),
+ * debajo del premio (arriba va la ilustración del comercio): `derecha` es la distancia al borde
+ * derecho (así queda en la esquina también en la franja de Google, que es más ancha), `y` es el
+ * borde de arriba y `alto` el tamaño de la letra. Va en todas las tarjetas: web, Apple y Google.
  */
-export const MARCA_LAZO = { derecha: 12, y: 8, alto: 10, ancho: 30, opacidad: 0.42 } as const;
+export const MARCA_LAZO = { derecha: 8, y: 131, alto: 9, ancho: 27, opacidad: 0.42 } as const;
 
 /** Con más sellos que estos (contando el premio), van en dos hileras para que no queden diminutos. */
 export const HILO_MAX_UNA_FILA = 7;
@@ -108,9 +116,9 @@ export interface AjustePremio {
  * Cómo escribir el nombre del premio para que quepa en la franja: grande en una línea si es
  * corto; si es largo, más pequeño y en dos líneas. Nunca se sale ni tapa los sellos.
  */
-export function ajustePremio(nombre: string, upper = false, compacto = false): AjustePremio {
+export function ajustePremio(nombre: string, upper = false, compacto = false, espacio = 335): AjustePremio {
   const text = nombre.trim().replace(/\s+/g, " ");
-  const ancho = 335; // 375 menos los márgenes
+  const ancho = espacio; // por defecto, 375 menos los márgenes
   // Ancho medio de una letra respecto a su tamaño (las mayúsculas espaciadas ocupan más).
   const porLetra = upper ? 0.74 : 0.54;
   const unaLinea = Math.floor(ancho / (Math.max(text.length, 1) * porLetra));
