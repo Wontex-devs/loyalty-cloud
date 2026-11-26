@@ -1,6 +1,7 @@
 /**
  * Control de cobros a los comercios: a partir de la fecha «pagado hasta» (AAAA-MM-DD, hora de Colombia)
- * se calcula si el comercio está al día, por vencer o vencido. Nada se suspende solo.
+ * se calcula si el comercio está al día, por vencer o vencido. Pasados los días de gracia se pausa
+ * el panel del dueño (corte por mora); el comercio y las tarjetas de sus clientes no se suspenden solos.
  */
 
 export type EstadoCobro = "al-dia" | "por-vencer" | "vencido" | "sin-dato";
@@ -39,6 +40,28 @@ export function estadoCobro(pagadoHasta: string | null | undefined, hoy = hoyCol
   if (dias < 0) return "vencido";
   if (dias <= DIAS_AVISO_COBRO) return "por-vencer";
   return "al-dia";
+}
+
+/** Días de gracia después del vencimiento: el dueño todavía puede usar su panel mientras paga. */
+export const DIAS_GRACIA_COBRO = 5;
+
+/** Último día (incluido) en que el panel sigue abierto estando vencido. */
+export function finDeGracia(pagadoHasta: string): string {
+  const [a, m, d] = pagadoHasta.split("-").map(Number);
+  return new Date(Date.UTC(a, m - 1, d + DIAS_GRACIA_COBRO)).toISOString().slice(0, 10);
+}
+
+/**
+ * Corte por mora: pasados los días de gracia, el panel del dueño se bloquea hasta que pague.
+ * No aplica al comercio nuevo que todavía no ha hecho su primer pago (tiene la invitación con
+ * el mes gratis) ni cuando no hay fecha. Las tarjetas de los clientes no se tocan.
+ */
+export function accesoCortado(
+  b: { pagadoHasta: string | null | undefined; mesGratisPendiente: boolean },
+  hoy = hoyColombia(),
+): boolean {
+  if (!esFecha(b.pagadoHasta) || b.mesGratisPendiente) return false;
+  return diasHasta(b.pagadoHasta, hoy) < -DIAS_GRACIA_COBRO;
 }
 
 /** Frase corta para la tabla: «vence en 3 días», «venció hace 2 días». */
@@ -116,7 +139,9 @@ export function avisoCobro(
   return {
     tono: "danger",
     titulo: `Tu plan venció ${textoVencimiento(b.pagadoHasta, hoy).replace(/^Venció /, "")}`,
-    texto: `Estaba pagado hasta el ${fecha}. Ponte al día para seguir usando Lazo con tus clientes.`,
+    texto: accesoCortado(b, hoy)
+      ? `Estaba pagado hasta el ${fecha}. Tu panel está en pausa hasta que te pongas al día.`
+      : `Estaba pagado hasta el ${fecha}. Tienes hasta el ${fechaCorta(finDeGracia(b.pagadoHasta!))} para pagar; después tu panel queda en pausa hasta que te pongas al día.`,
     clave,
   };
 }

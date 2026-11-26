@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { avisoCobro, diasHasta, estadoCobro, fechaCorta, hoyColombia, sumarMeses, textoVencimiento } from "../src/lib/domain/cobros.ts";
+import { accesoCortado, avisoCobro, diasHasta, estadoCobro, fechaCorta, hoyColombia, finDeGracia, sumarMeses, textoVencimiento } from "../src/lib/domain/cobros.ts";
 
 test("estado del cobro según la fecha «pagado hasta»", () => {
   const hoy = "2026-11-19";
@@ -63,4 +63,22 @@ test("aviso de cobro en el panel del dueño", () => {
   assert.match(nuevo!.texto, /primer mes y el segundo es gratis/);
   // La clave cambia de un día a otro (el aviso vuelve a salir al día siguiente).
   assert.notEqual(avisoCobro({ ...b, pagadoHasta: "2026-11-19" }, "2026-11-23")?.clave, vencido?.clave);
+});
+
+test("corte por mora: 5 días de gracia después del vencimiento", () => {
+  const b = { pagadoHasta: "2026-11-21", mesGratisPendiente: false };
+  assert.equal(finDeGracia("2026-11-21"), "2026-11-26");
+  assert.equal(finDeGracia("2026-12-29"), "2027-01-03");
+  assert.equal(accesoCortado(b, "2026-11-21"), false, "el día del vencimiento sigue abierto");
+  assert.equal(accesoCortado(b, "2026-11-22"), false, "primer día de gracia");
+  assert.equal(accesoCortado(b, "2026-11-26"), false, "último día de gracia");
+  assert.equal(accesoCortado(b, "2026-11-27"), true, "al sexto día se bloquea");
+  assert.equal(accesoCortado({ ...b, pagadoHasta: "2026-12-21" }, "2026-11-27"), false, "al pagar se abre");
+  assert.equal(accesoCortado({ ...b, pagadoHasta: null }, "2026-11-27"), false, "sin fecha no se bloquea");
+  // Comercio nuevo que aún no hace su primer pago: tiene la invitación, no el bloqueo.
+  assert.equal(accesoCortado({ ...b, mesGratisPendiente: true }, "2026-12-30"), false);
+  // El aviso rojo dice hasta cuándo hay plazo y, pasado el plazo, que el panel está en pausa.
+  const plan = { ...b, planId: "plan_starter" };
+  assert.match(avisoCobro(plan, "2026-11-23")!.texto, /Tienes hasta el 26 de nov/);
+  assert.match(avisoCobro(plan, "2026-11-27")!.texto, /en pausa hasta que te pongas al día/);
 });

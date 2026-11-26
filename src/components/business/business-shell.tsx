@@ -29,6 +29,7 @@ import { ROLE_LABELS } from "@/lib/domain/permissions";
 import { Avatar, ButtonLink, EmptyState } from "@/components/ui";
 import { AlertTriangle, Eye, Lock, PencilLine } from "lucide-react";
 import { AvisoCobroBanner } from "./aviso-cobro";
+import { CortePorMora } from "./corte-por-mora";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 import { MiNombre } from "./mi-nombre";
 import { faltaNombre } from "@/lib/domain/nombre";
@@ -190,7 +191,14 @@ export function BusinessShell({ slug, children }: { slug: string; children: Reac
               <AlertTriangle className="size-4" /> Este establecimiento está suspendido. Las tarjetas no aceptan nuevas visitas.
             </div>
           )}
-          {children}
+          {/* Corte por mora: solo dueños y administradores (no en modo soporte). */}
+          {!supportView && (membership.role === "owner" || membership.role === "admin") ? (
+            <CortePorMora businessId={business.id} businessName={business.name} slug={business.slug}>
+              {children}
+            </CortePorMora>
+          ) : (
+            children
+          )}
         </ScopeCtx.Provider>
       )}
     </AppShell>

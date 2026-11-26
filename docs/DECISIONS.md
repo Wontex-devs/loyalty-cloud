@@ -38,3 +38,11 @@
   - **Mantener una tarjeta web más rica (degradados, cristal, marco):** Wallet no lo permite y la diferencia confunde.
   - **Dibujar toda la tarjeta como una sola imagen:** los datos dejarían de ser texto (accesibilidad, notificaciones por campo y actualización en Wallet).
 - **Código QR:** se probó en el pase y en la tarjeta y se quitó el mismo día (no se veía bien y no hace falta: los sellos se suman con la tarjeta NFC). El pase sigue sin código, como antes.
+
+## 2026-11-25 · Corte por mora: el panel del dueño se pausa a los 5 días de vencido
+- **Decisión:** pasados 5 días de gracia desde la fecha «pagado hasta», el propietario o administrador ve la pantalla de pago en vez de su panel. Se abre solo cuando el pago queda aprobado. Siguen abiertas «Escanear» (sumar sellos) y «Configuración» (a donde vuelve el pago).
+- **Motivo:** con el pago en línea activo (Mercado Pago) se quiere que el cobro no dependa de perseguir a cada comercio a mano.
+- **Alcance:** es un bloqueo de pantalla (`src/components/business/corte-por-mora.tsx`), no de la base de datos: los empleados siguen sumando sellos y las tarjetas de los clientes no se tocan. No aplica al comercio nuevo que aún no hace su primer pago ni a las sesiones de soporte.
+- **Alternativas descartadas:**
+  - **Dejar de sumar sellos a los clientes del comercio:** castiga a personas que no tienen la culpa y daña la imagen del comercio y de Lazo.
+  - **Suspender el comercio automáticamente:** es más difícil de revertir; el botón «Suspender» sigue siendo manual.

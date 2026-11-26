@@ -20,7 +20,8 @@ Sin pago en línea todavía: Lazo cobra por transferencia y aquí se lleva la cu
   - **Cambiar fecha**: para corregir o dar días extra. Pide motivo.
   - Historial de pagos.
 - Solo el superadministrador registra pagos; soporte solo ve. El comercio no ve nada de esto.
-- **Nada se suspende solo.** Si no paga, se usa el botón «Suspender» de siempre.
+- **Corte por mora (desde el 25 de noviembre de 2026).** A los 5 días de vencido, el dueño o administrador ve la pantalla de pago en vez de su panel; se abre solo al pagar. Los empleados siguen sumando sellos y las tarjetas de los clientes no se tocan. No aplica al comercio nuevo que aún no hace su primer pago.
+- **El comercio no se suspende solo.** Para suspenderlo del todo se usa el botón «Suspender» de siempre.
 - Todo queda en la auditoría (`billing.payment_registered`, `billing.paid_until_changed`).
 
 Base de datos: migración `20261101000036_control_cobros.sql` (tablas `business_billing` y
